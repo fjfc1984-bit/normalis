@@ -598,7 +598,8 @@
           <li class="no">Panel consultor</li>
           <li class="no">Reportes automáticos por email</li>
         </ul>
-        <button class="btn-plan btn-plan-outline" onclick="openModal()">Empezar gratis 14 días</button>
+        <button class="btn-plan btn-plan-outline" onclick="irAPlan(STRIPE_LINK_BASICO,'Plan Básico $29.000/mes')">💳 Suscribirme — $29.000/mes</button>
+        <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px">✅ 14 días gratis · Sin tarjeta para empezar</p>
       </div>
 
       <div class="pricing-card popular">
@@ -616,7 +617,8 @@
           <li>Firma digital con historial de versiones</li>
           <li>Soporte prioritario</li>
         </ul>
-        <button class="btn-plan btn-plan-primary" onclick="openModal()">Solicitar demo</button>
+        <button class="btn-plan btn-plan-primary" onclick="irAPlan(STRIPE_LINK_PRO,'Plan Pro $79.000/mes')">💳 Suscribirme — $79.000/mes</button>
+        <p style="text-align:center;font-size:11px;color:rgba(255,255,255,.6);margin-top:10px">✅ 14 días gratis · Sin tarjeta para empezar</p>
       </div>
 
       <div class="pricing-card">
@@ -632,12 +634,13 @@
           <li>Marca blanca disponible</li>
           <li>Soporte dedicado</li>
         </ul>
-        <button class="btn-plan btn-plan-outline" onclick="openModal()">Hablar con ventas</button>
+        <button class="btn-plan btn-plan-outline" onclick="irAPlan(STRIPE_LINK_CONSULTOR,'Plan Consultor $149.000/mes')">💳 Suscribirme — $149.000/mes</button>
+        <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px">✅ 14 días gratis · Soporte dedicado</p>
       </div>
 
     </div>
     <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:28px">
-      💳 Pago con PSE, Nequi o tarjeta · 🔒 Datos seguros con Firebase · ✅ Prueba gratis 14 días sin tarjeta
+      💳 Pago con tarjeta, PSE o Nequi vía Stripe · 🔒 Pagos cifrados y seguros · ✅ Cancela en cualquier momento
     </p>
   </div>
 </div>
@@ -812,6 +815,30 @@
 </div>
 
 <script>
+// ─── STRIPE PAYMENT LINKS ─────────────────────────────────────────────────
+// Reemplaza estas 3 URLs con tus Payment Links de dashboard.stripe.com
+var STRIPE_LINK_BASICO    = 'https://buy.stripe.com/REEMPLAZA_BASICO';
+var STRIPE_LINK_PRO       = 'https://buy.stripe.com/REEMPLAZA_PRO';
+var STRIPE_LINK_CONSULTOR = 'https://buy.stripe.com/REEMPLAZA_CONSULTOR';
+// ─────────────────────────────────────────────────────────────────────────
+
+function irAPlan(link, plan) {
+  localStorage.setItem('normalis_plan_intent', plan);
+  window.open(link, '_blank');
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('pago') === 'exitoso') {
+    var plan = localStorage.getItem('normalis_plan_intent') || 'Tu plan';
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#10b981;color:#fff;padding:16px;text-align:center;font-weight:700;font-size:15px;';
+    banner.innerHTML = '🎉 ¡Pago exitoso! ' + plan + ' activado. <a href="normativa-app-v2.html" style="color:#fff;text-decoration:underline;margin-left:12px">Ir a la app →</a>';
+    document.body.prepend(banner);
+    localStorage.removeItem('normalis_plan_intent');
+  }
+});
+
 // MODAL
 function openModal(){ document.getElementById('demo-modal').classList.add('open'); }
 function closeModal(){ document.getElementById('demo-modal').classList.remove('open'); }
