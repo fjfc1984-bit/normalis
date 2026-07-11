@@ -9120,6 +9120,25 @@ document.addEventListener('keydown', function(e){
 });
 // FIN FOCUS TRAP
 
+
+// ── Firebase config predeterminada (inyectada en build) ─────────
+(function(){
+  try {
+    const existing = localStorage.getItem('normalis_firebase');
+    if(!existing || existing === '{}' || existing === 'null'){
+      localStorage.setItem('normalis_firebase', JSON.stringify({
+        apiKey: "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+        authDomain: "normalis-5587d.firebaseapp.com",
+        projectId: "normalis-5587d",
+        storageBucket: "normalis-5587d.firebasestorage.app",
+        messagingSenderId: "328915530941",
+        appId: "1:328915530941:web:8e77246bd2e326e115b3d4"
+      }));
+      console.log('[NormaLis] Firebase config predeterminada cargada');
+    }
+  } catch(e){ console.warn('Firebase config init:', e); }
+})();
+
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
