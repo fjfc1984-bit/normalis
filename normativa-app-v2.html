@@ -12168,6 +12168,149 @@ var fsSync = {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() { fsSync.init(); }, 1500);
 });
+
+// XAI CONSULTOR NORMATIVO EXPLICABLE
+
+function buildUserContext() {
+  var hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  var en30 = new Date(hoy); en30.setDate(en30.getDate()+30);
+  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs')||'[]');
+  var pqrsPend = pqrs.filter(function(p){return p.estado==='Pendiente';}).length;
+  var pqrsTotal = pqrs.length;
+  var incs = JSON.parse(localStorage.getItem('normalis_incidentes')||'[]');
+  var incCriticos = incs.filter(function(i){return i.severidad==='critico'&&i.estado!=='Cerrado';});
+  var incAbiertos = incs.filter(function(i){return i.estado==='Abierto';}).length;
+  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos')||'[]');
+  var vencidos = docs.filter(function(d){return new Date(d.fecha)<hoy;});
+  var proximos = docs.filter(function(d){var f=new Date(d.fecha);return f>=hoy&&f<=en30;});
+  var simSaved = JSON.parse(localStorage.getItem('normalis_simulacro')||'{}');
+  var simTotal = 27;
+  var simChecked = Object.values(simSaved).filter(Boolean).length;
+  var simPct = Math.round(simChecked/simTotal*100);
+  var pamecFase = parseInt(localStorage.getItem('normalis_pamec_fase')||'1');
+  var pamecProcs = JSON.parse(localStorage.getItem('normalis_pamec_procesos')||'[]');
+  var pamecAcciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones')||'[]');
+  var logs = JSON.parse(localStorage.getItem('normalis_bitacora')||'[]');
+  var ultimaActividad = logs.length > 0 ? new Date(logs[0].ts) : null;
+  var diasSinActividad = ultimaActividad ? Math.round((new Date()-ultimaActividad)/(1000*60*60*24)) : null;
+  var profesionales = JSON.parse(localStorage.getItem('th_profesionales')||'[]');
+  return {
+    pqrs: { total: pqrsTotal, pendientes: pqrsPend },
+    incidentes: { criticos_abiertos: incCriticos.length, abiertos: incAbiertos, detalle: incCriticos.slice(0,3) },
+    vencimientos: { vencidos: vencidos.length, proximos30: proximos.length, detalle_vencidos: vencidos.slice(0,3), detalle_proximos: proximos.slice(0,3) },
+    simulacro: { pct: simPct, completados: simChecked, total: simTotal },
+    pamec: { fase: pamecFase, procesos: pamecProcs.length, acciones: pamecAcciones.length },
+    talento: { profesionales: profesionales.length },
+    actividad: { dias_sin_actividad: diasSinActividad },
+    resumen_riesgo: calcularRiesgoGlobal({ pqrsPend: pqrsPend, incCriticos: incCriticos.length, vencidos: vencidos.length, simPct: simPct, pamecFase: pamecFase })
+  };
+}
+
+function calcularRiesgoGlobal(d) {
+  var score = 100;
+  if (d.incCriticos > 0) score -= d.incCriticos * 15;
+  if (d.vencidos > 0) score -= d.vencidos * 10;
+  if (d.pqrsPend > 3) score -= 10;
+  if (d.simPct < 50) score -= 20;
+  else if (d.simPct < 80) score -= 10;
+  if (d.pamecFase < 2) score -= 10;
+  score = Math.max(0, Math.min(100, score));
+  var nivel = score >= 80 ? 'BAJO' : score >= 60 ? 'MEDIO' : score >= 40 ? 'ALTO' : 'CRITICO';
+  return { score: score, nivel: nivel };
+}
+
+function xaiResponder(pregunta) {
+  var ctx = buildUserContext();
+  var q = pregunta.toLowerCase().trim();
+  var resp = '';
+  if (q.indexOf('visit')>=0 || q.indexOf('secret')>=0 || q.indexOf('habilitac')>=0 || q.indexOf('prepar')>=0 || q.indexOf('listo')>=0 || q.indexOf('lista')>=0) {
+    var riesgo = ctx.resumen_riesgo;
+    var problemas = [];
+    var acciones = [];
+    if (ctx.incidentes.criticos_abiertos > 0) {
+      problemas.push('<li><b>' + ctx.incidentes.criticos_abiertos + ' evento(s) critico(s) abiertos</b></li>');
+      acciones.push('<a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-weight:600">Ir a Incidentes</a>');
+    }
+    if (ctx.vencimientos.vencidos > 0) {
+      var nombres = ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional+' ('+d.tipo+')';}).join(', ');
+      problemas.push('<li><b>' + ctx.vencimientos.vencidos + ' doc(s) VENCIDOS</b>: ' + nombres + '</li>');
+      acciones.push('<a href="#" onclick="nav(\x27vencimientos-personal\x27);return false" style="color:#8b5cf6;font-weight:600">Actualizar docs</a>');
+    }
+    if (ctx.vencimientos.proximos30 > 0) {
+      problemas.push('<li><b>' + ctx.vencimientos.proximos30 + ' doc(s) vencen en 30 dias</b></li>');
+    }
+    if (ctx.simulacro.pct < 80) {
+      problemas.push('<li><b>Simulacro al ' + ctx.simulacro.pct + '%</b> (' + ctx.simulacro.completados + '/' + ctx.simulacro.total + ')</li>');
+      acciones.push('<a href="#" onclick="nav(\x27simulacro\x27);return false" style="color:#f59e0b;font-weight:600">Completar simulacro</a>');
+    }
+    if (ctx.pqrs.pendientes > 3) {
+      problemas.push('<li><b>' + ctx.pqrs.pendientes + ' PQRS pendientes</b></li>');
+      acciones.push('<a href="#" onclick="nav(\x27pqrs\x27);return false" style="color:#6366f1;font-weight:600">Gestionar PQRS</a>');
+    }
+    if (ctx.pamec.fase < 2) {
+      problemas.push('<li><b>PAMEC en fase inicial</b></li>');
+      acciones.push('<a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-weight:600">Avanzar PAMEC</a>');
+    }
+    var scoreColor = riesgo.score>=80?'#10b981':riesgo.score>=60?'#f59e0b':riesgo.score>=40?'#ef4444':'#7f1d1d';
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0">';
+    resp += '<div style="font-size:15px;font-weight:700;margin-bottom:12px">Preparacion: <span style="color:' + scoreColor + '">' + riesgo.score + '% - Riesgo ' + riesgo.nivel + '</span></div>';
+    if (problemas.length === 0) {
+      resp += '<p style="color:#10b981;font-weight:600">Sin riesgos criticos detectados. Estas listo para la visita.</p>';
+    } else {
+      resp += '<div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:6px">EVIDENCIA DE TUS DATOS</div>';
+      resp += '<ul style="margin:0 0 10px;padding-left:18px;font-size:13px">' + problemas.join('') + '</ul>';
+      resp += '<div style="font-size:11px;color:#64748b;margin-bottom:10px">Normativa: Res. 3100/2019 - Res. 465/2025 - Ley 1438/2011</div>';
+      if (acciones.length > 0) {
+        resp += '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px">' + acciones.join('') + '</div>';
+      }
+    }
+    resp += '</div>';
+  } else if (q.indexOf('pqrs')>=0 || q.indexOf('peticion')>=0 || q.indexOf('queja')>=0 || q.indexOf('reclamo')>=0) {
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado de PQRS</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Total: <b>' + ctx.pqrs.total + '</b></li><li>Pendientes: <b style="color:' + (ctx.pqrs.pendientes>0?'#ef4444':'#10b981') + '">' + ctx.pqrs.pendientes + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 2063/2021: max 15 dias habiles.</div>' + (ctx.pqrs.pendientes>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27pqrs\x27);return false" style="color:#6366f1;font-size:13px;font-weight:600">Gestionar PQRS pendientes</a></div>':'') + '</div>';
+  } else if (q.indexOf('incident')>=0 || q.indexOf('evento')>=0 || q.indexOf('adverso')>=0) {
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Incidentes y Eventos Adversos</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Abiertos: <b style="color:' + (ctx.incidentes.abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.abiertos + '</b></li><li>Criticos: <b style="color:' + (ctx.incidentes.criticos_abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.criticos_abiertos + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 1446/2006 y 4816/2008: reporte en max 72h.</div>' + (ctx.incidentes.criticos_abiertos>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-size:13px;font-weight:600">Atender eventos criticos</a></div>':'') + '</div>';
+  } else if (q.indexOf('vencim')>=0 || q.indexOf('tarjeta')>=0 || q.indexOf('certificad')>=0 || q.indexOf('licencia')>=0) {
+    var nomV = ctx.vencimientos.detalle_vencidos.length>0?' ('+ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional;}).join(', ')+')':'';
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Documentos del Personal</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Vencidos: <b style="color:' + (ctx.vencimientos.vencidos>0?'#ef4444':'#10b981') + '">' + ctx.vencimientos.vencidos + '</b>' + nomV + '</li><li>Por vencer 30d: <b style="color:' + (ctx.vencimientos.proximos30>0?'#f59e0b':'#10b981') + '">' + ctx.vencimientos.proximos30 + '</b></li><li>Profesionales: <b>' + ctx.talento.profesionales + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 3100/2019: tarjetas vigentes obligatorias.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27vencimientos-personal\x27);return false" style="color:#8b5cf6;font-size:13px;font-weight:600">Ver vencimientos</a></div></div>';
+  } else if (q.indexOf('pamec')>=0 || q.indexOf('mejora')>=0 || q.indexOf('calidad')>=0) {
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado del PAMEC</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Fase: <b>' + ctx.pamec.fase + ' de 4</b></li><li>Procesos: <b>' + ctx.pamec.procesos + '</b></li><li>Acciones: <b>' + ctx.pamec.acciones + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 1446/2006 y Decreto 1011/2006: PAMEC obligatorio en SOGC.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-size:13px;font-weight:600">Ir al PAMEC</a></div></div>';
+  } else {
+    var r2 = ctx.resumen_riesgo;
+    var cR2 = r2.score>=80?'#10b981':r2.score>=60?'#f59e0b':r2.score>=40?'#ef4444':'#7f1d1d';
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><div style="font-size:14px;font-weight:700;color:'+cR2+';margin-bottom:8px">Riesgo ' + r2.nivel + ' (' + r2.score + '/100)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px"><div>PQRS pend: <b>' + ctx.pqrs.pendientes + '</b></div><div>Inc. criticos: <b>' + ctx.incidentes.criticos_abiertos + '</b></div><div>Docs vencidos: <b>' + ctx.vencimientos.vencidos + '</b></div><div>Vencen 30d: <b>' + ctx.vencimientos.proximos30 + '</b></div><div>Simulacro: <b>' + ctx.simulacro.pct + '%</b></div><div>PAMEC: <b>fase ' + ctx.pamec.fase + '</b></div></div><p style="font-size:12px;color:#64748b;margin:10px 0 0">Preguntame sobre: visita/habilitacion, PQRS, incidentes, vencimientos o PAMEC.</p></div>';
+  }
+  return resp;
+}
+
+window.sendMainChat = function() {
+  var input = document.getElementById('chat-input');
+  if (!input) return;
+  var pregunta = input.value.trim();
+  if (!pregunta) return;
+  input.value = '';
+  var msgs = document.getElementById('chat-msgs');
+  if (!msgs) return;
+  msgs.innerHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:#6366f1;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:13px">'+pregunta+'</div></div>';
+  var tid = 'typing-' + Date.now();
+  msgs.innerHTML += '<div id="'+tid+'" style="display:flex;align-items:center;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="background:#f1f5f9;padding:10px 14px;border-radius:12px;font-size:13px;color:#64748b">Analizando tus datos...</div></div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  setTimeout(function() {
+    var t = document.getElementById(tid);
+    if (t) t.remove();
+    var respuesta = xaiResponder(pregunta);
+    var ts = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    msgs.innerHTML += '<div style="display:flex;align-items:flex-start;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="flex:1">'+respuesta+'<div style="font-size:10px;color:#94a3b8;margin-top:4px">XAI - datos reales - '+ts+'</div></div></div>';
+    msgs.scrollTop = msgs.scrollHeight;
+    if (typeof logAction === 'function') logAction('Sistema','Consulta XAI',pregunta.substring(0,60));
+  }, 800);
+};
+
+window.sendChatQ = function(q) {
+  var inp = document.getElementById('chat-input');
+  if (inp) inp.value = q;
+  window.sendMainChat();
+};
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
