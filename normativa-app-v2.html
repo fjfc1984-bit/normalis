@@ -9618,9 +9618,9 @@ saveCfg = function(data){
 };
 
 // ── Fix data-cfg="director-rm" rendering ─────────────────────────
-const _origRenderCfgExtra = renderCfg;
-if(typeof renderCfg === 'function'){
-  renderCfg = function(cfg){
+const _origRenderCfgExtra = window['renderCfg'];
+if(typeof window['renderCfg'] === 'function'){
+  window['renderCfg'] = function(cfg){
     _origRenderCfgExtra(cfg);
     // director-rm composite field
     const cfg2 = cfg || (typeof _cfg !== 'undefined' ? _cfg : {});
