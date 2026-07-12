@@ -942,6 +942,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
         <button class="btn btn-outline btn-sm" onclick="nav('auditoria')">🔍 Nueva auditoría</button>
         <button class="btn btn-primary btn-sm" onclick="nav('generador')">✨ Generar manual</button>
       </div>
+      <div id="sync-indicator" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin-left:16px;padding:4px 12px;background:#f8fafc;border-radius:20px;border:1px solid #e2e8f0">
+        <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;transition:background 0.3s"></span>
+        <span id="sync-text">Listo</span>
+      </div>
     </div>
     <div class="content" id="main-content" role="main">
 
@@ -12042,6 +12046,128 @@ window.nav = function(sec) {
   if (typeof _prevNavBit === 'function') _prevNavBit(sec);
   if (sec === 'bitacora') { BIT_PAGE = 0; setTimeout(renderBitacora, 100); }
 };
+
+
+// ═══════════════════════════════════════════
+// ESCALABILIDAD — CAPA DE SINCRONIZACIÓN FIRESTORE
+// ═══════════════════════════════════════════
+
+// Claves de localStorage que se sincronizan con Firestore
+var FS_KEYS = [
+  'normalis_pqrs',
+  'normalis_incidentes',
+  'normalis_vencimientos',
+  'normalis_bitacora',
+  'normalis_simulacro',
+  'th_profesionales',
+  'normalis_pamec_autoeval',
+  'normalis_pamec_procesos',
+  'normalis_pamec_acciones',
+  'normalis_pamec_fase',
+  'normalis_consentimientos',
+  'normalis_versiones',
+  'normalis_cal_eventos',
+  'normalis_roi_data'
+];
+
+var fsSync = {
+  _db: null,
+  _userId: null,
+  _online: true,
+
+  init: function() {
+    try {
+      if (!window.firebase || !firebase.firestore) return;
+      this._db = firebase.firestore();
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          fsSync._userId = user.uid;
+          fsSync.pullAll();
+          logAction('Sistema', 'Datos sincronizados desde la nube', user.email || user.uid);
+        }
+      });
+      // Online/offline detection
+      window.addEventListener('online', function() {
+        fsSync._online = true;
+        fsSync.setSyncStatus('synced');
+        if (fsSync._userId) FS_KEYS.forEach(k => fsSync.push(k));
+      });
+      window.addEventListener('offline', function() {
+        fsSync._online = false;
+        fsSync.setSyncStatus('offline');
+      });
+    } catch(e) {
+      console.warn('[NormaLis] Firestore no disponible:', e.message);
+    }
+  },
+
+  getRef: function(key) {
+    if (!this._db || !this._userId) return null;
+    return this._db.collection('ips').doc(this._userId).collection('data').doc(key);
+  },
+
+  push: function(key) {
+    if (!this._online || !this._userId) return;
+    var ref = this.getRef(key);
+    if (!ref) return;
+    var raw = localStorage.getItem(key);
+    if (!raw) return;
+    this.setSyncStatus('syncing');
+    ref.set({ data: raw, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function() { fsSync.setSyncStatus('synced'); })
+      .catch(function(e) { fsSync.setSyncStatus('error'); console.warn('[fsSync] push error:', e); });
+  },
+
+  pull: function(key) {
+    var ref = this.getRef(key);
+    if (!ref) return Promise.resolve();
+    return ref.get().then(function(doc) {
+      if (doc.exists && doc.data().data) {
+        localStorage.setItem(key, doc.data().data);
+      }
+    }).catch(function(e) { console.warn('[fsSync] pull error:', key, e); });
+  },
+
+  pullAll: function() {
+    if (!this._userId) return;
+    this.setSyncStatus('syncing');
+    Promise.all(FS_KEYS.map(k => this.pull(k)))
+      .then(function() { fsSync.setSyncStatus('synced'); })
+      .catch(function() { fsSync.setSyncStatus('error'); });
+  },
+
+  setSyncStatus: function(status) {
+    var dot = document.getElementById('sync-dot');
+    var text = document.getElementById('sync-text');
+    if (!dot || !text) return;
+    var states = {
+      synced:  { color: '#10b981', label: '☁️ Sincronizado' },
+      syncing: { color: '#f59e0b', label: '⏳ Sincronizando...' },
+      offline: { color: '#94a3b8', label: '📴 Sin conexión' },
+      error:   { color: '#ef4444', label: '⚠️ Error de sync' }
+    };
+    var s = states[status] || states.synced;
+    dot.style.background = s.color;
+    text.textContent = s.label;
+  }
+};
+
+// ── Patch save functions to also push to Firestore ──
+(function patchSaves() {
+  // Helper: after any localStorage.setItem, push to Firestore
+  var origSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value) {
+    origSetItem(key, value);
+    if (FS_KEYS.includes(key)) {
+      setTimeout(function() { fsSync.push(key); }, 0);
+    }
+  };
+})();
+
+// Initialize on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() { fsSync.init(); }, 1500);
+});
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
