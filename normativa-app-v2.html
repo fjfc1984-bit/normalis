@@ -904,6 +904,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
       <div class="sb-item" onclick="nav('pamec')"><span class="icon">🔄</span>PAMEC</div>
       <div class="sb-item" onclick="nav('ips')"><span class="icon">🏥</span>IPS Colombia</div>
       <div class="sb-item" onclick="nav('actividad')"><span class="icon">📊</span>Actividad de Usuarios</div>
+      <div class="sb-section">Novedades 2026</div>
+      <div class="sb-item" onclick="nav('pqrs')"><span class="icon">📮</span>Gestor PQRS</div>
+      <div class="sb-item" onclick="nav('incidentes')"><span class="icon">⚠️</span>Incidentes y Eventos</div>
+      <div class="sb-item" onclick="nav('vencimientos-personal')"><span class="icon">🪪</span>Vencimientos Personal</div>
+      <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
       <div class="sb-item" onclick="openUserMgmt()"><span class="icon">👤</span>Gestión de Perfiles</div>
       <div class="sb-item-settings" onclick="abrirSetup()"><span>⚙️</span> Configuración</div>
     </nav>
@@ -2523,6 +2528,147 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       <button class="btn btn-outline btn-sm" onclick="closeDoc()">Cerrar</button>
       <button class="btn btn-primary btn-sm">📥 Descargar DOCX</button>
     </div>
+  </div>
+</div>
+
+<div class="view" id="view-pqrs">
+  <div style="padding:24px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">📮 Gestor PQRS</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Peticiones, Quejas, Reclamos, Sugerencias y Felicitaciones</p></div>
+      <button onclick="openPQRSForm()" style="background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px">+ Nueva PQRS</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#6366f1" id="pqrs-total">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Total</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#f59e0b" id="pqrs-pendientes">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Pendientes</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#3b82f6" id="pqrs-proceso">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">En Proceso</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#10b981" id="pqrs-cerradas">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Cerradas</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="exportPQRSReport()" style="background:#fff;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">📄 Exportar Informe</button>
+    </div>
+    <div id="pqrs-list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+  <div id="pqrs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:500px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Nueva PQRS</h3>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Tipo</label>
+          <select id="pqrs-tipo" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+            <option>Petición</option><option>Queja</option><option>Reclamo</option><option>Sugerencia</option><option>Felicitación</option>
+          </select></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Nombre del usuario</label>
+          <input id="pqrs-nombre" placeholder="Nombre completo" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box"></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Descripción</label>
+          <textarea id="pqrs-desc" rows="3" placeholder="Describa la situación..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box"></textarea></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Área involucrada</label>
+          <input id="pqrs-area" placeholder="Ej: Consulta externa, Urgencias..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button onclick="closePQRSModal()" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff">Cancelar</button>
+        <button onclick="savePQRS()" style="flex:1;padding:10px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-incidentes">
+  <div style="padding:24px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">⚠️ Incidentes y Eventos Adversos</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Registro y seguimiento según Resolución 1446/2006 y 4816/2008</p></div>
+      <button onclick="openIncidenteForm()" style="background:#ef4444;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px">+ Nuevo Evento</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#ef4444" id="inc-criticos">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Críticos</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#f59e0b" id="inc-moderados">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Moderados</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#3b82f6" id="inc-leves">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Leves</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;text-align:center"><div style="font-size:28px;font-weight:800;color:#10b981" id="inc-cerrados">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Cerrados</div></div>
+    </div>
+    <div id="incidentes-list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+  <div id="incidente-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:520px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Registrar Evento Adverso</h3>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Tipo de evento</label>
+            <select id="inc-tipo" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
+              <option>Caída de paciente</option><option>Error de medicación</option><option>Infección asociada</option><option>Evento quirúrgico</option><option>Fallo de equipo</option><option>Otro</option>
+            </select></div>
+          <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Severidad</label>
+            <select id="inc-severidad" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px">
+              <option value="leve">🔵 Leve</option><option value="moderado">🟡 Moderado</option><option value="critico">🔴 Crítico</option>
+            </select></div>
+        </div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Descripción del evento</label>
+          <textarea id="inc-desc" rows="3" placeholder="Describa qué ocurrió..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;resize:vertical;box-sizing:border-box"></textarea></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Acción correctiva inmediata</label>
+          <input id="inc-accion" placeholder="Acción tomada..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Responsable</label>
+          <input id="inc-responsable" placeholder="Nombre del responsable..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button onclick="closeIncidenteModal()" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff">Cancelar</button>
+        <button onclick="saveIncidente()" style="flex:1;padding:10px;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Registrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-vencimientos-personal">
+  <div style="padding:24px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🪪 Vencimientos de Personal</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Control de tarjetas profesionales, certificados y contratos</p></div>
+      <button onclick="openVencForm()" style="background:#8b5cf6;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px">+ Agregar Documento</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:18px;border:2px solid #ef4444;text-align:center"><div style="font-size:28px;font-weight:800;color:#ef4444" id="venc-vencidos">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Vencidos</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:2px solid #f59e0b;text-align:center"><div style="font-size:28px;font-weight:800;color:#f59e0b" id="venc-proximos">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Próximos 30 días</div></div>
+      <div style="background:#fff;border-radius:12px;padding:18px;border:2px solid #10b981;text-align:center"><div style="font-size:28px;font-weight:800;color:#10b981" id="venc-vigentes">0</div><div style="font-size:12px;color:#64748b;margin-top:4px">Vigentes</div></div>
+    </div>
+    <div id="venc-list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+  <div id="venc-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:460px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Agregar Documento</h3>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Profesional</label>
+          <input id="venc-profesional" placeholder="Nombre completo" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box"></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Tipo de documento</label>
+          <select id="venc-tipo" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+            <option>Tarjeta Profesional</option><option>Certificado RCN</option><option>Soporte Vital BLS/ACLS</option><option>Contrato Laboral</option><option>Carné de Vacunación</option><option>Otro certificado</option>
+          </select></div>
+        <div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Fecha de vencimiento</label>
+          <input type="date" id="venc-fecha" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button onclick="closeVencModal()" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff">Cancelar</button>
+        <button onclick="saveVenc()" style="flex:1;padding:10px;background:#8b5cf6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-simulacro">
+  <div style="padding:24px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🔎 Simulacro Secretaría de Salud</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Lista de verificación para visita de habilitación — Res. 3100/2019 y 465/2025</p></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="resetSimulacro()" style="background:#fff;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">🔄 Reiniciar</button>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:20px;border:1px solid #e2e8f0;margin-bottom:20px;display:flex;align-items:center;gap:24px">
+      <div style="text-align:center">
+        <div style="font-size:42px;font-weight:900;color:#6366f1" id="sim-score">0%</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px" id="sim-counts">0 / 0 criterios</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px" id="sim-status">🔴 Requiere atención</div>
+        <div style="background:#f1f5f9;border-radius:8px;height:10px;overflow:hidden">
+          <div id="sim-bar" style="background:linear-gradient(90deg,#6366f1,#8b5cf6);height:100%;width:0%;transition:width 0.3s"></div>
+        </div>
+      </div>
+    </div>
+    <div id="simulacro-sections" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 </div>
 
