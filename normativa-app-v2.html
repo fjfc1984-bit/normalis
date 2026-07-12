@@ -11594,9 +11594,9 @@ function resetSimulacro() {
 }
 
 // Init new modules on nav
-var _origNav = window.nav;
+var _navWrap2026 = window.nav;
 window.nav = function(sec) {
-  if (typeof _origNav === 'function') _origNav(sec);
+  if (typeof _navWrap2026 === 'function') _navWrap2026(sec);
   if (sec === 'pqrs') { setTimeout(renderPQRS, 100); }
   if (sec === 'incidentes') { setTimeout(renderIncidentes, 100); }
   if (sec === 'vencimientos-personal') { setTimeout(renderVencimientos, 100); }
