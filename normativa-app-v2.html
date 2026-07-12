@@ -11304,6 +11304,305 @@ function authLogout(){
   });
 })();
 
+
+
+// ═══════════════════════════════════════════
+// MÓDULO PQRS
+// ═══════════════════════════════════════════
+function openPQRSForm() {
+  document.getElementById('pqrs-modal').style.display = 'flex';
+}
+function closePQRSModal() {
+  document.getElementById('pqrs-modal').style.display = 'none';
+}
+function savePQRS() {
+  var tipo = document.getElementById('pqrs-tipo').value;
+  var nombre = document.getElementById('pqrs-nombre').value;
+  var desc = document.getElementById('pqrs-desc').value;
+  var area = document.getElementById('pqrs-area').value;
+  if (!nombre || !desc) { alert('Por favor complete nombre y descripción'); return; }
+  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  pqrs.push({ id: Date.now(), tipo, nombre, desc, area, estado: 'Pendiente', fecha: new Date().toLocaleDateString('es-CO') });
+  localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
+  closePQRSModal();
+  renderPQRS();
+  ['pqrs-nombre','pqrs-desc','pqrs-area'].forEach(id => document.getElementById(id).value = '');
+}
+function renderPQRS() {
+  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  var list = document.getElementById('pqrs-list');
+  if (!list) return;
+  var pendientes = pqrs.filter(p => p.estado === 'Pendiente').length;
+  var proceso = pqrs.filter(p => p.estado === 'En Proceso').length;
+  var cerradas = pqrs.filter(p => p.estado === 'Cerrada').length;
+  document.getElementById('pqrs-total').textContent = pqrs.length;
+  document.getElementById('pqrs-pendientes').textContent = pendientes;
+  document.getElementById('pqrs-proceso').textContent = proceso;
+  document.getElementById('pqrs-cerradas').textContent = cerradas;
+  var colors = { 'Petición':'#3b82f6','Queja':'#ef4444','Reclamo':'#f59e0b','Sugerencia':'#8b5cf6','Felicitación':'#10b981' };
+  var estadoColors = { 'Pendiente':'#f59e0b','En Proceso':'#3b82f6','Cerrada':'#10b981' };
+  list.innerHTML = pqrs.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">No hay PQRS registradas. Haga clic en "+ Nueva PQRS"</div>' :
+    pqrs.map((p,i) => `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:flex-start;gap:12px">
+      <div style="background:${colors[p.tipo]||'#64748b'}20;color:${colors[p.tipo]||'#64748b'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">${p.tipo}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${p.nombre}</div>
+        <div style="color:#64748b;font-size:13px;margin:4px 0">${p.desc}</div>
+        <div style="font-size:12px;color:#94a3b8">${p.area ? '📍 '+p.area+' · ' : ''}${p.fecha}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <span style="background:${estadoColors[p.estado]}20;color:${estadoColors[p.estado]};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${p.estado}</span>
+        <select onchange="cambiarEstadoPQRS(${i},this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px">
+          <option>Pendiente</option><option>En Proceso</option><option>Cerrada</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+function cambiarEstadoPQRS(i, estado) {
+  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  pqrs[i].estado = estado;
+  localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
+  renderPQRS();
+}
+function exportPQRSReport() {
+  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  var w = window.open('','_blank');
+  w.document.write('<html><head><title>Informe PQRS</title></head><body style="font-family:Arial;padding:30px">');
+  w.document.write('<h1>Informe de PQRS — ' + new Date().toLocaleDateString('es-CO') + '</h1>');
+  w.document.write('<p>Total: '+pqrs.length+' | Pendientes: '+pqrs.filter(p=>p.estado==='Pendiente').length+' | Cerradas: '+pqrs.filter(p=>p.estado==='Cerrada').length+'</p>');
+  w.document.write('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%"><tr><th>Tipo</th><th>Usuario</th><th>Descripción</th><th>Área</th><th>Estado</th><th>Fecha</th></tr>');
+  pqrs.forEach(p => w.document.write('<tr><td>'+p.tipo+'</td><td>'+p.nombre+'</td><td>'+p.desc+'</td><td>'+p.area+'</td><td>'+p.estado+'</td><td>'+p.fecha+'</td></tr>'));
+  w.document.write('</table></body></html>');
+  w.print();
+}
+
+// ═══════════════════════════════════════════
+// MÓDULO INCIDENTES
+// ═══════════════════════════════════════════
+function openIncidenteForm() {
+  document.getElementById('incidente-modal').style.display = 'flex';
+}
+function closeIncidenteModal() {
+  document.getElementById('incidente-modal').style.display = 'none';
+}
+function saveIncidente() {
+  var tipo = document.getElementById('inc-tipo').value;
+  var severidad = document.getElementById('inc-severidad').value;
+  var desc = document.getElementById('inc-desc').value;
+  var accion = document.getElementById('inc-accion').value;
+  var responsable = document.getElementById('inc-responsable').value;
+  if (!desc) { alert('Por favor describa el evento'); return; }
+  var incs = JSON.parse(localStorage.getItem('normalis_incidentes') || '[]');
+  incs.push({ id: Date.now(), tipo, severidad, desc, accion, responsable, estado: 'Abierto', fecha: new Date().toLocaleDateString('es-CO') });
+  localStorage.setItem('normalis_incidentes', JSON.stringify(incs));
+  closeIncidenteModal();
+  renderIncidentes();
+  ['inc-desc','inc-accion','inc-responsable'].forEach(id => document.getElementById(id).value = '');
+}
+function renderIncidentes() {
+  var incs = JSON.parse(localStorage.getItem('normalis_incidentes') || '[]');
+  var list = document.getElementById('incidentes-list');
+  if (!list) return;
+  document.getElementById('inc-criticos').textContent = incs.filter(i=>i.severidad==='critico').length;
+  document.getElementById('inc-moderados').textContent = incs.filter(i=>i.severidad==='moderado').length;
+  document.getElementById('inc-leves').textContent = incs.filter(i=>i.severidad==='leve').length;
+  document.getElementById('inc-cerrados').textContent = incs.filter(i=>i.estado==='Cerrado').length;
+  var sevColor = { critico:'#ef4444', moderado:'#f59e0b', leve:'#3b82f6' };
+  var sevLabel = { critico:'🔴 Crítico', moderado:'🟡 Moderado', leve:'🔵 Leve' };
+  list.innerHTML = incs.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">No hay eventos registrados.</div>' :
+    incs.map((inc,i) => `<div style="border-left:4px solid ${sevColor[inc.severidad]};border:1px solid #e2e8f0;border-left-width:4px;border-left-color:${sevColor[inc.severidad]};border-radius:10px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span style="background:${sevColor[inc.severidad]}20;color:${sevColor[inc.severidad]};padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">${sevLabel[inc.severidad]}</span>
+            <span style="color:#64748b;font-size:12px">${inc.tipo}</span>
+          </div>
+          <div style="font-size:13px;margin-bottom:4px">${inc.desc}</div>
+          ${inc.accion ? '<div style="font-size:12px;color:#10b981">✅ '+inc.accion+'</div>' : ''}
+          ${inc.responsable ? '<div style="font-size:12px;color:#64748b;margin-top:4px">👤 '+inc.responsable+' · '+inc.fecha+'</div>' : ''}
+        </div>
+        <select onchange="cambiarEstadoInc(${i},this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px">
+          <option ${inc.estado==='Abierto'?'selected':''}>Abierto</option>
+          <option ${inc.estado==='En seguimiento'?'selected':''}>En seguimiento</option>
+          <option ${inc.estado==='Cerrado'?'selected':''}>Cerrado</option>
+        </select>
+      </div>
+    </div>`).join('');
+}
+function cambiarEstadoInc(i, estado) {
+  var incs = JSON.parse(localStorage.getItem('normalis_incidentes') || '[]');
+  incs[i].estado = estado;
+  localStorage.setItem('normalis_incidentes', JSON.stringify(incs));
+  renderIncidentes();
+}
+
+// ═══════════════════════════════════════════
+// MÓDULO VENCIMIENTOS PERSONAL
+// ═══════════════════════════════════════════
+function openVencForm() {
+  document.getElementById('venc-modal').style.display = 'flex';
+}
+function closeVencModal() {
+  document.getElementById('venc-modal').style.display = 'none';
+}
+function saveVenc() {
+  var profesional = document.getElementById('venc-profesional').value;
+  var tipo = document.getElementById('venc-tipo').value;
+  var fecha = document.getElementById('venc-fecha').value;
+  if (!profesional || !fecha) { alert('Complete todos los campos'); return; }
+  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  docs.push({ id: Date.now(), profesional, tipo, fecha });
+  localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
+  closeVencModal();
+  renderVencimientos();
+  document.getElementById('venc-profesional').value = '';
+  document.getElementById('venc-fecha').value = '';
+}
+function renderVencimientos() {
+  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  var list = document.getElementById('venc-list');
+  if (!list) return;
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var en30 = new Date(hoy); en30.setDate(en30.getDate() + 30);
+  var vencidos = docs.filter(d => new Date(d.fecha) < hoy).length;
+  var proximos = docs.filter(d => { var f = new Date(d.fecha); return f >= hoy && f <= en30; }).length;
+  var vigentes = docs.filter(d => new Date(d.fecha) > en30).length;
+  document.getElementById('venc-vencidos').textContent = vencidos;
+  document.getElementById('venc-proximos').textContent = proximos;
+  document.getElementById('venc-vigentes').textContent = vigentes;
+  docs.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+  list.innerHTML = docs.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">No hay documentos registrados.</div>' :
+    docs.map((d,i) => {
+      var f = new Date(d.fecha); f.setHours(0,0,0,0);
+      var dias = Math.round((f - hoy)/(1000*60*60*24));
+      var color = dias < 0 ? '#ef4444' : dias <= 30 ? '#f59e0b' : '#10b981';
+      var label = dias < 0 ? 'VENCIDO hace '+Math.abs(dias)+' días' : dias === 0 ? 'VENCE HOY' : 'Vence en '+dias+' días';
+      return `<div style="border:1px solid ${color}40;border-left:4px solid ${color};border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-weight:600;font-size:14px">${d.profesional}</div>
+          <div style="color:#64748b;font-size:13px">${d.tipo}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px">Vence: ${new Date(d.fecha).toLocaleDateString('es-CO')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span style="background:${color}20;color:${color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${label}</span>
+          <button onclick="eliminarVenc(${i})" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px">🗑️ Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+}
+function eliminarVenc(i) {
+  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  docs.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+  docs.splice(i,1);
+  localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
+  renderVencimientos();
+}
+
+// ═══════════════════════════════════════════
+// MÓDULO SIMULACRO SECRETARÍA
+// ═══════════════════════════════════════════
+var SIMULACRO_CRITERIOS = [
+  { cat:'🏗️ Infraestructura y Dotación', items:[
+    'Las áreas cumplen con metros cuadrados mínimos por servicio habilitado',
+    'Señalización de emergencias, rutas de evacuación y extintores vigentes',
+    'Baños diferenciados para usuarios y personal, con acceso para discapacitados',
+    'Iluminación y ventilación adecuada en todas las áreas',
+    'Equipos biomédicos con mantenimiento preventivo documentado y vigente',
+    'Inventario de dotación actualizado y disponible para verificación'
+  ]},
+  { cat:'👥 Talento Humano', items:[
+    'Hojas de vida del personal con soportes completos y actualizados',
+    'Tarjetas profesionales vigentes de todo el personal asistencial',
+    'Contratos laborales o de prestación de servicios firmados y vigentes',
+    'Certificados de soporte vital (SVB/SVA) vigentes según aplique',
+    'Inducción y reinducción documentada para el personal',
+    'Carné de vacunación del personal asistencial al día'
+  ]},
+  { cat:'📋 Procesos y Procedimientos', items:[
+    'Manual de funciones y procedimientos actualizado y socializado',
+    'Protocolos de atención por servicio habilitado disponibles',
+    'Protocolo de bioseguridad y manejo de residuos hospitalarios',
+    'Consentimientos informados por procedimiento disponibles',
+    'Protocolo de referencia y contrarreferencia establecido',
+    'Guías de práctica clínica adoptadas y disponibles'
+  ]},
+  { cat:'📊 Sistema de Gestión de Calidad', items:[
+    'PAMEC actualizado con autoevaluación del año en curso',
+    'Indicadores de calidad con metas, resultados y análisis',
+    'Plan de mejoramiento vigente con acciones y responsables',
+    'Actas de comités (COPASO, farmacia, infecciones) al día',
+    'Registro de eventos adversos e incidentes documentado',
+    'Sistema de PQRS activo con seguimiento y cierre documentado'
+  ]},
+  { cat:'💊 Medicamentos y Dispositivos', items:[
+    'Botiquín de urgencias completo y con medicamentos vigentes',
+    'Control de temperatura de neveras de medicamentos',
+    'Inventario de medicamentos sin vencidos en stock',
+    'Dispositivos médicos con registro INVIMA vigente',
+    'Programa de gestión de residuos peligrosos activo'
+  ]}
+];
+
+function renderSimulacro() {
+  var container = document.getElementById('simulacro-sections');
+  if (!container) return;
+  var saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
+  var totalItems = 0, checkedItems = 0;
+  container.innerHTML = SIMULACRO_CRITERIOS.map((cat, ci) => {
+    totalItems += cat.items.length;
+    var catChecked = cat.items.filter((item, ii) => saved[ci+'-'+ii]).length;
+    checkedItems += catChecked;
+    return `<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+      <div style="background:#f8fafc;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSimCat(${ci})">
+        <div style="font-weight:700;font-size:14px">${cat.cat}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;color:${catChecked===cat.items.length?'#10b981':'#64748b'}">${catChecked}/${cat.items.length}</span>
+          <span id="sim-arrow-${ci}">▼</span>
+        </div>
+      </div>
+      <div id="sim-cat-${ci}" style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+        ${cat.items.map((item, ii) => `<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px">
+          <input type="checkbox" ${saved[ci+'-'+ii]?'checked':''} onchange="toggleSimItem(${ci},${ii},this.checked)" style="margin-top:2px;width:16px;height:16px;flex-shrink:0">
+          <span style="color:${saved[ci+'-'+ii]?'#10b981':'#374151'}">${item}</span>
+        </label>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  var pct = totalItems ? Math.round(checkedItems/totalItems*100) : 0;
+  document.getElementById('sim-score').textContent = pct + '%';
+  document.getElementById('sim-counts').textContent = checkedItems + ' / ' + totalItems + ' criterios';
+  var status = pct === 100 ? '✅ Listo para visita' : pct >= 80 ? '🟡 Casi listo' : pct >= 50 ? '🟠 En proceso' : '🔴 Requiere atención';
+  document.getElementById('sim-status').textContent = status;
+}
+function toggleSimCat(ci) {
+  var el = document.getElementById('sim-cat-'+ci);
+  var arrow = document.getElementById('sim-arrow-'+ci);
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+  el.style.flexDirection = 'column';
+  arrow.textContent = el.style.display === 'none' ? '▶' : '▼';
+}
+function toggleSimItem(ci, ii, checked) {
+  var saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
+  saved[ci+'-'+ii] = checked;
+  localStorage.setItem('normalis_simulacro', JSON.stringify(saved));
+  renderSimulacro();
+}
+function resetSimulacro() {
+  if (confirm('¿Reiniciar el simulacro? Se borrarán todas las respuestas.')) {
+    localStorage.removeItem('normalis_simulacro');
+    renderSimulacro();
+  }
+}
+
+// Init new modules on nav
+var _origNav = window.nav;
+window.nav = function(sec) {
+  if (typeof _origNav === 'function') _origNav(sec);
+  if (sec === 'pqrs') { setTimeout(renderPQRS, 100); }
+  if (sec === 'incidentes') { setTimeout(renderIncidentes, 100); }
+  if (sec === 'vencimientos-personal') { setTimeout(renderVencimientos, 100); }
+  if (sec === 'simulacro') { setTimeout(renderSimulacro, 100); }
+};
+
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
