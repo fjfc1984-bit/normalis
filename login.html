@@ -42,6 +42,33 @@ body{
 .logo-name span{color:#38bdf8}
 .logo-sub{font-size:13px;color:#64748b;margin-top:4px}
 
+/* ── VALUE PROP ── */
+.logo-value{
+  font-size:13px;color:#94a3b8;margin-top:10px;line-height:1.55;
+  padding:0 4px;
+}
+
+/* ── FEATURES ── */
+.features{
+  display:flex;gap:6px;justify-content:center;flex-wrap:wrap;
+  margin-top:14px;margin-bottom:4px;
+}
+.feat{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(14,165,233,.08);
+  border:1px solid rgba(14,165,233,.15);
+  border-radius:999px;padding:4px 11px;
+  font-size:11px;font-weight:600;color:#7dd3fc;
+}
+
+/* ── SOLICITAR ACCESO ── */
+.request-access{
+  text-align:center;margin-top:14px;
+  font-size:12px;color:#475569;
+}
+.request-access a{color:#38bdf8;text-decoration:none;font-weight:600}
+.request-access a:hover{text-decoration:underline}
+
 /* ── FIELDS ── */
 .field{margin-bottom:18px}
 .field label{
@@ -159,6 +186,13 @@ body{
     <div class="logo-icon">N</div>
     <div class="logo-name">Norma<span>Lis</span></div>
     <div class="logo-sub">Software de Gestión de Calidad para IPS</div>
+    <p class="logo-value">Cumple tu habilitación, gestiona el PAMEC y audita la seguridad del paciente desde un solo lugar — diseñado para IPS en Colombia.</p>
+    <div class="features">
+      <span class="feat">📋 Habilitación</span>
+      <span class="feat">🎯 PAMEC</span>
+      <span class="feat">🛡️ Seguridad del Paciente</span>
+      <span class="feat">📊 Indicadores</span>
+    </div>
   </div>
 
   <!-- Mensajes -->
@@ -201,7 +235,11 @@ body{
     <a href="#" id="link-forgot">¿Olvidaste tu contraseña?</a>
   </div>
 
-  <div class="card-footer">NormaLis · Resolución 3100/2019 + 465/2025</div>
+  <div class="request-access">
+    ¿Tu IPS aún no tiene acceso? <a href="mailto:hola@normalis.co">Solicita el programa piloto</a>
+  </div>
+
+  <div class="card-footer">NormaLis · Res. 3100/2019 &amp; 465/2025 · 🔒 Datos seguros</div>
 </div>
 
 <script>
