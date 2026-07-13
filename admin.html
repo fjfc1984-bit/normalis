@@ -583,6 +583,21 @@
     </div>
   </div>
 
+
+  <!-- ═══════════════ TAB: SOLICITUDES PENDIENTES ═══════════════ -->
+  <div id="tab-solicitudes" class="tab-panel" style="display:none">
+    <div class="section-header">
+      <h2 class="section-title">📝 Solicitudes de Registro Pendientes</h2>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Usuarios que completaron el auto-registro y esperan aprobación.</p>
+    </div>
+    <div id="solicitudes-lista">
+      <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+        <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+        <p>Cargando solicitudes…</p>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- ══════════════════════════════════════════════
@@ -789,6 +804,7 @@ function initApp() {
   escucharProspectos();
   cargarPilotos();
   cargarAnalytics();
+  cargarSolicitudes();
 }
 
 // ──────────────────────────────────────────────
@@ -1358,4 +1374,96 @@ async function cargarAnalytics() {
           <tr>
             <td><strong>${u.nombre||'—'}</strong><div style="font-size:11px;color:var(--text-muted)">${u.cargo||''}</div></td>
             <td style="font-size:12px">${u.email||'—'}</td>
-            <td s
+            <td style="font-size:12px;color:var(--text-muted)">${u.ciudad||'—'}</td>
+            <td><span class="badge badge-blue">${u.rol||'—'}</span></td>
+            <td>${u.activo ? '<span style="color:var(--green)">✅ Activo</span>' : '<span style="color:var(--text-muted)">—</span>'}</td>
+          </tr>`).join('')
+      : '<tr class="empty-row"><td colspan="5">Sin usuarios registrados.</td></tr>';
+
+  } catch(e) {
+    console.error('Analytics error:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
+// SOLICITUDES PENDIENTES
+// ──────────────────────────────────────────────
+function cargarSolicitudes() {
+  db.collection('usuarios').where('rol', '==', 'pendiente')
+    .orderBy('fechaSolicitud', 'desc')
+    .onSnapshot(snap => {
+      const pendientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const badge = document.getElementById('badge-solicitudes');
+      if (badge) badge.textContent = pendientes.length || '';
+      renderSolicitudes(pendientes);
+    }, err => {
+      console.error('Error cargando solicitudes:', err);
+    });
+}
+
+function renderSolicitudes(lista) {
+  const container = document.getElementById('solicitudes-lista');
+  if (!container) return;
+  if (!lista.length) {
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted);"><div style="font-size:40px;margin-bottom:12px">✅</div><p>No hay solicitudes pendientes.</p></div>';
+    return;
+  }
+  let rows = lista.map(u => {
+    const fecha = u.fechaSolicitud ? new Date(u.fechaSolicitud.seconds * 1000).toLocaleDateString('es-CO') : '—';
+    const nombre = (u.nombre || '').replace(/[<>"']/g, '');
+    const contacto = (u.nombreContacto || '').replace(/[<>"']/g, '');
+    const email = (u.email || '').replace(/[<>"']/g, '');
+    const ciudad = (u.ciudad || '').replace(/[<>"']/g, '');
+    const cargo = (u.cargo || '').replace(/[<>"']/g, '');
+    const nit = (u.nit || '').replace(/[<>"']/g, '');
+    return `<tr>
+      <td><strong>${nombre}</strong><div style="font-size:11px;color:var(--text-muted)">${nit}</div></td>
+      <td>${contacto}<div style="font-size:11px;color:var(--text-muted)">${cargo}</div></td>
+      <td style="font-size:12px">${email}</td>
+      <td>${ciudad}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${fecha}</td>
+      <td>
+        <button class="btn btn-success btn-sm" onclick="aprobarUsuario('${u.id}')" style="margin-right:4px">✅ Aprobar</button>
+        <button class="btn btn-danger btn-sm" onclick="rechazarUsuario('${u.id}')">❌ Rechazar</button>
+      </td>
+    </tr>`;
+  }).join('');
+  container.innerHTML = `<div class="table-wrap"><table class="data-table">
+    <thead><tr>
+      <th>IPS / NIT</th><th>Contacto</th><th>Email</th><th>Ciudad</th><th>Fecha solicitud</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+async function aprobarUsuario(uid) {
+  if (!confirm('¿Aprobar a este usuario?')) return;
+  try {
+    await db.collection('usuarios').doc(uid).update({
+      rol: 'cliente',
+      activo: true,
+      estado: 'aprobado',
+      fechaAprobacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Usuario aprobado ✅', 'success');
+  } catch(e) {
+    showToast('Error al aprobar: ' + e.message, 'error');
+  }
+}
+
+async function rechazarUsuario(uid) {
+  if (!confirm('¿Rechazar esta solicitud?')) return;
+  try {
+    await db.collection('usuarios').doc(uid).update({
+      rol: 'rechazado',
+      estado: 'rechazado'
+    });
+    showToast('Solicitud rechazada', 'warning');
+  } catch(e) {
+    showToast('Error al rechazar: ' + e.message, 'error');
+  }
+}
+
+</script>
+</body>
+</html>
