@@ -12287,12 +12287,12 @@ function xaiResponder(pregunta) {
 }
 
 window.sendMainChat = function() {
-  var input = document.getElementById('chat-input');
+  var input = document.getElementById('main-chat-input');
   if (!input) return;
   var pregunta = input.value.trim();
   if (!pregunta) return;
   input.value = '';
-  var msgs = document.getElementById('chat-msgs');
+  var msgs = document.getElementById('main-chat-msgs');
   if (!msgs) return;
   msgs.innerHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:#6366f1;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:13px">'+pregunta+'</div></div>';
   var tid = 'typing-' + Date.now();
@@ -12310,7 +12310,7 @@ window.sendMainChat = function() {
 };
 
 window.sendChatQ = function(q) {
-  var inp = document.getElementById('chat-input');
+  var inp = document.getElementById('main-chat-input');
   if (inp) inp.value = q;
   window.sendMainChat();
 };
@@ -12375,7 +12375,7 @@ function trackEvent(categoria, accion, valor) {
 (function() {
   var _origChatSuperv = window.sendMainChat;
   window.sendMainChat = function() {
-    var inp = document.getElementById('chat-input');
+    var inp = document.getElementById('main-chat-input');
     if (inp && inp.value.trim()) trackEvent('xai', 'consulta', inp.value.trim().substring(0, 60));
     if (typeof _origChatSuperv === 'function') _origChatSuperv();
   };
@@ -12498,9 +12498,9 @@ function iniciarAhaMoment(nombreIPS) {
   document.body.appendChild(toast);
   setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500); }, 3500);
   setTimeout(function() {
-    try { nav('ia'); } catch(e) {}
+    try { nav('chat'); } catch(e) {}
     setTimeout(function() {
-      var inp = document.getElementById('chat-input');
+      var inp = document.getElementById('main-chat-input');
       if (inp) {
         inp.value = 'Analiza mi estado normativo y dime que riesgos tengo antes de una visita de la Secretaria';
         if (typeof sendMainChat === 'function') sendMainChat();
