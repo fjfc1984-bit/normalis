@@ -6105,7 +6105,7 @@ function printDoc() {
   </div>
 </div>
 
-</body></html>`);
+<script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),300);
 }
@@ -6308,7 +6308,7 @@ function printAuditReport(){
   </div>
   <div class="footer">NormaLis · Copiloto de Habilitación Normativa · ${hoy} · Este informe es de uso interno y orientativo. No reemplaza la visita oficial de habilitación por la Secretaría de Salud.</div>
   
-</body></html>`);
+<script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),400);
 }
@@ -6673,7 +6673,7 @@ function exportActividadPDF(){
     return '<tr><td>'+dt.toLocaleString('es-CO')+'</td>'+(isDir?'<td>'+(l.userName||'')+'</td>':'')+'<td>'+(ACT_LABELS[l.action]||l.action)+'</td><td>'+(l.module||'')+'</td><td>'+(l.detail||'')+'</td></tr>';
   }).join('')}</tbody></table>
   
-</body></html>`);
+<script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>`);
   w.document.close(); setTimeout(()=>w.print(),400);
 }
 
@@ -8232,7 +8232,7 @@ function aePrintReport(){
   <hr>
   <p><strong>No conformidades críticas:</strong> ${snap.criticas||0} &nbsp;&nbsp; <strong>Moderadas:</strong> ${snap.moderadas||0}</p>
   <p style="font-size:11px;color:#64748b;margin-top:32px">Documento generado por NormaLis · Herramienta de habilitación en salud · Colombia</p>
-  </body></html>`);
+  <script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>`);
   w.document.close();
   w.print();
 }
@@ -11602,7 +11602,7 @@ function exportPQRSReport() {
   w.document.write('<p>Total: '+pqrs.length+' | Pendientes: '+pqrs.filter(p=>p.estado==='Pendiente').length+' | Cerradas: '+pqrs.filter(p=>p.estado==='Cerrada').length+'</p>');
   w.document.write('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%"><tr><th>Tipo</th><th>Usuario</th><th>Descripción</th><th>Área</th><th>Estado</th><th>Fecha</th></tr>');
   pqrs.forEach(p => w.document.write('<tr><td>'+p.tipo+'</td><td>'+p.nombre+'</td><td>'+p.desc+'</td><td>'+p.area+'</td><td>'+p.estado+'</td><td>'+p.fecha+'</td></tr>'));
-  w.document.write('</table></body></html>');
+  w.document.write('</table><script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>');
   w.print();
 }
 
@@ -11966,7 +11966,7 @@ function exportBitacoraPDF() {
   logs.forEach(l => {
     w.document.write('<tr><td>' + new Date(l.ts).toLocaleString('es-CO') + '</td><td>' + l.usuario + '</td><td>' + l.modulo + '</td><td>' + l.accion + '</td><td>' + l.detalle + '</td></tr>');
   });
-  w.document.write('</table></body></html>');
+  w.document.write('</table><script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script></body></html>');
   w.print();
   logAction('Sistema', 'Exportó bitácora PDF', logs.length + ' registros');
 }
