@@ -708,6 +708,75 @@
   </div>
 </div>
 
+<!-- LEAD MAGNET -->
+<section style="padding:4.5rem 1.5rem;background:linear-gradient(135deg,#1a237e 0%,#1565c0 100%);text-align:center" id="checklist">
+  <div style="max-width:700px;margin:0 auto">
+    <div style="display:inline-block;background:rgba(255,255,255,.15);color:#fff;font-size:.85rem;font-weight:600;padding:.4rem 1rem;border-radius:999px;margin-bottom:1.2rem;letter-spacing:.04em">
+      📥 DESCARGA GRATUITA
+    </div>
+    <h2 style="color:#fff;font-size:1.9rem;margin-bottom:.8rem;line-height:1.25">
+      Checklist de Autoevaluación<br><em style="color:#90caf9">Resolución 3100 — 57 criterios</em>
+    </h2>
+    <p style="color:#bbdefb;font-size:1rem;margin-bottom:2rem;line-height:1.6">
+      Evalúa el estado real de tu IPS antes de la visita de habilitación. 9 áreas normativas, puntaje de cumplimiento y plan de acción. Listo para imprimir.
+    </p>
+    <div id="lm-form" style="background:rgba(255,255,255,.1);border-radius:16px;padding:2rem;backdrop-filter:blur(8px)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem">
+        <input id="lm-nombre" type="text" placeholder="Tu nombre" style="padding:.75rem 1rem;border-radius:8px;border:none;font-size:.95rem;width:100%;box-sizing:border-box">
+        <input id="lm-ips" type="text" placeholder="Nombre de tu IPS" style="padding:.75rem 1rem;border-radius:8px;border:none;font-size:.95rem;width:100%;box-sizing:border-box">
+      </div>
+      <input id="lm-email" type="email" placeholder="tu@email.com" style="padding:.75rem 1rem;border-radius:8px;border:none;font-size:.95rem;width:100%;box-sizing:border-box;margin-bottom:1rem">
+      <button onclick="downloadChecklist()" style="width:100%;padding:.9rem;background:#fff;color:#1a237e;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+        📄 Descargar Checklist Gratuito
+      </button>
+      <p style="color:rgba(255,255,255,.6);font-size:.78rem;margin-top:.8rem">Sin spam. Solo recibirás actualizaciones normativas relevantes.</p>
+    </div>
+    <div id="lm-success" style="display:none;background:rgba(255,255,255,.15);border-radius:16px;padding:2rem">
+      <div style="font-size:3rem;margin-bottom:.5rem">✅</div>
+      <h3 style="color:#fff;margin-bottom:.5rem">¡Listo! Tu checklist está disponible</h3>
+      <p style="color:#bbdefb;margin-bottom:1.2rem">Hemos registrado tu solicitud. Haz clic para descargar:</p>
+      <a id="lm-download-link" href="checklist-resolucion-3100.pdf" download style="display:inline-block;background:#fff;color:#1a237e;padding:.8rem 2rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:1rem">
+        ⬇️ Descargar PDF
+      </a>
+    </div>
+  </div>
+</section>
+<script>
+function downloadChecklist() {
+  var nombre = document.getElementById('lm-nombre').value.trim();
+  var email  = document.getElementById('lm-email').value.trim();
+  var ips    = document.getElementById('lm-ips').value.trim();
+  if (!nombre || !email || !ips) {
+    alert('Por favor completa todos los campos para descargar el checklist.');
+    return;
+  }
+  if (!/^[^@]+@[^@]+.[^@]+$/.test(email)) {
+    alert('Ingresa un email válido.');
+    return;
+  }
+  // Save lead to localStorage
+  try {
+    var leads = JSON.parse(localStorage.getItem('normalis_leads') || '[]');
+    leads.push({nombre, email, ips, fecha: new Date().toISOString()});
+    localStorage.setItem('normalis_leads', JSON.stringify(leads));
+  } catch(e) {}
+  // Send via EmailJS if available
+  if (typeof emailjs !== 'undefined') {
+    emailjs.send('normalis_service', 'normalis_lead', {nombre, email, ips, tipo: 'checklist'}).catch(function(){});
+  }
+  // Show success
+  document.getElementById('lm-form').style.display = 'none';
+  document.getElementById('lm-success').style.display = 'block';
+  // Also trigger download immediately
+  setTimeout(function() {
+    var a = document.createElement('a');
+    a.href = 'checklist-resolucion-3100.pdf';
+    a.download = 'Checklist-Resolucion-3100-NormaLis.pdf';
+    a.click();
+  }, 500);
+}
+</script>
+
 <!-- IA SECTION -->
 <section style="padding:4rem 1.5rem;background:#f0f4ff;text-align:center">
   <div style="max-width:900px;margin:0 auto">
