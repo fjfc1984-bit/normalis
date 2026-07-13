@@ -600,72 +600,128 @@
 
 <!-- PRICING -->
 <div style="padding:80px 5%;background:var(--dark2)" id="precios">
-  <div style="max-width:1000px;margin:0 auto">
+  <div style="max-width:1100px;margin:0 auto">
     <div class="section-label">Precios</div>
     <h2 class="section-title">Precios transparentes para IPS en Colombia</h2>
-    <p class="section-sub">Cancela cuando quieras. Sin contratos anuales.</p>
-    <div class="pricing-grid">
+    <p class="section-sub">Cancela cuando quieras. Sin letra pequeña. Todos los planes incluyen acceso a la plataforma desde el primer día.</p>
 
-      <div class="pricing-card">
-        <div class="plan-name">Básico</div>
-        <div class="plan-price">$29.000<span>/mes</span></div>
-        <div class="plan-desc">Para consultorios y IPS de una sola sede que están comenzando su proceso de habilitación.</div>
-        <ul class="plan-features">
-          <li>Auditoría interna completa (559 criterios)</li>
-          <li>Generador de 6 documentos normativos</li>
-          <li>Control de vencimientos (hasta 5 profesionales)</li>
-          <li>Calendario normativo</li>
-          <li>Chat IA normativo</li>
-          <li class="no">Multi-sede</li>
-          <li class="no">Panel consultor</li>
-          <li class="no">Reportes automáticos por email</li>
+    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:2.5rem">
+      <span style="color:var(--text2);font-size:.9rem">Mensual</span>
+      <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer">
+        <input type="checkbox" id="billing-toggle" style="opacity:0;width:0;height:0" onchange="toggleBilling()">
+        <span style="position:absolute;inset:0;background:#334;border-radius:999px;transition:.3s" id="toggle-bg"></span>
+        <span id="toggle-knob" style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s"></span>
+      </label>
+      <span style="color:var(--text2);font-size:.9rem">Anual <span style="background:#10b981;color:#fff;font-size:.7rem;padding:.2rem .5rem;border-radius:999px;margin-left:.3rem">2 meses gratis</span></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.2rem">
+
+      <!-- BÁSICO -->
+      <div style="background:var(--card);border-radius:16px;padding:1.8rem;border:1px solid var(--border)">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text2);letter-spacing:.08em;margin-bottom:.8rem">BÁSICO</div>
+        <div style="margin-bottom:1.2rem">
+          <span class="price-monthly" style="font-size:2.2rem;font-weight:800;color:var(--text1)">$199K</span>
+          <span class="price-annual" style="font-size:2.2rem;font-weight:800;color:var(--text1);display:none">$166K</span>
+          <span style="color:var(--text2);font-size:.85rem"> COP/mes</span>
+        </div>
+        <p style="color:var(--text2);font-size:.85rem;margin-bottom:1.2rem">Para consultorios y clínicas de un solo servicio.</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.6rem">
+          <li style="font-size:.85rem;color:var(--text2)">✅ 1 sede · 2 usuarios</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Auditoría Res. 3100 básica</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Generador de documentos (5 plantillas)</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Calendario de vencimientos</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Dashboard de cumplimiento</li>
+          <li style="font-size:.85rem;color:var(--text2)">🤖 Consultor IA (10 consultas/mes)</li>
+          <li style="font-size:.85rem;color:#666">❌ PAMEC completo</li>
+          <li style="font-size:.85rem;color:#666">❌ Firma digital</li>
         </ul>
-        <button class="btn-plan btn-plan-outline" onclick="irAPlan(STRIPE_LINK_BASICO,'Plan Básico $29.000/mes')">💳 Suscribirme — $29.000/mes</button>
-        <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px">✅ 14 días gratis · Sin tarjeta para empezar</p>
+        <a href="#" onclick="openModal()" style="display:block;text-align:center;padding:.75rem;border:1px solid var(--accent);color:var(--accent);border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none">Comenzar gratis</a>
       </div>
 
-      <div class="pricing-card popular">
-        <div class="popular-badge">⭐ Más popular</div>
-        <div class="plan-name">Pro</div>
-        <div class="plan-price">$79.000<span>/mes</span></div>
-        <div class="plan-desc">Para IPS establecidas que necesitan control total de cumplimiento y automatización de alertas.</div>
-        <ul class="plan-features">
-          <li>Todo lo del plan Básico</li>
-          <li>Profesionales ilimitados</li>
-          <li>Automatismos (reportes semanales, alertas email)</li>
-          <li>PAMEC e indicadores de calidad</li>
-          <li>Auditoría Externa (simulacro de visita)</li>
-          <li>Consentimientos informados</li>
-          <li>Firma digital con historial de versiones</li>
-          <li>Soporte prioritario</li>
+      <!-- PROFESIONAL (DESTACADO) -->
+      <div style="background:var(--accent);border-radius:16px;padding:1.8rem;position:relative;transform:scale(1.03);box-shadow:0 8px 32px rgba(99,102,241,.35)">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#fff;font-size:.72rem;font-weight:700;padding:.3rem .9rem;border-radius:999px;letter-spacing:.06em;white-space:nowrap">⭐ MÁS POPULAR</div>
+        <div style="font-size:.8rem;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.08em;margin-bottom:.8rem">PROFESIONAL</div>
+        <div style="margin-bottom:1.2rem">
+          <span class="price-monthly" style="font-size:2.2rem;font-weight:800;color:#fff">$499K</span>
+          <span class="price-annual" style="font-size:2.2rem;font-weight:800;color:#fff;display:none">$416K</span>
+          <span style="color:rgba(255,255,255,.7);font-size:.85rem"> COP/mes</span>
+        </div>
+        <p style="color:rgba(255,255,255,.8);font-size:.85rem;margin-bottom:1.2rem">Para IPS con equipo de calidad activo.</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.6rem">
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ 1 sede · 5 usuarios</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ Auditoría Res. 3100 completa</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ PAMEC completo + indicadores</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ Generador (todas las plantillas)</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ Firma digital + versiones</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ CAPAs con seguimiento</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">✅ Exportación PDF de informes</li>
+          <li style="font-size:.85rem;color:rgba(255,255,255,.9)">🤖 Consultor IA ilimitado</li>
         </ul>
-        <button class="btn-plan btn-plan-primary" onclick="irAPlan(STRIPE_LINK_PRO,'Plan Pro $79.000/mes')">💳 Suscribirme — $79.000/mes</button>
-        <p style="text-align:center;font-size:11px;color:rgba(255,255,255,.6);margin-top:10px">✅ 14 días gratis · Sin tarjeta para empezar</p>
+        <a href="#" onclick="openModal()" style="display:block;text-align:center;padding:.75rem;background:#fff;color:var(--accent);border-radius:8px;font-weight:700;font-size:.9rem;text-decoration:none">Comenzar gratis</a>
       </div>
 
-      <div class="pricing-card">
-        <div class="plan-name">Consultor</div>
-        <div class="plan-price">$149.000<span>/mes</span></div>
-        <div class="plan-desc">Para consultores externos que gestionan múltiples IPS y necesitan un panel de control centralizado.</div>
-        <ul class="plan-features">
-          <li>Todo lo del plan Pro</li>
-          <li>Gestión multi-sede</li>
-          <li>Panel de clientes IPS/EPS</li>
-          <li>Generador de informes ejecutivos CSV/PDF</li>
-          <li>Comparador de cumplimiento entre sedes</li>
-          <li>Marca blanca disponible</li>
-          <li>Soporte dedicado</li>
+      <!-- INSTITUCIONAL -->
+      <div style="background:var(--card);border-radius:16px;padding:1.8rem;border:1px solid var(--border)">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text2);letter-spacing:.08em;margin-bottom:.8rem">INSTITUCIONAL</div>
+        <div style="margin-bottom:1.2rem">
+          <span class="price-monthly" style="font-size:2.2rem;font-weight:800;color:var(--text1)">$999K</span>
+          <span class="price-annual" style="font-size:2.2rem;font-weight:800;color:var(--text1);display:none">$832K</span>
+          <span style="color:var(--text2);font-size:.85rem"> COP/mes</span>
+        </div>
+        <p style="color:var(--text2);font-size:.85rem;margin-bottom:1.2rem">Para IPS medianas con varias sedes.</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.6rem">
+          <li style="font-size:.85rem;color:var(--text2)">✅ Hasta 3 sedes · 15 usuarios</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Todo el plan Profesional</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Multi-sede incluida</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Panel de Consultor Externo</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Bitácora de Gobernanza</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Informes ejecutivos automáticos</li>
+          <li style="font-size:.85rem;color:var(--text2)">🤖 Predicción de riesgo IA</li>
+          <li style="font-size:.85rem;color:var(--text2)">📞 Soporte prioritario + videollamada</li>
         </ul>
-        <button class="btn-plan btn-plan-outline" onclick="irAPlan(STRIPE_LINK_CONSULTOR,'Plan Consultor $149.000/mes')">💳 Suscribirme — $149.000/mes</button>
-        <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:10px">✅ 14 días gratis · Soporte dedicado</p>
+        <a href="#" onclick="openModal()" style="display:block;text-align:center;padding:.75rem;border:1px solid var(--accent);color:var(--accent);border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none">Comenzar gratis</a>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div style="background:var(--card);border-radius:16px;padding:1.8rem;border:1px solid var(--border)">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text2);letter-spacing:.08em;margin-bottom:.8rem">ENTERPRISE</div>
+        <div style="margin-bottom:1.2rem">
+          <span style="font-size:1.8rem;font-weight:800;color:var(--text1)">A medida</span>
+        </div>
+        <p style="color:var(--text2);font-size:.85rem;margin-bottom:1.2rem">Redes de IPS, grupos hospitalarios y consultoras.</p>
+        <ul style="list-style:none;padding:0;margin:0 0 1.5rem;display:flex;flex-direction:column;gap:.6rem">
+          <li style="font-size:.85rem;color:var(--text2)">✅ Sedes y usuarios ilimitados</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Todo el plan Institucional</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ API e integraciones personalizadas</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ White-label opcional</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ SLA 99.5% de disponibilidad</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Gerente de cuenta dedicado</li>
+          <li style="font-size:.85rem;color:var(--text2)">✅ Onboarding en sitio</li>
+          <li style="font-size:.85rem;color:var(--text2)">🤖 Toda la IA incluida</li>
+        </ul>
+        <a href="#" onclick="openModal()" style="display:block;text-align:center;padding:.75rem;background:var(--accent);color:#fff;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none">Hablar con ventas</a>
       </div>
 
     </div>
-    <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-top:28px">
-      💳 Pago con tarjeta, PSE o Nequi vía Stripe · 🔒 Pagos cifrados y seguros · ✅ Cancela en cualquier momento
+
+    <p style="text-align:center;color:var(--text2);font-size:.85rem;margin-top:2rem">
+      💳 Sin tarjeta de crédito para la prueba gratuita · Cancela cuando quieras · Precios en COP + IVA
     </p>
   </div>
 </div>
+<script>
+function toggleBilling() {
+  var annual = document.getElementById('billing-toggle').checked;
+  document.querySelectorAll('.price-monthly').forEach(function(el){ el.style.display = annual ? 'none' : ''; });
+  document.querySelectorAll('.price-annual').forEach(function(el){ el.style.display = annual ? '' : 'none'; });
+  var bg = document.getElementById('toggle-bg');
+  var knob = document.getElementById('toggle-knob');
+  if (bg) bg.style.background = annual ? 'var(--accent)' : '#334';
+  if (knob) knob.style.left = annual ? '25px' : '3px';
+}
+</script>
 
 <!-- TESTIMONIALS -->
 <div style="padding:80px 5%;max-width:1100px;margin:0 auto">
