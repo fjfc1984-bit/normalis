@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NormaLis Admin — Panel de Administrador</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+  :root {
+    --primary: #0ea5e9;
+    --primary-dark: #0284c7;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #475569;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --purple: #a855f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* AUTH SCREEN */
+  #auth-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; flex-direction: column; gap: 16px;
+  }
+  #auth-screen .logo { font-size: 28px; font-weight: 800; color: var(--primary); }
+  #auth-screen .subtitle { color: var(--text-muted); margin-bottom: 8px; }
+  .auth-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 32px; width: 360px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .auth-box h2 { font-size: 18px; }
+  .auth-error { color: var(--red); font-size: 13px; display: none; }
+
+  /* TOP BAR */
+  #topbar {
+    display: none; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 56px; align-items: center; justify-content: space-between;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .logo-text { font-weight: 800; font-size: 18px; color: var(--primary); }
+  .admin-badge {
+    background: var(--purple); color: white; font-size: 10px;
+    font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 1px;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-user { color: var(--text-muted); font-size: 13px; }
+  .btn-logout {
+    background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* TAB NAV */
+  #tab-nav {
+    display: none; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .tab-nav-inner { display: flex; gap: 0; }
+  .tab-btn {
+    background: none; border: none; color: var(--text-muted); padding: 14px 20px;
+    cursor: pointer; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-badge {
+    background: var(--primary); color: white; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px; margin-left: 6px;
+  }
+
+  /* MAIN */
+  #main { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* COMMON COMPONENTS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+  }
+  .section-title { font-size: 20px; font-weight: 700; }
+  .section-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+    border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { background: #16a34a; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* INPUTS */
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 13px;
+    outline: none; transition: border 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 28px; font-weight: 700; }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); }
+  .kpi-green .kpi-value { color: var(--green); }
+  .kpi-amber .kpi-value { color: var(--amber); }
+  .kpi-blue .kpi-value { color: var(--primary); }
+  .kpi-purple .kpi-value { color: var(--purple); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 12px; font-size: 11px;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(71,85,105,0.4); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  tr:last-child td { border-bottom: none; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-blue { background: rgba(14,165,233,0.15); color: var(--primary); }
+  .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .badge-gray { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+  /* SEMAFORO */
+  .semaforo { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: var(--green); }
+  .dot-amber { background: var(--amber); }
+  .dot-red { background: var(--red); }
+
+  /* SEARCH / FILTER BAR */
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-bar input, .filter-bar select {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 12px; border-radius: 6px; font-size: 13px; outline: none;
+  }
+  .filter-bar input { min-width: 220px; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary); }
+
+  /* SCORE PILL */
+  .score-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+  }
+  .score-a { background: rgba(34,197,94,0.2); color: var(--green); }
+  .score-b { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .score-c { background: rgba(148,163,184,0.2); color: var(--text-muted); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    width: 90%; max-width: 680px; max-height: 90vh; overflow-y: auto;
+    padding: 28px;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+  .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; background: none; border: none; color: var(--text-muted); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+  .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .alert-info { background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); color: #7dd3fc; }
+
+  /* LOADING */
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid var(--border);
+    border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-row td { text-align: center; padding: 32px; color: var(--text-muted); }
+  .empty-row td { text-align: center; padding: 32px; color: var(--text-muted); }
+
+  /* PROGRESO */
+  .progress-bar-wrap { background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; background: var(--primary); transition: width 0.5s; }
+
+  /* PILOTO CARD */
+  .piloto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .piloto-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px;
+  }
+  .piloto-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .piloto-name { font-weight: 600; font-size: 15px; }
+  .piloto-ciudad { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+  .piloto-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .piloto-metric { background: var(--bg); border-radius: 6px; padding: 8px 10px; }
+  .piloto-metric-label { font-size: 10px; color: var(--text-muted); }
+  .piloto-metric-value { font-size: 16px; font-weight: 700; color: var(--primary); }
+  .piloto-week { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .piloto-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+  /* TIMELINE */
+  .timeline { display: flex; gap: 0; align-items: center; margin: 12px 0; }
+  .timeline-step {
+    flex: 1; text-align: center; position: relative;
+  }
+  .timeline-step::before {
+    content: ''; position: absolute; top: 10px; left: 50%; right: -50%;
+    height: 2px; background: var(--border); z-index: 0;
+  }
+  .timeline-step:last-child::before { display: none; }
+  .timeline-dot {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border);
+    background: var(--bg); display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; position: relative; z-index: 1;
+  }
+  .timeline-dot.done { background: var(--green); border-color: var(--green); color: white; }
+  .timeline-dot.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .timeline-label { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="logo">NormaLis</div>
+  <div class="subtitle">Panel de Administrador</div>
+  <div class="auth-box">
+    <h2>Acceso restringido</h2>
+    <p style="color:var(--text-muted);font-size:13px;">Solo para el administrador de NormaLis.</p>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" id="auth-email" class="form-input" placeholder="fjfc1984@gmail.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input type="password" id="auth-password" class="form-input" placeholder="••••••••" />
+    </div>
+    <p class="auth-error" id="auth-error">❌ Credenciales inválidas o sin permiso de administrador.</p>
+    <button class="btn btn-primary" id="btn-login" onclick="doLogin()" style="width:100%;justify-content:center;">
+      Ingresar
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TOP BAR
+══════════════════════════════════════════════ -->
+<div id="topbar">
+  <div class="topbar-left">
+    <span class="logo-text">NormaLis</span>
+    <span class="admin-badge">ADMIN</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="topbar-user-email"></span>
+    <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB NAV
+══════════════════════════════════════════════ -->
+<div id="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('crm')">
+      📋 CRM Prospectos <span class="tab-badge" id="badge-crm">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('nueva-ips')">
+      ➕ Nueva IPS
+    </button>
+    <button class="tab-btn" onclick="switchTab('pilotos')">
+      🚀 Pilotos <span class="tab-badge" id="badge-pilotos">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('analytics')">
+      📊 Analytics
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════ -->
+<div id="main">
+
+  <!-- ─── TAB: CRM PROSPECTOS ─── -->
+  <div class="tab-panel active" id="tab-crm">
+    <div class="section-header">
+      <div>
+        <div class="section-title">CRM de Prospectos</div>
+        <div class="section-sub">Gestión de IPS candidatas al programa piloto</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModalProspecto()">+ Agregar prospecto</button>
+    </div>
+
+    <div class="kpi-grid" id="crm-kpis">
+      <div class="kpi-card kpi-blue"><div class="kpi-label">Total prospectos</div><div class="kpi-value" id="kpi-total">—</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-label">Categoría A</div><div class="kpi-value" id="kpi-catA">—</div></div>
+      <div class="kpi-card kpi-amber"><div class="kpi-label">En contacto</div><div class="kpi-value" id="kpi-contacto">—</div></div>
+      <div class="kpi-card kpi-purple"><div class="kpi-label">Demo agendada</div><div class="kpi-value" id="kpi-demo">—</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-label">→ Piloto</div><div class="kpi-value" id="kpi-piloto">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <input type="text" id="crm-search" placeholder="🔍 Buscar por nombre, ciudad…" oninput="renderCRM()">
+        <select id="crm-filter-estado" onchange="renderCRM()">
+          <option value="">Todos los estados</option>
+          <option>Por contactar</option>
+          <option>Contactado</option>
+          <option>Demo agendada</option>
+          <option>Demo realizada</option>
+          <option>Propuesta enviada</option>
+          <option>Piloto iniciado</option>
+          <option>Descartado</option>
+        </select>
+        <select id="crm-filter-cat" onchange="renderCRM()">
+          <option value="">Todas las categorías</option>
+          <option>A-Prioritario</option>
+          <option>B-Seguimiento</option>
+          <option>C-Radar</option>
+        </select>
+        <select id="crm-filter-ciudad" onchange="renderCRM()">
+          <option value="">Todas las ciudades</option>
+          <option>Barranquilla</option><option>Bogotá</option><option>Medellín</option>
+          <option>Cali</option><option>Cartagena</option><option>Bucaramanga</option>
+          <option>Pereira</option><option>Manizales</option><option>Santa Marta</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>IPS</th><th>Ciudad</th><th>Contacto</th><th>Canal</th>
+              <th>Score</th><th>Cat.</th><th>Estado</th><th>Último contacto</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="crm-tbody">
+            <tr class="loading-row"><td colspan="9"><div class="spinner"></div> Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB: NUEVA IPS ─── -->
+  <div class="tab-panel" id="tab-nueva-ips">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Configurar Nueva IPS Piloto</div>
+        <div class="section-sub">Crea la cuenta, configura Firestore y envía email de bienvenida automáticamente</div>
+      </div>
+    </div>
+
+    <div id="nueva-ips-alert"></div>
+
+    <div class="card">
+      <div class="card-title">🏥 Datos de la IPS</div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Nombre de la IPS *</label>
+          <input type="text" class="form-input" id="ips-nombre" placeholder="Clínica San Pedro SAS">
+        </div>
+        <div class="form-group">
+          <label class="form-label">NIT *</label>
+          <input type="text" class="form-input" id="ips-nit" placeholder="900123456">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Director/Gerente *</label>
+          <input type="text" class="form-input" id="ips-director" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad *</label>
+          <select class="form-select" id="ips-ciudad">
+            <option value="">Seleccionar…</option>
+            <option>Barranquilla</option><option>Bogotá</option><option>Medellín</option>
+            <option>Cali</option><option>Cartagena</option><option>Bucaramanga</option>
+            <option>Pereira</option><option>Manizales</option><option>Santa Marta</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-input" id="ips-direccion" placeholder="Calle 45 # 12-30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input type="text" class="form-input" id="ips-telefono" placeholder="(605) 3456789">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nivel de atención</label>
+          <select class="form-select" id="ips-nivel">
+            <option>Primario</option><option>Secundario</option><option>Terciario</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plan piloto *</label>
+          <select class="form-select" id="ips-plan">
+            <option value="basico">Básico ($199K/mes)</option>
+            <option value="profesional" selected>Profesional ($499K/mes)</option>
+            <option value="institucional">Institucional ($999K/mes)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 Responsable de Calidad (usuario principal)</div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Nombre completo *</label>
+          <input type="text" class="form-input" id="ips-resp-nombre" placeholder="María García">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cargo *</label>
+          <input type="text" class="form-input" id="ips-resp-cargo" placeholder="Coordinadora de Calidad">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email (será su usuario de acceso) *</label>
+          <input type="email" class="form-input" id="ips-resp-email" placeholder="calidad@ips.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono WhatsApp</label>
+          <input type="text" class="form-input" id="ips-resp-whatsapp" placeholder="+57 300 123 4567">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 Piloto y Onboarding</div>
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label">Fecha inicio piloto *</label>
+          <input type="date" class="form-input" id="ips-fecha-inicio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha fin piloto (8 sem.)</label>
+          <input type="date" class="form-input" id="ips-fecha-fin" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha onboarding *</label>
+          <input type="date" class="form-input" id="ips-fecha-onboarding">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link Google Meet *</label>
+          <input type="text" class="form-input" id="ips-meet" placeholder="https://meet.google.com/xxx-yyy-zzz">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Servicios habilitados</label>
+          <input type="text" class="form-input" id="ips-servicios" placeholder="Consulta externa, Urgencias…">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background:rgba(14,165,233,0.05);border-color:rgba(14,165,233,0.3);">
+      <div class="card-title">⚙️ Lo que se ejecutará automáticamente</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--text-muted);">
+        <div>✅ Crear usuario en Firebase Auth</div>
+        <div>✅ Crear documento /ips/{nit} en Firestore</div>
+        <div>✅ Crear documento /usuarios/{uid}</div>
+        <div>✅ Crear documento /pilotos/{nit}</div>
+        <div>✅ Enviar email de bienvenida (EmailJS)</div>
+        <div>✅ Mostrar recordatorio WhatsApp</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="limpiarFormIPS()">Limpiar</button>
+      <button class="btn btn-primary" id="btn-crear-ips" onclick="crearIPS()">
+        🚀 Crear IPS y enviar bienvenida
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── TAB: PILOTOS ─── -->
+  <div class="tab-panel" id="tab-pilotos">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Dashboard de Pilotos</div>
+        <div class="section-sub">Seguimiento en tiempo real de todas las IPS en programa piloto</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="cargarPilotos()">🔄 Actualizar</button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue"><div class="kpi-label">Pilotos activos</div><div class="kpi-value" id="p-kpi-activos">—</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-label">🟢 Salud verde</div><div class="kpi-value" id="p-kpi-verde">—</div></div>
+      <div class="kpi-card kpi-amber"><div class="kpi-label">🟡 Salud amarilla</div><div class="kpi-value" id="p-kpi-amarillo">—</div></div>
+      <div class="kpi-card kpi-red" style="--red:#ef4444;"><div class="kpi-label">🔴 Salud roja</div><div class="kpi-value" id="p-kpi-rojo" style="color:var(--red)">—</div></div>
+      <div class="kpi-card kpi-purple"><div class="kpi-label">Convertidos a pago</div><div class="kpi-value" id="p-kpi-convertidos">—</div></div>
+    </div>
+
+    <div id="pilotos-grid" class="piloto-grid">
+      <div class="card" style="text-align:center;padding:40px;color:var(--text-muted);">
+        <div class="spinner" style="margin:0 auto 12px"></div>
+        Cargando pilotos…
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TAB: ANALYTICS ─── -->
+  <div class="tab-panel" id="tab-analytics">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Analytics del Negocio</div>
+        <div class="section-sub">Métricas globales de NormaLis</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue"><div class="kpi-label">IPS totales</div><div class="kpi-value" id="a-kpi-ips">—</div></div>
+      <div class="kpi-card kpi-green"><div class="kpi-label">IPS activas (pago)</div><div class="kpi-value" id="a-kpi-pago">—</div></div>
+      <div class="kpi-card kpi-purple"><div class="kpi-label">MRR estimado</div><div class="kpi-value" id="a-kpi-mrr">—</div></div>
+      <div class="kpi-card kpi-amber"><div class="kpi-label">Prospectos activos</div><div class="kpi-value" id="a-kpi-prospectos">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📈 IPS registradas en Firestore</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>IPS</th><th>NIT</th><th>Ciudad</th><th>Plan</th><th>Estado</th><th>Fecha inicio</th></tr>
+          </thead>
+          <tbody id="analytics-ips-tbody">
+            <tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 Usuarios registrados</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Email</th><th>IPS</th><th>Rol</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="analytics-users-tbody">
+            <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════════════
+     MODAL: AGREGAR PROSPECTO
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-prospecto">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-prospecto-title">Agregar prospecto</span>
+      <button class="modal-close" onclick="closeModalProspecto()">✕</button>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Nombre IPS *</label>
+        <input type="text" class="form-input" id="p-nombre" placeholder="Clínica XYZ SAS">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ciudad *</label>
+        <select class="form-select" id="p-ciudad">
+          <option value="">Seleccionar…</option>
+          <option>Barranquilla</option><option>Bogotá</option><option>Medellín</option>
+          <option>Cali</option><option>Cartagena</option><option>Bucaramanga</option>
+          <option>Pereira</option><option>Manizales</option><option>Santa Marta</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del contacto *</label>
+        <input type="text" class="form-input" id="p-contacto" placeholder="Nombre cargo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email del contacto</label>
+        <input type="email" class="form-input" id="p-email" placeholder="contacto@ips.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">WhatsApp</label>
+        <input type="text" class="form-input" id="p-whatsapp" placeholder="+57 300…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Canal de primer contacto</label>
+        <select class="form-select" id="p-canal">
+          <option>LinkedIn</option><option>Email frío</option><option>Referido</option>
+          <option>Evento/Webinar</option><option>Llamada</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="p-estado">
+          <option>Por contactar</option><option>Contactado</option>
+          <option>Demo agendada</option><option>Demo realizada</option>
+          <option>Propuesta enviada</option><option>Piloto iniciado</option>
+          <option>Descartado</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:8px;margin-bottom:4px;font-size:12px;color:var(--text-muted);font-weight:600;">SCORING ICE (Urgencia + Ajuste + Acceso, máx 5 c/u)</div>
+    <div class="form-grid-3">
+      <div class="form-group">
+        <label class="form-label">Urgencia (1-5)</label>
+        <input type="number" class="form-input" id="p-urgencia" min="1" max="5" value="3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ajuste ICP (1-5)</label>
+        <input type="number" class="form-input" id="p-ajuste" min="1" max="5" value="3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Acceso (1-5)</label>
+        <input type="number" class="form-input" id="p-acceso" min="1" max="5" value="3">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea class="form-textarea" id="p-notas" placeholder="Contexto, conversaciones previas, próximos pasos…"></textarea>
+    </div>
+    <div id="modal-prospecto-alert"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModalProspecto()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-prospecto" onclick="guardarProspecto()">💾 Guardar prospecto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL: DETALLE PILOTO
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-piloto-detalle">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-title">
+      <span id="modal-piloto-nombre">IPS Piloto</span>
+      <button class="modal-close" onclick="document.getElementById('modal-piloto-detalle').classList.remove('open')">✕</button>
+    </div>
+    <div id="modal-piloto-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-piloto-detalle').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────
+// FIREBASE CONFIG
+// ──────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+  authDomain: "normalis-5587d.firebaseapp.com",
+  projectId: "normalis-5587d",
+  storageBucket: "normalis-5587d.firebasestorage.app",
+  messagingSenderId: "328915530941",
+  appId: "1:328915530941:web:8e77246bd2e326e115b3d4"
+};
+
+// EmailJS — actualizar con tu service ID y public key
+const EJS_SERVICE = 'normalis_service';
+const EJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY'; // ← pegar desde EmailJS dashboard
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+let db, auth;
+let prospectoEditId = null;
+let prospectosDatos = [];
+
+firebase.initializeApp(FIREBASE_CONFIG);
+db = firebase.firestore();
+auth = firebase.auth();
+emailjs.init(EJS_PUBLIC_KEY);
+
+// Fecha fin auto (inicio + 56 días)
+document.getElementById('ips-fecha-inicio').addEventListener('change', e => {
+  const d = new Date(e.target.value);
+  d.setDate(d.getDate() + 56);
+  document.getElementById('ips-fecha-fin').value = d.toISOString().split('T')[0];
+});
+
+// ──────────────────────────────────────────────
+// AUTH
+// ──────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    showScreen('auth');
+    return;
+  }
+  try {
+    const token = await user.getIdTokenResult();
+    if (!token.claims.superadmin) {
+      await auth.signOut();
+      showAuthError('Tu cuenta no tiene permisos de administrador.');
+      showScreen('auth');
+      return;
+    }
+    document.getElementById('topbar-user-email').textContent = user.email;
+    showScreen('app');
+    initApp();
+  } catch(e) {
+    showAuthError('Error verificando permisos: ' + e.message);
+    showScreen('auth');
+  }
+});
+
+function showScreen(s) {
+  document.getElementById('auth-screen').style.display = s === 'auth' ? 'flex' : 'none';
+  document.getElementById('topbar').style.display = s === 'app' ? 'flex' : 'none';
+  document.getElementById('tab-nav').style.display = s === 'app' ? 'block' : 'none';
+  document.getElementById('main').style.display = s === 'app' ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const btn = document.getElementById('btn-login');
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  if (!email || !pass) return showAuthError('Completa email y contraseña.');
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged se encarga del resto
+  } catch(e) {
+    showAuthError('Email o contraseña incorrectos.');
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+}
+
+document.getElementById('auth-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
+
+async function doLogout() {
+  await auth.signOut();
+}
+
+// ──────────────────────────────────────────────
+// APP INIT — escuchadores Firestore
+// ──────────────────────────────────────────────
+function initApp() {
+  escucharProspectos();
+  cargarPilotos();
+  cargarAnalytics();
+}
+
+// ──────────────────────────────────────────────
+// TAB NAVIGATION
+// ──────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ──────────────────────────────────────────────
+// CRM PROSPECTOS
+// ──────────────────────────────────────────────
+function escucharProspectos() {
+  db.collection('prospectos').orderBy('creado_en', 'desc').onSnapshot(snap => {
+    prospectosDatos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('badge-crm').textContent = prospectosDatos.length;
+    actualizarKPIsCRM();
+    renderCRM();
+  }, err => console.error('CRM listener error:', err));
+}
+
+function actualizarKPIsCRM() {
+  const datos = prospectosDatos;
+  document.getElementById('kpi-total').textContent = datos.length;
+  document.getElementById('kpi-catA').textContent = datos.filter(p => p.categoria === 'A-Prioritario').length;
+  document.getElementById('kpi-contacto').textContent = datos.filter(p => ['Contactado','Demo agendada','Demo realizada'].includes(p.estado)).length;
+  document.getElementById('kpi-demo').textContent = datos.filter(p => p.estado === 'Demo agendada').length;
+  document.getElementById('kpi-piloto').textContent = datos.filter(p => p.estado === 'Piloto iniciado').length;
+}
+
+function renderCRM() {
+  const q = (document.getElementById('crm-search').value||'').toLowerCase();
+  const fe = document.getElementById('crm-filter-estado').value;
+  const fc = document.getElementById('crm-filter-cat').value;
+  const fci = document.getElementById('crm-filter-ciudad').value;
+
+  let datos = prospectosDatos.filter(p => {
+    const matchQ = !q || (p.nombre||'').toLowerCase().includes(q) || (p.ciudad||'').toLowerCase().includes(q) || (p.contacto||'').toLowerCase().includes(q);
+    const matchE = !fe || p.estado === fe;
+    const matchC = !fc || p.categoria === fc;
+    const matchCi = !fci || p.ciudad === fci;
+    return matchQ && matchE && matchC && matchCi;
+  });
+
+  const tbody = document.getElementById('crm-tbody');
+
+  if (!datos.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Sin prospectos para los filtros seleccionados.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = datos.map(p => {
+    const score = (parseInt(p.urgencia||3) + parseInt(p.ajuste||3) + parseInt(p.acceso||3));
+    const cat = score >= 11 ? 'A-Prioritario' : score >= 7 ? 'B-Seguimiento' : 'C-Radar';
+    const catClass = cat.startsWith('A') ? 'score-a' : cat.startsWith('B') ? 'score-b' : 'score-c';
+    const estadoBadge = estadoToBadge(p.estado||'Por contactar');
+    const fecha = p.ultimo_contacto ? new Date(p.ultimo_contacto.toDate ? p.ultimo_contacto.toDate() : p.ultimo_contacto).toLocaleDateString('es-CO') : '—';
+    return `
+      <tr>
+        <td><div style="font-weight:600">${p.nombre||'—'}</div><div style="font-size:11px;color:var(--text-muted)">${p.email||''}</div></td>
+        <td>${p.ciudad||'—'}</td>
+        <td><div>${p.contacto||'—'}</div><div style="font-size:11px;color:var(--text-muted)">${p.whatsapp||''}</div></td>
+        <td>${p.canal||'—'}</td>
+        <td><span class="score-pill ${catClass}">${score}/15</span></td>
+        <td><span class="score-pill ${catClass}">${cat.split('-')[0]}</span></td>
+        <td>
+          <select class="form-select" style="padding:4px 8px;font-size:12px;width:auto"
+            onchange="cambiarEstado('${p.id}', this.value)">
+  ${['Por contactar','Contactado','Demo agendada','Demo realizada','Propuesta enviada','Piloto iniciado','Descartado']
+              .map(e => `<option${p.estado===e?' selected':''}>${e}</option>`).join('')}
+          </select>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted)">${fecha}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="editarProspecto('${p.id}')">✏️</button>
+            <button class="btn btn-primary btn-sm" onclick="pasarAPiloto('${p.id}')" title="Pasar a piloto">🚀</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function estadoToBadge(e) {
+  const map = {
+    'Por contactar': 'badge-gray', 'Contactado': 'badge-blue',
+    'Demo agendada': 'badge-amber', 'Demo realizada': 'badge-purple',
+    'Propuesta enviada': 'badge-amber', 'Piloto iniciado': 'badge-green',
+    'Descartado': 'badge-red'
+  };
+  return `<span class="badge ${map[e]||'badge-gray'}">${e}</span>`;
+}
+
+async function cambiarEstado(id, nuevoEstado) {
+  try {
+    await db.collection('prospectos').doc(id).update({
+      estado: nuevoEstado,
+      ultimo_contacto: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) { console.error(e); }
+}
+
+function openModalProspecto() {
+  prospectoEditId = null;
+  document.getElementById('modal-prospecto-title').textContent = 'Agregar prospecto';
+  ['p-nombre','p-contacto','p-email','p-whatsapp','p-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-ciudad').value = '';
+  document.getElementById('p-canal').value = 'LinkedIn';
+  document.getElementById('p-estado').value = 'Por contactar';
+  document.getElementById('p-urgencia').value = 3;
+  document.getElementById('p-ajuste').value = 3;
+  document.getElementById('p-acceso').value = 3;
+  document.getElementById('modal-prospecto-alert').innerHTML = '';
+  document.getElementById('modal-prospecto').classList.add('open');
+}
+
+function closeModalProspecto() {
+  document.getElementById('modal-prospecto').classList.remove('open');
+}
+
+function editarProspecto(id) {
+  const p = prospectosDatos.find(x => x.id === id);
+  if (!p) return;
+  prospectoEditId = id;
+  document.getElementById('modal-prospecto-title').textContent = 'Editar prospecto';
+  document.getElementById('p-nombre').value = p.nombre||'';
+  document.getElementById('p-ciudad').value = p.ciudad||'';
+  document.getElementById('p-contacto').value = p.contacto||'';
+  document.getElementById('p-email').value = p.email||'';
+  document.getElementById('p-whatsapp').value = p.whatsapp||'';
+  document.getElementById('p-canal').value = p.canal||'LinkedIn';
+  document.getElementById('p-estado').value = p.estado||'Por contactar';
+  document.getElementById('p-urgencia').value = p.urgencia||3;
+  document.getElementById('p-ajuste').value = p.ajuste||3;
+  document.getElementById('p-acceso').value = p.acceso||3;
+  document.getElementById('p-notas').value = p.notas||'';
+  document.getElementById('modal-prospecto-alert').innerHTML = '';
+  document.getElementById('modal-prospecto').classList.add('open');
+}
+
+async function guardarProspecto() {
+  const btn = document.getElementById('btn-guardar-prospecto');
+  const nombre = document.getElementById('p-nombre').value.trim();
+  const ciudad = document.getElementById('p-ciudad').value;
+  const contacto = document.getElementById('p-contacto').value.trim();
+  if (!nombre || !ciudad || !contacto) {
+    showAlert('modal-prospecto-alert', 'error', 'Completa: Nombre IPS, Ciudad y Contacto.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+  const urgencia = parseInt(document.getElementById('p-urgencia').value)||3;
+  const ajuste = parseInt(document.getElementById('p-ajuste').value)||3;
+  const acceso = parseInt(document.getElementById('p-acceso').value)||3;
+  const score = urgencia + ajuste + acceso;
+  const categoria = score >= 11 ? 'A-Prioritario' : score >= 7 ? 'B-Seguimiento' : 'C-Radar';
+  const data = {
+    nombre, ciudad, contacto,
+    email: document.getElementById('p-email').value.trim(),
+    whatsapp: document.getElementById('p-whatsapp').value.trim(),
+    canal: document.getElementById('p-canal').value,
+    estado: document.getElementById('p-estado').value,
+    urgencia, ajuste, acceso, score_total: score, categoria,
+    notas: document.getElementById('p-notas').value.trim(),
+    ultimo_contacto: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    if (prospectoEditId) {
+      await db.collection('prospectos').doc(prospectoEditId).update(data);
+    } else {
+      data.creado_en = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('prospectos').add(data);
+    }
+    closeModalProspecto();
+  } catch(e) {
+    showAlert('modal-prospecto-alert', 'error', 'Error guardando: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar prospecto';
+}
+
+function pasarAPiloto(id) {
+  const p = prospectosDatos.find(x => x.id === id);
+  if (!p) return;
+  // Pre-llenar formulario de nueva IPS
+  switchTab('nueva-ips');
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===1));
+  document.getElementById('ips-nombre').value = p.nombre||'';
+  document.getElementById('ips-ciudad').value = p.ciudad||'';
+  document.getElementById('ips-resp-nombre').value = p.contacto||'';
+  document.getElementById('ips-resp-email').value = p.email||'';
+  document.getElementById('ips-resp-whatsapp').value = p.whatsapp||'';
+  showAlert('nueva-ips-alert','info',`Prospecto "${p.nombre}" cargado. Completa los datos restantes y crea la IPS.`);
+}
+
+// ──────────────────────────────────────────────
+// CREAR IPS
+// ──────────────────────────────────────────────
+async function crearIPS() {
+  const btn = document.getElementById('btn-crear-ips');
+  const datos = {
+    nombre: document.getElementById('ips-nombre').value.trim(),
+    nit: document.getElementById('ips-nit').value.trim(),
+    director: document.getElementById('ips-director').value.trim(),
+    ciudad: document.getElementById('ips-ciudad').value,
+    direccion: document.getElementById('ips-direccion').value.trim(),
+    telefono: document.getElementById('ips-telefono').value.trim(),
+    nivel: document.getElementById('ips-nivel').value,
+    plan: document.getElementById('ips-plan').value,
+    nombre_responsable: document.getElementById('ips-resp-nombre').value.trim(),
+    cargo_responsable: document.getElementById('ips-resp-cargo').value.trim(),
+    email_responsable: document.getElementById('ips-resp-email').value.trim(),
+    whatsapp_responsable: document.getElementById('ips-resp-whatsapp').value.trim(),
+    fecha_inicio: document.getElementById('ips-fecha-inicio').value,
+    fecha_fin: document.getElementById('ips-fecha-fin').value,
+    fecha_onboarding: document.getElementById('ips-fecha-onboarding').value,
+    meet_link: document.getElementById('ips-meet').value.trim(),
+    servicios: document.getElementById('ips-servicios').value.trim(),
+  };
+
+  // Validación
+  const requeridos = ['nombre','nit','director','ciudad','plan','nombre_responsable','cargo_responsable','email_responsable','fecha_inicio','fecha_onboarding','meet_link'];
+  const faltantes = requeridos.filter(k => !datos[k]);
+  if (faltantes.length) {
+    showAlert('nueva-ips-alert','error','Completa los campos obligatorios: ' + faltantes.join(', '));
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creando IPS…';
+  document.getElementById('nueva-ips-alert').innerHTML = '';
+
+  try {
+    // 1. Crear usuario Firebase Auth
+    showAlert('nueva-ips-alert','info','[1/5] Creando cuenta en Firebase Auth…');
+    const userCredential = await auth.createUserWithEmailAndPassword(datos.email_responsable, 'NormaLis2026!');
+    const uid = userCredential.user.uid;
+
+    // 2. Crear documento /ips/{nit}
+    showAlert('nueva-ips-alert','info','[2/5] Creando perfil IPS en Firestore…');
+    await db.collection('ips').doc(datos.nit).set({
+      nombre: datos.nombre,
+      nit: datos.nit,
+      director: datos.director,
+      ciudad: datos.ciudad,
+      direccion: datos.direccion,
+      telefono: datos.telefono,
+      nivel_atencion: datos.nivel,
+      naturaleza: 'Privada',
+      estado: 'piloto',
+      plan: datos.plan,
+      fecha_inicio_piloto: datos.fecha_inicio,
+      fecha_fin_piloto: datos.fecha_fin || '',
+      servicios_habilitados: datos.servicios.split(',').map(s => s.trim()).filter(Boolean),
+      creado_por: auth.currentUser.email,
+      creado_en: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 3. Crear documento /usuarios/{uid}
+    showAlert('nueva-ips-alert','info','[3/5] Creando perfil de usuario…');
+    await db.collection('usuarios').doc(uid).set({
+      uid,
+      nombre: datos.nombre_responsable,
+      cargo: datos.cargo_responsable,
+      email: datos.email_responsable,
+      whatsapp: datos.whatsapp_responsable,
+      ips_id: datos.nit,
+      ips_nombre: datos.nombre,
+      rol: 'admin_ips',
+      activo: true,
+      primer_ingreso: true,
+      fecha_creacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 4. Crear documento /pilotos/{nit}
+    showAlert('nueva-ips-alert','info','[4/5] Inicializando tablero piloto…');
+    await db.collection('pilotos').doc(datos.nit).set({
+      ips_id: datos.nit,
+      ips_nombre: datos.nombre,
+      ciudad: datos.ciudad,
+      plan: datos.plan,
+      responsable_nombre: datos.nombre_responsable,
+      responsable_email: datos.email_responsable,
+      fecha_inicio: datos.fecha_inicio,
+      fecha_fin: datos.fecha_fin || '',
+      estado_piloto: 'activo',
+      semana_actual: 1,
+      salud: 'verde',
+      sesiones_total: 0,
+      auditorias_completadas: 0,
+      documentos_generados: 0,
+      capas_creadas: 0,
+      ai_sugerencias_aceptadas: 0,
+      ai_sugerencias_rechazadas: 0,
+      porcentaje_cumplimiento: 0,
+      nps: null,
+      pagaria: null,
+      plan_elegido: null,
+      testimonial_estado: 'pendiente',
+      convertido_a_pago: false,
+      historial_semanas: [],
+      creado_en: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // 5. Enviar email de bienvenida
+    showAlert('nueva-ips-alert','info','[5/5] Enviando email de bienvenida…');
+    try {
+      await emailjs.send(EJS_SERVICE, 'bienvenida_piloto', {
+        to_email: datos.email_responsable,
+        to_name: datos.nombre_responsable,
+        ips_nombre: datos.nombre,
+        email_acceso: datos.email_responsable,
+        password_temporal: 'NormaLis2026!',
+        fecha_onboarding: datos.fecha_onboarding,
+        meet_link: datos.meet_link,
+        from_name: 'Fernando Fuentes — NormaLis'
+      });
+    } catch(ejsErr) {
+      console.warn('EmailJS no configurado aún:', ejsErr.message);
+    }
+
+    // Éxito
+    showAlert('nueva-ips-alert','success',`✅ IPS "${datos.nombre}" creada exitosamente.\n👥 Usuario: ${datos.email_responsable} / Clave: NormaLis2026!\n📱 Recuerda crear el grupo WhatsApp: "NormaLis | ${datos.nombre}"`);
+    limpiarFormIPS();
+
+  } catch(e) {
+    let msg = e.message;
+    if (e.code === 'auth/email-already-in-use') msg = 'Este email ya tiene cuenta en Firebase. Usa otro email o busca el usuario existente.';
+    showAlert('nueva-ips-alert','error','❌ Error: ' + msg);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🚀 Crear IPS y enviar bienvenida';
+}
+
+function limpiarFormIPS() {
+  ['ips-nombre','ips-nit','ips-director','ips-direccion','ips-telefono','ips-servicios',
+   'ips-resp-nombre','ips-resp-cargo','ips-resp-email','ips-resp-whatsapp',
+   'ips-fecha-inicio','ips-fecha-fin','ips-fecha-onboarding','ips-meet'
+  ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('ips-ciudad').value = '';
+}
+
+// ──────────────────────────────────────────────
+// PILOTOS DASHBOARD
+// ──────────────────────────────────────────────
+async function cargarPilotos() {
+  try {
+    const snap = await db.collection('pilotos').where('estado_piloto','==','activo').get();
+    const pilotos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    document.getElementById('badge-pilotos').textContent = pilotos.length;
+    document.getElementById('p-kpi-activos').textContent = pilotos.length;
+    document.getElementById('p-kpi-verde').textContent = pilotos.filter(p=>p.salud==='verde').length;
+    document.getElementById('p-kpi-amarillo').textContent = pilotos.filter(p=>p.salud==='amarillo').length;
+    document.getElementById('p-kpi-rojo').textContent = pilotos.filter(p=>p.salud==='rojo').length;
+    document.getElementById('p-kpi-convertidos').textContent = pilotos.filter(p=>p.convertido_a_pago).length;
+
+    const grid = document.getElementById('pilotos-grid');
+    if (!pilotos.length) {
+      grid.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:var(--text-muted);">No hay pilotos activos aún. Crea una IPS en la pestaña "Nueva IPS".</div>';
+      return;
+    }
+
+    grid.innerHTML = pilotos.map(p => {
+      const saludDot = p.salud==='verde' ? 'dot-green' : p.salud==='amarillo' ? 'dot-amber' : 'dot-red';
+      const saludLabel = p.salud==='verde' ? 'Saludable' : p.salud==='amarillo' ? 'Atención' : 'En riesgo';
+      const semanas = calcularSemana(p.fecha_inicio);
+      const progreso = Math.min(Math.round((semanas/8)*100),100);
+      return `
+        <div class="piloto-card">
+          <div class="piloto-card-header">
+            <div>
+              <div class="piloto-name">${p.ips_nombre||p.id}</div>
+              <div class="piloto-ciudad">${p.ciudad||''} · Plan ${p.plan||''}</div>
+            </div>
+            <div class="semaforo"><span class="dot ${saludDot}"></span>${saludLabel}</div>
+          </div>
+
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">
+            Semana ${semanas}/8 del piloto
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${progreso}%"></div>
+          </div>
+
+          <div class="piloto-metrics">
+            <div class="piloto-metric">
+              <div class="piloto-metric-label">Auditorías</div>
+              <div class="piloto-metric-value">${p.auditorias_completadas||0}</div>
+            </div>
+            <div class="piloto-metric">
+              <div class="piloto-metric-label">Documentos</div>
+              <div class="piloto-metric-value">${p.documentos_generados||0}</div>
+            </div>
+            <div class="piloto-metric">
+              <div class="piloto-metric-label">CAPAs</div>
+              <div class="piloto-metric-value">${p.capas_creadas||0}</div>
+            </div>
+            <div class="piloto-metric">
+              <div class="piloto-metric-label">% Cumplimiento</div>
+              <div class="piloto-metric-value">${p.porcentaje_cumplimiento||0}%</div>
+            </div>
+          </div>
+
+          ${p.nps !== null ? `<div style="margin-top:10px;font-size:13px">NPS: <strong>${p.nps}/10</strong> · ¿Pagaría? <strong>${p.pagaria||'—'}</strong></div>` : ''}
+
+          <div class="piloto-actions">
+            <button class="btn btn-ghost btn-sm" onclick="verDetallePiloto('${p.id}')">Ver detalle</button>
+            <button class="btn btn-ghost btn-sm" onclick="cambiarSaludPiloto('${p.id}')">🚦 Salud</button>
+            ${!p.convertido_a_pago ? `<button class="btn btn-success btn-sm" onclick="marcarConvertido('${p.id}')">✅ Convertido</button>` : '<span class="badge badge-green">Pago ✓</span>'}
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Error cargando pilotos:', e);
+    document.getElementById('pilotos-grid').innerHTML = '<div class="card" style="color:var(--red)">Error cargando pilotos: ' + e.message + '</div>';
+  }
+}
+
+function calcularSemana(fechaInicio) {
+  if (!fechaInicio) return 1;
+  const inicio = new Date(fechaInicio);
+  const hoy = new Date();
+  const dias = Math.floor((hoy - inicio) / (1000*60*60*24));
+  return Math.min(Math.max(Math.ceil(dias/7), 1), 8);
+}
+
+function verDetallePiloto(id) {
+  const modal = document.getElementById('modal-piloto-detalle');
+  modal.classList.add('open');
+  document.getElementById('modal-piloto-nombre').textContent = 'Cargando…';
+  document.getElementById('modal-piloto-content').innerHTML = '<div style="text-align:center;padding:32px"><div class="spinner" style="margin:auto"></div></div>';
+
+  db.collection('pilotos').doc(id).get().then(doc => {
+    if (!doc.exists) return;
+    const p = doc.data();
+    document.getElementById('modal-piloto-nombre').textContent = p.ips_nombre || id;
+    const sem = calcularSemana(p.fecha_inicio);
+    document.getElementById('modal-piloto-content').innerHTML = `
+      <div class="form-grid-2" style="margin-bottom:16px">
+        <div><span style="color:var(--text-muted);font-size:12px">NIT</span><br><strong>${id}</strong></div>
+        <div><span style="color:var(--text-muted);font-size:12px">Ciudad</span><br><strong>${p.ciudad||'—'}</strong></div>
+        <div><span style="color:var(--text-muted);font-size:12px">Plan</span><br><strong>${p.plan||'—'}</strong></div>
+        <div><span style="color:var(--text-muted);font-size:12px">Responsable</span><br><strong>${p.responsable_nombre||'—'}</strong><br><span style="font-size:12px;color:var(--text-muted)">${p.responsable_email||''}</span></div>
+        <div><span style="color:var(--text-muted);font-size:12px">Inicio piloto</span><br><strong>${p.fecha_inicio||'—'}</strong></div>
+        <div><span style="color:var(--text-muted);font-size:12px">Fin piloto</span><br><strong>${p.fecha_fin||'—'}</strong></div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Progreso del piloto — Semana ${sem} de 8</div>
+        <div class="progress-bar-wrap" style="height:10px">
+          <div class="progress-bar-fill" style="width:${Math.round(sem/8*100)}%"></div>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card"><div class="kpi-label">Auditorías</div><div class="kpi-value kpi-blue" style="font-size:20px">${p.auditorias_completadas||0}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Documentos</div><div class="kpi-value kpi-blue" style="font-size:20px">${p.documentos_generados||0}</div></div>
+        <div class="kpi-card"><div class="kpi-label">CAPAs</div><div class="kpi-value kpi-blue" style="font-size:20px">${p.capas_creadas||0}</div></div>
+        <div class="kpi-card"><div class="kpi-label">% Cumpl.</div><div class="kpi-value kpi-green" style="font-size:20px">${p.porcentaje_cumplimiento||0}%</div></div>
+      </div>
+      ${p.nps !== null ? `
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;gap:24px">
+          <div><div style="color:var(--text-muted);font-size:12px">NPS</div><div style="font-size:24px;font-weight:700;color:${p.nps>=7?'var(--green)':p.nps>=5?'var(--amber)':'var(--red)'}">${p.nps}/10</div></div>
+          <div><div style="color:var(--text-muted);font-size:12px">¿Pagaría?</div><div style="font-size:18px;font-weight:700">${p.pagaria||'—'}</div></div>
+          <div><div style="color:var(--text-muted);font-size:12px">Plan elegido</div><div style="font-size:18px;font-weight:700">${p.plan_elegido||'—'}</div></div>
+          <div><div style="color:var(--text-muted);font-size:12px">Testimonial</div><div class="badge ${p.testimonial_estado==='obtenido'?'badge-green':'badge-gray'}">${p.testimonial_estado||'pendiente'}</div></div>
+        </div>
+      </div>` : ''}
+      <div style="margin-top:16px">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">ACTUALIZAR SALUD</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-success btn-sm" onclick="setSalud('${id}','verde')">🟢 Verde</button>
+          <button class="btn btn-sm" style="background:var(--amber);color:white" onclick="setSalud('${id}','amarillo')">
+🟡 Amarillo</button>
+          <button class="btn btn-danger btn-sm" onclick="setSalud('${id}','rojo')">🔴 Rojo</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+async function setSalud(id, salud) {
+  await db.collection('pilotos').doc(id).update({ salud });
+  cargarPilotos();
+}
+
+async function cambiarSaludPiloto(id) {
+  const p = (await db.collection('pilotos').doc(id).get()).data();
+  const opciones = ['verde','amarillo','rojo'];
+  const actual = opciones.indexOf(p.salud||'verde');
+  const nuevo = opciones[(actual+1)%3];
+  await setSalud(id, nuevo);
+}
+
+async function marcarConvertido(id) {
+  const plan = prompt('Plan de conversión (basico/profesional/institucional):','profesional');
+  if (!plan) return;
+  await db.collection('pilotos').doc(id).update({
+    convertido_a_pago: true,
+    plan_elegido: plan,
+    estado_piloto: 'convertido'
+  });
+  cargarPilotos();
+}
+
+// ──────────────────────────────────────────────
+// ANALYTICS
+// ──────────────────────────────────────────────
+async function cargarAnalytics() {
+  try {
+    const [ipsSnap, usersSnap, prospSnap] = await Promise.all([
+      db.collection('ips').get(),
+      db.collection('usuarios').get(),
+      db.collection('prospectos').get()
+    ]);
+    const ipsList = ipsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const pagos = ipsList.filter(i => i.estado === 'activo');
+
+    // MRR estimado
+    const planPrices = { basico: 199000, profesional: 499000, institucional: 999000 };
+    const mrr = pagos.reduce((sum, i) => sum + (planPrices[i.plan]||0), 0);
+
+    document.getElementById('a-kpi-ips').textContent = ipsList.length;
+    document.getElementById('a-kpi-pago').textContent = pagos.length;
+    document.getElementById('a-kpi-mrr').textContent = mrr > 0 ? '$' + (mrr/1000).toFixed(0) + 'K' : '$0';
+    document.getElementById('a-kpi-prospectos').textContent = prospSnap.size;
+
+    // Tabla IPS
+    document.getElementById('analytics-ips-tbody').innerHTML = ipsList.length
+      ? ipsList.map(i => `
+          <tr>
+            <td><strong>${i.nombre||i.id}</strong></td>
+            <td style="font-size:12px;color:var(--text-muted)">${i.nit||i.id}</td>
+            <td>${i.ciudad||'—'}</td>
+            <td><span class="badge badge-blue">${i.plan||'—'}</span></td>
+            <td>${estadoToBadge(i.estado==='piloto'?'Demo realizada':i.estado==='activo'?'Piloto iniciado':'Por contactar')}</td>
+            <td style="font-size:12px;color:var(--text-muted)">${i.fecha_inicio_piloto||'—'}</td>
+          </tr>`).join('')
+      : '<tr class="empty-row"><td colspan="6">Sin IPS registradas aún.</td></tr>';
+
+    // Tabla usuarios
+    const usersList = usersSnap.docs.map(d => d.data());
+    document.getElementById('analytics-users-tbody').innerHTML = usersList.length
+      ? usersList.map(u => `
+          <tr>
+            <td><strong>${u.nombre||'—'}</strong><div style="font-size:11px;color:var(--text-muted)">${u.cargo||''}</div></td>
+            <td style="font-size:12px">${u.email||'—'}</td>
+            <td style="font-size:12px;color:var(--text-muted)">${u.ips_nombre||u.ips_id||'—'}</td>
+            <td><span class="badge badge-purple">${u.rol||'—'}</span></td>
+            <td><span class="badge ${u.activo?'badge-green':'badge-gray'}">${u.activo?'Activo':'Inactivo'}</span></td>
+          </tr>`).join('')
+      : '<tr class="empty-row"><td colspan="5">Sin usuarios registrados aún.</td></tr>';
+
+  } catch(e) {
+    console.error('Analytics error:', e);
+  }
+}
+
+// ──────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────
+function showAlert(containerId, type, msg) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `<div class="alert alert-${type}">${msg.replace(/\n/g,'<br>')}</div>`;
+}
+</script>
+</body>
+</html>
