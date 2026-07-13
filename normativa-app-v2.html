@@ -12452,6 +12452,161 @@ function renderSupervision() {
   var view = document.getElementById('view-supervision');
   if (view) view.innerHTML = html;
 }
+
+// ADOPCION — Onboarding Wizard + Demo Data + Aha Moment
+
+function cargarDatosDemo() {
+  var hoy = new Date();
+  function addDias(d) { var f = new Date(hoy); f.setDate(f.getDate()+d); return f.toISOString().split('T')[0]; }
+  var venc = [
+    { id: 'v1', profesional: 'Dr. Carlos Mendoza', tipo: 'Tarjeta Profesional', fecha: addDias(-15), estado: 'Vencido' },
+    { id: 'v2', profesional: 'Enf. Sandra Rios', tipo: 'Certificado ACLS', fecha: addDias(-5), estado: 'Vencido' },
+    { id: 'v3', profesional: 'Dr. Luis Herrera', tipo: 'Tarjeta Profesional', fecha: addDias(12), estado: 'Vigente' },
+    { id: 'v4', profesional: 'Aux. Martha Cano', tipo: 'Certificado Vacunas', fecha: addDias(25), estado: 'Vigente' }
+  ];
+  localStorage.setItem('normalis_vencimientos', JSON.stringify(venc));
+  var incs = [
+    { id: 'i1', fecha: addDias(-3), tipo: 'Caida de paciente', severidad: 'critico', estado: 'Abierto', descripcion: 'Paciente cayo de la camilla durante traslado', area: 'Urgencias' },
+    { id: 'i2', fecha: addDias(-10), tipo: 'Error de medicacion', severidad: 'moderado', estado: 'En seguimiento', descripcion: 'Dosis incorrecta administrada, sin consecuencias graves', area: 'Hospitalizacion' }
+  ];
+  localStorage.setItem('normalis_incidentes', JSON.stringify(incs));
+  var pqrs = [
+    { id: 'p1', fecha: addDias(-8), tipo: 'Queja', descripcion: 'Tiempo de espera excesivo en consulta externa', estado: 'Pendiente', usuario: 'Anonimo' },
+    { id: 'p2', fecha: addDias(-12), tipo: 'Peticion', descripcion: 'Solicitud de historia clinica', estado: 'Pendiente', usuario: 'Juan Garcia' },
+    { id: 'p3', fecha: addDias(-20), tipo: 'Felicitacion', descripcion: 'Excelente atencion del personal de enfermeria', estado: 'Respondido', usuario: 'Maria Lopez' }
+  ];
+  localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
+  var simData = {};
+  for (var i = 1; i <= 14; i++) simData['item_' + i] = true;
+  localStorage.setItem('normalis_simulacro', JSON.stringify(simData));
+  localStorage.setItem('normalis_pamec_fase', '1');
+  var profs = [
+    { id: 'pr1', nombre: 'Dr. Carlos Mendoza', cargo: 'Medico General', especialidad: 'Medicina General' },
+    { id: 'pr2', nombre: 'Enf. Sandra Rios', cargo: 'Enfermera Jefe', especialidad: 'Enfermeria' },
+    { id: 'pr3', nombre: 'Dr. Luis Herrera', cargo: 'Medico Especialista', especialidad: 'Cirugia General' },
+    { id: 'pr4', nombre: 'Aux. Martha Cano', cargo: 'Auxiliar de Enfermeria', especialidad: '' }
+  ];
+  localStorage.setItem('th_profesionales', JSON.stringify(profs));
+}
+
+function iniciarAhaMoment(nombreIPS) {
+  var modal = document.getElementById('onboarding-modal');
+  if (modal) modal.style.display = 'none';
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 32px rgba(99,102,241,.4);transition:opacity .5s;white-space:nowrap';
+  toast.textContent = 'Bienvenido a NormaLis, ' + nombreIPS + '! Generando tu diagnostico...';
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500); }, 3500);
+  setTimeout(function() {
+    try { nav('ia'); } catch(e) {}
+    setTimeout(function() {
+      var inp = document.getElementById('chat-input');
+      if (inp) {
+        inp.value = 'Analiza mi estado normativo y dime que riesgos tengo antes de una visita de la Secretaria';
+        if (typeof sendMainChat === 'function') sendMainChat();
+      }
+    }, 700);
+  }, 1200);
+  localStorage.setItem('normalis_onboarding_done', '1');
+  localStorage.setItem('normalis_ips_nombre', nombreIPS);
+  if (typeof trackEvent === 'function') trackEvent('onboarding', 'completado', nombreIPS);
+}
+
+function mostrarOnboarding() {
+  if (localStorage.getItem('normalis_onboarding_done')) return;
+  var html = '<div id="onboarding-modal" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">';
+  html += '<div style="background:#fff;border-radius:20px;width:100%;max-width:500px;margin:16px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.3)">';
+  html += '<div style="height:4px;background:#f1f5f9"><div id="ob-progress" style="height:4px;background:linear-gradient(90deg,#6366f1,#8b5cf6);width:25%;transition:width .4s"></div></div>';
+  html += '<div id="ob-steps">';
+  html += '<div id="ob-step-1" style="padding:40px">';
+  html += '<div style="font-size:48px;text-align:center;margin-bottom:16px">&#127973;</div>';
+  html += '<h2 style="text-align:center;font-size:22px;font-weight:800;margin:0 0 12px">Bienvenido a NormaLis</h2>';
+  html += '<p style="text-align:center;color:#64748b;font-size:14px;margin:0 0 24px;line-height:1.6">Tu copiloto de habilitacion para IPS colombianas.<br>En 2 minutos tendras tu primer diagnostico normativo.</p>';
+  html += '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:24px;font-size:13px;color:#374151;display:flex;flex-direction:column;gap:8px"><div><b>Paso 1:</b> Datos basicos de tu IPS</div><div><b>Paso 2:</b> Cargar datos de ejemplo</div><div><b>Paso 3:</b> Tu primer diagnostico XAI</div></div>';
+  html += '<button onclick="obNext(2)" style="width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Comenzar</button>';
+  html += '</div>';
+  html += '<div id="ob-step-2" style="padding:40px;display:none">';
+  html += '<h2 style="font-size:20px;font-weight:800;margin:0 0 6px">Datos de tu IPS</h2>';
+  html += '<p style="color:#64748b;font-size:13px;margin:0 0 20px">Solo lo esencial para personalizar tu experiencia.</p>';
+  html += '<div style="display:flex;flex-direction:column;gap:14px">';
+  html += '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Nombre de la IPS *</label><input id="ob-nombre" type="text" placeholder="Ej: Clinica San Rafael" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none"></div>';
+  html += '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Ciudad</label><input id="ob-ciudad" type="text" placeholder="Ej: Bogota" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none"></div>';
+  html += '<div><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Tipo de servicio</label><select id="ob-tipo" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;background:#fff"><option value="">Seleccionar...</option><option>Consulta Externa</option><option>Urgencias</option><option>Hospitalizacion</option><option>Quirurgico</option><option>Laboratorio</option><option>Imagenes Diagnosticas</option><option>Salud Mental</option><option>Rehabilitacion</option><option>Odontologia</option></select></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:12px;margin-top:24px">';
+  html += '<button onclick="obNext(1)" style="flex:1;background:#f1f5f9;color:#374151;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Atras</button>';
+  html += '<button onclick="obValidarPaso2()" style="flex:2;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Continuar</button>';
+  html += '</div></div>';
+  html += '<div id="ob-step-3" style="padding:40px;display:none">';
+  html += '<div style="font-size:40px;text-align:center;margin-bottom:16px">&#128202;</div>';
+  html += '<h2 style="font-size:20px;font-weight:800;margin:0 0 8px;text-align:center">Como quieres empezar?</h2>';
+  html += '<p style="color:#64748b;font-size:13px;margin:0 0 20px;text-align:center">Te recomendamos datos de ejemplo para ver el potencial de inmediato.</p>';
+  html += '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">';
+  html += '<div id="ob-opt-demo" onclick="obSeleccionarOpcion(\x27demo\x27)" style="border:2px solid #6366f1;background:#eef2ff;border-radius:12px;padding:16px;cursor:pointer"><div style="font-weight:700;font-size:14px;color:#4338ca">Cargar datos de ejemplo (Recomendado)</div><div style="font-size:12px;color:#6366f1;margin-top:4px">Veras tu diagnostico en segundos. Puedes reemplazarlos con tus datos reales despues.</div></div>';
+  html += '<div id="ob-opt-vacio" onclick="obSeleccionarOpcion(\x27vacio\x27)" style="border:2px solid #e2e8f0;border-radius:12px;padding:16px;cursor:pointer"><div style="font-weight:700;font-size:14px;color:#374151">Empezar desde cero</div><div style="font-size:12px;color:#64748b;margin-top:4px">Ingresar mis propios datos manualmente.</div></div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:12px">';
+  html += '<button onclick="obNext(2)" style="flex:1;background:#f1f5f9;color:#374151;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer">Atras</button>';
+  html += '<button onclick="obFinalizar()" style="flex:2;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Ver mi diagnostico</button>';
+  html += '</div></div>';
+  html += '<div id="ob-step-4" style="padding:48px;display:none;text-align:center">';
+  html += '<div style="font-size:48px;margin-bottom:20px">&#129302;</div>';
+  html += '<h2 style="font-size:20px;font-weight:800;margin:0 0 8px">Analizando tu IPS...</h2>';
+  html += '<p style="color:#64748b;font-size:14px;margin:0 0 24px">El Consultor XAI esta preparando tu diagnostico normativo.</p>';
+  html += '<div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden"><div id="ob-loader-bar" style="background:linear-gradient(90deg,#6366f1,#8b5cf6);height:8px;width:0%;transition:width 1.5s ease"></div></div>';
+  html += '</div></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  window._obOpcion = 'demo';
+}
+
+function obNext(step) {
+  for (var i = 1; i <= 4; i++) {
+    var el = document.getElementById('ob-step-' + i);
+    if (el) el.style.display = i === step ? 'block' : 'none';
+  }
+  var pcts = {1:'25%',2:'50%',3:'75%',4:'100%'};
+  var prog = document.getElementById('ob-progress');
+  if (prog) prog.style.width = pcts[step] || '25%';
+}
+
+function obValidarPaso2() {
+  var nombre = document.getElementById('ob-nombre');
+  if (!nombre || !nombre.value.trim()) {
+    if (nombre) { nombre.style.borderColor = '#ef4444'; nombre.focus(); }
+    return;
+  }
+  obNext(3);
+}
+
+function obSeleccionarOpcion(opcion) {
+  window._obOpcion = opcion;
+  var demo = document.getElementById('ob-opt-demo');
+  var vacio = document.getElementById('ob-opt-vacio');
+  if (opcion === 'demo') {
+    if (demo) { demo.style.borderColor = '#6366f1'; demo.style.background = '#eef2ff'; }
+    if (vacio) { vacio.style.borderColor = '#e2e8f0'; vacio.style.background = '#fff'; }
+  } else {
+    if (vacio) { vacio.style.borderColor = '#6366f1'; vacio.style.background = '#eef2ff'; }
+    if (demo) { demo.style.borderColor = '#e2e8f0'; demo.style.background = '#fff'; }
+  }
+}
+
+function obFinalizar() {
+  var nombreInput = document.getElementById('ob-nombre');
+  var ciudadInput = document.getElementById('ob-ciudad');
+  var nombre = (nombreInput && nombreInput.value.trim()) ? nombreInput.value.trim() : 'Mi IPS';
+  var ciudad = ciudadInput ? ciudadInput.value.trim() : '';
+  obNext(4);
+  var bar = document.getElementById('ob-loader-bar');
+  if (bar) setTimeout(function() { bar.style.width = '100%'; }, 100);
+  if (window._obOpcion === 'demo') cargarDatosDemo();
+  if (ciudad) localStorage.setItem('normalis_ips_ciudad', ciudad);
+  setTimeout(function() { iniciarAhaMoment(nombre); }, 2200);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(mostrarOnboarding, 900);
+});
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
