@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>NormaLis — Solicitar Acceso</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --accent:      #00c9a7;
+  --accent2:     #0ea5e9;
+  --accent-glow: rgba(0,201,167,.28);
+  --bg1:         #071920;
+  --bg2:         #0d2d3a;
+  --card-bg:     rgba(255,255,255,.07);
+  --border:      rgba(0,201,167,.18);
+  --text:        #e2f4f1;
+  --text-muted:  #7fb5aa;
+  --text-dim:    #3d6b63;
+  --danger:      #ef4444;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 55%,var(--bg1) 100%);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:20px;position:relative;overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,201,167,.1) 0%,transparent 70%);
+  top:-120px;right:-100px;pointer-events:none;
+}
+body::after{
+  content:'';position:fixed;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(14,165,233,.07) 0%,transparent 70%);
+  bottom:-80px;left:-100px;pointer-events:none;
+}
+
+/* ── CARD ── */
+.reg-card{
+  width:100%;max-width:460px;
+  background:var(--card-bg);
+  backdrop-filter:blur(24px);
+  border:1px solid var(--border);
+  border-radius:28px;
+  padding:40px 40px 32px;
+  animation:fadeUp .45s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 0 1px rgba(0,201,167,.06);
+  position:relative;z-index:1;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HEADER ── */
+.reg-header{text-align:center;margin-bottom:28px;}
+.logo-icon{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,#00c9a7,#0ea5e9);
+  border-radius:16px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:900;color:#fff;
+  margin-bottom:12px;
+  box-shadow:0 8px 28px var(--accent-glow);
+}
+.reg-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;}
+.reg-sub{font-size:13px;color:var(--text-muted);line-height:1.5;}
+
+/* ── STEPS INDICATOR ── */
+.steps{display:flex;justify-content:center;gap:8px;margin-bottom:26px;}
+.step{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  background:rgba(0,201,167,.08);
+  border:1.5px solid rgba(0,201,167,.2);
+  color:var(--text-muted);
+  transition:all .3s;
+}
+.step.active{background:rgba(0,201,167,.18);border-color:var(--accent);color:#5ee8cc;}
+.step.done{background:var(--accent);border-color:var(--accent);color:#001a14;}
+.step-line{width:32px;height:2px;background:rgba(0,201,167,.12);align-self:center;border-radius:2px;transition:background .3s;}
+.step-line.done{background:var(--accent);}
+
+/* ── FIELDS ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.field input,.field select{
+  width:100%;
+  background:rgba(0,0,0,.25);
+  border:1.5px solid rgba(0,201,167,.15);
+  border-radius:12px;
+  padding:12px 15px;
+  font-size:14px;color:var(--text);
+  font-family:inherit;outline:none;
+  transition:all .2s;
+  -webkit-appearance:none;
+}
+.field input::placeholder{color:#3d6b63}
+.field input:focus,.field select:focus{
+  border-color:var(--accent);
+  background:rgba(0,201,167,.06);
+  box-shadow:0 0 0 3px rgba(0,201,167,.12);
+}
+.field .hint{font-size:11px;color:var(--text-dim);margin-top:5px;padding-left:2px;}
+.field .field-error{font-size:11px;color:#fca5a5;margin-top:5px;padding-left:2px;display:none;}
+
+/* Password con toggle */
+.input-wrap{position:relative;}
+.input-wrap input{padding-right:46px;}
+.toggle-pass{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  font-size:16px;opacity:.45;color:var(--text);padding:4px;line-height:1;
+}
+.toggle-pass:hover{opacity:.8;}
+
+/* Fortaleza de contraseña */
+.pass-strength{margin-top:8px;}
+.strength-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;}
+.strength-fill{height:100%;width:0%;border-radius:2px;transition:all .3s;}
+.strength-text{font-size:11px;margin-top:4px;font-weight:600;}
+
+/* Row 2 columnas */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── TERMS ── */
+.terms-check{
+  display:flex;align-items:flex-start;gap:10px;
+  margin:16px 0 4px;font-size:12px;color:var(--text-muted);line-height:1.5;
+}
+.terms-check input[type=checkbox]{
+  width:16px;height:16px;flex-shrink:0;
+  accent-color:var(--accent);cursor:pointer;margin-top:1px;
+}
+.terms-check a{color:var(--accent);text-decoration:none;}
+.terms-check a:hover{text-decoration:underline;}
+
+/* ── BTN ── */
+.btn-primary{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#00c9a7,#0ea5e9);
+  border:none;border-radius:13px;
+  color:#fff;font-size:15px;font-weight:800;
+  cursor:pointer;font-family:inherit;
+  transition:all .22s;
+  box-shadow:0 4px 20px var(--accent-glow);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:14px;letter-spacing:.01em;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 32px var(--accent-glow)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+.btn-primary.loading .spinner{display:block}
+.btn-primary.loading .btn-text{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MENSAJES ── */
+.msg{border-radius:10px;padding:12px 15px;font-size:13px;font-weight:600;display:none;margin-bottom:14px;align-items:center;gap:8px;}
+.msg.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5}
+.msg.show{display:flex}
+
+/* ── SUCCESS SCREEN ── */
+.success-screen{text-align:center;padding:20px 0;display:none;}
+.success-icon{font-size:64px;margin-bottom:16px;display:block;animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes bounceIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.success-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:10px;}
+.success-body{font-size:14px;color:var(--text-muted);line-height:1.65;max-width:320px;margin:0 auto 20px;}
+.success-body strong{color:#5ee8cc;}
+.success-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;}
+.schip{display:inline-flex;align-items:center;gap:4px;background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.18);border-radius:999px;padding:5px 14px;font-size:12px;font-weight:600;color:#5ee8cc;}
+
+/* ── FOOTER / BACK ── */
+.back-link{text-align:center;margin-top:20px;font-size:13px;color:var(--text-dim);}
+.back-link a{color:var(--accent);text-decoration:none;font-weight:600;}
+.back-link a:hover{text-decoration:underline;}
+.divider{border:none;border-top:1px solid rgba(0,201,167,.1);margin:18px 0;}
+.card-footer{text-align:center;font-size:11px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<div class="reg-card">
+
+  <!-- Header -->
+  <div class="reg-header">
+    <div class="logo-icon">N</div>
+    <div class="reg-title">Solicitar Acceso a NormaLis</div>
+    <div class="reg-sub">Crea la cuenta de tu IPS. Un administrador revisará tu solicitud y te dará acceso.</div>
+  </div>
+
+  <!-- Indicador de pasos -->
+  <div class="steps" id="steps-bar">
+    <div class="step active" id="step1-dot">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2-dot">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3-dot">3</div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="msg error" id="msg-error"><span>⚠️</span><span id="msg-error-text"></span></div>
+
+  <!-- ── PASO 1: Datos de la IPS ── -->
+  <div id="step1">
+    <form id="form-step1" novalidate>
+      <div class="field">
+        <label for="r-nombre">Nombre de la IPS / Organización *</label>
+        <input type="text" id="r-nombre" placeholder="Ej. Clínica San Rafael" required maxlength="150">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="r-nit">NIT (opcional)</label>
+          <input type="text" id="r-nit" placeholder="Ej. 900123456-7" maxlength="20">
+        </div>
+        <div class="field">
+          <label for="r-tipo">Tipo de IPS</label>
+          <select id="r-tipo">
+            <option value="">— Selecciona —</option>
+            <option value="ips_primaria">IPS Primaria</option>
+            <option value="clinica">Clínica</option>
+            <option value="hospital">Hospital</option>
+            <option value="consultorio">Consultorio / Esp.</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="r-ciudad">Ciudad *</label>
+        <input type="text" id="r-ciudad" placeholder="Ej. Bogotá, Medellín…" required maxlength="80">
+      </div>
+      <button type="submit" class="btn-primary">
+        <span class="btn-text">Continuar →</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+  </div>
+
+  <!-- ── PASO 2: Datos de acceso ── -->
+  <div id="step2" style="display:none;">
+    <form id="form-step2" novalidate>
+      <div class="field">
+        <label for="r-contacto">Nombre del responsable *</label>
+        <input type="text" id="r-contacto" placeholder="Nombre y apellido" required maxlength="100">
+      </div>
+      <div class="field">
+        <label for="r-cargo">Cargo</label>
+        <input type="text" id="r-cargo" placeholder="Ej. Coordinadora de Calidad" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="r-email">Correo electrónico *</label>
+        <input type="email" id="r-email" placeholder="correo@ips.com" required maxlength="254" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="r-tel">Teléfono / WhatsApp</label>
+        <input type="tel" id="r-tel" placeholder="+57 300 000 0000" maxlength="25">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn-primary" id="btn-back1" style="background:rgba(255,255,255,.08);box-shadow:none;flex:0 0 auto;width:auto;padding:14px 20px;">
+          ← Atrás
+        </button>
+        <button type="submit" class="btn-primary" style="flex:1;">
+          <span class="btn-text">Continuar →</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── PASO 3: Contraseña y confirmación ── -->
+  <div id="step3" style="display:none;">
+    <form id="form-step3" novalidate>
+      <div class="field">
+        <label for="r-pass">Contraseña *</label>
+        <div class="input-wrap">
+          <input type="password" id="r-pass" placeholder="Mínimo 8 caracteres" required minlength="8" maxlength="128" autocomplete="new-password">
+          <button type="button" class="toggle-pass" id="toggle-p1" aria-label="Mostrar contraseña">👁</button>
+        </div>
+        <div class="pass-strength">
+          <div class="strength-bar"><div class="strength-fill" id="str-fill"></div></div>
+          <div class="strength-text" id="str-text" style="color:var(--text-dim);">—</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="r-pass2">Confirmar contraseña *</label>
+        <div class="input-wrap">
+          <input type="password" id="r-pass2" placeholder="Repite la contraseña" required maxlength="128" autocomplete="new-password">
+          <button type="button" class="toggle-pass" id="toggle-p2" aria-label="Mostrar contraseña">👁</button>
+        </div>
+        <div class="field-error" id="pass-match-err">Las contraseñas no coinciden.</div>
+      </div>
+
+      <div class="terms-check">
+        <input type="checkbox" id="r-terms" required>
+        <label for="r-terms">Acepto que NormaLis almacene los datos de mi IPS para gestionar el acceso a la plataforma, conforme a la normativa colombiana de protección de datos (Ley 1581/2012).</label>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn-primary" id="btn-back2" style="background:rgba(255,255,255,.08);box-shadow:none;flex:0 0 auto;width:auto;padding:14px 20px;">
+          ← Atrás
+        </button>
+        <button type="submit" class="btn-primary" id="btn-submit" style="flex:1;">
+          <span class="btn-text">✓ Enviar solicitud</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── PANTALLA DE ÉXITO ── -->
+  <div class="success-screen" id="success-screen">
+    <span class="success-icon">🎉</span>
+    <div class="success-title">¡Solicitud enviada!</div>
+    <p class="success-body">
+      Tu cuenta ha sido creada. Un administrador de NormaLis revisará tu solicitud y activará tu acceso.<br><br>
+      Te notificaremos a <strong id="success-email"></strong> cuando esté listo.
+    </p>
+    <div class="success-chips">
+      <span class="schip">⏱ Revisión en 24-48 h</span>
+      <span class="schip">📧 Recibirás un correo</span>
+    </div>
+    <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;width:auto;padding:13px 28px;">
+      Ir al inicio de sesión
+    </a>
+  </div>
+
+  <hr class="divider">
+  <div class="back-link">¿Ya tienes cuenta? <a href="login.html">Ingresar</a></div>
+  <div class="card-footer" style="margin-top:10px;">NormaLis · Res. 3100/2019 &amp; 465/2025 · 🔒 Datos seguros</div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+// FIREBASE CONFIG
+// ════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+  authDomain:        "normalis-5587d.firebaseapp.com",
+  projectId:         "normalis-5587d",
+  storageBucket:     "normalis-5587d.firebasestorage.app",
+  messagingSenderId: "328915530941",
+  appId:             "1:328915530941:web:8e77246bd2e326e115b3d4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ════════════════════════════════════
+// ESTADO DEL FORMULARIO
+// ════════════════════════════════════
+const formData = {};
+let currentStep = 1;
+
+function updateSteps(n) {
+  currentStep = n;
+  [1,2,3].forEach(function(i) {
+    const dot  = document.getElementById('step' + i + '-dot');
+    if (i < n) {
+      dot.className = 'step done';
+      dot.textContent = '✓';
+    } else if (i === n) {
+      dot.className = 'step active';
+      dot.textContent = String(i);
+    } else {
+      dot.className = 'step';
+      dot.textContent = String(i);
+    }
+  });
+  [1,2].forEach(function(i) {
+    const line = document.getElementById('line' + i);
+    line.className = 'step-line' + (i < n ? ' done' : '');
+  });
+}
+
+function showStep(n) {
+  [1,2,3].forEach(function(i) {
+    document.getElementById('step' + i).style.display = (i === n) ? '' : 'none';
+  });
+  updateSteps(n);
+  hideError();
+}
+
+// ════════════════════════════════════
+// PASO 1 — Datos IPS
+// ════════════════════════════════════
+document.getElementById('form-step1').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const nombre  = sanitize(document.getElementById('r-nombre').value.trim());
+  const ciudad  = sanitize(document.getElementById('r-ciudad').value.trim());
+  if (!nombre || !ciudad) { showError('Completa los campos obligatorios.'); return; }
+
+  formData.nombreIPS  = nombre;
+  formData.nit        = sanitize(document.getElementById('r-nit').value.trim());
+  formData.tipoIPS    = document.getElementById('r-tipo').value;
+  formData.ciudad     = ciudad;
+  showStep(2);
+});
+
+// ════════════════════════════════════
+// PASO 2 — Datos de contacto
+// ════════════════════════════════════
+document.getElementById('btn-back1').addEventListener('click', function() { showStep(1); });
+
+document.getElementById('form-step2').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const contacto = sanitize(document.getElementById('r-contacto').value.trim());
+  const email    = document.getElementById('r-email').value.trim().toLowerCase();
+  if (!contacto || !isValidEmail(email)) { showError('Verifica el nombre y el correo electrónico.'); return; }
+
+  formData.nombreContacto = contacto;
+  formData.cargo          = sanitize(document.getElementById('r-cargo').value.trim());
+  formData.email          = email;
+  formData.telefono       = sanitize(document.getElementById('r-tel').value.trim());
+  showStep(3);
+});
+
+// ════════════════════════════════════
+// PASO 3 — Contraseña + submit
+// ════════════════════════════════════
+document.getElementById('btn-back2').addEventListener('click', function() { showStep(2); });
+
+// Fortaleza contraseña
+document.getElementById('r-pass').addEventListener('input', function() {
+  const v = this.value;
+  const fill = document.getElementById('str-fill');
+  const txt  = document.getElementById('str-text');
+  let score = 0;
+  if (v.length >= 8)  score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const levels = [
+    { w:'0%',   color:'transparent',   label:'' },
+    { w:'25%',  color:'#ef4444',        label:'Débil' },
+    { w:'50%',  color:'#f59e0b',        label:'Regular' },
+    { w:'75%',  color:'#0ea5e9',        label:'Buena' },
+    { w:'100%', color:'#00c9a7',        label:'Fuerte 💪' },
+  ];
+  const lvl = levels[score];
+  fill.style.width = lvl.w;
+  fill.style.background = lvl.color;
+  txt.textContent = lvl.label;
+  txt.style.color = lvl.color;
+});
+
+// Toggle pass
+[['toggle-p1','r-pass'],['toggle-p2','r-pass2']].forEach(function(pair) {
+  document.getElementById(pair[0]).addEventListener('click', function() {
+    const inp  = document.getElementById(pair[1]);
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    this.textContent = show ? '🙈' : '👁';
+  });
+});
+
+// Validar coincidencia en tiempo real
+document.getElementById('r-pass2').addEventListener('input', function() {
+  const err = document.getElementById('pass-match-err');
+  const match = this.value === document.getElementById('r-pass').value;
+  err.style.display = (this.value && !match) ? 'block' : 'none';
+});
+
+// Submit final
+document.getElementById('form-step3').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  hideError();
+
+  const pass   = document.getElementById('r-pass').value;
+  const pass2  = document.getElementById('r-pass2').value;
+  const terms  = document.getElementById('r-terms').checked;
+
+  if (pass.length < 8)         { showError('La contraseña debe tener al menos 8 caracteres.'); return; }
+  if (pass !== pass2)          { showError('Las contraseñas no coinciden.'); return; }
+  if (!terms)                  { showError('Debes aceptar los términos para continuar.'); return; }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  try {
+    // 1. Crear cuenta en Firebase Auth
+    const cred = await auth.createUserWithEmailAndPassword(formData.email, pass);
+    const uid  = cred.user.uid;
+
+    // 2. Actualizar displayName
+    await cred.user.updateProfile({ displayName: formData.nombreContacto });
+
+    // 3. Crear documento en Firestore — rol: 'pendiente'
+    await db.collection('usuarios').doc(uid).set({
+      rol:             'pendiente',
+      nombre:          formData.nombreIPS,
+      nombreContacto:  formData.nombreContacto,
+      cargo:           formData.cargo || '',
+      email:           formData.email,
+      telefono:        formData.telefono || '',
+      nit:             formData.nit      || '',
+      tipoIPS:         formData.tipoIPS  || '',
+      ciudad:          formData.ciudad,
+      fechaSolicitud:  firebase.firestore.FieldValue.serverTimestamp(),
+      estado:          'pendiente_aprobacion',
+    });
+
+    // 4. Cerrar sesión hasta que el admin apruebe
+    await auth.signOut();
+
+    // 5. Notificar al admin (mailto)
+    const adminSubject = encodeURIComponent('Nueva solicitud NormaLis — ' + formData.nombreIPS);
+    const adminBody    = encodeURIComponent(
+      'Nueva IPS registrada:\n\n'
+      + 'IPS: '        + formData.nombreIPS      + '\n'
+      + 'NIT: '        + (formData.nit || 'N/A') + '\n'
+      + 'Tipo: '       + (formData.tipoIPS || 'N/A') + '\n'
+      + 'Ciudad: '     + formData.ciudad          + '\n'
+      + 'Contacto: '   + formData.nombreContacto  + '\n'
+      + 'Cargo: '      + (formData.cargo || 'N/A') + '\n'
+      + 'Email: '      + formData.email            + '\n'
+      + 'Teléfono: '   + (formData.telefono || 'N/A') + '\n\n'
+      + 'UID Firebase: ' + uid + '\n\n'
+      + 'Para aprobar: ve a Firebase Console > Firestore > usuarios > '
+      + uid + ' y cambia rol a "cliente".'
+    );
+    // Abrir mailto silenciosamente (best-effort)
+    try {
+      window.open('mailto:fjfc1984@gmail.com?subject=' + adminSubject + '&body=' + adminBody, '_blank', 'noopener');
+    } catch(_) {}
+
+    // 6. Mostrar pantalla de éxito
+    document.getElementById('success-email').textContent = formData.email;
+    document.getElementById('form-step3').style.display = 'none';
+    document.getElementById('steps-bar').style.display  = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    showError(friendlyError(err.code));
+  }
+});
+
+// ════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════
+function showError(msg) {
+  const el = document.getElementById('msg-error');
+  document.getElementById('msg-error-text').textContent = msg;
+  el.classList.add('show');
+}
+function hideError() {
+  document.getElementById('msg-error').classList.remove('show');
+}
+function isValidEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
+}
+function sanitize(str) {
+  return String(str).replace(/[<>"'`]/g, '').slice(0, 300);
+}
+function friendlyError(code) {
+  const map = {
+    'auth/email-already-in-use':     'Ya existe una cuenta con ese correo. ¿Quieres iniciar sesión?',
+    'auth/invalid-email':            'El correo no es válido.',
+    'auth/weak-password':            'La contraseña es muy débil. Usa al menos 8 caracteres con números y letras.',
+    'auth/network-request-failed':   'Sin conexión a internet. Verifica tu red.',
+    'auth/too-many-requests':        'Demasiados intentos. Espera unos minutos.',
+  };
+  return map[code] || 'Error al crear la cuenta (' + (code || 'desconocido') + '). Intenta de nuevo.';
+}
+</script>
+</body>
+</html>

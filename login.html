@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>NormaLis — Acceso</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -28,11 +31,8 @@ body{
   font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
   background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);
   min-height:100vh;display:flex;align-items:center;justify-content:center;
-  padding:20px;
-  position:relative;overflow:hidden;
+  padding:20px;position:relative;overflow:hidden;
 }
-
-/* Fondo con glow decorativo */
 body::before{
   content:'';position:fixed;
   width:500px;height:500px;border-radius:50%;
@@ -55,7 +55,7 @@ body::after{
   border-radius:28px;
   padding:44px 40px 36px;
   animation:fadeUp .45s cubic-bezier(.34,1.56,.64,1);
-  box-shadow:0 24px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(0,201,167,.06);
+  box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 0 1px rgba(0,201,167,.06);
   position:relative;z-index:1;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
@@ -69,7 +69,7 @@ body::after{
   display:inline-flex;align-items:center;justify-content:center;
   font-size:28px;font-weight:900;color:#fff;
   margin-bottom:14px;
-  box-shadow:0 8px 32px var(--accent-glow), 0 2px 8px rgba(0,0,0,.3);
+  box-shadow:0 8px 32px var(--accent-glow),0 2px 8px rgba(0,0,0,.3);
 }
 .logo-name{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-1px}
 .logo-name span{
@@ -77,18 +77,8 @@ body::after{
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .logo-sub{font-size:13px;color:var(--text-muted);margin-top:5px;font-weight:500}
-
-/* ── VALUE PROP ── */
-.logo-value{
-  font-size:13px;color:var(--text-muted);margin-top:12px;line-height:1.6;
-  padding:0 6px;
-}
-
-/* ── FEATURES ── */
-.features{
-  display:flex;gap:6px;justify-content:center;flex-wrap:wrap;
-  margin-top:14px;margin-bottom:6px;
-}
+.logo-value{font-size:13px;color:var(--text-muted);margin-top:12px;line-height:1.6;padding:0 6px;}
+.features{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:14px;margin-bottom:6px;}
 .feat{
   display:inline-flex;align-items:center;gap:4px;
   background:rgba(0,201,167,.08);
@@ -100,19 +90,12 @@ body::after{
 .feat:hover{background:rgba(0,201,167,.14)}
 
 /* ── DIVIDER ── */
-.divider{
-  border:none;border-top:1px solid rgba(0,201,167,.1);
-  margin:22px 0 20px;
-}
+.divider{border:none;border-top:1px solid rgba(0,201,167,.1);margin:22px 0 20px;}
 
 /* ── FIELDS ── */
 .field{margin-bottom:16px}
-.field label{
-  display:block;font-size:11px;font-weight:700;
-  color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;
-  margin-bottom:7px;
-}
-.field input{
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.field input,.field textarea{
   width:100%;
   background:rgba(0,0,0,.25);
   border:1.5px solid rgba(0,201,167,.15);
@@ -122,12 +105,31 @@ body::after{
   font-family:inherit;outline:none;
   transition:all .2s;
 }
-.field input::placeholder{color:#3d6b63}
-.field input:focus{
+.field textarea{resize:vertical;min-height:80px;font-size:14px;}
+.field input::placeholder,.field textarea::placeholder{color:#3d6b63}
+.field input:focus,.field textarea:focus{
   border-color:var(--accent);
   background:rgba(0,201,167,.06);
   box-shadow:0 0 0 3px rgba(0,201,167,.12);
 }
+/* Contenedor con ojo de contraseña */
+.input-wrap{position:relative;}
+.input-wrap input{padding-right:48px;}
+.toggle-pass{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  font-size:16px;opacity:.45;color:var(--text);padding:4px;line-height:1;
+}
+.toggle-pass:hover{opacity:.8;}
+
+/* ── LOCKOUT BAR ── */
+.lockout-bar{
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);
+  border-radius:10px;padding:10px 14px;
+  font-size:12px;color:#fca5a5;font-weight:600;
+  display:none;margin-bottom:14px;text-align:center;
+}
+.lockout-bar.show{display:block;}
 
 /* ── BTN ── */
 .btn-login{
@@ -145,20 +147,23 @@ body::after{
 .btn-login:active{transform:translateY(0)}
 .btn-login:disabled{opacity:.55;cursor:not-allowed;transform:none}
 
-/* ── FORGOT & SOLICITAR ── */
-.forgot{
-  text-align:center;margin-top:16px;
+/* ── FORGOT & LINKS ── */
+.forgot,.request-access,.register-link{
+  text-align:center;margin-top:12px;
   font-size:13px;color:var(--text-dim);
 }
-.forgot a{color:var(--accent);text-decoration:none;font-weight:600}
-.forgot a:hover{text-decoration:underline}
-
-.request-access{
-  text-align:center;margin-top:12px;
-  font-size:12px;color:var(--text-dim);
+.forgot{margin-top:16px;}
+.forgot a,.request-access a,.register-link a{
+  color:var(--accent);text-decoration:none;font-weight:600;
 }
-.request-access a{color:var(--accent);text-decoration:none;font-weight:600}
-.request-access a:hover{text-decoration:underline}
+.forgot a:hover,.request-access a:hover,.register-link a:hover{text-decoration:underline;}
+.register-link{
+  margin-top:10px;font-size:13px;
+  background:rgba(0,201,167,.06);
+  border:1px solid rgba(0,201,167,.12);
+  border-radius:12px;padding:12px 16px;
+}
+.register-link a{font-size:13px;}
 
 /* ── ERROR / INFO ── */
 .msg{
@@ -169,17 +174,11 @@ body::after{
 }
 .msg.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5}
 .msg.info{background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.2);color:#5ee8cc}
+.msg.warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24}
 .msg.show{display:flex}
 
 /* ── SPINNER ── */
-.spinner{
-  width:18px;height:18px;
-  border:2px solid rgba(255,255,255,.3);
-  border-top-color:#fff;
-  border-radius:50%;
-  animation:spin .7s linear infinite;
-  display:none;
-}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
 .btn-login.loading .spinner{display:block}
 .btn-login.loading .btn-text{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -195,24 +194,57 @@ body::after{
 .role-redirect p{font-size:12px;color:var(--text-muted)}
 
 /* ── PILOT BADGE ── */
-.pilot-info{
-  background:rgba(245,158,11,.07);
-  border:1px solid rgba(245,158,11,.18);
-  border-radius:12px;padding:12px 14px;
-  font-size:12px;color:#fbbf24;
-  margin-top:14px;display:none;line-height:1.5;
-}
+.pilot-info{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:12px;padding:12px 14px;font-size:12px;color:#fbbf24;margin-top:14px;display:none;line-height:1.5;}
 .pilot-info strong{font-weight:800}
 
 /* ── FOOTER ── */
-.card-footer{
-  text-align:center;margin-top:20px;
-  font-size:11px;color:var(--text-dim);
+.card-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--text-dim);}
+
+/* ════════════════════════════════════
+   MODAL CONTACTO
+   ════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s;
 }
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-card{
+  width:100%;max-width:420px;
+  background:linear-gradient(145deg,#071f2a,#0e3040);
+  border:1px solid var(--border);
+  border-radius:24px;padding:36px 32px 28px;
+  animation:fadeUp .3s ease;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.modal-title{font-size:20px;font-weight:800;color:var(--text);}
+.modal-close{
+  background:rgba(255,255,255,.07);border:none;cursor:pointer;
+  color:var(--text-muted);font-size:18px;
+  width:32px;height:32px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s;flex-shrink:0;
+}
+.modal-close:hover{background:rgba(255,255,255,.14);}
+.modal-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.5;}
+.modal-footer{text-align:center;margin-top:14px;font-size:12px;color:var(--text-dim);}
+.modal-footer a{color:var(--accent);text-decoration:none;font-weight:600;}
+.modal-footer a:hover{text-decoration:underline;}
+/* Campos del modal más compactos */
+.modal-card .field{margin-bottom:13px;}
+.modal-card .field input,.modal-card .field textarea{padding:11px 14px;font-size:14px;}
+.modal-card .btn-login{padding:13px;font-size:14px;margin-top:6px;}
 </style>
 </head>
 <body>
 
+<!-- ══════════════════ TARJETA LOGIN ══════════════════ -->
 <div class="login-card">
 
   <!-- Logo -->
@@ -230,22 +262,26 @@ body::after{
   </div>
 
   <!-- Mensajes -->
-  <div class="msg error" id="msg-error">
-    <span>⚠️</span><span id="msg-error-text">Error al iniciar sesión</span>
-  </div>
-  <div class="msg info" id="msg-info">
-    <span>ℹ️</span><span id="msg-info-text"></span>
-  </div>
+  <div class="msg error" id="msg-error"><span>⚠️</span><span id="msg-error-text">Error al iniciar sesión</span></div>
+  <div class="msg info"  id="msg-info"><span>ℹ️</span><span id="msg-info-text"></span></div>
+
+  <!-- Barra de bloqueo por intentos -->
+  <div class="lockout-bar" id="lockout-bar"></div>
 
   <!-- Form -->
-  <form id="login-form">
+  <form id="login-form" autocomplete="on" novalidate>
     <div class="field">
-      <label>Correo electrónico</label>
-      <input type="email" id="email" placeholder="correo@ips.com" autocomplete="email" required>
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" name="email" placeholder="correo@ips.com"
+             autocomplete="email" required maxlength="254">
     </div>
     <div class="field">
-      <label>Contraseña</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+      <label for="password">Contraseña</label>
+      <div class="input-wrap">
+        <input type="password" id="password" name="password" placeholder="••••••••"
+               autocomplete="current-password" required maxlength="128">
+        <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Mostrar contraseña">👁</button>
+      </div>
     </div>
 
     <button type="submit" class="btn-login" id="btn-login">
@@ -269,82 +305,246 @@ body::after{
     <a href="#" id="link-forgot">¿Olvidaste tu contraseña?</a>
   </div>
 
-  <div class="request-access">
-    ¿Tu IPS aún no tiene acceso? <a href="mailto:hola@normalis.co">Solicita el programa piloto</a>
+  <!-- Registro nuevo cliente -->
+  <div class="register-link">
+    ¿Tu IPS es nueva en NormaLis? <a href="registro.html">Solicitar acceso</a>
+  </div>
+
+  <div class="request-access" style="margin-top:10px;">
+    <a href="#" id="btn-open-contact">📩 Contactar a NormaLis</a>
   </div>
 
   <div class="card-footer">NormaLis · Res. 3100/2019 &amp; 465/2025 · 🔒 Datos seguros</div>
 </div>
 
-<script>
-// ── Firebase Config ──
-const firebaseConfig = {
-  apiKey: "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
-  authDomain: "normalis-5587d.firebaseapp.com",
-  projectId: "normalis-5587d",
-  storageBucket: "normalis-5587d.firebasestorage.app",
-  messagingSenderId: "328915530941",
-  appId: "1:328915530941:web:8e77246bd2e326e115b3d4"
-};
+<!-- ══════════════════ MODAL CONTACTO ══════════════════ -->
+<div class="modal-overlay" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title-text">📩 Contáctanos</div>
+      <button class="modal-close" id="btn-close-modal" aria-label="Cerrar">✕</button>
+    </div>
+    <p class="modal-sub">¿Tu IPS quiere conocer NormaLis? Cuéntanos y te respondemos pronto.</p>
 
+    <!-- Mensaje de éxito -->
+    <div class="msg info" id="contact-success" style="margin-bottom:16px;">
+      <span>✓</span><span>¡Mensaje enviado! Te responderemos a la brevedad.</span>
+    </div>
+
+    <form id="contact-form" novalidate>
+      <div class="field">
+        <label for="c-nombre">Nombre de la IPS</label>
+        <input type="text" id="c-nombre" placeholder="Ej. Clínica San Rafael" required maxlength="120">
+      </div>
+      <div class="field">
+        <label for="c-email">Correo de contacto</label>
+        <input type="email" id="c-email" placeholder="gerencia@ips.com" required maxlength="254">
+      </div>
+      <div class="field">
+        <label for="c-tel">Teléfono (opcional)</label>
+        <input type="tel" id="c-tel" placeholder="+57 300 000 0000" maxlength="25">
+      </div>
+      <div class="field">
+        <label for="c-msg">Mensaje</label>
+        <textarea id="c-msg" placeholder="¿En qué podemos ayudarte?" rows="3" required maxlength="600"></textarea>
+      </div>
+      <button type="submit" class="btn-login">
+        <span class="btn-text">📨 Enviar mensaje</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <div class="modal-footer">
+      O escríbenos directamente a <a href="mailto:hola@normalis.co">hola@normalis.co</a>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════
+// FIREBASE CONFIG
+// ════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+  authDomain:        "normalis-5587d.firebaseapp.com",
+  projectId:         "normalis-5587d",
+  storageBucket:     "normalis-5587d.firebasestorage.app",
+  messagingSenderId: "328915530941",
+  appId:             "1:328915530941:web:8e77246bd2e326e115b3d4"
+};
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ── Elementos ──
-const form        = document.getElementById('login-form');
-const btnLogin    = document.getElementById('btn-login');
-const emailInput  = document.getElementById('email');
-const passInput   = document.getElementById('password');
-const msgError    = document.getElementById('msg-error');
-const msgErrorTxt = document.getElementById('msg-error-text');
-const msgInfo     = document.getElementById('msg-info');
-const msgInfoTxt  = document.getElementById('msg-info-text');
-const roleRedirect= document.getElementById('role-redirect');
-const roleBadge   = document.getElementById('role-badge');
-const pilotInfo   = document.getElementById('pilot-info');
+// ════════════════════════════════════
+// REFERENCIAS DOM
+// ════════════════════════════════════
+const form         = document.getElementById('login-form');
+const btnLogin     = document.getElementById('btn-login');
+const emailInput   = document.getElementById('email');
+const passInput    = document.getElementById('password');
+const msgError     = document.getElementById('msg-error');
+const msgErrorTxt  = document.getElementById('msg-error-text');
+const msgInfo      = document.getElementById('msg-info');
+const msgInfoTxt   = document.getElementById('msg-info-text');
+const roleRedirect = document.getElementById('role-redirect');
+const roleBadge    = document.getElementById('role-badge');
+const pilotInfo    = document.getElementById('pilot-info');
+const lockoutBar   = document.getElementById('lockout-bar');
 
-// ── Si ya está autenticado, redirigir ──
-auth.onAuthStateChanged(async user => {
-  if (user) await routeUser(user);
+// ════════════════════════════════════
+// RATE LIMITING — anti fuerza bruta
+// ════════════════════════════════════
+const RATE_KEY      = 'nls_login_rl';
+const MAX_ATTEMPTS  = 5;
+const LOCKOUT_MS    = 15 * 60 * 1000; // 15 minutos
+
+function getRateData() {
+  try {
+    return JSON.parse(localStorage.getItem(RATE_KEY)) || { count: 0, lockedUntil: 0 };
+  } catch (_) {
+    return { count: 0, lockedUntil: 0 };
+  }
+}
+
+function saveRateData(data) {
+  try { localStorage.setItem(RATE_KEY, JSON.stringify(data)); } catch (_) {}
+}
+
+function checkLockout() {
+  const d = getRateData();
+  if (d.lockedUntil && Date.now() < d.lockedUntil) {
+    const min = Math.ceil((d.lockedUntil - Date.now()) / 60000);
+    return 'Por seguridad, el acceso está bloqueado. Vuelve en ' + min + ' minuto' + (min !== 1 ? 's' : '') + '.';
+  }
+  return null;
+}
+
+function registerFailedAttempt() {
+  const d   = getRateData();
+  const now = Date.now();
+  if (d.lockedUntil && now >= d.lockedUntil) {
+    saveRateData({ count: 1, lockedUntil: 0 });
+    return;
+  }
+  d.count = (d.count || 0) + 1;
+  if (d.count >= MAX_ATTEMPTS) {
+    d.lockedUntil = now + LOCKOUT_MS;
+    d.count = 0;
+  }
+  saveRateData(d);
+}
+
+function clearRateData() {
+  try { localStorage.removeItem(RATE_KEY); } catch (_) {}
+}
+
+// Mostrar barra de lockout si aplica al cargar
+(function() {
+  const msg = checkLockout();
+  if (msg) {
+    lockoutBar.textContent = '🔒 ' + msg;
+    lockoutBar.classList.add('show');
+    btnLogin.disabled = true;
+    // Refrescar cada 10s
+    const iv = setInterval(function() {
+      const m = checkLockout();
+      if (!m) {
+        lockoutBar.classList.remove('show');
+        btnLogin.disabled = false;
+        clearInterval(iv);
+      } else {
+        lockoutBar.textContent = '🔒 ' + m;
+      }
+    }, 10000);
+  }
+})();
+
+// ════════════════════════════════════
+// AUTH — si ya está logueado redirigir
+// ════════════════════════════════════
+auth.onAuthStateChanged(function(user) {
+  if (user) routeUser(user);
 });
 
-// ── Submit ──
-form.addEventListener('submit', async e => {
+// ════════════════════════════════════
+// SUBMIT LOGIN
+// ════════════════════════════════════
+form.addEventListener('submit', async function(e) {
   e.preventDefault();
   hideMessages();
+
+  // Verificar lockout
+  const lockMsg = checkLockout();
+  if (lockMsg) {
+    lockoutBar.textContent = '🔒 ' + lockMsg;
+    lockoutBar.classList.add('show');
+    return;
+  }
+
+  const emailVal = emailInput.value.trim().toLowerCase();
+  const passVal  = passInput.value;
+
+  // Validación cliente
+  if (!isValidEmail(emailVal)) {
+    showError('Ingresa un correo electrónico válido.');
+    return;
+  }
+  if (passVal.length < 6) {
+    showError('La contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
   setLoading(true);
 
-  const email    = emailInput.value.trim();
-  const password = passInput.value;
-
   try {
-    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const cred = await auth.signInWithEmailAndPassword(emailVal, passVal);
+    clearRateData();
     await routeUser(cred.user);
   } catch (err) {
     setLoading(false);
-    showError(friendlyError(err.code));
+    registerFailedAttempt();
+    const lm = checkLockout();
+    if (lm) {
+      lockoutBar.textContent = '🔒 ' + lm;
+      lockoutBar.classList.add('show');
+    } else {
+      showError(friendlyError(err.code));
+    }
   }
 });
 
-// ── Ruteo por rol ──
+// ════════════════════════════════════
+// RUTEO POR ROL
+// ════════════════════════════════════
 async function routeUser(user) {
   try {
     const snap = await db.collection('usuarios').doc(user.uid).get();
 
     if (!snap.exists) {
-      // Sin perfil → crear como cliente por defecto (o bloquear)
       showError('Tu cuenta no tiene un perfil asignado. Contacta al administrador.');
       await auth.signOut();
+      sessionStorage.clear();
       setLoading(false);
       return;
     }
 
-    const data = snap.data();
-    const rol  = data.rol || 'cliente';
-    const nombre = data.nombre || user.email;
+    const data   = snap.data();
+    const rol    = (data.rol || 'cliente').trim().toLowerCase();
+    const nombre = (data.nombre || user.email).replace(/[<>]/g, ''); // sanitize
 
-    // Guardar sesión en sessionStorage
+    // ── Rol: pendiente (registrado, sin aprobar) ──
+    if (rol === 'pendiente') {
+      showError('Tu solicitud de acceso está en revisión. Te notificaremos cuando sea aprobada. ¿Dudas? Escríbenos a hola@normalis.co');
+      await auth.signOut();
+      sessionStorage.clear();
+      setLoading(false);
+      return;
+    }
+
+    // Guardar sesión (solo datos no sensibles)
     sessionStorage.setItem('normalis_uid',    user.uid);
     sessionStorage.setItem('normalis_rol',    rol);
     sessionStorage.setItem('normalis_nombre', nombre);
@@ -353,70 +553,137 @@ async function routeUser(user) {
     if (rol === 'admin') {
       roleBadge.textContent = '✓ Administrador — Bienvenido, ' + nombre;
       showRedirect();
-      setTimeout(() => { window.location.href = 'admin.html'; }, 1200);
+      setTimeout(function() { window.location.replace('admin.html'); }, 1200);
 
     } else if (rol === 'piloto') {
-      // Verificar expiración
       const expiresAt = data.expiresAt ? data.expiresAt.toDate() : null;
       const now       = new Date();
 
       if (expiresAt && expiresAt < now) {
-        showError('Tu acceso al programa piloto ha vencido el ' +
-          expiresAt.toLocaleDateString('es-CO', {day:'2-digit',month:'long',year:'numeric'}) +
-          '. Contacta a NormaLis para renovarlo.');
+        showError('Tu acceso piloto venció el ' +
+          expiresAt.toLocaleDateString('es-CO', { day:'2-digit', month:'long', year:'numeric' }) +
+          '. Contáctanos para renovarlo.');
         await auth.signOut();
+        sessionStorage.clear();
         setLoading(false);
         return;
       }
 
-      // Calcular días restantes
-      let diasRestantes = null;
       if (expiresAt) {
-        diasRestantes = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
-        sessionStorage.setItem('normalis_expires',      expiresAt.toISOString());
-        sessionStorage.setItem('normalis_dias_restantes', diasRestantes);
+        const diasRestantes = Math.max(0, Math.ceil((expiresAt - now) / 86400000));
+        sessionStorage.setItem('normalis_expires',         expiresAt.toISOString());
+        sessionStorage.setItem('normalis_dias_restantes',  String(diasRestantes));
+
+        pilotInfo.style.display = 'block';
+        // Usar textContent para el nombre (ya sanitizado), innerHTML solo para el wrapper
+        pilotInfo.innerHTML = '';
+        const pLine = document.createElement('span');
+        pLine.textContent = '🚀 Acceso Piloto — Te quedan ' + diasRestantes + ' días de acceso gratuito' +
+          ' (hasta el ' + expiresAt.toLocaleDateString('es-CO', { day:'2-digit', month:'long', year:'numeric' }) + ').';
+        pilotInfo.appendChild(pLine);
       }
 
       roleBadge.textContent = '✓ Programa Piloto — Bienvenido, ' + nombre;
-      if (diasRestantes !== null) {
-        pilotInfo.style.display = 'block';
-        pilotInfo.innerHTML = `🚀 <strong>Acceso Piloto</strong> — Te quedan <strong>${diasRestantes} días</strong> de acceso gratuito` +
-          ` (hasta el ${expiresAt.toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})}).`;
-      }
       showRedirect();
-      setTimeout(() => { window.location.href = 'normativa-app-v2.html'; }, 2000);
+      setTimeout(function() { window.location.replace('normativa-app-v2.html'); }, 2000);
 
     } else {
       // cliente
       roleBadge.textContent = '✓ Bienvenido, ' + nombre;
       showRedirect();
-      setTimeout(() => { window.location.href = 'normativa-app-v2.html'; }, 1200);
+      setTimeout(function() { window.location.replace('normativa-app-v2.html'); }, 1200);
     }
 
   } catch (err) {
-    console.error(err);
-    showError('Error al verificar tu perfil. Intenta de nuevo.');
+    console.error('[NormaLis] routeUser:', err.code || err.message);
+    showError('Error al verificar tu perfil. Verifica tu conexión e intenta de nuevo.');
     setLoading(false);
   }
 }
 
-// ── Recuperar contraseña ──
-document.getElementById('link-forgot').addEventListener('click', async e => {
+// ════════════════════════════════════
+// RECUPERAR CONTRASEÑA
+// ════════════════════════════════════
+document.getElementById('link-forgot').addEventListener('click', async function(e) {
   e.preventDefault();
-  const email = emailInput.value.trim();
-  if (!email) {
+  const emailVal = emailInput.value.trim().toLowerCase();
+  if (!emailVal || !isValidEmail(emailVal)) {
     showError('Ingresa tu correo primero para recuperar la contraseña.');
     return;
   }
   try {
-    await auth.sendPasswordResetEmail(email);
-    showInfo('Te enviamos un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.');
+    await auth.sendPasswordResetEmail(emailVal);
+    showInfo('Te enviamos un correo para restablecer tu contraseña. Revisa tu bandeja (y la carpeta de spam).');
   } catch (err) {
     showError(friendlyError(err.code));
   }
 });
 
-// ── Helpers ──
+// ════════════════════════════════════
+// TOGGLE CONTRASEÑA
+// ════════════════════════════════════
+document.getElementById('toggle-pass').addEventListener('click', function() {
+  const isPass = passInput.type === 'password';
+  passInput.type  = isPass ? 'text' : 'password';
+  this.textContent = isPass ? '🙈' : '👁';
+  this.setAttribute('aria-label', isPass ? 'Ocultar contraseña' : 'Mostrar contraseña');
+});
+
+// ════════════════════════════════════
+// MODAL CONTACTO
+// ════════════════════════════════════
+const contactModal  = document.getElementById('contact-modal');
+const contactForm   = document.getElementById('contact-form');
+const contactSuccess= document.getElementById('contact-success');
+
+function openModal() {
+  contactModal.classList.add('open');
+  contactSuccess.classList.remove('show');
+  document.getElementById('c-nombre').focus();
+}
+function closeModal() {
+  contactModal.classList.remove('open');
+}
+
+document.getElementById('btn-open-contact').addEventListener('click', function(e) {
+  e.preventDefault(); openModal();
+});
+document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+contactModal.addEventListener('click', function(e) {
+  if (e.target === contactModal) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && contactModal.classList.contains('open')) closeModal();
+});
+
+contactForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const nombre = sanitizeText(document.getElementById('c-nombre').value.trim());
+  const email  = document.getElementById('c-email').value.trim();
+  const tel    = sanitizeText(document.getElementById('c-tel').value.trim());
+  const msg    = sanitizeText(document.getElementById('c-msg').value.trim());
+
+  if (!nombre || !isValidEmail(email) || !msg) {
+    return; // HTML5 validation handles display
+  }
+
+  const subject = 'Solicitud NormaLis — ' + nombre;
+  const body    = 'Nombre IPS: ' + nombre + '\n'
+                + 'Correo: '     + email   + '\n'
+                + (tel ? 'Teléfono: ' + tel + '\n' : '')
+                + '\nMensaje:\n' + msg;
+
+  const mailto = 'mailto:hola@normalis.co?subject='
+    + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  window.open(mailto, '_blank', 'noopener');
+  contactSuccess.classList.add('show');
+  contactForm.reset();
+});
+
+// ════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════
 function setLoading(on) {
   btnLogin.disabled = on;
   btnLogin.classList.toggle('loading', on);
@@ -440,22 +707,32 @@ function hideMessages() {
 }
 
 function showRedirect() {
-  form.style.display = 'none';
+  form.style.display    = 'none';
   roleRedirect.style.display = 'block';
   setLoading(false);
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+}
+
+function sanitizeText(str) {
+  return String(str).replace(/[<>"'`]/g, '').slice(0, 600);
+}
+
 function friendlyError(code) {
-  const errors = {
-    'auth/user-not-found':      'No existe una cuenta con ese correo.',
-    'auth/wrong-password':      'Contraseña incorrecta.',
-    'auth/invalid-email':       'El correo no es válido.',
-    'auth/too-many-requests':   'Demasiados intentos fallidos. Espera unos minutos.',
-    'auth/user-disabled':       'Esta cuenta ha sido desactivada.',
-    'auth/network-request-failed': 'Sin conexión a internet. Verifica tu red.',
-    'auth/invalid-credential':  'Correo o contraseña incorrectos.',
+  const map = {
+    'auth/user-not-found':          'No existe una cuenta con ese correo.',
+    'auth/wrong-password':          'Contraseña incorrecta.',
+    'auth/invalid-email':           'El correo no es válido.',
+    'auth/too-many-requests':       'Demasiados intentos fallidos. Espera unos minutos.',
+    'auth/user-disabled':           'Esta cuenta ha sido desactivada. Contacta al administrador.',
+    'auth/network-request-failed':  'Sin conexión a internet. Verifica tu red.',
+    'auth/invalid-credential':      'Correo o contraseña incorrectos.',
+    'auth/missing-password':        'Ingresa tu contraseña.',
+    'auth/email-already-in-use':    'Ya existe una cuenta con ese correo.',
   };
-  return errors[code] || 'Error al iniciar sesión. Intenta de nuevo.';
+  return map[code] || 'Error al iniciar sesión (' + (code || 'desconocido') + '). Intenta de nuevo.';
 }
 </script>
 </body>
