@@ -2580,7 +2580,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <div class="view" id="view-incidentes">
   <div style="padding:24px;max-width:900px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">⚠️ Incidentes y Eventos Adversos</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Registro y seguimiento según Resolución 1446/2006 y 4816/2008</p></div>
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">⚠️ Incidentes y Eventos Adversos</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Registro y seguimiento según Resolución 256/2016 y 4816/2008</p></div>
       <button onclick="openIncidenteForm()" style="background:#ef4444;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px">+ Nuevo Evento</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
@@ -8280,10 +8280,10 @@ const PAMEC_AUTOEVAL_ITEMS = [
   {id:'ae12', cat:'Indicadores Res. 256/2016', texto:'Los indicadores se reportan al SOGCS en los tiempos establecidos (trimestral o según aplique).', norma:'Res. 256/2016 Art. 6'},
   {id:'ae13', cat:'Indicadores Res. 256/2016', texto:'Se hace análisis de tendencia de los indicadores con al menos 4 mediciones históricas.', norma:'Res. 256/2016 Art. 7'},
   {id:'ae14', cat:'Seguimiento y evaluación', texto:'Se realizan reuniones periódicas de seguimiento PAMEC con actas firmadas y compromisos registrados.', norma:'Res. 1445/2006 Anexo Técnico 1'},
-  {id:'ae15', cat:'Seguimiento y evaluación', texto:'Los eventos adversos reportados están vinculados al PAMEC como insumo para la selección de procesos.', norma:'Dec. 1011/2006 Art. 6 · Res. 1446/2006'},
+  {id:'ae15', cat:'Seguimiento y evaluación', texto:'Los eventos adversos reportados están vinculados al PAMEC como insumo para la selección de procesos.', norma:'Dec. 1011/2006 Art. 6 · Res. 256/2016},
   {id:'ae16', cat:'Seguimiento y evaluación', texto:'Se documentó la evaluación del impacto de las intervenciones realizadas comparando con la línea base.', norma:'Art. 6, Res. 1445/2006'},
   {id:'ae17', cat:'Seguimiento y evaluación', texto:'Existe evidencia del conocimiento y participación del personal en el PAMEC (actas, listas de asistencia).', norma:'Res. 1445/2006 Anexo Técnico 1'},
-  {id:'ae18', cat:'Articulación normativa', texto:'El PAMEC articula resultados de auditoría interna, PQRSF, eventos adversos e indicadores en un análisis integrado.', norma:'Dec. 1011/2006 Art. 8 · Res. 1446/2006'},
+  {id:'ae18', cat:'Articulación normativa', texto:'El PAMEC articula resultados de auditoría interna, PQRSF, eventos adversos e indicadores en un análisis integrado.', norma:'Dec. 1011/2006 Art. 8 · Res. 256/2016},
 ];
 
 function loadPamecData(){
@@ -12272,12 +12272,12 @@ function xaiResponder(pregunta) {
   } else if (q.indexOf('pqrs')>=0 || q.indexOf('peticion')>=0 || q.indexOf('queja')>=0 || q.indexOf('reclamo')>=0) {
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado de PQRS</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Total: <b>' + ctx.pqrs.total + '</b></li><li>Pendientes: <b style="color:' + (ctx.pqrs.pendientes>0?'#ef4444':'#10b981') + '">' + ctx.pqrs.pendientes + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 2063/2021: max 15 dias habiles.</div>' + (ctx.pqrs.pendientes>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27pqrs\x27);return false" style="color:#6366f1;font-size:13px;font-weight:600">Gestionar PQRS pendientes</a></div>':'') + '</div>';
   } else if (q.indexOf('incident')>=0 || q.indexOf('evento')>=0 || q.indexOf('adverso')>=0) {
-    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Incidentes y Eventos Adversos</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Abiertos: <b style="color:' + (ctx.incidentes.abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.abiertos + '</b></li><li>Criticos: <b style="color:' + (ctx.incidentes.criticos_abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.criticos_abiertos + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 1446/2006 y 4816/2008: reporte en max 72h.</div>' + (ctx.incidentes.criticos_abiertos>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-size:13px;font-weight:600">Atender eventos criticos</a></div>':'') + '</div>';
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Incidentes y Eventos Adversos</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Abiertos: <b style="color:' + (ctx.incidentes.abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.abiertos + '</b></li><li>Criticos: <b style="color:' + (ctx.incidentes.criticos_abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.criticos_abiertos + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 256/2016 y 4816/2008: reporte en max 72h.</div>' + (ctx.incidentes.criticos_abiertos>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-size:13px;font-weight:600">Atender eventos criticos</a></div>':'') + '</div>';
   } else if (q.indexOf('vencim')>=0 || q.indexOf('tarjeta')>=0 || q.indexOf('certificad')>=0 || q.indexOf('licencia')>=0) {
     var nomV = ctx.vencimientos.detalle_vencidos.length>0?' ('+ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional;}).join(', ')+')':'';
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Documentos del Personal</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Vencidos: <b style="color:' + (ctx.vencimientos.vencidos>0?'#ef4444':'#10b981') + '">' + ctx.vencimientos.vencidos + '</b>' + nomV + '</li><li>Por vencer 30d: <b style="color:' + (ctx.vencimientos.proximos30>0?'#f59e0b':'#10b981') + '">' + ctx.vencimientos.proximos30 + '</b></li><li>Profesionales: <b>' + ctx.talento.profesionales + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 3100/2019: tarjetas vigentes obligatorias.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27vencimientos-personal\x27);return false" style="color:#8b5cf6;font-size:13px;font-weight:600">Ver vencimientos</a></div></div>';
   } else if (q.indexOf('pamec')>=0 || q.indexOf('mejora')>=0 || q.indexOf('calidad')>=0) {
-    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado del PAMEC</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Fase: <b>' + ctx.pamec.fase + ' de 4</b></li><li>Procesos: <b>' + ctx.pamec.procesos + '</b></li><li>Acciones: <b>' + ctx.pamec.acciones + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 1446/2006 y Decreto 1011/2006: PAMEC obligatorio en SOGC.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-size:13px;font-weight:600">Ir al PAMEC</a></div></div>';
+    resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado del PAMEC</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Fase: <b>' + ctx.pamec.fase + ' de 4</b></li><li>Procesos: <b>' + ctx.pamec.procesos + '</b></li><li>Acciones: <b>' + ctx.pamec.acciones + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 256/2016 y Decreto 1011/2006: PAMEC obligatorio en SOGC.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-size:13px;font-weight:600">Ir al PAMEC</a></div></div>';
   } else {
     var r2 = ctx.resumen_riesgo;
     var cR2 = r2.score>=80?'#10b981':r2.score>=60?'#f59e0b':r2.score>=40?'#ef4444':'#7f1d1d';
@@ -12797,7 +12797,7 @@ function pamecGuiaFase() {
   });
   html += '</div>';
   html += '<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">';
-  html += 'Resolución 1446/2006 · Decreto 1011/2006 — SOGC · Resolución 2082/2014';
+  html += 'Decreto 1011/2006 — SOGC · Resolución 256/2016';
   html += '</div></div>';
   return html;
 }
