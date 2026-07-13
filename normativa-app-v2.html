@@ -910,6 +910,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
       <div class="sb-item" onclick="nav('vencimientos-personal')"><span class="icon">🪪</span>Vencimientos Personal</div>
       <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
       <div class="sb-item" onclick="nav('bitacora')"><span class="icon">📋</span>Bitácora</div>
+<div class="sb-item" onclick="nav('supervision')"><span class="icon">🔭</span>Supervisión</div>
       <div class="sb-item" onclick="openUserMgmt()"><span class="icon">👤</span>Gestión de Perfiles</div>
       <div class="sb-item-settings" onclick="abrirSetup()"><span>⚙️</span> Configuración</div>
     </nav>
@@ -2751,6 +2752,8 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       <div id="bit-pagination" style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#64748b"></div>
     </div>
   </div>
+<div id="view-supervision" class="view" style="display:none"></div>
+
 </div>
 
 <script>
@@ -12311,6 +12314,144 @@ window.sendChatQ = function(q) {
   if (inp) inp.value = q;
   window.sendMainChat();
 };
+
+// SUPERVISION — Error Tracking + Analytics + Dashboard
+
+(function() {
+  var MAX_ERRORS = 200;
+  function saveError(err) {
+    try {
+      var errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
+      errors.unshift(err);
+      if (errors.length > MAX_ERRORS) errors = errors.slice(0, MAX_ERRORS);
+      localStorage.setItem('normalis_errores', JSON.stringify(errors));
+    } catch(e) {}
+  }
+  window.onerror = function(msg, src, line, col, error) {
+    var entry = {
+      ts: new Date().toISOString(),
+      tipo: 'JS_ERROR',
+      mensaje: String(msg).substring(0, 200),
+      archivo: (src || '').split('/').pop(),
+      linea: line,
+      columna: col,
+      stack: error && error.stack ? error.stack.substring(0, 300) : ''
+    };
+    saveError(entry);
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(e) {
+    var entry = {
+      ts: new Date().toISOString(),
+      tipo: 'PROMISE_ERROR',
+      mensaje: String(e.reason && e.reason.message ? e.reason.message : e.reason).substring(0, 200),
+      archivo: '',
+      linea: 0,
+      columna: 0,
+      stack: e.reason && e.reason.stack ? e.reason.stack.substring(0, 300) : ''
+    };
+    saveError(entry);
+  });
+})();
+
+function trackEvent(categoria, accion, valor) {
+  try {
+    var analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
+    analytics.unshift({ ts: new Date().toISOString(), categoria: categoria, accion: accion, valor: valor || '' });
+    if (analytics.length > 500) analytics = analytics.slice(0, 500);
+    localStorage.setItem('normalis_analytics', JSON.stringify(analytics));
+  } catch(e) {}
+}
+
+(function() {
+  var _navSuperv = window.nav;
+  window.nav = function(sec) {
+    trackEvent('navegacion', 'modulo_visitado', sec);
+    if (sec === 'supervision') { setTimeout(renderSupervision, 100); }
+    if (typeof _navSuperv === 'function') _navSuperv(sec);
+  };
+})();
+
+(function() {
+  var _origChatSuperv = window.sendMainChat;
+  window.sendMainChat = function() {
+    var inp = document.getElementById('chat-input');
+    if (inp && inp.value.trim()) trackEvent('xai', 'consulta', inp.value.trim().substring(0, 60));
+    if (typeof _origChatSuperv === 'function') _origChatSuperv();
+  };
+})();
+
+window.addEventListener('load', function() {
+  try {
+    var nav = window.performance && window.performance.timing;
+    if (nav) { var lt = nav.loadEventEnd - nav.navigationStart; if (lt > 0) trackEvent('performance', 'page_load_ms', lt); }
+  } catch(e) {}
+});
+
+function renderSupervision() {
+  var errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
+  var analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
+  var navEvents = analytics.filter(function(e) { return e.categoria === 'navegacion'; });
+  var xaiEvents = analytics.filter(function(e) { return e.categoria === 'xai'; });
+  var perfEvents = analytics.filter(function(e) { return e.categoria === 'performance' && e.accion === 'page_load_ms'; });
+  var moduleCounts = {};
+  navEvents.forEach(function(e) { moduleCounts[e.valor] = (moduleCounts[e.valor] || 0) + 1; });
+  var topModules = Object.entries(moduleCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  var avgLoad = perfEvents.length > 0 ? Math.round(perfEvents.reduce(function(s,e){return s+parseInt(e.valor||0);},0)/perfEvents.length) : null;
+  var fsStatus = 'Listo';
+  try { var st = document.getElementById('sync-text'); if (st) fsStatus = st.textContent || 'Listo'; } catch(ex) {}
+  var errorsHoy = errors.filter(function(e){return new Date(e.ts)>new Date(Date.now()-86400000);});
+  var errColor = errorsHoy.length===0?'#10b981':errorsHoy.length<5?'#f59e0b':'#ef4444';
+  var html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px"><div><h2 style="margin:0;font-size:22px;font-weight:800">Supervision del Sistema</h2><p style="margin:4px 0 0;color:#64748b;font-size:13px">Monitoreo en tiempo real de NormaLis</p></div><button onclick="renderSupervision()" style="background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Actualizar</button></div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px">';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Errores hoy</div><div style="font-size:28px;font-weight:800;color:'+errColor+'">'+errorsHoy.length+'</div><div style="font-size:11px;color:#94a3b8">Total: '+errors.length+'</div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Consultas XAI</div><div style="font-size:28px;font-weight:800;color:#6366f1">'+xaiEvents.length+'</div><div style="font-size:11px;color:#94a3b8">en total</div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Navegaciones</div><div style="font-size:28px;font-weight:800;color:#8b5cf6">'+navEvents.length+'</div><div style="font-size:11px;color:#94a3b8">cambios modulo</div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Carga prom.</div><div style="font-size:28px;font-weight:800;color:'+(avgLoad&&avgLoad<3000?'#10b981':avgLoad&&avgLoad<6000?'#f59e0b':'#ef4444')+'">'+(avgLoad?avgLoad+'ms':'--')+'</div><div style="font-size:11px;color:#94a3b8">tiempo pagina</div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Firestore</div><div style="font-size:18px;font-weight:800;color:#10b981;margin-top:6px">'+fsStatus+'</div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:16px">Modulos mas usados</div>';
+  if (topModules.length===0) {
+    html += '<p style="color:#94a3b8;font-size:13px">Sin datos. Navega por los modulos para generar estadisticas.</p>';
+  } else {
+    var maxC = topModules[0][1];
+    topModules.forEach(function(m){
+      var pct = Math.round(m[1]/maxC*100);
+      html += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">'+m[0]+'</span><span style="color:#64748b">'+m[1]+'x</span></div><div style="background:#f1f5f9;border-radius:99px;height:6px"><div style="background:#6366f1;border-radius:99px;height:6px;width:'+pct+'%"></div></div></div>';
+    });
+  }
+  html += '</div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:16px">Ultimas consultas XAI</div>';
+  if (xaiEvents.length===0) {
+    html += '<p style="color:#94a3b8;font-size:13px">Sin consultas aun.</p>';
+  } else {
+    xaiEvents.slice(0,6).forEach(function(e){
+      var t = new Date(e.ts).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+      html += '<div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:#94a3b8;font-size:11px">'+t+'</span> '+e.valor+'</div>';
+    });
+  }
+  html += '</div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-weight:700;font-size:15px">Log de errores</div>';
+  if (errors.length>0) html += '<button onclick="localStorage.removeItem(\x27normalis_errores\x27);renderSupervision();" style="background:#fee2e2;color:#ef4444;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">Limpiar</button>';
+  html += '</div>';
+  if (errors.length===0) {
+    html += '<div style="text-align:center;padding:20px;color:#10b981;font-weight:600">Sin errores registrados</div>';
+  } else {
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;color:#64748b">Hora</th><th style="padding:8px;text-align:left;color:#64748b">Tipo</th><th style="padding:8px;text-align:left;color:#64748b">Mensaje</th><th style="padding:8px;text-align:left;color:#64748b">Archivo</th><th style="padding:8px;text-align:left;color:#64748b">Linea</th></tr></thead><tbody>';
+    errors.slice(0,20).forEach(function(e){
+      var t = new Date(e.ts).toLocaleString('es-CO',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      var tc = e.tipo==='JS_ERROR'?'#ef4444':'#f59e0b';
+      html += '<tr style="border-top:1px solid #f1f5f9"><td style="padding:8px;color:#64748b;white-space:nowrap">'+t+'</td><td style="padding:8px"><span style="background:'+tc+'22;color:'+tc+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">'+e.tipo+'</span></td><td style="padding:8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.mensaje+'</td><td style="padding:8px;color:#64748b">'+e.archivo+'</td><td style="padding:8px;color:#64748b">'+e.linea+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  html += '</div></div>';
+  var view = document.getElementById('view-supervision');
+  if (view) view.innerHTML = html;
+}
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
