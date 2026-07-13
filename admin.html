@@ -316,6 +316,12 @@
     <button class="tab-btn" onclick="switchTab('analytics')">
       📊 Analytics
     </button>
+    <button class="tab-btn" onclick="switchTab('solicitudes')">
+      📝 Solicitudes <span class="tab-badge" id="badge-solicitudes">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('leads')">
+      🔔 Leads <span class="tab-badge" id="badge-leads">0</span>
+    </button>
   </div>
 </div>
 
@@ -584,19 +590,26 @@
   </div>
 
 
-  <!-- ═══════════════ TAB: SOLICITUDES PENDIENTES ═══════════════ -->
-  <div id="tab-solicitudes" class="tab-panel" style="display:none">
-    <div class="section-header">
-      <h2 class="section-title">📝 Solicitudes de Registro Pendientes</h2>
-      <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Usuarios que completaron el auto-registro y esperan aprobación.</p>
-    </div>
-    <div id="solicitudes-lista">
-      <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
-        <div style="font-size:40px;margin-bottom:12px;">⏳</div>
-        <p>Cargando solicitudes…</p>
-      </div>
-    </div>
+<!-- ═══════════════ TAB: SOLICITUDES PENDIENTES ═══════════════ -->
+<div id="tab-solicitudes" class="tab-panel" style="display:none">
+  <div class="section-header">
+    <h2 class="section-title">📝 Solicitudes de Registro Pendientes</h2>
   </div>
+  <div id="solicitudes-lista">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ TAB: LEADS ═══════════════ -->
+<div id="tab-leads" class="tab-panel" style="display:none">
+  <div class="section-header">
+    <h2 class="section-title">🔔 Leads del Landing Page</h2>
+    <button class="btn btn-ghost btn-sm" onclick="cargarLeads()">🔄 Actualizar</button>
+  </div>
+  <div id="leads-lista">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
 
 </div><!-- /main -->
 
@@ -804,7 +817,6 @@ function initApp() {
   escucharProspectos();
   cargarPilotos();
   cargarAnalytics();
-  cargarSolicitudes();
 }
 
 // ──────────────────────────────────────────────
@@ -1374,48 +1386,75 @@ async function cargarAnalytics() {
           <tr>
             <td><strong>${u.nombre||'—'}</strong><div style="font-size:11px;color:var(--text-muted)">${u.cargo||''}</div></td>
             <td style="font-size:12px">${u.email||'—'}</td>
-            <td style="font-size:12px;color:var(--text-muted)">${u.ciudad||'—'}</td>
             <td><span class="badge badge-blue">${u.rol||'—'}</span></td>
-            <td>${u.activo ? '<span style="color:var(--green)">✅ Activo</span>' : '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td style="font-size:12px;color:var(--text-muted)">${u.fechaRegistro ? new Date(u.fechaRegistro.seconds*1000).toLocaleDateString('es-CO') : '—'}</td>
           </tr>`).join('')
-      : '<tr class="empty-row"><td colspan="5">Sin usuarios registrados.</td></tr>';
+      : '<tr class="empty-row"><td colspan="4">Sin usuarios registrados aún.</td></tr>';
 
   } catch(e) {
-    console.error('Analytics error:', e);
+    console.error('Error analytics:', e);
   }
 }
 
-// ──────────────────────────────────────────────
-// SOLICITUDES PENDIENTES
-// ──────────────────────────────────────────────
+</div><!-- /app-panels -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Firebase init (already in <head>) ──
+
+// ── Auth guard ──
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.replace('login.html'); return; }
+  const snap = await db.collection('usuarios').doc(user.uid).get();
+  const rol = snap.exists ? (snap.data().rol || '') : '';
+  if (rol !== 'admin' && rol !== 'superadmin') {
+    alert('Acceso solo para administradores.');
+    await auth.signOut();
+    window.location.replace('login.html');
+    return;
+  }
+  document.getElementById('topbar-user').textContent = user.email;
+  initApp();
+});
+
+function initApp() {
+  escucharProspectos();
+  cargarPilotos();
+  cargarAnalytics();
+  cargarSolicitudes();
+  cargarLeads();
+}
+
+// ── SOLICITUDES PENDIENTES ──
 function cargarSolicitudes() {
   db.collection('usuarios').where('rol', '==', 'pendiente')
     .orderBy('fechaSolicitud', 'desc')
     .onSnapshot(snap => {
-      const pendientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       const badge = document.getElementById('badge-solicitudes');
-      if (badge) badge.textContent = pendientes.length || '';
-      renderSolicitudes(pendientes);
-    }, err => {
-      console.error('Error cargando solicitudes:', err);
-    });
+      if (badge) badge.textContent = lista.length || '';
+      renderSolicitudes(lista);
+    }, err => console.error('solicitudes:', err));
 }
 
 function renderSolicitudes(lista) {
-  const container = document.getElementById('solicitudes-lista');
-  if (!container) return;
+  const el = document.getElementById('solicitudes-lista');
   if (!lista.length) {
-    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted);"><div style="font-size:40px;margin-bottom:12px">✅</div><p>No hay solicitudes pendientes.</p></div>';
+    el.innerHTML = '<div class="empty-state"><p>No hay solicitudes pendientes.</p></div>';
     return;
   }
-  let rows = lista.map(u => {
-    const fecha = u.fechaSolicitud ? new Date(u.fechaSolicitud.seconds * 1000).toLocaleDateString('es-CO') : '—';
-    const nombre = (u.nombre || '').replace(/[<>"']/g, '');
-    const contacto = (u.nombreContacto || '').replace(/[<>"']/g, '');
-    const email = (u.email || '').replace(/[<>"']/g, '');
-    const ciudad = (u.ciudad || '').replace(/[<>"']/g, '');
-    const cargo = (u.cargo || '').replace(/[<>"']/g, '');
-    const nit = (u.nit || '').replace(/[<>"']/g, '');
+  const rows = lista.map(u => {
+    const nombre   = (u.nombre         || '—').replace(/[<>]/g,'');
+    const contacto = (u.nombreContacto || '—').replace(/[<>]/g,'');
+    const email    = (u.email          || '—').replace(/[<>]/g,'');
+    const ciudad   = (u.ciudad         || '—').replace(/[<>]/g,'');
+    const nit      = (u.nit            || '').replace(/[<>]/g,'');
+    const cargo    = (u.cargo          || '').replace(/[<>]/g,'');
+    const fecha    = u.fechaSolicitud
+      ? new Date(u.fechaSolicitud.seconds*1000).toLocaleDateString('es-CO')
+      : '—';
     return `<tr>
       <td><strong>${nombre}</strong><div style="font-size:11px;color:var(--text-muted)">${nit}</div></td>
       <td>${contacto}<div style="font-size:11px;color:var(--text-muted)">${cargo}</div></td>
@@ -1428,42 +1467,100 @@ function renderSolicitudes(lista) {
       </td>
     </tr>`;
   }).join('');
-  container.innerHTML = `<div class="table-wrap"><table class="data-table">
-    <thead><tr>
-      <th>IPS / NIT</th><th>Contacto</th><th>Email</th><th>Ciudad</th><th>Fecha solicitud</th><th>Acciones</th>
-    </tr></thead>
-    <tbody>${rows}</tbody>
-  </table></div>`;
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>IPS</th><th>Responsable</th><th>Email</th><th>Ciudad</th><th>Fecha</th><th>Acciones</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
 }
 
 async function aprobarUsuario(uid) {
-  if (!confirm('¿Aprobar a este usuario?')) return;
   try {
     await db.collection('usuarios').doc(uid).update({
-      rol: 'cliente',
-      activo: true,
-      estado: 'aprobado',
+      rol: 'cliente', activo: true, estado: 'aprobado',
       fechaAprobacion: firebase.firestore.FieldValue.serverTimestamp()
     });
-    showToast('Usuario aprobado ✅', 'success');
-  } catch(e) {
-    showToast('Error al aprobar: ' + e.message, 'error');
-  }
+    showToast('Usuario aprobado', 'success');
+  } catch(e) { showToast('Error al aprobar: ' + e.message, 'error'); }
 }
 
 async function rechazarUsuario(uid) {
   if (!confirm('¿Rechazar esta solicitud?')) return;
   try {
-    await db.collection('usuarios').doc(uid).update({
-      rol: 'rechazado',
-      estado: 'rechazado'
-    });
+    await db.collection('usuarios').doc(uid).update({ rol: 'rechazado', estado: 'rechazado' });
     showToast('Solicitud rechazada', 'warning');
-  } catch(e) {
-    showToast('Error al rechazar: ' + e.message, 'error');
-  }
+  } catch(e) { showToast('Error al rechazar: ' + e.message, 'error'); }
 }
 
+// ── LEADS ──────────────────────────────────────────────────────────────────
+function cargarLeads() {
+  db.collection('leads').orderBy('fecha', 'desc').limit(500)
+    .onSnapshot(snap => {
+      const leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const nuevos = leads.filter(l => !l.estado || l.estado === 'nuevo').length;
+      const badge = document.getElementById('badge-leads');
+      if (badge) badge.textContent = nuevos || '';
+      renderLeads(leads);
+    }, err => console.error('leads:', err));
+}
+
+function renderLeads(lista) {
+  const el = document.getElementById('leads-lista');
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-state"><p>Sin leads aún. Los formularios de demo en normalis.co aparecerán aquí en tiempo real.</p></div>';
+    return;
+  }
+  const rows = lista.map(l => {
+    let fechaStr = '—';
+    if (l.fecha && l.fecha.seconds) {
+      fechaStr = new Date(l.fecha.seconds*1000).toLocaleString('es-CO',
+        {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    } else if (typeof l.fecha === 'string') {
+      fechaStr = new Date(l.fecha).toLocaleDateString('es-CO');
+    }
+    const nombre = (l.nombre||'—').replace(/[<>]/g,'');
+    const email  = (l.email ||'—').replace(/[<>]/g,'');
+    const tel    = (l.tel   ||'—').replace(/[<>]/g,'');
+    const tipo   = (l.tipo  ||'—').replace(/[<>]/g,'');
+    const ciudad = (l.ciudad||'—').replace(/[<>]/g,'');
+    const estado = l.estado || 'nuevo';
+    const badges = {nuevo:'badge-red',contactado:'badge-blue',convertido:'badge-green',descartado:'badge-gray'};
+    return `<tr>
+      <td><strong>${nombre}</strong></td>
+      <td style="font-size:12px"><a href="mailto:${email}" style="color:var(--primary)">${email}</a></td>
+      <td style="font-size:12px">${tel}</td>
+      <td style="font-size:12px">${tipo}</td>
+      <td>${ciudad}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${fechaStr}</td>
+      <td>
+        <span class="badge ${badges[estado]||'badge-gray'}">${estado}</span>
+        <select style="margin-left:6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px"
+          onchange="actualizarEstadoLead('${l.id}', this.value)">
+          <option value="nuevo"      ${estado==='nuevo'      ?'selected':''}>nuevo</option>
+          <option value="contactado" ${estado==='contactado' ?'selected':''}>contactado</option>
+          <option value="convertido" ${estado==='convertido' ?'selected':''}>convertido</option>
+          <option value="descartado" ${estado==='descartado' ?'selected':''}>descartado</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Tipo IPS</th><th>Ciudad</th><th>Fecha</th><th>Estado</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+async function actualizarEstadoLead(id, nuevoEstado) {
+  try {
+    await db.collection('leads').doc(id).update({ estado: nuevoEstado });
+    showToast('Estado actualizado', 'success');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast toast-' + (type||'info') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
 </script>
 </body>
 </html>

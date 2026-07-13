@@ -6,6 +6,20 @@
 <title>Normalis | Software de Gestión de Calidad para IPS en Colombia</title>
 <meta name="description" content="Software con IA para gestión de calidad en IPS colombianas. Resolución 3100, auditorías internas, generación de documentos normativos y alertas de habilitación.">
 <link rel="canonical" href="https://normalis.co/">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Firebase para captura de leads
+(function(){
+  var cfg={apiKey:"AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",authDomain:"normalis-5587d.firebaseapp.com",
+    projectId:"normalis-5587d",storageBucket:"normalis-5587d.firebasestorage.app",
+    messagingSenderId:"328915530941",appId:"1:328915530941:web:8e77246bd2e326e115b3d4"};
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    window._nlDB = firebase.firestore();
+  }catch(e){ window._nlDB = null; }
+})();
+</script>
 <meta property="og:title" content="Normalis | Software de Gestión de Calidad para IPS">
 <meta property="og:description" content="Software con IA para gestión de calidad en IPS colombianas. Resolución 3100, auditorías, documentos normativos y alertas de habilitación.">
 <style>
@@ -1024,16 +1038,53 @@ document.getElementById('demo-modal').addEventListener('click', function(e){ if(
 
 function submitDemo(){
   var nombre = document.getElementById('f-nombre').value.trim();
-  var email = document.getElementById('f-email').value.trim();
-  var tel = document.getElementById('f-tel').value.trim();
+  var email  = document.getElementById('f-email').value.trim();
+  var tel    = document.getElementById('f-tel').value.trim();
+  var tipo   = document.getElementById('f-tipo').value;
+  var ciudad = document.getElementById('f-ciudad').value.trim();
+
   if(!nombre || !email || !tel){ alert('Por favor completa los campos obligatorios (*)'); return; }
-  // Store lead locally
-  var leads = JSON.parse(localStorage.getItem('normalis_leads')||'[]');
-  leads.push({nombre,email,tel,tipo:document.getElementById('f-tipo').value,ciudad:document.getElementById('f-ciudad').value,fecha:new Date().toISOString()});
-  localStorage.setItem('normalis_leads', JSON.stringify(leads));
-  // Show success
+
+  // ── 1. Guardar en Firestore ────────────────────────────────────────────────
+  var leadData = {
+    nombre:  nombre,
+    email:   email,
+    tel:     tel,
+    tipo:    tipo   || '',
+    ciudad:  ciudad || '',
+    fuente:  'landing_demo',
+    estado:  'nuevo',
+    fecha:   firebase.firestore ? firebase.firestore.FieldValue.serverTimestamp() : new Date().toISOString()
+  };
+  if(window._nlDB){
+    window._nlDB.collection('leads').add(leadData).catch(function(){});
+  }
+
+  // ── 2. Copia local (respaldo) ──────────────────────────────────────────────
+  try{
+    var leads = JSON.parse(localStorage.getItem('normalis_leads')||'[]');
+    leads.push(Object.assign({}, leadData, {fecha: new Date().toISOString()}));
+    localStorage.setItem('normalis_leads', JSON.stringify(leads));
+  }catch(_){}
+
+  // ── 3. Notificación por email (mailto fallback) ───────────────────────────
+  try{
+    var subj = encodeURIComponent('🔔 Nuevo lead NormaLis — ' + nombre);
+    var body = encodeURIComponent(
+      'Nuevo lead desde normalis.co\n\n'
+      + 'Nombre: '  + nombre + '\n'
+      + 'Email: '   + email  + '\n'
+      + 'Teléfono: '+ tel    + '\n'
+      + 'Tipo IPS: '+ (tipo   || 'N/A') + '\n'
+      + 'Ciudad: '  + (ciudad || 'N/A') + '\n'
+      + 'Fecha: '   + new Date().toLocaleString('es-CO')
+    );
+    window.open('mailto:fjfc1984@gmail.com?subject='+subj+'&body='+body,'_blank','noopener,noreferrer');
+  }catch(_){}
+
+  // ── 4. Mostrar pantalla de éxito ──────────────────────────────────────────
   document.getElementById('modal-form-wrap').style.display = 'none';
-  document.getElementById('modal-success').style.display = 'block';
+  document.getElementById('modal-success').style.display  = 'block';
 }
 
 function submitCTAEmail(){
