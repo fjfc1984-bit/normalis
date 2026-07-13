@@ -12505,8 +12505,8 @@ function iniciarAhaMoment(nombreIPS) {
         inp.value = 'Analiza mi estado normativo y dime que riesgos tengo antes de una visita de la Secretaria';
         if (typeof sendMainChat === 'function') sendMainChat();
       }
-    }, 700);
-  }, 1200);
+    }, 400);
+  }, 600);
   localStorage.setItem('normalis_onboarding_done', '1');
   localStorage.setItem('normalis_ips_nombre', nombreIPS);
   if (typeof trackEvent === 'function') trackEvent('onboarding', 'completado', nombreIPS);
@@ -12601,7 +12601,7 @@ function obFinalizar() {
   if (bar) setTimeout(function() { bar.style.width = '100%'; }, 100);
   if (window._obOpcion === 'demo') cargarDatosDemo();
   if (ciudad) localStorage.setItem('normalis_ips_ciudad', ciudad);
-  setTimeout(function() { iniciarAhaMoment(nombre); }, 2200);
+  setTimeout(function() { iniciarAhaMoment(nombre); }, 1500);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
