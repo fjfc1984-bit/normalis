@@ -12607,6 +12607,119 @@ function obFinalizar() {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(mostrarOnboarding, 900);
 });
+
+// ROI REESTRUCTURADO v2
+function renderROI() {
+  var SMLMV = 1300000;
+  var html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
+  html += '<div style="margin-bottom:24px"><h2 style="margin:0 0 4px;font-size:22px;font-weight:800">Calculadora de ROI</h2><p style="margin:0;color:#64748b;font-size:13px">Cuanto cuesta NO tener NormaLis — basado en sanciones reales Ley 1438/2011 y Res. 3100/2019</p></div>';
+  html += '<div id="roi-result-card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:28px;color:#fff;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px"><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Costo anual del riesgo</div><div id="roi-costo-riesgo" style="font-size:28px;font-weight:800">$0</div><div style="font-size:11px;opacity:.7">sin NormaLis</div></div><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Inversion NormaLis/ano</div><div id="roi-costo-normalis" style="font-size:28px;font-weight:800">$0</div><div style="font-size:11px;opacity:.7">suscripcion anual</div></div><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ROI estimado</div><div id="roi-multiplier" style="font-size:36px;font-weight:900">0x</div><div style="font-size:11px;opacity:.7">retorno sobre inversion</div></div></div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:16px;color:#374151">Perfil de tu IPS</div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:6px">Tipo de IPS</label><select id="roi-tipo-ips" onchange="calcROIv2()" style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;background:#fff"><option value="basica">Basica (Consulta Externa / Laboratorio)</option><option value="media" selected>Media (Urgencias / Hospitalizacion)</option><option value="alta">Alta complejidad (Quirurgico / UCI)</option></select></div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">No. de sedes: <span id="roi-val-sedes" style="color:#6366f1;font-weight:700">1</span></label><input type="range" id="roi-sedes" min="1" max="10" value="1" oninput="document.getElementById(\x27roi-val-sedes\x27).textContent=this.value;calcROIv2()" style="width:100%"></div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Profesionales: <span id="roi-val-prof" style="color:#6366f1;font-weight:700">8</span></label><input type="range" id="roi-prof" min="2" max="50" value="8" oninput="document.getElementById(\x27roi-val-prof\x27).textContent=this.value;calcROIv2()" style="width:100%"></div>';
+  html += '<div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Horas/mes gestion normativa: <span id="roi-val-horas" style="color:#6366f1;font-weight:700">20</span>h</label><input type="range" id="roi-horas" min="4" max="80" value="20" oninput="document.getElementById(\x27roi-val-horas\x27).textContent=this.value;calcROIv2()" style="width:100%"></div></div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px"><div style="font-weight:700;font-size:15px;margin-bottom:16px;color:#374151">Nivel de riesgo actual</div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Prob. NC critica en proxima visita: <span id="roi-val-prob" style="color:#ef4444;font-weight:700">40</span>%</label><input type="range" id="roi-prob" min="5" max="95" value="40" oninput="document.getElementById(\x27roi-val-prob\x27).textContent=this.value;calcROIv2()" style="width:100%"><div style="font-size:11px;color:#94a3b8;margin-top:4px">IPS sin sistema de gestion: 60-80% historico Supersalud</div></div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">NC criticas esperadas: <span id="roi-val-nc-crit" style="color:#ef4444;font-weight:700">3</span></label><input type="range" id="roi-nc-crit" min="0" max="15" value="3" oninput="document.getElementById(\x27roi-val-nc-crit\x27).textContent=this.value;calcROIv2()" style="width:100%"><div style="font-size:11px;color:#94a3b8;margin-top:4px">Multa: 100-500 SMLMV c/u (Ley 1438/2011 Art.131)</div></div>';
+  html += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">NC leves esperadas: <span id="roi-val-nc-leve" style="color:#f59e0b;font-weight:700">5</span></label><input type="range" id="roi-nc-leve" min="0" max="20" value="5" oninput="document.getElementById(\x27roi-val-nc-leve\x27).textContent=this.value;calcROIv2()" style="width:100%"><div style="font-size:11px;color:#94a3b8;margin-top:4px">Multa: 10-100 SMLMV c/u</div></div>';
+  html += '<div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Dias suspension si falla habilitacion: <span id="roi-val-susp" style="color:#ef4444;font-weight:700">30</span>d</label><input type="range" id="roi-susp" min="0" max="180" value="30" oninput="document.getElementById(\x27roi-val-susp\x27).textContent=this.value;calcROIv2()" style="width:100%"><div style="font-size:11px;color:#94a3b8;margin-top:4px">Ingreso diario IPS mediana: $3-8M COP</div></div></div>';
+  html += '</div>';
+  html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px"><div style="font-weight:700;font-size:15px;margin-bottom:16px">Desglose del calculo</div><div id="roi-breakdown-v2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px"></div></div>';
+  html += '<div id="roi-narrativa" style="background:#f8fafc;border-left:4px solid #6366f1;border-radius:0 12px 12px 0;padding:16px;margin-bottom:16px;font-size:13px;line-height:1.7;color:#374151"></div>';
+  html += '<div style="text-align:right"><button onclick="exportarROIPDF()" style="background:#6366f1;color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Exportar reporte ROI</button></div>';
+  html += '</div>';
+  var view = document.getElementById('view-roi');
+  if (view) { view.innerHTML = html; calcROIv2(); }
+}
+
+function fmtCOP(n) {
+  return '$' + Math.round(n).toLocaleString('es-CO') + ' COP';
+}
+
+function calcROIv2() {
+  var SMLMV = 1300000;
+  var tipoEl = document.getElementById('roi-tipo-ips');
+  var tipo = tipoEl ? tipoEl.value : 'media';
+  var sedes = parseInt((document.getElementById('roi-sedes')||{value:1}).value);
+  var prof = parseInt((document.getElementById('roi-prof')||{value:8}).value);
+  var horas = parseInt((document.getElementById('roi-horas')||{value:20}).value);
+  var prob = parseInt((document.getElementById('roi-prob')||{value:40}).value) / 100;
+  var ncCrit = parseInt((document.getElementById('roi-nc-crit')||{value:3}).value);
+  var ncLeve = parseInt((document.getElementById('roi-nc-leve')||{value:5}).value);
+  var diasSusp = parseInt((document.getElementById('roi-susp')||{value:30}).value);
+  var multaCritPorNC = 200 * SMLMV;
+  var multaLevePorNC = 30 * SMLMV;
+  var ingresoDiario = (tipo==='basica'?2000000:tipo==='media'?5000000:12000000) * sedes;
+  var costoHoraAdmin = 35000;
+  var costoMultasCrit = ncCrit * multaCritPorNC * prob;
+  var costoMultasLeve = ncLeve * multaLevePorNC * prob;
+  var costoSuspension = diasSusp * ingresoDiario * prob;
+  var costoConsultorEmerg = prob > 0.3 ? 8000000 : 0;
+  var costoHorasAdmin = horas * 12 * costoHoraAdmin;
+  var costoReputacion = prob > 0.5 ? ingresoDiario * 15 : 0;
+  var totalRiesgo = costoMultasCrit + costoMultasLeve + costoSuspension + costoConsultorEmerg + costoHorasAdmin + costoReputacion;
+  var precioMensual = (tipo==='basica'?190000:tipo==='media'?290000:490000) * sedes;
+  var costoNormalis = precioMensual * 12;
+  var ahorroHoras = horas * 0.7 * 12 * costoHoraAdmin;
+  var beneficioNeto = totalRiesgo + ahorroHoras - costoNormalis;
+  var roi = costoNormalis > 0 ? beneficioNeto / costoNormalis : 0;
+  var el = function(id){return document.getElementById(id);};
+  if (el('roi-costo-riesgo')) el('roi-costo-riesgo').textContent = fmtCOP(totalRiesgo);
+  if (el('roi-costo-normalis')) el('roi-costo-normalis').textContent = fmtCOP(costoNormalis);
+  if (el('roi-multiplier')) el('roi-multiplier').textContent = roi>=1?Math.round(roi)+'x':(roi*100).toFixed(0)+'%';
+  var bd = el('roi-breakdown-v2');
+  if (bd) {
+    var rows = [
+      ['Multas NC criticas (ponderadas x prob.)', costoMultasCrit, '#ef4444'],
+      ['Multas NC leves (ponderadas x prob.)', costoMultasLeve, '#f59e0b'],
+      ['Lucro cesante por suspension', costoSuspension, '#ef4444'],
+      ['Consultor emergencia pre-visita', costoConsultorEmerg, '#8b5cf6'],
+      ['Costo horas admin gestion manual/ano', costoHorasAdmin, '#64748b'],
+      ['Impacto reputacional', costoReputacion, '#ec4899'],
+      ['---', null, null],
+      ['Costo NormaLis anual', costoNormalis, '#6366f1'],
+      ['Ahorro horas admin (70% reduccion)', ahorroHoras, '#10b981'],
+      ['BENEFICIO NETO ANUAL', beneficioNeto, beneficioNeto>=0?'#10b981':'#ef4444']
+    ];
+    bd.innerHTML = rows.map(function(r){
+      if (!r[0]||r[0]==='---') return '<div style="grid-column:1/-1;border-top:1px solid #e2e8f0;margin:4px 0"></div>';
+      var isTotal = r[0].indexOf('BENEFICIO')>=0;
+      return '<div style="color:#64748b'+(isTotal?';font-weight:700;color:#374151':'')+'">'+r[0]+'</div>'+
+             '<div style="text-align:right;font-weight:700;color:'+r[2]+'">'+fmtCOP(Math.abs(r[1]))+'</div>';
+    }).join('');
+  }
+  var narr = el('roi-narrativa');
+  if (narr) {
+    var nivelColor = prob<0.3?'#10b981':prob<0.6?'#f59e0b':'#ef4444';
+    var nivelTxt = prob<0.3?'BAJO':prob<0.6?'MODERADO':'ALTO';
+    var t = '<b style="color:'+nivelColor+'">Riesgo '+nivelTxt+':</b> Con '+Math.round(prob*100)+'% de probabilidad de NC en la proxima visita, ';
+    t += 'tu IPS enfrenta <b>'+fmtCOP(totalRiesgo)+' anuales</b> en riesgos combinados. ';
+    if (ncCrit>0) t += 'Las '+ncCrit+' NC criticas pueden generar multas de hasta <b>'+fmtCOP(ncCrit*500*SMLMV)+'</b> (500 SMLMV c/u, Art.131 Ley 1438/2011). ';
+    if (diasSusp>0) t += 'Una suspension de '+diasSusp+' dias representa <b>'+fmtCOP(diasSusp*ingresoDiario)+'</b> en lucro cesante. ';
+    t += '<br><br>NormaLis cuesta <b>'+fmtCOP(costoNormalis)+' al ano</b> y reduce 70% del tiempo de gestion manual (<b>'+fmtCOP(ahorroHoras)+' ahorrados</b>). ';
+    if (roi>=1) t += '<br><br><b style="color:#10b981">ROI: '+Math.round(roi)+'x</b> — por cada peso invertido en NormaLis, recuperas '+Math.round(roi)+' pesos en riesgos evitados y eficiencia ganada.';
+    narr.innerHTML = t;
+  }
+  try { localStorage.setItem('normalis_roi_data', JSON.stringify({fecha:new Date().toISOString(),tipo:tipo,roi:Math.round(roi),costoRiesgo:totalRiesgo,costoNormalis:costoNormalis,beneficioNeto:beneficioNeto})); } catch(e) {}
+}
+
+function exportarROIPDF() {
+  var d = JSON.parse(localStorage.getItem('normalis_roi_data')||'{}');
+  var c = 'REPORTE ROI NORMALIS\n\nFecha: '+new Date().toLocaleDateString('es-CO')+'\nIPS: '+(localStorage.getItem('normalis_ips_nombre')||'Mi IPS')+'\n\nCosto riesgo anual: '+fmtCOP(d.costoRiesgo||0)+'\nInversion NormaLis: '+fmtCOP(d.costoNormalis||0)+'\nBeneficio neto: '+fmtCOP(d.beneficioNeto||0)+'\nROI: '+(d.roi||0)+'x\n\nNormativa:\n- Ley 1438/2011 Art.131: sanciones 10-2000 SMLMV\n- Res. 3100/2019: condiciones habilitacion\n- Decreto 1011/2006: SOGC y PAMEC';
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c],{type:'text/plain;charset=utf-8'}));
+  a.download = 'ROI_NormaLis_'+new Date().toISOString().split('T')[0]+'.txt'; a.click();
+}
+
+// Hook renderROI into nav
+(function(){
+  var _navROI = window.nav;
+  window.nav = function(sec){
+    if (typeof _navROI === 'function') _navROI(sec);
+    if (sec === 'roi') setTimeout(renderROI, 100);
+  };
+})();
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
