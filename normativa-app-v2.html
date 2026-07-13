@@ -12720,6 +12720,183 @@ function exportarROIPDF() {
     if (sec === 'roi') setTimeout(renderROI, 100);
   };
 })();
+
+// ═══════════════════════════════════════════════════════
+// FIX 1 — PAMEC: guía de avance de fase
+// ═══════════════════════════════════════════════════════
+
+function pamecGuiaFase() {
+  var fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
+  var autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
+  var procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
+  var acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
+
+  var fases = [
+    {
+      num: 1, nombre: 'Autoevaluación',
+      descripcion: 'Evalúa el cumplimiento actual de los estándares de calidad.',
+      criterio: 'Completa al menos 5 ítems de autoevaluación',
+      completado: Object.keys(autoeval).length >= 5,
+      progreso: Math.min(100, Math.round(Object.keys(autoeval).length / 5 * 100)),
+      accion: 'Ir a autoevaluación', modulo: 'pamec'
+    },
+    {
+      num: 2, nombre: 'Priorización de Procesos',
+      descripcion: 'Identifica y prioriza los procesos que requieren mejora.',
+      criterio: 'Registra al menos 1 proceso de mejora',
+      completado: procesos.length >= 1,
+      progreso: Math.min(100, procesos.length * 100),
+      accion: 'Registrar proceso', modulo: 'pamec'
+    },
+    {
+      num: 3, nombre: 'Plan de Mejoramiento',
+      descripcion: 'Define acciones concretas para corregir las brechas identificadas.',
+      criterio: 'Registra al menos 2 acciones de mejora',
+      completado: acciones.length >= 2,
+      progreso: Math.min(100, Math.round(acciones.length / 2 * 100)),
+      accion: 'Registrar acciones', modulo: 'pamec'
+    },
+    {
+      num: 4, nombre: 'Evaluación del Mejoramiento',
+      descripcion: 'Verifica el impacto de las acciones ejecutadas y cierra el ciclo.',
+      criterio: 'Al menos 1 acción marcada como completada',
+      completado: acciones.filter(function(a){return a.estado==='completada';}).length >= 1,
+      progreso: Math.min(100, acciones.filter(function(a){return a.estado==='completada';}).length * 100),
+      accion: 'Completar acción', modulo: 'pamec'
+    }
+  ];
+
+  var html = '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-top:16px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
+  html += '<div style="font-weight:700;font-size:15px">Guía del ciclo PAMEC</div>';
+  html += '<div style="font-size:12px;color:#64748b">Decreto 1011/2006 — SOGC</div></div>';
+  html += '<div style="display:flex;flex-direction:column;gap:12px">';
+  fases.forEach(function(f) {
+    var esActual = f.num === fase;
+    var completada = f.completado;
+    var bloqueada = f.num > fase + 1;
+    var borderColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#e2e8f0' : '#f59e0b';
+    var bgColor = completada ? '#f0fdf4' : esActual ? '#eef2ff' : bloqueada ? '#f8fafc' : '#fffbeb';
+    var iconColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#cbd5e1' : '#f59e0b';
+    var icon = completada ? '✅' : esActual ? '🔄' : bloqueada ? '🔒' : '⏳';
+    html += '<div style="border:2px solid '+borderColor+';background:'+bgColor+';border-radius:10px;padding:14px">';
+    html += '<div style="display:flex;align-items:flex-start;gap:12px">';
+    html += '<div style="font-size:20px;flex-shrink:0">'+icon+'</div>';
+    html += '<div style="flex:1">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">';
+    html += '<div style="font-weight:700;font-size:14px;color:'+iconColor+'">Fase '+f.num+': '+f.nombre+'</div>';
+    if (esActual && !completada && f.num < 4) {
+      html += '<button onclick="pamecAvanzarFase()" style="background:#6366f1;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Avanzar a fase '+(f.num+1)+'</button>';
+    }
+    html += '</div>';
+    html += '<div style="font-size:12px;color:#64748b;margin-bottom:8px">'+f.descripcion+'</div>';
+    html += '<div style="background:#e2e8f0;border-radius:99px;height:6px;margin-bottom:6px">';
+    html += '<div style="background:'+borderColor+';border-radius:99px;height:6px;width:'+f.progreso+'%;transition:width .4s"></div></div>';
+    html += '<div style="font-size:11px;color:#64748b">'+f.criterio+' — '+f.progreso+'% completado</div>';
+    html += '</div></div></div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8">';
+  html += 'Resolución 1446/2006 · Decreto 1011/2006 — SOGC · Resolución 2082/2014';
+  html += '</div></div>';
+  return html;
+}
+
+function pamecAvanzarFase() {
+  var fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
+  if (fase >= 4) return;
+  var autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
+  var procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
+  var acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
+  var puedeAvanzar = false;
+  if (fase === 1) puedeAvanzar = Object.keys(autoeval).length >= 5;
+  else if (fase === 2) puedeAvanzar = procesos.length >= 1;
+  else if (fase === 3) puedeAvanzar = acciones.length >= 2;
+  if (!puedeAvanzar) {
+    var mensajes = {1:'Completa al menos 5 ítems de autoevaluación antes de avanzar.',2:'Registra al menos 1 proceso de mejora antes de avanzar.',3:'Registra al menos 2 acciones de mejora antes de avanzar.'};
+    alert(mensajes[fase] || 'Completa los criterios de esta fase primero.');
+    return;
+  }
+  localStorage.setItem('normalis_pamec_fase', String(fase + 1));
+  if (typeof logAction === 'function') logAction('PAMEC', 'Avance de fase', 'Fase ' + fase + ' → Fase ' + (fase + 1));
+  if (typeof trackEvent === 'function') trackEvent('pamec', 'avance_fase', 'fase_' + (fase + 1));
+  var guiaContainer = document.getElementById('pamec-guia-container');
+  if (guiaContainer) guiaContainer.innerHTML = pamecGuiaFase();
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(16,185,129,.4)';
+  toast.textContent = '¡Avanzaste a la Fase ' + (fase + 1) + ' del PAMEC!';
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
+(function() {
+  var _navPAMEC = window.nav;
+  window.nav = function(sec) {
+    if (typeof _navPAMEC === 'function') _navPAMEC(sec);
+    if (sec === 'pamec') {
+      setTimeout(function() {
+        var pamecView = document.getElementById('view-pamec');
+        if (pamecView && !document.getElementById('pamec-guia-container')) {
+          var guiaDiv = document.createElement('div');
+          guiaDiv.id = 'pamec-guia-container';
+          guiaDiv.style.cssText = 'padding:0 24px 24px;max-width:960px;margin:0 auto';
+          guiaDiv.innerHTML = pamecGuiaFase();
+          pamecView.appendChild(guiaDiv);
+        } else if (document.getElementById('pamec-guia-container')) {
+          document.getElementById('pamec-guia-container').innerHTML = pamecGuiaFase();
+        }
+      }, 300);
+    }
+  };
+})();
+
+// ═══════════════════════════════════════════════════════
+// FIX 2 — XAI: advertir cuando datos son insuficientes
+// ═══════════════════════════════════════════════════════
+
+function evaluarSuficienciaDatos(ctx) {
+  var score = 0;
+  var vacios = [];
+  var incs = JSON.parse(localStorage.getItem('normalis_incidentes') || '[]');
+  if (ctx.vencimientos.vencidos === 0 && ctx.vencimientos.proximos30 === 0 && ctx.talento.profesionales === 0) {
+    vacios.push('vencimientos de personal');
+  } else { score++; }
+  if (incs.length === 0) {
+    vacios.push('incidentes y eventos adversos');
+  } else { score++; }
+  if (ctx.pqrs.total === 0) {
+    vacios.push('PQRS');
+  } else { score++; }
+  if (ctx.simulacro.completados === 0) {
+    vacios.push('simulacro de Secretaría');
+  } else { score++; }
+  return { suficiente: score >= 3, score: score, vacios: vacios };
+}
+
+(function() {
+  var _xaiOrig = window.xaiResponder;
+  window.xaiResponder = function(pregunta) {
+    var ctx = (typeof buildUserContext === 'function') ? buildUserContext() : {};
+    var suf = evaluarSuficienciaDatos(ctx);
+    var resp = typeof _xaiOrig === 'function' ? _xaiOrig(pregunta) : '';
+    if (!suf.suficiente && suf.vacios.length > 0) {
+      var mods = {'vencimientos de personal':'vencimientos-personal','incidentes y eventos adversos':'incidentes','PQRS':'pqrs','simulacro de Secretaría':'simulacro'};
+      var aviso = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:12px;color:#92400e">';
+      aviso += '<b>⚠️ Diagnóstico preliminar</b> — Para mayor precisión, registra datos en: ';
+      aviso += suf.vacios.map(function(v){ return '<b>'+v+'</b>'; }).join(', ') + '. ';
+      aviso += 'Con más datos, el análisis será más exacto y accionable.';
+      aviso += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
+      suf.vacios.forEach(function(v) {
+        var mod = mods[v];
+        if (mod) aviso += '<a href="#" onclick="nav(\'' + mod + '\');return false" style="color:#6366f1;font-weight:600;font-size:12px">Registrar '+v+'</a>';
+      });
+      aviso += '</div></div>';
+      resp = resp + aviso;
+    }
+    return resp;
+  };
+})();
+
 </script>
 
 <!-- ══════════ SETUP WIZARD ══════════ -->
