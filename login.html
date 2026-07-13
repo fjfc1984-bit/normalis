@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NormaLis — Acceso</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(135deg,#0c1628 0%,#0f2d55 50%,#0c1628 100%);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+
+/* ── CARD ── */
+.login-card{
+  width:100%;max-width:420px;
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;padding:40px 36px;
+  animation:fadeUp .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOGO ── */
+.logo{text-align:center;margin-bottom:32px}
+.logo-icon{
+  width:56px;height:56px;
+  background:linear-gradient(135deg,#0ea5e9,#3b82f6);
+  border-radius:16px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:900;color:#fff;
+  margin-bottom:14px;
+  box-shadow:0 8px 32px rgba(14,165,233,.35);
+}
+.logo-name{font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px}
+.logo-name span{color:#38bdf8}
+.logo-sub{font-size:13px;color:#64748b;margin-top:4px}
+
+/* ── FIELDS ── */
+.field{margin-bottom:18px}
+.field label{
+  display:block;font-size:11px;font-weight:700;
+  color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;
+  margin-bottom:7px;
+}
+.field input{
+  width:100%;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:13px 16px;
+  font-size:15px;color:#f1f5f9;
+  font-family:inherit;outline:none;
+  transition:all .2s;
+}
+.field input::placeholder{color:#475569}
+.field input:focus{
+  border-color:#0ea5e9;
+  background:rgba(14,165,233,.08);
+  box-shadow:0 0 0 3px rgba(14,165,233,.15);
+}
+
+/* ── BTN ── */
+.btn-login{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#0ea5e9,#3b82f6);
+  border:none;border-radius:12px;
+  color:#fff;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  transition:all .2s;
+  box-shadow:0 4px 20px rgba(14,165,233,.3);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:8px;
+}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(14,165,233,.4)}
+.btn-login:active{transform:translateY(0)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* ── FORGOT ── */
+.forgot{
+  text-align:center;margin-top:18px;
+  font-size:13px;color:#64748b;
+}
+.forgot a{color:#38bdf8;text-decoration:none;font-weight:600}
+.forgot a:hover{text-decoration:underline}
+
+/* ── ERROR / INFO ── */
+.msg{
+  border-radius:10px;padding:12px 15px;
+  font-size:13px;font-weight:600;
+  display:none;margin-bottom:16px;
+  align-items:center;gap:8px;
+}
+.msg.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.msg.info{background:rgba(14,165,233,.1);border:1px solid rgba(14,165,233,.2);color:#7dd3fc}
+.msg.show{display:flex}
+
+/* ── SPINNER ── */
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  display:none;
+}
+.btn-login.loading .spinner{display:block}
+.btn-login.loading .btn-text{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ROLE BADGE (post-login) ── */
+.role-redirect{
+  text-align:center;padding:20px 0 0;display:none;
+}
+.role-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);
+  border-radius:999px;padding:8px 18px;
+  font-size:13px;font-weight:700;color:#34d399;margin-bottom:10px;
+}
+.role-redirect p{font-size:12px;color:#64748b}
+
+/* ── PILOT BADGE ── */
+.pilot-info{
+  background:rgba(245,158,11,.08);
+  border:1px solid rgba(245,158,11,.2);
+  border-radius:12px;padding:12px 14px;
+  font-size:12px;color:#fbbf24;
+  margin-top:16px;display:none;
+  line-height:1.5;
+}
+.pilot-info strong{font-weight:800}
+
+/* ── DIVIDER ── */
+.divider{
+  border:none;border-top:1px solid rgba(255,255,255,.07);
+  margin:24px 0;
+}
+
+/* ── FOOTER ── */
+.card-footer{
+  text-align:center;margin-top:24px;
+  font-size:11px;color:#334155;
+}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">N</div>
+    <div class="logo-name">Norma<span>Lis</span></div>
+    <div class="logo-sub">Software de Gestión de Calidad para IPS</div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="msg error" id="msg-error">
+    <span>⚠️</span><span id="msg-error-text">Error al iniciar sesión</span>
+  </div>
+  <div class="msg info" id="msg-info">
+    <span>ℹ️</span><span id="msg-info-text"></span>
+  </div>
+
+  <!-- Form -->
+  <form id="login-form">
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="email" placeholder="correo@ips.com" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+
+    <button type="submit" class="btn-login" id="btn-login">
+      <span class="btn-text">Ingresar</span>
+      <div class="spinner"></div>
+    </button>
+  </form>
+
+  <!-- Redirección exitosa -->
+  <div class="role-redirect" id="role-redirect">
+    <div class="role-badge" id="role-badge">✓ Acceso verificado</div>
+    <p>Redirigiendo…</p>
+  </div>
+
+  <!-- Info piloto -->
+  <div class="pilot-info" id="pilot-info"></div>
+
+  <hr class="divider">
+
+  <div class="forgot">
+    <a href="#" id="link-forgot">¿Olvidaste tu contraseña?</a>
+  </div>
+
+  <div class="card-footer">NormaLis · Resolución 3100/2019 + 465/2025</div>
+</div>
+
+<script>
+// ── Firebase Config ──
+const firebaseConfig = {
+  apiKey: "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+  authDomain: "normalis-5587d.firebaseapp.com",
+  projectId: "normalis-5587d",
+  storageBucket: "normalis-5587d.firebasestorage.app",
+  messagingSenderId: "328915530941",
+  appId: "1:328915530941:web:8e77246bd2e326e115b3d4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ── Elementos ──
+const form        = document.getElementById('login-form');
+const btnLogin    = document.getElementById('btn-login');
+const emailInput  = document.getElementById('email');
+const passInput   = document.getElementById('password');
+const msgError    = document.getElementById('msg-error');
+const msgErrorTxt = document.getElementById('msg-error-text');
+const msgInfo     = document.getElementById('msg-info');
+const msgInfoTxt  = document.getElementById('msg-info-text');
+const roleRedirect= document.getElementById('role-redirect');
+const roleBadge   = document.getElementById('role-badge');
+const pilotInfo   = document.getElementById('pilot-info');
+
+// ── Si ya está autenticado, redirigir ──
+auth.onAuthStateChanged(async user => {
+  if (user) await routeUser(user);
+});
+
+// ── Submit ──
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  hideMessages();
+  setLoading(true);
+
+  const email    = emailInput.value.trim();
+  const password = passInput.value;
+
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    await routeUser(cred.user);
+  } catch (err) {
+    setLoading(false);
+    showError(friendlyError(err.code));
+  }
+});
+
+// ── Ruteo por rol ──
+async function routeUser(user) {
+  try {
+    const snap = await db.collection('usuarios').doc(user.uid).get();
+
+    if (!snap.exists) {
+      // Sin perfil → crear como cliente por defecto (o bloquear)
+      showError('Tu cuenta no tiene un perfil asignado. Contacta al administrador.');
+      await auth.signOut();
+      setLoading(false);
+      return;
+    }
+
+    const data = snap.data();
+    const rol  = data.rol || 'cliente';
+    const nombre = data.nombre || user.email;
+
+    // Guardar sesión en sessionStorage
+    sessionStorage.setItem('normalis_uid',    user.uid);
+    sessionStorage.setItem('normalis_rol',    rol);
+    sessionStorage.setItem('normalis_nombre', nombre);
+    sessionStorage.setItem('normalis_email',  user.email);
+
+    if (rol === 'admin') {
+      roleBadge.textContent = '✓ Administrador — Bienvenido, ' + nombre;
+      showRedirect();
+      setTimeout(() => { window.location.href = 'admin.html'; }, 1200);
+
+    } else if (rol === 'piloto') {
+      // Verificar expiración
+      const expiresAt = data.expiresAt ? data.expiresAt.toDate() : null;
+      const now       = new Date();
+
+      if (expiresAt && expiresAt < now) {
+        showError('Tu acceso al programa piloto ha vencido el ' +
+          expiresAt.toLocaleDateString('es-CO', {day:'2-digit',month:'long',year:'numeric'}) +
+          '. Contacta a NormaLis para renovarlo.');
+        await auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      // Calcular días restantes
+      let diasRestantes = null;
+      if (expiresAt) {
+        diasRestantes = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+        sessionStorage.setItem('normalis_expires',      expiresAt.toISOString());
+        sessionStorage.setItem('normalis_dias_restantes', diasRestantes);
+      }
+
+      roleBadge.textContent = '✓ Programa Piloto — Bienvenido, ' + nombre;
+      if (diasRestantes !== null) {
+        pilotInfo.style.display = 'block';
+        pilotInfo.innerHTML = `🚀 <strong>Acceso Piloto</strong> — Te quedan <strong>${diasRestantes} días</strong> de acceso gratuito` +
+          ` (hasta el ${expiresAt.toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})}).`;
+      }
+      showRedirect();
+      setTimeout(() => { window.location.href = 'normativa-app-v2.html'; }, 2000);
+
+    } else {
+      // cliente
+      roleBadge.textContent = '✓ Bienvenido, ' + nombre;
+      showRedirect();
+      setTimeout(() => { window.location.href = 'normativa-app-v2.html'; }, 1200);
+    }
+
+  } catch (err) {
+    console.error(err);
+    showError('Error al verificar tu perfil. Intenta de nuevo.');
+    setLoading(false);
+  }
+}
+
+// ── Recuperar contraseña ──
+document.getElementById('link-forgot').addEventListener('click', async e => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) {
+    showError('Ingresa tu correo primero para recuperar la contraseña.');
+    return;
+  }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showInfo('Te enviamos un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.');
+  } catch (err) {
+    showError(friendlyError(err.code));
+  }
+});
+
+// ── Helpers ──
+function setLoading(on) {
+  btnLogin.disabled = on;
+  btnLogin.classList.toggle('loading', on);
+}
+
+function showError(msg) {
+  msgErrorTxt.textContent = msg;
+  msgError.classList.add('show');
+  msgInfo.classList.remove('show');
+}
+
+function showInfo(msg) {
+  msgInfoTxt.textContent = msg;
+  msgInfo.classList.add('show');
+  msgError.classList.remove('show');
+}
+
+function hideMessages() {
+  msgError.classList.remove('show');
+  msgInfo.classList.remove('show');
+}
+
+function showRedirect() {
+  form.style.display = 'none';
+  roleRedirect.style.display = 'block';
+  setLoading(false);
+}
+
+function friendlyError(code) {
+  const errors = {
+    'auth/user-not-found':      'No existe una cuenta con ese correo.',
+    'auth/wrong-password':      'Contraseña incorrecta.',
+    'auth/invalid-email':       'El correo no es válido.',
+    'auth/too-many-requests':   'Demasiados intentos fallidos. Espera unos minutos.',
+    'auth/user-disabled':       'Esta cuenta ha sido desactivada.',
+    'auth/network-request-failed': 'Sin conexión a internet. Verifica tu red.',
+    'auth/invalid-credential':  'Correo o contraseña incorrectos.',
+  };
+  return errors[code] || 'Error al iniciar sesión. Intenta de nuevo.';
+}
+</script>
+</body>
+</html>
