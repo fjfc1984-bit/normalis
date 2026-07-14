@@ -3881,7 +3881,7 @@ function resetAudit(){
 function renderAreaCards(){
   const container=document.getElementById('area-cards');
   container.innerHTML=areas.map((a,i)=>{
-    const done=flatQ.filter(q=>q.areaId===a.id).every(q=>auditAnswers[q.areaId+'_'+q.qi]!==undefined);
+    const done=flatQ.filter(q=>q.areaId===a.id).every(q=>auditAnswers['q'+flatQ.indexOf(q)]!==undefined);
     const cls=done?'area-card done':(i===getAreaIdx(curQIdx())?'area-card active-area':'area-card');
     return`<div class="${cls}"><div class="area-icon">${a.icon}</div><div class="area-name">${a.name}</div><div class="area-status">${done?'<span class="badge b-green">✓ Listo</span>':'<span class="badge b-gray">Pendiente</span>'}</div></div>`;
   }).join('');
@@ -3897,15 +3897,15 @@ function renderAuditQ(idx){
   const q=flatQ[idx];
   if(!q)return;
   const panel=document.getElementById('audit-q-panel');
-  const ansKey=q.areaId+'_'+q.qi;
+  const ansKey='q'+idx;
   const cur=auditAnswers[ansKey];
   panel.innerHTML=`
     <div class="audit-q-num">${q.icon} ${q.areaName} · Pregunta ${q.qi+1} de ${areas.find(a=>a.id===q.areaId).q.length}</div>
     <div class="audit-q-text">${q.q}</div>
     <div class="audit-q-norm text-xs text-muted" style="margin-bottom:14px">📋 Criterio de habilitación · ${q.norm||'Res. 3100/2019'}</div>
     <div class="audit-opts">
-      <div class="aopt ${cur==='yes'?'y':''}" onclick="setAns(this,'yes','${ansKey}')">✅ Cumple completamente</div>
-      <div class="aopt ${cur==='partial'?'p':''}" onclick="setAns(this,'partial','${ansKey}')">⚠️ Cumple parcialmente</div>
+      <div class="aopt ${cur==='si'?'y':''}" onclick="setAns(this,'si','${ansKey}')">✅ Cumple completamente</div>
+      <div class="aopt ${cur==='parcial'?'p':''}" onclick="setAns(this,'parcial','${ansKey}')">⚠️ Cumple parcialmente</div>
       <div class="aopt ${cur==='no'?'n':''}" onclick="setAns(this,'no','${ansKey}')">❌ No cumple</div>
     </div>
     <div class="photo-upload" onclick="toast('📸 Adjunta la foto como evidencia en el informe PDF','info')">
@@ -3922,7 +3922,7 @@ function renderAuditQ(idx){
 function setAns(el,val,key){
   auditAnswers[key]=val;
   el.closest('.audit-opts').querySelectorAll('.aopt').forEach(o=>o.className='aopt');
-  el.classList.add(val==='yes'?'y':val==='partial'?'p':'n');
+  el.classList.add(val==='si'?'y':val==='parcial'?'p':'n');
   document.getElementById('aud-next').disabled=false;
 }
 
@@ -3936,7 +3936,7 @@ function renderAuditProg(){
   const container=document.getElementById('audit-prog-rows');
   container.innerHTML=areas.map(a=>{
     const aqs=flatQ.filter(q=>q.areaId===a.id);
-    const answered=aqs.filter(q=>auditAnswers[q.areaId+'_'+q.qi]!==undefined).length;
+    const answered=aqs.filter(q=>auditAnswers['q'+flatQ.indexOf(q)]!==undefined).length;
     const pct=aqs.length?Math.round(answered/aqs.length*100):0;
     return`<div class="apt-row">${a.icon} <span style="width:100px;flex-shrink:0">${a.name}</span><div class="apt-bar"><div class="apt-fill" style="width:${pct}%"></div></div><span class="text-xs text-muted" style="width:32px;text-align:right">${answered}/${aqs.length}</span></div>`;
   }).join('');
@@ -13135,4 +13135,4 @@ function evaluarSuficienciaDatos(ctx) {
             </select>
           </div>
           <div>
-           
+            <label
