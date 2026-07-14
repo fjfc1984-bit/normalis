@@ -3988,51 +3988,70 @@ const normAnswers={
 };
 
 function getAnswer(q){
-  const ql=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  const kw=(words)=>words.some(w=>ql.includes(w));
-  // Norma específica primero
-  if(kw(['res. 465','resolucion 465','465 de 2025','465/2025','ultima resolucion','nueva resolucion','cambios recientes','que cambio en 2025'])) return normAnswers['res. 465'];
-  // Temas específicos (palabras clave precisas)
-  if(kw(['bioseguridad','bioseguri','higiene de manos','accidente biologico','accidente laboral biologico','epp ','equipo de proteccion personal'])) return normAnswers['bioseguridad'];
-  if(kw(['odontologo','odontologia','amalgama','consultorio dental','residuo dental'])) return normAnswers['odontólogo'];
-  if(kw(['residuo','respel','pgirh','desecho hospitalario','bolsa roja','bolsa negra','cortopunzante','guardian rigido','residuos peligrosos'])) return normAnswers['residuos'];
-  if(kw(['rethus','registro del talento humano en salud','tarjeta profesional','matricula profesional'])) return normAnswers['rethus'];
-  if(kw(['historia clinica','expediente clinico','registro clinico','apertura de historia','custodia de historia','archivo clinico','20 anos','20 años','hc electronica','historia electronica'])) return normAnswers['historia clínica'];
-  if(kw(['reps ','registro especial de prestadores','inscripcion reps','novedades reps','actualizar reps'])) return normAnswers['reps'];
-  if(kw(['telemedicina','teleconsulta','telexperticia','atencion virtual','consulta virtual','no interactiva'])) return normAnswers['telemedicina'];
-  if(kw(['multa','sancion','clausura','proceso penal','responsabilidad penal','infraccion','10000 smlmv','sanciones por'])) return normAnswers['multa'];
-  if(kw(['equipo biomedico','equipos biomedicos','dispositivo medico','calibracion','mantenimiento preventivo','hoja de vida equipo','tecnologia biomedica','decreto 4725'])) return normAnswers['equipos'];
-  if(kw(['accesibilidad','rampa','bano adaptado','discapacidad','movilidad reducida','personas con discapacidad'])) return normAnswers['accesibilidad'];
-  if(kw(['pqrs','queja','reclamo','peticion ciudadana','sugerencia','felicitacion','canal de atencion al usuario'])) return normAnswers['pqrsf'];
-  if(kw(['consentimiento informado','autorizacion escrita del paciente','consentimiento escrito','autorizar procedimiento'])) return normAnswers['consentimiento'];
-  if(kw(['pamec','programa de auditoria','mejoramiento de la calidad','procesos prioritarios pamec','ciclo pamec'])) return normAnswers['pamec'];
-  if(kw(['indicador de calidad','res. 256','resolucion 256','sispro','oportunidad de cita','satisfaccion del usuario','tasa de eventos adversos','reporte de indicadores'])) return normAnswers['indicadores'];
-  if(kw(['medicamento','farmaco','farmacia','psicotr','opioide','control especial','sistema peps','almacenamiento de medicamentos','farmacovigilancia','doble llave'])) return normAnswers['medicamentos'];
-  if(kw(['director tecnico','responsable del establecimiento','cargo director','suplente del director'])) return normAnswers['director técnico'];
-  if(kw(['infraestructura','planta fisica','instalaciones','sismica','vulnerabilidad sismica','iluminacion','ventilacion','metros cuadrados','señalizacion de areas'])) return normAnswers['infraestructura'];
-  if(kw(['urgencia','emergencia','triage','sala de urgencias','atencion de urgencias','nivel de triage'])) return normAnswers['urgencias'];
-  if(kw(['referencia','contrarreferencia','remision de paciente','derivacion','mayor complejidad','acuerdo de referencia'])) return normAnswers['referencia'];
-  if(kw(['seguridad del paciente','evento adverso','incidente clinico','caida del paciente','caidas del paciente','ulcera por presion','identificacion del paciente','pulsera de identificacion','rondas de seguridad'])) return normAnswers['seguridad del paciente'];
-  if(kw(['talento humano','personal de salud','perfil de cargo','personal asistencial','dotacion de personal','enfermera','profesional de salud','medico contratado'])) return normAnswers['talento humano'];
-  if(kw(['vacuna','vacunacion','inmunobiologico','cadena de frio','pai ','esquema de vacunacion','inmunizacion'])) return normAnswers['vacuna'];
-  if(kw(['ambulancia','transporte asistencial','vehiculo asistencial','unidad movil','estrella de la vida','mision medica','traslado de paciente'])) return normAnswers['ambulancia'];
-  if(kw(['plan de emergencia','plan de desastre','simulacro','evacuacion','brigada de emergencia','extintor','riesgo de incendio'])) return normAnswers['plan de emergencias'];
-  if(kw(['laboratorio clinico','bacteriologo','muestra de laboratorio','control de calidad externo','hemograma','cultivo bacteriologico','vih laboratorio'])) return normAnswers['laboratorio'];
-  if(kw(['imagen diagnostica','radiologia','ecografia','tomografia','resonancia','rayos x','blindaje','dosimetria','radiacion ionizante'])) return normAnswers['imágenes diagnósticas'];
-  if(kw(['derechos del paciente','deberes del paciente','carta de derechos','atencion humanizada','ley 1751','autonomia del paciente'])) return normAnswers['derechos del paciente'];
-  if(kw(['eps ','aseguradora','plan de beneficios','pbs ','contrato con eps','ley 100','sgsss','red de prestadores'])) return normAnswers['eps'];
-  if(kw(['apertura de sede','nueva sede','cambio de sede','cambio de domicilio','cambio de direccion','nueva sucursal'])) return normAnswers['sede'];
-  if(kw(['documentos obligatorios','documentacion obligatoria','que documentos necesito','cuales documentos','protocolos obligatorios','manual de procesos'])) return normAnswers['manuales'];
-  // Checks generales al final (palabras ambiguas)
-  if(kw(['consentimiento','informado'])) return normAnswers['consentimiento'];
-  if(kw(['derechos','paciente'])) return normAnswers['derechos del paciente'];
-  if(kw(['invima','registro sanitario','dispositivo medico','equipo medico'])) return normAnswers['equipos'];
-  if(kw(['video','camara de seguridad','vigilancia'])) return normAnswers['res. 465'];
-  if(kw(['manual','documento','protocolo','obligatorio'])) return normAnswers['manuales'];
-  if(kw(['habilitar','habilitacion','como me habilito','requisitos de habilitacion','visita de verificacion','decreto 780','7 estandares'])) return normAnswers['habilitación'];
-  if(kw(['ips','institucion prestadora','clinica','centro de salud','consultorio medico','prestador de salud'])) return normAnswers['ips'];
-  if(kw(['inscripcion','inscribir','registro','inscripcion en'])) return normAnswers['reps'];
-  if(kw(['requisito','proceso de habilitacion'])) return normAnswers['habilitación'];
+  const ql=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[¿?¡!]/g,'');
+  // Sistema de puntuación: cada tema tiene palabras clave con peso
+  const topicKw={
+    'res. 465':       ['465','2025','nueva resolucion','cambio reciente','que cambio','ultimas modificaciones','camaras de video','estrella de la vida','mision medica','barrera fisica','menores de 5','consultorios','autoevaluacion momentos'],
+    'bioseguridad':   ['bioseguridad','higiene de manos','epp','equipo de proteccion','accidente biologico','accidente laboral','lavado de manos','desinfeccion','esterilizacion','protocolo de limpieza','guantes','mascarilla','proteccion personal'],
+    'odontólogo':     ['odontologo','odontologia','amalgama','dental','diente','consultorio dental','odontologica'],
+    'residuos':       ['residuo','respel','pgirh','desecho','bolsa roja','bolsa negra','cortopunzante','guardian','reciclable','residuos peligrosos','contenedor de color','color de bolsa','manejo de residuos','basura hospital','gestor','empresa gestora'],
+    'rethus':         ['rethus','registro talento humano','tarjeta profesional','matricula profesional','inscripcion profesional','profesional inscrito','titulo profesional'],
+    'historia clínica':['historia clinica','expediente','registro clinico','hce','apertura historia','custodia historia','archivo clinico','20 anos','20 años','historia electronica','folio','epicrisis','nota de evolucion','historia del paciente','anotar en la historia','documentar en historia'],
+    'reps':           ['reps','registro especial de prestadores','inscripcion reps','novedades reps','actualizar reps','registro de prestadores','codigo reps','tramite reps'],
+    'telemedicina':   ['telemedicina','teleconsulta','telexperticia','atencion virtual','consulta virtual','consulta en linea','consulta por video','no interactiva','interactiva','plataforma digital'],
+    'multa':          ['multa','sancion','clausura','proceso penal','responsabilidad','infraccion','castigo','10000 smlmv','sin habilitacion opera','operando sin habilitacion','consecuencia','que pasa si no','pena'],
+    'equipos':        ['equipo biomedico','dispositivo medico','calibracion','mantenimiento preventivo','hoja de vida equipo','tecnologia biomedica','decreto 4725','invima','maquina','aparato medico','desfibrilador','ecografo','monitor','camilla','equipo medico','mantenimiento de equipo'],
+    'accesibilidad':  ['accesibilidad','rampa','bano adaptado','discapacidad','movilidad reducida','silla de ruedas','personas con discapacidad','señalizacion','acceso universal','barreras arquitectonicas'],
+    'pqrsf':          ['pqrs','queja','reclamo','peticion','sugerencia','felicitacion','canal de atencion','buzon','derecho de peticion','15 dias','reclamacion','inconformidad'],
+    'consentimiento': ['consentimiento informado','autorizar','autorizacion del paciente','firmar','firma del paciente','consentimiento escrito','paciente autoriza','acepta el procedimiento'],
+    'pamec':          ['pamec','programa de auditoria','mejoramiento de la calidad','procesos prioritarios','ciclo pamec','auditoria interna','plan de mejoramiento','mejora continua'],
+    'indicadores':    ['indicador','res. 256','resolucion 256','sispro','oportunidad de cita','satisfaccion del usuario','tasa de eventos adversos','reporte de indicadores','medir calidad','indicadores de calidad'],
+    'medicamentos':   ['medicamento','farmaco','farmacia','psicotr','opioide','control especial','peps','almacenamiento de medicamentos','farmacovigilancia','doble llave','cadena de custodia farmaco','medicamento vencido','nevera medicamentos','temperatura medicamento'],
+    'director técnico':['director tecnico','responsable del establecimiento','cargo director','suplente del director','quien dirige','director de la ips','responsable tecnico','jefe medico'],
+    'infraestructura':['infraestructura','planta fisica','instalaciones','sismica','vulnerabilidad sismica','iluminacion','ventilacion','metros cuadrados','señalizacion de areas','espacios','sala de espera','consultorio','bano','paredes','piso','techo','construccion','obra'],
+    'urgencias':      ['urgencia','emergencia','triage','sala de urgencias','atencion de urgencias','nivel de triage','urgencias 24','manchester','clasificacion de urgencias'],
+    'referencia':     ['referencia','contrarreferencia','remision','derivacion','mayor complejidad','acuerdo de referencia','remitir paciente','enviar a otro hospital','red de prestadores'],
+    'seguridad del paciente':['seguridad del paciente','evento adverso','incidente clinico','caida del paciente','caidas','ulcera por presion','escaras','identificacion del paciente','pulsera','rondas de seguridad','barrera de seguridad','error medico','incidente','error en medicamento','confundir paciente'],
+    'talento humano': ['talento humano','personal de salud','perfil de cargo','personal asistencial','dotacion de personal','enfermera','enfermero','profesional de salud','medico contratado','contratar personal','turno','personal medico','auxiliar de enfermeria','tecnico','recurso humano'],
+    'vacuna':         ['vacuna','vacunacion','inmunobiologico','cadena de frio','pai','esquema de vacunacion','inmunizacion','biológico','biologico','vacunar','aplicar vacuna'],
+    'ambulancia':     ['ambulancia','transporte asistencial','vehiculo asistencial','unidad movil','estrella de la vida','mision medica','traslado de paciente','transporte medico'],
+    'plan de emergencias':['plan de emergencia','plan de desastre','simulacro','evacuacion','brigada de emergencia','extintor','riesgo de incendio','emergencia hospitalaria','sismo','terremoto','inundacion','brigada'],
+    'laboratorio':    ['laboratorio clinico','laboratorio de','bacteriologo','muestra de laboratorio','control de calidad externo','hemograma','cultivo bacteriologico','vih laboratorio','examen de laboratorio','prueba de laboratorio','resultado laboratorio'],
+    'imágenes diagnósticas':['imagen diagnostica','radiologia','ecografia','tomografia','resonancia','rayos x','blindaje','dosimetria','radiacion ionizante','rx ','scanner','ultrasonido','gammagrafia'],
+    'derechos del paciente':['derechos del paciente','deberes del paciente','carta de derechos','atencion humanizada','ley 1751','autonomia del paciente','derecho a la salud','derechos del usuario'],
+    'eps':            ['eps','aseguradora','plan de beneficios','pbs','contrato con eps','ley 100','sgsss','red de prestadores','afiliado','eps-s','conveniada','entidad promotora'],
+    'sede':           ['apertura de sede','nueva sede','cambio de sede','cambio de domicilio','cambio de direccion','nueva sucursal','abrir sede','otra sede','sucursal'],
+    'manuales':       ['documentos obligatorios','documentacion obligatoria','que documentos necesito','cuales documentos','protocolos obligatorios','manual de procesos','que papeles','que archivos','documentos para habilitacion'],
+    'habilitación':   ['habilitar','habilitacion','como me habilito','requisitos de habilitacion','visita de verificacion','decreto 780','7 estandares','proceso de habilitacion','estandares','inscripcion','como registro','paso a paso habilitacion'],
+    'ips':            ['ips','institucion prestadora','clinica','centro de salud','consultorio medico','prestador de salud','hospital','que es una ips'],
+  };
+  // Normalizar la query eliminando stop words muy comunes
+  const stopWords=['que','como','cuando','donde','por','para','los','las','del','una','uno','con','sin','hay','puedo','debo','debe','tiene','tienen','necesito','necesita','cual','cuales','sobre','segun','tengo','esta'];
+  const words = ql.split(/\s+/).filter(w=>w.length>2 && !stopWords.includes(w));
+  // Puntuar cada tema
+  let scores={};
+  for(const [topic, kws] of Object.entries(topicKw)){
+    let score=0;
+    for(const kw of kws){
+      if(ql.includes(kw)) score += (kw.split(' ').length > 1 ? 3 : 1); // frases valen más
+    }
+    // También revisar palabras individuales de la query contra las kw
+    for(const word of words){
+      if(word.length>3){
+        for(const kw of kws){
+          if(kw.includes(word) && word.length>4) score += 0.5;
+        }
+      }
+    }
+    if(score>0) scores[topic]=score;
+  }
+  // Elegir el tema con mayor puntaje
+  if(Object.keys(scores).length>0){
+    const best=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+    if(scores[best]>=1) return normAnswers[best];
+  }
+  // Fallback inteligente: si la pregunta tiene signos de ser una pregunta sobre normativa
+  if(ql.length<10) return '¿Sobre qué tema de normativa de salud quieres información? Puedo ayudarte con habilitación, REPS, historia clínica, bioseguridad, residuos, equipos, urgencias, medicamentos, PAMEC, indicadores, seguridad del paciente, telemedicina, y más.';
   return normAnswers['default'];
 }
 
