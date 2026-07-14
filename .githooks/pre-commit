@@ -1,11 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # .githooks/pre-commit
-# Compatible con Linux/Mac (bash) y Windows (Git for Windows sh)
-# Si bash no está disponible, el commit pasa sin validación.
-if ! command -v bash >/dev/null 2>&1; then
-  echo "  [INFO] bash no disponible — saltando validacion NormaLis (entorno Windows sin bash en PATH)"
-  exit 0
-fi
 # Se instala una vez con: git config core.hooksPath .githooks
 # A partir de ahi corre automaticamente en cada git commit.
 
@@ -81,4 +75,13 @@ echo ""
 echo "============================================================"
 if [ "$ERRORS" -eq 0 ]; then
     echo "  COMMIT AUTORIZADO"
-    echo "==============================================
+    echo "============================================================"
+    echo ""
+    exit 0
+else
+    echo "  COMMIT BLOQUEADO - $ERRORS archivo(s) con errores criticos"
+    echo "  Corrige los errores y vuelve a intentar el commit."
+    echo "============================================================"
+    echo ""
+    exit 1
+fi

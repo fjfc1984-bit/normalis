@@ -2927,6 +2927,9 @@ document.addEventListener('DOMContentLoaded', function(){
   if (localStorage.getItem('normalis_onboarding_done')) {
     var ob = document.getElementById('onboarding');
     if (ob) ob.style.display = 'none';
+    var appEl = document.getElementById('app');
+    if (appEl) appEl.style.display = 'flex';
+    if (typeof initApp === 'function') setTimeout(initApp, 50);
     return;
   }
   setTimeout(obRunStep, 300);
@@ -13132,5 +13135,4 @@ function evaluarSuficienciaDatos(ctx) {
             </select>
           </div>
           <div>
-            <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">PIN de acceso (4 dígitos)</label>
-            <input id="um-form-pin" class="
+           
