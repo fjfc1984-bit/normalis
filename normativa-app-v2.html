@@ -1773,7 +1773,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
           <div class="card" style="padding:0;overflow:hidden">
             <div style="background:var(--sidebar-bg);padding:16px 20px;display:flex;align-items:center;gap:12px">
               <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>
-              <div><div style="font-size:14px;font-weight:700;color:#f1f5f9">Consultor Normativo IA</div><div style="font-size:11px;color:#94a3b8">Experto en Res. 3100 · 465/2025 · Dec. 4725 · y más</div></div>
+              <div><div style="font-size:14px;font-weight:700;color:#f1f5f9">Consultor Normativo</div><div style="font-size:11px;color:#94a3b8">Res. 3100/2019 · 544/2023 · Dec. 351/2014 · Dec. 4725/2005</div></div>
               <div style="margin-left:auto"><span class="badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;font-size:11px">● En línea</span></div>
             </div>
             <div class="chat-msgs" id="main-chat-msgs" style="height:380px;border-radius:0;border:none"></div>
@@ -2672,7 +2672,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <div class="view" id="view-simulacro">
   <div style="padding:24px;max-width:900px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🔎 Simulacro Secretaría de Salud</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Lista de verificación para visita de habilitación — Res. 3100/2019 y 465/2025</p></div>
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🔎 Simulacro Secretaría de Salud</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Lista de verificación para visita de habilitación — Res. 3100/2019 · Res. 544/2023</p></div>
       <div style="display:flex;gap:10px">
         <button onclick="resetSimulacro()" style="background:#fff;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">🔄 Reiniciar</button>
       </div>
@@ -2948,7 +2948,7 @@ const viewTitles={
   auditoria:['Auditoría Simulada','Inspección por áreas físicas · Res. 3100'],
   resultados:['Resultados de Auditoría','Última evaluación: 5 de julio, 2026'],
   cronograma:['Cronograma de Visita','Plan de 6 semanas · Visita próxima'],
-  chat:['Consultor Normativo IA','Experto en Res. 3100, 465/2025 y normativa colombiana'],
+  chat:['Consultor Normativo','Res. 3100/2019 · 544/2023 · Dec. 351/2014 y normativa colombiana'],
   establecimiento:['Mi Establecimiento','Datos e información del prestador'],
 };
 
@@ -3159,7 +3159,7 @@ const areasDB={
       '¿El acceso a historias clínicas tiene registro de préstamo y devolución, garantizando que solo personal autorizado accede a los expedientes?'
     ]},
     {id:'residuos',icon:'🗑️',name:'Gestión de Residuos Hospitalarios (PGIRH)',norm:'Decreto 351/2014 · Res. 1164/2002 · Res. 3100/2019 Est. 5',q:[
-      '¿Existen recipientes diferenciados: rojo (infeccioso/biológico), verde (ordinario), blanco (reciclable) y guardián (cortopunzantes) en cada área?',
+      '¿Existen recipientes diferenciados según Dec. 351/2014: rojo (infeccioso/biológico), negro (ordinario no aprovechable), verde (biodegradable), blanco o gris (reciclable) y guardián rígido (cortopunzantes) en cada área asistencial?',
       '¿El contrato con empresa gestora de RESPEL autorizada está vigente con manifiestos de disposición final de las últimas tres recolecciones?',
       '¿El Plan de Gestión Integral de Residuos Hospitalarios (PGIRH) está actualizado, registrado ante la autoridad ambiental y con cronograma activo?',
       '¿El personal tiene capacitación documentada en segregación de residuos hospitalarios en los últimos 12 meses con registro de asistencia?',
@@ -3969,7 +3969,7 @@ const normAnswers={
   'referencia':'El Estándar 7 (Interdependencia) de la Res. 3100/2019 y la Res. 544/2023 (Art. 17) exigen un acuerdo formal de referencia y contrarreferencia con al menos una IPS de mayor complejidad. El acuerdo debe estar firmado, vigente, con datos de contacto actualizados, y el personal debe conocerlo. Su ausencia es causal de no conformidad en visita.',
   'manuales':'Los documentos obligatorios según el Manual de Habilitación (Res. 3100/2019) son: Manual de Bioseguridad, Plan de Gestión de Residuos (PGIRH), Protocolo de Historia Clínica, Manual de Procesos y Procedimientos asistenciales, Protocolo de Referencia y Contrarreferencia, Plan de Emergencias, y Protocolo de Seguridad del Paciente. Todos deben estar firmados por el Director Técnico con fecha de revisión vigente.',
   'res. 465':'La Resolución 465 de 2025 modificó la Res. 3100/2019. Actualizó estándares de talento humano para nuevas especialidades, incorporó requisitos para servicios de salud mental comunitaria, y ajustó los criterios de infraestructura para establecimientos rurales dispersos. Nota: NormaLis está actualizado hasta la Res. 544/2023. Consulta el Ministerio de Salud para cambios posteriores.',
-  'default':'Con gusto te ayudo. Para darte la respuesta más precisa sobre normativa de habilitación en Colombia, puedes preguntarme sobre: bioseguridad, historia clínica, RETHUS, REPS, habilitación, urgencias, medicamentos, equipos, residuos, consentimiento, PAMEC, indicadores, telemedicina, accesibilidad, PQRSF, o cualquier resolución específica (3100/2019, 544/2023, 1445/2006, etc.).',
+  'default':'Con gusto te ayudo con normativa de habilitación colombiana. Puedo responderte sobre: bioseguridad · historia clínica · RETHUS · REPS · proceso de habilitación · urgencias · medicamentos y dispositivos · equipos biomédicos · residuos hospitalarios · consentimiento informado · PAMEC · indicadores Res. 256/2016 · telemedicina · accesibilidad · PQRSF · director técnico · referencia y contrarreferencia · Res. 3100/2019 · Res. 544/2023 · Decreto 351/2014. Soy un consultor de contenido normativo — para interpretaciones jurídicas específicas de tu caso, consulta también con tu Secretaría de Salud.',
 };
 
 function getAnswer(q){
@@ -4003,7 +4003,7 @@ function getAnswer(q){
 }
 
 function initMainChat(){
-  addMainMsg('¡Hola! Soy tu consultor especializado en normativa de salud colombiana. Conozco la Resolución 3100/2019, la Res. 465/2025, el Dec. 4725/2005 y todas las normas de habilitación. ¿En qué te ayudo hoy?','bot');
+  addMainMsg('¡Hola! Soy tu consultor de normativa de habilitación en salud colombiana. Respondo preguntas sobre la Res. 3100/2019 (actualizada hasta Res. 544/2023), Dec. 4725/2005, Decreto 351/2014 y otras normas vigentes. ¿En qué te ayudo hoy?','bot');
 }
 
 function addMainMsg(text,type){
@@ -4049,7 +4049,7 @@ function sendFloat(){
 // ═══════════════════════════════════════════
 const docPreviews={
   bioseguridad:{title:'Manual de Bioseguridad',html:`<h2 style="font-size:16px;font-weight:800;text-align:center;margin-bottom:4px">MANUAL DE BIOSEGURIDAD</h2>
-<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Generado con IA · Adaptado a Resolución 3100/2019 y 465/2025</em></p>
+<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Adaptado a Resolución 3100/2019 · Res. 544/2023</em></p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">1. Objetivo</h3>
 <p>Establecer los lineamientos de bioseguridad para proteger la salud del personal, pacientes y comunidad, cumpliendo la Resolución 3100 de 2019 y su modificación 465 de 2025.</p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">2. EPP por Área</h3>
@@ -13127,12 +13127,4 @@ function evaluarSuficienciaDatos(ctx) {
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Rol</label>
-            <select id="um-form-rol" class="form-control">
-              <option value="director">Director Técnico</option>
-              <option value="auditor">Auditor Interno</option>
-              <option value="auxiliar">Auxiliar Administrativo</option>
-              <option value="consultor">Consultor Externo</option>
-            </select>
-          </div>
-          <div>
-            <label
+            <select id="um-for
