@@ -702,6 +702,20 @@ input[type=range].roi-range{width:100%;accent-color:var(--primary);height:4px;cu
 .act-stat-num{font-size:24px;font-weight:800;margin-bottom:4px}
 .act-stat-lbl{font-size:11px;color:var(--text-muted)}
 
+/* ═══════════ UPDATE BANNER + PANEL ═══════════ */
+.upd-banner{display:none;align-items:center;gap:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:#fff;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;position:sticky;top:0;z-index:200;border-radius:0}
+.upd-banner.show{display:flex}
+.upd-banner-close{margin-left:auto;background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
+.upd-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:500px;max-width:100vw;background:#fff;z-index:600;flex-direction:column;box-shadow:-6px 0 30px rgba(0,0,0,.18)}
+.upd-panel.show{display:flex}
+.upd-panel-head{padding:18px 20px;background:var(--sidebar-bg,#1e293b);color:#fff;flex-shrink:0}
+.upd-panel-body{flex:1;overflow-y:auto;padding:14px 16px}
+.upd-item{padding:12px 0;border-bottom:1px solid var(--border,#e2e8f0)}
+.upd-item:last-child{border-bottom:none}
+.upd-item-norma{font-size:12px;font-weight:700;margin-bottom:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.upd-item-desc{font-size:12px;color:var(--text-muted,#64748b);line-height:1.5}
+.upd-item-badge{font-size:10px}
+.upd-last{font-size:10px;color:var(--text-muted,#94a3b8);text-align:center;padding-top:10px}
 
 /* ═══════════ AUTOMATION ENGINE ═══════════ */
 .auto-rule-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .2s}
@@ -13119,10 +13133,4 @@ function evaluarSuficienciaDatos(ctx) {
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">PIN de acceso (4 dígitos)</label>
-            <input id="um-form-pin" class="form-control" type="password" inputmode="numeric" maxlength="4" placeholder="4 dígitos numéricos">
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn btn-prima
-
-<script>(function(){var _o=window.mostrarOnboarding,_x=false;function _go(){if(_x)return;_x=true;window.mostrarOnboarding=_o;_o&&_o();}window.mostrarOnboarding=function(){};if(window.firebase&&firebase.apps&&firebase.apps.length){firebase.auth().onAuthStateChanged(async function(u){if(u){try{var s=await firebase.firestore().collection('usuarios').doc(u.uid).get();if(s.exists){var d=s.data(),n=(d.nombre||'').replace(/[<>]/g,'').trim();if(n){var c={};try{c=JSON.parse(localStorage.getItem('normalis_cfg')||'{}')}catch(e){}Object.assign(c,{director:n,tipo:d.tipoIPS||c.tipo||'',ciudad:d.ciudad||c.ciudad||'',nit:d.nit||c.nit||'',responsable:d.nombreContacto||c.responsable||'',cargo:d.cargo||c.cargo||'',telefono:d.telefono||c.telefono||''});localStorage.setItem('normalis_cfg',JSON.stringify(c));localStorage.setItem('normalis_ips_nombre',n);localStorage.setItem('normalis_ips_ciudad',d.ciudad||'');localStorage.setItem('normalis_onboarding_done','true');}}}catch(e){console.warn('[NormaLis]',e);}_go();}});}else{window.mostrarOnboarding=_o;}})();</script>
+            <input id="um-form-pin" class="
