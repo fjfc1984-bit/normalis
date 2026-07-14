@@ -45,115 +45,232 @@ const normAnswers={
   'default':'Con gusto te ayudo con normativa de habilitación en salud colombiana. Puedo responder sobre: proceso de habilitación · los 7 estándares Res. 3100/2019 · REPS · RETHUS · historia clínica · bioseguridad · residuos hospitalarios · equipos biomédicos · medicamentos · urgencias y triage · referencia y contrarreferencia · PAMEC · indicadores Res. 256/2016 · seguridad del paciente · talento humano · vacunación · ambulancias · plan de emergencias · laboratorio · imágenes diagnósticas · telemedicina · consentimiento informado · derechos del paciente · PQRSF · EPS · apertura de sede · Res. 465/2025 · multas y sanciones. ¿Sobre cuál tema quieres información?',
 };
 
-function getAnswer(q){
-  const ql=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[¿?¡!]/g,'');
-  // Sistema de puntuación: cada tema tiene palabras clave con peso
-  const topicKw={
-    'res. 465':       ['465','2025','nueva resolucion','cambio reciente','que cambio','ultimas modificaciones','camaras de video','estrella de la vida','mision medica','barrera fisica','menores de 5','consultorios','autoevaluacion momentos'],
-    'bioseguridad':   ['bioseguridad','higiene de manos','epp','equipo de proteccion','accidente biologico','accidente laboral','lavado de manos','desinfeccion','esterilizacion','protocolo de limpieza','guantes','mascarilla','proteccion personal'],
-    'odontólogo':     ['odontologo','odontologia','amalgama','dental','diente','consultorio dental','odontologica'],
-    'residuos':       ['residuo','respel','pgirh','desecho','bolsa roja','bolsa negra','cortopunzante','guardian','reciclable','residuos peligrosos','contenedor de color','color de bolsa','manejo de residuos','basura hospital','gestor','empresa gestora'],
-    'rethus':         ['rethus','registro talento humano','tarjeta profesional','matricula profesional','inscripcion profesional','profesional inscrito','titulo profesional'],
-    'historia clínica':['historia clinica','expediente','registro clinico','hce','apertura historia','custodia historia','archivo clinico','20 anos','20 años','historia electronica','folio','epicrisis','nota de evolucion','historia del paciente','anotar en la historia','documentar en historia'],
-    'reps':           ['reps','registro especial de prestadores','inscripcion reps','novedades reps','actualizar reps','registro de prestadores','codigo reps','tramite reps'],
-    'telemedicina':   ['telemedicina','teleconsulta','telexperticia','atencion virtual','consulta virtual','consulta en linea','consulta por video','no interactiva','interactiva','plataforma digital'],
-    'multa':          ['multa','sancion','clausura','proceso penal','responsabilidad','infraccion','castigo','10000 smlmv','sin habilitacion opera','operando sin habilitacion','consecuencia','que pasa si no','pena'],
-    'equipos':        ['equipo biomedico','dispositivo medico','calibracion','mantenimiento preventivo','hoja de vida equipo','tecnologia biomedica','decreto 4725','invima','maquina','aparato medico','desfibrilador','ecografo','monitor','camilla','equipo medico','mantenimiento de equipo'],
-    'accesibilidad':  ['accesibilidad','rampa','bano adaptado','discapacidad','movilidad reducida','silla de ruedas','personas con discapacidad','señalizacion','acceso universal','barreras arquitectonicas'],
-    'pqrsf':          ['pqrs','queja','reclamo','peticion','sugerencia','felicitacion','canal de atencion','buzon','derecho de peticion','15 dias','reclamacion','inconformidad'],
-    'consentimiento': ['consentimiento informado','autorizar','autorizacion del paciente','firmar','firma del paciente','consentimiento escrito','paciente autoriza','acepta el procedimiento'],
-    'pamec':          ['pamec','programa de auditoria','mejoramiento de la calidad','procesos prioritarios','ciclo pamec','auditoria interna','plan de mejoramiento','mejora continua'],
-    'indicadores':    ['indicador','res. 256','resolucion 256','sispro','oportunidad de cita','satisfaccion del usuario','tasa de eventos adversos','reporte de indicadores','medir calidad','indicadores de calidad'],
-    'medicamentos':   ['medicamento','farmaco','farmacia','psicotr','opioide','control especial','peps','almacenamiento de medicamentos','farmacovigilancia','doble llave','cadena de custodia farmaco','medicamento vencido','nevera medicamentos','temperatura medicamento'],
-    'director técnico':['director tecnico','responsable del establecimiento','cargo director','suplente del director','quien dirige','director de la ips','responsable tecnico','jefe medico'],
-    'infraestructura':['infraestructura','planta fisica','instalaciones','sismica','vulnerabilidad sismica','iluminacion','ventilacion','metros cuadrados','señalizacion de areas','espacios','sala de espera','consultorio','bano','paredes','piso','techo','construccion','obra'],
-    'urgencias':      ['urgencia','emergencia','triage','sala de urgencias','atencion de urgencias','nivel de triage','urgencias 24','manchester','clasificacion de urgencias'],
-    'referencia':     ['referencia','contrarreferencia','remision','derivacion','mayor complejidad','acuerdo de referencia','remitir paciente','enviar a otro hospital','red de prestadores'],
-    'seguridad del paciente':['seguridad del paciente','evento adverso','incidente clinico','caida del paciente','caidas','ulcera por presion','escaras','identificacion del paciente','pulsera','rondas de seguridad','barrera de seguridad','error medico','incidente','error en medicamento','confundir paciente'],
-    'talento humano': ['talento humano','personal de salud','perfil de cargo','personal asistencial','dotacion de personal','enfermera','enfermero','profesional de salud','medico contratado','contratar personal','turno','personal medico','auxiliar de enfermeria','tecnico','recurso humano'],
-    'vacuna':         ['vacuna','vacunacion','inmunobiologico','cadena de frio','pai','esquema de vacunacion','inmunizacion','biológico','biologico','vacunar','aplicar vacuna'],
-    'ambulancia':     ['ambulancia','transporte asistencial','vehiculo asistencial','unidad movil','estrella de la vida','mision medica','traslado de paciente','transporte medico'],
-    'plan de emergencias':['plan de emergencia','plan de desastre','simulacro','evacuacion','brigada de emergencia','extintor','riesgo de incendio','emergencia hospitalaria','sismo','terremoto','inundacion','brigada'],
-    'laboratorio':    ['laboratorio clinico','laboratorio de','bacteriologo','muestra de laboratorio','control de calidad externo','hemograma','cultivo bacteriologico','vih laboratorio','examen de laboratorio','prueba de laboratorio','resultado laboratorio'],
-    'imágenes diagnósticas':['imagen diagnostica','radiologia','ecografia','tomografia','resonancia','rayos x','blindaje','dosimetria','radiacion ionizante','rx ','scanner','ultrasonido','gammagrafia'],
-    'derechos del paciente':['derechos del paciente','deberes del paciente','carta de derechos','atencion humanizada','ley 1751','autonomia del paciente','derecho a la salud','derechos del usuario'],
-    'eps':            ['eps','aseguradora','plan de beneficios','pbs','contrato con eps','ley 100','sgsss','red de prestadores','afiliado','eps-s','conveniada','entidad promotora'],
-    'sede':           ['apertura de sede','nueva sede','cambio de sede','cambio de domicilio','cambio de direccion','nueva sucursal','abrir sede','otra sede','sucursal'],
-    'manuales':       ['documentos obligatorios','documentacion obligatoria','que documentos necesito','cuales documentos','protocolos obligatorios','manual de procesos','que papeles','que archivos','documentos para habilitacion'],
-    'habilitación':   ['habilitar','habilitacion','como me habilito','requisitos de habilitacion','visita de verificacion','decreto 780','7 estandares','proceso de habilitacion','estandares','inscripcion','como registro','paso a paso habilitacion'],
-    'ips':            ['ips','institucion prestadora','clinica','centro de salud','consultorio medico','prestador de salud','hospital','que es una ips'],
+// ── Gemini API config ──────────────────────────────────────────────────────
+const GEMINI_API_KEY = 'AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg';
+const GEMINI_MODEL   = 'gemini-2.0-flash';
+const GEMINI_URL     = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+// ── System prompt — ancla el modelo a normativa colombiana de salud ──────────
+function buildSystemPrompt() {
+  const cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
+  const ipsNombre = localStorage.getItem('normalis_ips_nombre') || '';
+  const ipsCiudad = localStorage.getItem('normalis_ips_ciudad') || '';
+  const tipoIPS = cfg.tipo || '';
+  const contextoIPS = (ipsNombre || tipoIPS || ipsCiudad)
+    ? `\n\nCONTEXTO DE LA IPS:\n- Nombre: ${ipsNombre || 'No configurado'}\n- Tipo: ${tipoIPS || 'No configurado'}\n- Ciudad: ${ipsCiudad || 'No configurado'}`
+    : '';
+
+  return `Eres el Consultor Normativo de NormaLis, un sistema especializado en habilitación de servicios de salud en Colombia.
+
+MARCO NORMATIVO QUE CONOCES:
+- Resolución 3100/2019 (estándares de habilitación — talento humano, infraestructura, dotación, medicamentos, procesos prioritarios, historia clínica, interdependencia)
+- Resolución 465/2025 (actualización de estándares, nuevos requisitos 2025)
+- Resolución 544/2023 (accesibilidad, PQRSF, REPS)
+- Decreto 780/2016 (política de atención integral en salud)
+- Resolución 1995/1999 (historia clínica)
+- Decreto 351/2014 (residuos hospitalarios y similares)
+- Resolución 256/2016 (indicadores de calidad)
+- Decreto 4725/2005 (dispositivos médicos)
+- Ley 1164/2007 (RETHUS — talento humano en salud)
+- Resolución 1317/2021 (telemedicina)
+- Resolución 1445/2006 y Decreto 1011/2006 (PAMEC)
+- Resolución 1138/2022 (medicamentos de control especial)${contextoIPS}
+
+REGLAS DE RESPUESTA:
+1. Responde siempre en español colombiano, claro y directo.
+2. Sé específico: cita el artículo o estándar exacto cuando sea posible.
+3. Si la pregunta es sobre una situación específica de la IPS (tipo de servicio, número de camas, etc.), pide ese dato si no lo tienes.
+4. Nunca inventes normas. Si no sabes algo con certeza, di "Te recomiendo verificar directamente con la Secretaría de Salud de tu departamento."
+5. Evita respuestas genéricas. Si el usuario pregunta "¿qué necesito para urgencias?", pregunta el nivel de complejidad antes de responder.
+6. Sé conciso: máximo 4 párrafos por respuesta. Para respuestas largas, usa listas numeradas.
+7. Nunca reemplazas la asesoría de un profesional en habilitación — indica esto cuando corresponda.`;
+}
+
+// ── Llamada a Gemini API ──────────────────────────────────────────────────────
+async function callGemini(userMessage, historial) {
+  const systemPrompt = buildSystemPrompt();
+  
+  // Construir contents con historial de conversación
+  const contents = [];
+  
+  // Agregar historial previo
+  if (historial && historial.length > 0) {
+    for (const msg of historial) {
+      contents.push({
+        role: msg.role,
+        parts: [{ text: msg.text }]
+      });
+    }
+  }
+  
+  // Agregar mensaje actual
+  contents.push({
+    role: 'user',
+    parts: [{ text: userMessage }]
+  });
+
+  const body = {
+    system_instruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    contents: contents,
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens: 800,
+      topP: 0.8
+    }
   };
-  // Normalizar la query eliminando stop words muy comunes
-  const stopWords=['que','como','cuando','donde','por','para','los','las','del','una','uno','con','sin','hay','puedo','debo','debe','tiene','tienen','necesito','necesita','cual','cuales','sobre','segun','tengo','esta'];
+
+  const resp = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Error ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No pude generar una respuesta. Intenta de nuevo.';
+}
+
+// ── Fallback: sistema de keywords (respaldo si Gemini falla) ────────────────
+function getAnswerFallback(q){
+  const ql=q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[¿?¡!]/g,'');
+  const topicKw={
+    'bioseguridad':   ['bioseguridad','higiene de manos','epp','accidente biologico','lavado de manos','desinfeccion'],
+    'residuos':       ['residuo','respel','pgirh','bolsa roja','cortopunzante','guardian','gestor'],
+    'rethus':         ['rethus','registro talento humano','tarjeta profesional','matricula profesional'],
+    'historia clínica':['historia clinica','hce','custodia historia','20 anos','historia electronica'],
+    'reps':           ['reps','registro especial de prestadores','novedades reps','actualizar reps'],
+    'habilitación':   ['habilitar','habilitacion','requisitos de habilitacion','visita de verificacion','7 estandares'],
+    'pamec':          ['pamec','programa de auditoria','mejoramiento de la calidad'],
+    'medicamentos':   ['medicamento','farmaco','farmacia','control especial','peps','farmacovigilancia'],
+    'equipos':        ['equipo biomedico','calibracion','mantenimiento preventivo','hoja de vida equipo'],
+    'seguridad del paciente':['seguridad del paciente','evento adverso','caida del paciente','error medico'],
+  };
+  const stopWords=['que','como','cuando','donde','por','para','los','las','del','una','con','sin','hay','puedo','debo','tiene','tengo'];
   const words = ql.split(/\s+/).filter(w=>w.length>2 && !stopWords.includes(w));
-  // Puntuar cada tema
   let scores={};
   for(const [topic, kws] of Object.entries(topicKw)){
     let score=0;
-    for(const kw of kws){
-      if(ql.includes(kw)) score += (kw.split(' ').length > 1 ? 3 : 1); // frases valen más
-    }
-    // También revisar palabras individuales de la query contra las kw
-    for(const word of words){
-      if(word.length>3){
-        for(const kw of kws){
-          if(kw.includes(word) && word.length>4) score += 0.5;
-        }
-      }
-    }
+    for(const kw of kws){ if(ql.includes(kw)) score += (kw.split(' ').length > 1 ? 3 : 1); }
+    for(const word of words){ if(word.length>3) for(const kw of kws) if(kw.includes(word) && word.length>4) score += 0.5; }
     if(score>0) scores[topic]=score;
   }
-  // Elegir el tema con mayor puntaje
   if(Object.keys(scores).length>0){
     const best=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
     if(scores[best]>=1) return normAnswers[best];
   }
-  // Fallback inteligente: si la pregunta tiene signos de ser una pregunta sobre normativa
-  if(ql.length<10) return '¿Sobre qué tema de normativa de salud quieres información? Puedo ayudarte con habilitación, REPS, historia clínica, bioseguridad, residuos, equipos, urgencias, medicamentos, PAMEC, indicadores, seguridad del paciente, telemedicina, y más.';
-  return normAnswers['default'];
+  return normAnswers['default'] || 'Puedo ayudarte con habilitación, REPS, historia clínica, bioseguridad, residuos, equipos, urgencias, medicamentos, PAMEC, seguridad del paciente y más. ¿Sobre qué tema tienes dudas?';
 }
 
+// ── Historial de conversación (main chat) ───────────────────────────────────
+let mainChatHistory = [];
+
+// ── Chat principal ────────────────────────────────────────────────────────────
 function initMainChat(){
-  addMainMsg('¡Hola! Soy tu consultor de normativa de habilitación en salud colombiana. Respondo preguntas sobre la Res. 3100/2019 (actualizada hasta Res. 544/2023), Dec. 4725/2005, Decreto 351/2014 y otras normas vigentes. ¿En qué te ayudo hoy?','bot');
+  mainChatHistory = [];
+  addMainMsg('¡Hola! Soy el Consultor Normativo IA de NormaLis. Respondo preguntas sobre habilitación, Res. 3100/2019, Res. 465/2025, historia clínica, residuos, PAMEC y toda la normativa de salud colombiana.\n\n¿Cuál es tu pregunta?','bot');
 }
 
-function addMainMsg(text,type){
+function addMainMsg(text, type){
   const box=document.getElementById('main-chat-msgs');
+  if(!box) return;
   const d=document.createElement('div');
   d.className=`msg ${type==='bot'?'bot':'user-msg'}`;
-  d.textContent=text;
+  d.innerHTML = type==='bot' ? text.replace(/\n/g,'<br>') : escapeHtml(text);
   box.appendChild(d);
   box.scrollTop=box.scrollHeight;
+  return d;
 }
 
-function sendMainChat(){
+function escapeHtml(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function sendMainChat(){
   const inp=document.getElementById('main-chat-input');
-  const val=inp.value.trim();if(!val)return;
+  if(!inp) return;
+  const val=inp.value.trim();
+  if(!val) return;
+  
   addMainMsg(val,'user');
   inp.value='';
-  setTimeout(()=>{addMainMsg('…','bot');setTimeout(()=>{const msgs=document.querySelectorAll('#main-chat-msgs .msg');msgs[msgs.length-1].textContent=getAnswer(val);document.getElementById('main-chat-msgs').scrollTop=9999;},800);},300);
+  inp.disabled=true;
+  
+  // Indicador de escritura
+  const typingEl = addMainMsg('⏳ Consultando normativa...','bot');
+  
+  try {
+    const respuesta = await callGemini(val, mainChatHistory);
+    
+    // Guardar en historial
+    mainChatHistory.push({ role:'user', text: val });
+    mainChatHistory.push({ role:'model', text: respuesta });
+    // Limitar historial a últimas 10 interacciones
+    if(mainChatHistory.length > 20) mainChatHistory = mainChatHistory.slice(-20);
+    
+    if(typingEl) typingEl.innerHTML = respuesta.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  } catch(err) {
+    console.warn('Gemini API error:', err.message);
+    // Fallback al sistema de keywords
+    const fallback = getAnswerFallback(val);
+    if(typingEl) typingEl.innerHTML = fallback.replace(/\n/g,'<br>') + '<br><br><em style="font-size:11px;color:#9ca3af">⚠ Respuesta desde base local (sin conexión a IA)</em>';
+  } finally {
+    inp.disabled=false;
+    inp.focus();
+    const box=document.getElementById('main-chat-msgs');
+    if(box) box.scrollTop=box.scrollHeight;
+  }
 }
 
 function sendChatQ(el){
   const q=el.textContent;
-  document.getElementById('main-chat-input').value=q;
-  sendMainChat();
+  const inp=document.getElementById('main-chat-input');
+  if(inp){ inp.value=q; sendMainChat(); }
 }
 
-// FLOAT CHAT
+// ── Chat flotante ─────────────────────────────────────────────────────────────
 let floatOpen=false;
+let floatHistory=[];
+
 function toggleFloat(){
   floatOpen=!floatOpen;
   document.getElementById('fcp').classList.toggle('open',floatOpen);
 }
-function sendFloat(){
+
+async function sendFloat(){
   const inp=document.getElementById('fcp-input');
-  const val=inp.value.trim();if(!val)return;
+  const val=inp.value.trim();
+  if(!val) return;
+  
   const box=document.getElementById('fcp-msgs');
-  const u=document.createElement('div');u.className='fcp-msg usr';u.textContent=val;box.appendChild(u);
+  const u=document.createElement('div');
+  u.className='fcp-msg usr';
+  u.textContent=val;
+  box.appendChild(u);
   inp.value='';
-  setTimeout(()=>{const b=document.createElement('div');b.className='fcp-msg bot';b.textContent=getAnswer(val);box.appendChild(b);box.scrollTop=9999;},700);
+  
+  const b=document.createElement('div');
+  b.className='fcp-msg bot';
+  b.textContent='⏳ Consultando...';
+  box.appendChild(b);
+  box.scrollTop=9999;
+  
+  try {
+    const respuesta = await callGemini(val, floatHistory);
+    floatHistory.push({ role:'user', text:val });
+    floatHistory.push({ role:'model', text:respuesta });
+    if(floatHistory.length > 10) floatHistory = floatHistory.slice(-10);
+    b.innerHTML = respuesta.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  } catch(err) {
+    b.textContent = getAnswerFallback(val);
+  }
+  box.scrollTop=9999;
 }
 
+// getAnswer se mantiene para compatibilidad con código externo que la llame
+function getAnswer(q){ return getAnswerFallback(q); }
 
 // END:normalis-chat.js — NormaLis integrity seal
