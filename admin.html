@@ -817,6 +817,8 @@ function initApp() {
   escucharProspectos();
   cargarPilotos();
   cargarAnalytics();
+  cargarSolicitudes();
+  cargarLeads();
 }
 
 // ──────────────────────────────────────────────
@@ -1402,30 +1404,7 @@ async function cargarAnalytics() {
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Firebase init (already in <head>) ──
-
-// ── Auth guard ──
-auth.onAuthStateChanged(async user => {
-  if (!user) { window.location.replace('login.html'); return; }
-  const snap = await db.collection('usuarios').doc(user.uid).get();
-  const rol = snap.exists ? (snap.data().rol || '') : '';
-  if (rol !== 'admin' && rol !== 'superadmin') {
-    alert('Acceso solo para administradores.');
-    await auth.signOut();
-    window.location.replace('login.html');
-    return;
-  }
-  document.getElementById('topbar-user').textContent = user.email;
-  initApp();
-});
-
-function initApp() {
-  escucharProspectos();
-  cargarPilotos();
-  cargarAnalytics();
-  cargarSolicitudes();
-  cargarLeads();
-}
+// ── Auth guard (handled by onAuthStateChanged in auth section above) ──
 
 // ── SOLICITUDES PENDIENTES ──
 function cargarSolicitudes() {
