@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Se instala una vez con: git config core.hooksPath .githooks
+# A partir de ahi corre automaticamente en cada git commit.
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ERRORS=0
+
+echo ""
+echo "============================================================"
+echo "  NormaLis — Validacion pre-commit"
+echo "============================================================"
+
+# Validar admin.html si fue modificado (o siempre si el flag --full esta activo)
+if git diff --cached --name-only | grep -q 'admin.html' || [ "${NORMALIS_FULL_CHECK:-0}" = "1" ]; then
+    echo "  Validando admin.html..."
+    if bash "$REPO_ROOT/validate-admin.sh" "$REPO_ROOT/admin.html" > /tmp/normalis-validate-admin.log 2>&1; then
+        echo "  [OK] admin.html paso todos los checks"
+    else
+        echo "  [XX] admin.html tiene errores criticos:"
+        echo ""
+        cat /tmp/normalis-validate-admin.log
+        ERRORS=$((ERRORS+1))
+    fi
+else
+    echo "  admin.html no fue modificado, saltando validacion"
+fi
+
+# Validar login.html si fue modificado
+if git diff --cached --name-only | grep -q 'login.html' || [ "${NORMALIS_FULL_CHECK:-0}" = "1" ]; then
+    if [ -f "$REPO_ROOT/validate-login.sh" ]; then
+        echo "  Validando login.html..."
+        if bash "$REPO_ROOT/validate-login.sh" "$REPO_ROOT/login.html" > /tmp/normalis-validate-login.log 2>&1; then
+            echo "  [OK] login.html paso todos los checks"
+        else
+            echo "  [XX] login.html tiene errores criticos:"
+            echo ""
+            cat /tmp/normalis-validate-login.log
+            ERRORS=$((ERRORS+1))
+        fi
+    fi
+fi
+
+# Validar registro.html si fue modificado
+if git diff --cached --name-only | grep -q 'registro.html' || [ "${NORMALIS_FULL_CHECK:-0}" = "1" ]; then
+    if [ -f "$REPO_ROOT/validate-registro.sh" ]; then
+        echo "  Validando registro.html..."
+        if bash "$REPO_ROOT/validate-registro.sh" "$REPO_ROOT/registro.html" > /tmp/normalis-validate-registro.log 2>&1; then
+            echo "  [OK] registro.html paso todos los checks"
+        else
+            echo "  [XX] registro.html tiene errores criticos:"
+            echo ""
+            cat /tmp/normalis-validate-registro.log
+            ERRORS=$((ERRORS+1))
+        fi
+    fi
+fi
+
+# Validar consistencia Firebase si cualquier HTML fue modificado
+if git diff --cached --name-only | grep -qE '\.(html|js)$' || [ "${NORMALIS_FULL_CHECK:-0}" = "1" ]; then
+    if [ -f "$REPO_ROOT/validate-firebase.sh" ]; then
+        echo "  Validando consistencia Firebase..."
+        if bash "$REPO_ROOT/validate-firebase.sh" > /tmp/normalis-validate-firebase.log 2>&1; then
+            echo "  [OK] Configuracion Firebase consistente"
+        else
+            echo "  [XX] Firebase config inconsistente:"
+            echo ""
+            cat /tmp/normalis-validate-firebase.log
+            ERRORS=$((ERRORS+1))
+        fi
+    fi
+fi
+
+echo ""
+echo "============================================================"
+if [ "$ERRORS" -eq 0 ]; then
+    echo "  COMMIT AUTORIZADO"
+    echo "============================================================"
+    echo ""
+    exit 0
+else
+    echo "  COMMIT BLOQUEADO - $ERRORS archivo(s) con errores criticos"
+    echo "  Corrige los errores y vuelve a intentar el commit."
+    echo "============================================================"
+    echo ""
+    exit 1
+fi

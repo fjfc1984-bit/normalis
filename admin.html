@@ -802,6 +802,14 @@ function showScreen(s) {
   document.getElementById('main').style.display = s === 'app' ? 'block' : 'none';
 }
 
+function showAlert(elementId, type, msg) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  el.innerHTML = `<div class="alert alert-${type}">${icons[type] || ''} ${msg.replace(/\n/g,'<br>')}</div>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 async function doLogin() {
   const btn = document.getElementById('btn-login');
   const email = document.getElementById('auth-email').value.trim();
@@ -1194,10 +1202,10 @@ async function crearIPS() {
     let msg = e.message;
     if (e.code === 'auth/email-already-in-use') msg = 'Este email ya tiene cuenta en Firebase. Usa otro email o busca el usuario existente.';
     showAlert('nueva-ips-alert','error','❌ Error: ' + msg);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Crear IPS y enviar bienvenida';
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '🚀 Crear IPS y enviar bienvenida';
 }
 
 function limpiarFormIPS() {
@@ -1546,7 +1554,7 @@ function renderLeads(lista) {
         <span class="badge ${badges[estado]||'badge-gray'}">${estado}</span>
         <select style="margin-left:6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:11px"
           onchange="actualizarEstadoLead('${l.id}', this.value)">
-          <          <option value="nuevo"      ${estado==='nuevo'      ?'selected':''}>nuevo</option>
+          <option value="nuevo"      ${estado==='nuevo'      ?'selected':''}>nuevo</option>
           <option value="contactado" ${estado==='contactado' ?'selected':''}>contactado</option>
           <option value="convertido" ${estado==='convertido' ?'selected':''}>convertido</option>
           <option value="descartado" ${estado==='descartado' ?'selected':''}>descartado</option>
@@ -1566,12 +1574,12 @@ async function actualizarEstadoLead(id, nuevoEstado) {
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
 }
 
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.className = 'toast toast-' + (type || 'info') + ' show';
-  setTimeout(() => t.classList.remove('show'), 3500);
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.className = `toast toast-${type} show`;
+  toast.textContent = msg;
+  setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 </script>
 </body>

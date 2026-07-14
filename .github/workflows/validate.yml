@@ -1,0 +1,58 @@
+name: Validacion NormaLis
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '*.html'
+      - '*.js'
+      - 'validate-*.sh'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validar integridad del codigo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar admin.html
+        run: |
+          chmod +x validate-admin.sh
+          bash validate-admin.sh admin.html
+
+      - name: Validar login.html
+        run: |
+          if [ -f validate-login.sh ]; then
+            chmod +x validate-login.sh
+            bash validate-login.sh login.html
+          else
+            echo "validate-login.sh no encontrado, saltando"
+          fi
+
+      - name: Validar registro.html
+        run: |
+          if [ -f validate-registro.sh ]; then
+            chmod +x validate-registro.sh
+            bash validate-registro.sh registro.html
+          else
+            echo "validate-registro.sh no encontrado, saltando"
+          fi
+
+      - name: Validar consistencia Firebase
+        run: |
+          if [ -f validate-firebase.sh ]; then
+            chmod +x validate-firebase.sh
+            bash validate-firebase.sh
+          else
+            echo "validate-firebase.sh no encontrado, saltando"
+          fi
+
+      - name: Resumen
+        if: always()
+        run: |
+          echo ""
+          echo "Validacion completada. Ver logs arriba para detalles."
