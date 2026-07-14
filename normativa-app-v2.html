@@ -182,6 +182,7 @@ self.addEventListener('fetch',e=>{
       <div class="tb-right">
         <button class="btn btn-outline btn-sm" onclick="nav('auditoria')">🔍 Nueva auditoría</button>
         <button class="btn btn-primary btn-sm" onclick="nav('generador')">✨ Generar manual</button>
+        <button class="btn btn-outline btn-sm" onclick="startNormalisTour(true)" title="Ver introducción al sistema">❓ Ver tour</button>
       </div>
       <div id="sync-indicator" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin-left:16px;padding:4px 12px;background:#f8fafc;border-radius:20px;border:1px solid #e2e8f0">
         <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;transition:background 0.3s"></span>
@@ -2008,6 +2009,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-simulacro.js"></script>
 <script src="normalis-bitacora.js"></script>
 <script src="normalis-firestore.js"></script>
+<script src="normalis-tour.js"></script>
 
 <script>
 // ═══════════════════════════════════════════
@@ -9392,7 +9394,7 @@ function evaluarSuficienciaDatos(ctx) {
       <button class="pin-btn" onclick="pinPress('9')">9</button>
       <button class="pin-btn cancel" onclick="pinCancel()" aria-label="Cerrar">✕</button>
       <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn del" onclick="pinDel()">⌫</button>
+      <button c)">⌫</button>
     </div>
     <div class="pin-error" id="pin-error"></div>
   </div><!-- /pin-box -->

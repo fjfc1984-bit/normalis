@@ -43,6 +43,7 @@ CRITICAL_FILES=(
   "registro.html"
   "index.html"
   "normalis-pilot.js"
+  "normalis-tour.js"
 )
 
 for f in "${CRITICAL_FILES[@]}"; do
@@ -73,6 +74,7 @@ declare -A MIN_SIZES=(
   ["normalis-simulacro.js"]=3000
   ["normalis-bitacora.js"]=5000
   ["normalis-firestore.js"]=10000
+  ["normalis-tour.js"]=3000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=400000
 )
@@ -105,6 +107,7 @@ declare -A SEALS=(
   ["normalis-simulacro.js"]="END:normalis-simulacro.js"
   ["normalis-bitacora.js"]="END:normalis-bitacora.js"
   ["normalis-firestore.js"]="END:normalis-firestore.js"
+  ["normalis-tour.js"]="END:normalis-tour.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
 )
 
@@ -160,6 +163,7 @@ if [[ -f "$APP" ]]; then
     "normalis-simulacro.js"
     "normalis-bitacora.js"
     "normalis-firestore.js"
+    "normalis-tour.js"
     "normalis-styles.css"
   )
   for mod in "${MODULES[@]}"; do
@@ -212,6 +216,8 @@ declare -A CRITICAL_FUNCTIONS=(
   ["mostrarOnboarding"]="normalis-firestore.js"
   ["renderROI"]="normalis-firestore.js"
   ["xaiResponder"]="normalis-firestore.js"
+  # tour
+  ["startNormalisTour"]="normalis-tour.js"
 )
 
 for fn in "${!CRITICAL_FUNCTIONS[@]}"; do
@@ -376,7 +382,7 @@ if [[ -f "$APP" ]]; then
   # Check only actual <script src="..."> tags, not comments
   MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
     "normalis-docs.js" "normalis-pdf.js" "normalis-pqrs.js" "normalis-incidentes.js"
-    "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js")
+    "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do
     TAG_COUNT=$(grep -c "<script src=\"$mod\"" "$APP" || true)
     if [[ "$TAG_COUNT" -gt 1 ]]; then
@@ -405,8 +411,7 @@ if [[ $ERRORS -eq 0 ]]; then
   echo -e "${GRN}✔ VALIDACIÓN COMPLETA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
   echo -e "${GRN}  NormaLis está en estado íntegro. Seguro para commit/deploy.${NC}"
   exit 0
-else
-  echo -e "${RED}✘ VALIDACIÓN FALLIDA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
+else  echo -e "${RED}✘ VALIDACIÓN FALLIDA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
   echo -e "${RED}  Corregir errores críticos antes de hacer commit.${NC}"
   exit 1
 fi
