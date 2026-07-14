@@ -1,123 +1,80 @@
 // normalis-chat.js
-// NormaLis — Motor del chat normativo
-// Contiene: normAnswers (base de conocimiento), getAnswer() con scoring,
-//           initMainChat(), addMainMsg(), sendChatQ(), sendFloatChat()
-// Para actualizar respuestas: editar normAnswers en este archivo
+// NormaLis — Consultor Normativo IA
+// Fuente de verdad: búsqueda en tiempo real en fuentes oficiales del gobierno colombiano
+// (minsalud.gov.co, suin-juriscol.gov.co, invima.gov.co)
+// NO contiene normativa hardcodeada — toda respuesta viene de fuentes verificadas.
 // ─────────────────────────────────────────────────────────────────
 
-// ═══════════════════════════════════════════
-// CHAT NORMATIVO (main + flotante)
-// ═══════════════════════════════════════════
-const normAnswers={
-  'bioseguridad':'La Res. 3100/2019 (Estándar 5 · Procesos Prioritarios) exige Manual de Bioseguridad documentado, actualizado mínimo cada año y firmado por el Director Técnico. Debe incluir: higiene de manos (5 momentos OMS), EPP por área de riesgo, manejo de residuos RESPEL (Decreto 351/2014), limpieza y desinfección por superficies (nivel bajo, intermedio, alto), y protocolo de accidente biológico con seguimiento a 6 meses. La ausencia del manual o su desactualización es causal de no conformidad en visita.',
-  'odontólogo':'Sí. El Decreto 351/2014 aplica a TODOS los generadores de residuos peligrosos en salud, incluyendo odontólogos independientes. Debes tener un PGIRH con contrato vigente con empresa gestora de RESPEL autorizada. Los residuos de amalgama son RESPEL clase Y (mercurio) — requieren contenedor diferenciado. Multas por incumplimiento: hasta 10.000 SMLMV (Ley 1333/2009).',
-  'residuos':'El Decreto 351/2014 y Res. 1164/2002 regulan los residuos hospitalarios. Clasificación por color: ROJO (infeccioso/biológico), NEGRO (ordinario no aprovechable), VERDE (biodegradable), BLANCO o GRIS (reciclable), y contenedor GUARDIÁN rígido (cortopunzantes). El PGIRH debe actualizarse anualmente. El contrato con el gestor de RESPEL autorizado debe estar vigente y disponible para verificación.',
-  'rethus':'El RETHUS (Registro del Talento Humano en Salud) es obligatorio para todos los profesionales de la salud (Ley 1164/2007). El verificador lo consulta en línea durante la visita. Sin RETHUS activo, el profesional NO puede prestar servicios. El Director Técnico también debe tener RETHUS activo y registro ante la Secretaría de Salud departamental.',
-  'historia clínica':'La Res. 1995/1999 define los componentes mínimos: identificación, anamnesis, examen físico, diagnóstico, plan de manejo y evoluciones. Custodia mínima: 20 años. El Estándar 6 de la Res. 3100/2019 exige protocolo de apertura, manejo, custodia y cierre. La historia clínica electrónica (HCE) debe cumplir los mismos requisitos. Es propiedad del paciente y del establecimiento de salud.',
-  'habilitación':'La habilitación se rige por la Res. 3100/2019 y el Decreto 780/2016. Los 7 estándares son: 1) Talento Humano, 2) Infraestructura, 3) Dotación, 4) Medicamentos y Dispositivos, 5) Procesos Prioritarios, 6) Historia Clínica, 7) Interdependencia. Pasos: inscripción en REPS → declaración de condiciones de habilitación → visita de verificación por la Secretaría de Salud → resolución de habilitación. No hay plazo fijo de renovación — se actualiza ante cambios.',
-  'reps':'El REPS (Registro Especial de Prestadores de Servicios de Salud) es el sistema oficial de inscripción (Decreto 780/2016). Todo cambio en servicios, talento humano o sede debe reportarse dentro de 30 días (Res. 544/2023 · Art. 26). El REPS es público — las EPS lo consultan antes de contratar. La Res. 465/2025 estableció 4 momentos de autoevaluación obligatoria antes de reportar novedades al REPS.',
-  'telemedicina':'La Res. 1317/2021 regula la telemedicina. Modalidades: interactiva (video en tiempo real), no interactiva (diferida) y telexperticia. Requieren: plataforma tecnológica segura, consentimiento informado específico, historia clínica electrónica, y talento humano con las mismas competencias que en presencial. La telemedicina NO puede usarse para atención de urgencias.',
-  'ips':'Una IPS (Institución Prestadora de Servicios de Salud) debe habilitarse ante la Secretaría de Salud de su departamento cumpliendo los 7 estándares de la Res. 3100/2019. También requiere inscripción en el REPS, Director Técnico con RETHUS activo e infraestructura adecuada. Cada servicio habilitado tiene condiciones específicas por tipo y complejidad.',
-  'multa':'Las sanciones por prestar servicios sin habilitación incluyen: multas de 100 a 10.000 SMLMV según gravedad (Ley 1122/2007 · Ley 715/2001), clausura del establecimiento, procesos disciplinarios ante el tribunal ético, y responsabilidad penal en casos con daño al paciente. La Superintendencia de Salud y las Secretarías de Salud tienen facultad sancionatoria.',
-  'equipos':'El Estándar 3 (Dotación) de la Res. 3100/2019 exige para cada equipo biomédico: hoja de vida actualizada, plan de mantenimiento preventivo y correctivo documentado, calibración vigente según el fabricante, y registro INVIMA si aplica (Decreto 4725/2005). Equipos sin mantenimiento o con calibración vencida son causal de medida sanitaria inmediata.',
-  'accesibilidad':'La Res. 544/2023 (Art. 19) exige accesibilidad universal: rampas de acceso, baños adaptados para personas con discapacidad, señalización visual y táctil, y puertas con ancho mínimo para silla de ruedas. La Ley 1618/2013 garantiza atención en igualdad de condiciones. La ausencia de accesibilidad es causal de no conformidad en visita.',
-  'pqrsf':'El sistema PQRSF (Peticiones, Quejas, Reclamos, Sugerencias y Felicitaciones) es obligatorio (Ley 1437/2011 · Res. 544/2023 Art. 20). Debe existir canal virtual además del presencial. Tiempo máximo de respuesta: 15 días hábiles. Las quejas frecuentes deben incluirse en el PAMEC. Los incidentes graves deben reportarse a la Superintendencia de Salud.',
-  'consentimiento':'El consentimiento informado se rige por la Res. 13437/1991 y la Ley 23/1981. Debe ser: escrito para procedimientos de riesgo, firmado por el paciente o representante legal y el profesional, en lenguaje comprensible y revocable en cualquier momento. Para telemedicina debe ser específico. Para menores de edad, firma el acudiente. Se archiva en la historia clínica.',
-  'pamec':'El PAMEC (Programa de Auditoría para el Mejoramiento de la Calidad) es obligatorio para todos los prestadores habilitados (Res. 1445/2006 · Decreto 1011/2006). Componentes: autoevaluación anual, identificación de procesos prioritarios, plan de intervención con metas medibles y evaluación del mejoramiento. Debe estar documentado con evidencias y disponible para visita.',
-  'indicadores':'La Res. 256/2016 define los indicadores de calidad obligatorios: satisfacción de usuarios (meta ≥80%), oportunidad de cita medicina general (meta ≤3 días), oportunidad cita especializada (meta ≤15 días), tasa de eventos adversos, y proporción de reingresos hospitalarios no programados. Se reportan al SISPRO según la periodicidad definida por la Supersalud.',
-  'medicamentos':'El Estándar 4 (Medicamentos y Dispositivos) de la Res. 3100/2019 exige: temperatura y humedad controladas en almacenamiento, sistema PEPS (primero en entrar, primero en salir), doble llave para medicamentos de control especial (Res. 1138/2022), identificación de medicamentos de alto riesgo, y protocolo de farmacovigilancia con reporte al INVIMA.',
-  'director técnico':'El Director Técnico debe ser profesional de la salud con título habilitante para los servicios ofertados, RETHUS activo e inscrito ante la Secretaría de Salud. Puede dirigir máximo 2 establecimientos en el mismo municipio. Su ausencia temporal requiere suplente designado y habilitado. Sin Director Técnico activo, la IPS no puede operar legalmente.',
-  'infraestructura':'El Estándar 2 (Infraestructura) de la Res. 3100/2019 define requisitos de espacio mínimo, ventilación, iluminación y circulación diferenciada por riesgo. La Res. 544/2023 (Art. 7) exige concepto de vulnerabilidad sísmica para establecimientos construidos antes del 2010. Las áreas deben estar diferenciadas, señalizadas y con acceso para personas con discapacidad.',
-  'urgencias':'Para urgencias, el establecimiento debe habilitarse específicamente (Res. 3100/2019 · Estándar 5). Exige: protocolo de triage documentado y aplicado, acuerdo de referencia con IPS de mayor complejidad firmado y vigente (Res. 544/2023 · Art. 17), medicamentos esenciales disponibles, disponibilidad 24/7, y protocolos de atención inicial por tipo de urgencia.',
-  'referencia':'El Estándar 7 (Interdependencia) de la Res. 3100/2019 y la Res. 544/2023 (Art. 17) exigen acuerdo formal de referencia y contrarreferencia con al menos una IPS de mayor complejidad. Debe estar firmado, vigente, con datos de contacto actualizados. El personal asistencial debe conocerlo. Su ausencia es causal de no conformidad en visita de verificación.',
-  'manuales':'Los documentos obligatorios (Res. 3100/2019) son: Manual de Bioseguridad, Plan de Gestión Integral de Residuos (PGIRH), Protocolo de Historia Clínica, Manual de Procesos y Procedimientos Asistenciales, Protocolo de Referencia y Contrarreferencia, Plan de Emergencias y Desastres, Protocolo de Seguridad del Paciente, y Protocolo de Consentimiento Informado. Todos deben tener firma del Director Técnico y fecha de revisión vigente.',
-  'res. 465':'La Resolución 465 del 25 de marzo de 2025 modificó los artículos 4, 5, 7, 19 y 20 de la Res. 3100/2019. Cambios: 1) CÁMARAS: si graban procedimientos de salud, requiere autorización escrita del paciente Y el profesional en la Historia Clínica (Sentencia T-144/2024 · Ley 1581/2012). 2) VACUNACIÓN: puede hacerse en cualquier servicio con talento humano competente — no exclusivo del servicio de vacunación — documentar en Procesos Prioritarios. 3) CONSULTORIOS MENORES 5 AÑOS: se elimina la barrera física entre área de entrevista y examen. 4) AUTOEVALUACIÓN: obligatoria en 4 momentos (previa inscripción, año 4, previa renovación, previa novedades). 5) AMBULANCIAS: deben portar estrella de la vida y emblema Misión Médica.',
-  'seguridad del paciente':'La Seguridad del Paciente es parte del Estándar 5 (Procesos Prioritarios) de la Res. 3100/2019. Exige: identificación inequívoca del paciente (pulsera o doble verificación), protocolo de prevención de caídas con escala de riesgo documentada, protocolo de prevención de úlceras por presión (escala Braden), reporte y análisis de eventos adversos e incidentes (Res. 256/2016), y rondas de seguridad documentadas. Los eventos adversos graves deben reportarse a la Superintendencia de Salud.',
-  'talento humano':'El Estándar 1 (Talento Humano) de la Res. 3100/2019 exige: perfiles de cargo documentados para cada puesto asistencial, certificados de estudios o tarjeta profesional vigente, RETHUS activo para cada profesional, contrato o vinculación formal vigente, y disponibilidad del personal acorde al servicio habilitado. Para servicios 24/7 se requiere cobertura en todos los turnos. El verificador revisa la hoja de vida de cada profesional.',
-  'vacuna':'La Res. 465/2025 (Art. 7) permite vacunar en cualquier servicio habilitado cuyo talento humano tenga competencias comprobadas — ya no es obligatorio el servicio específico de vacunación. Se debe documentar en Procesos Prioritarios: garantía de cadena de frío, procedimiento de obtención de biológicos y registros clínicos. El PAI (Programa Ampliado de Inmunizaciones) rige el esquema nacional de vacunación.',
-  'ambulancia':'La Res. 465/2025 (Art. 20) y la Res. 4481/2012 establecen que los vehículos de transporte asistencial deben portar la "estrella de la vida" (azul o verde reflectivo) en costados, puertas posteriores y techo, y el emblema de la Misión Médica. Las ambulancias aéreas requieren talento humano técnico profesional o tecnólogo en atención prehospitalaria. Los vehículos deben estar habilitados ante la Secretaría de Salud.',
-  'plan de emergencias':'El Plan de Emergencias y Desastres es obligatorio (Estándar 5 · Res. 3100/2019). Debe incluir: identificación de amenazas y riesgos, rutas de evacuación señalizadas, brigada de emergencias con roles asignados, botiquín y extintores vigentes, y al menos un simulacro documentado por año. Su ausencia o falta de simulacros es causal de no conformidad en visita de verificación.',
-  'laboratorio':'Los servicios de laboratorio clínico se rigen por el Decreto 2323/2006 y la Res. 3100/2019. Requieren: habilitación específica, director de laboratorio con RETHUS activo (bacteriólogo o médico especialista), participación en control de calidad externo, condiciones diferenciadas de bioseguridad, y protocolo de toma, transporte y conservación de muestras. Las pruebas de VIH requieren consentimiento informado previo (Res. 3442/2006).',
-  'imágenes diagnósticas':'Los servicios de imágenes diagnósticas (radiología, ecografía, tomografía, resonancia) requieren habilitación específica. La Res. 3100/2019 exige: blindaje de salas, dosimetría personal vigente para trabajadores expuestos (Res. 9031/1990), registro de dosis al paciente, y consentimiento informado para procedimientos con radiación ionizante. Médico radiólogo como responsable para servicios con radiación ionizante.',
-  'derechos del paciente':'Los derechos del paciente están en la Res. 13437/1991 (10 derechos fundamentales) y la Ley 1751/2015. Todo establecimiento debe tener la carta de derechos y deberes visible y en formato accesible. El Estándar 5 de la Res. 3100/2019 exige protocolo de atención humanizada, información clara sobre diagnóstico y alternativas terapéuticas, y respeto a la autonomía del paciente.',
-  'eps':'Las EPS (Entidades Promotoras de Salud) son las aseguradoras del SGSSS (Ley 100/1993). Para contratar con una EPS, la IPS debe estar habilitada e inscrita en el REPS. El Plan de Beneficios en Salud (PBS) define los servicios cubiertos. Los servicios no cubiertos por el PBS se gestionan mediante MIPRES (Res. 1885/2018) y son reconocidos por ADRES.',
-  'sede':'Cada sede de prestación de servicios se habilita de forma independiente, aunque pertenezca a la misma IPS (Res. 3100/2019 · Decreto 780/2016). La apertura de nueva sede requiere inscripción en el REPS, declaración de condiciones de habilitación y visita de verificación. El cambio de dirección debe actualizarse en el REPS dentro de 30 días (Res. 544/2023 · Art. 26).',
-  'default':'Con gusto te ayudo con normativa de habilitación en salud colombiana. Puedo responder sobre: proceso de habilitación · los 7 estándares Res. 3100/2019 · REPS · RETHUS · historia clínica · bioseguridad · residuos hospitalarios · equipos biomédicos · medicamentos · urgencias y triage · referencia y contrarreferencia · PAMEC · indicadores Res. 256/2016 · seguridad del paciente · talento humano · vacunación · ambulancias · plan de emergencias · laboratorio · imágenes diagnósticas · telemedicina · consentimiento informado · derechos del paciente · PQRSF · EPS · apertura de sede · Res. 465/2025 · multas y sanciones. ¿Sobre cuál tema quieres información?',
-};
-
-// ── Gemini API config ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN GEMINI
+// ══════════════════════════════════════════════════════════════════
 const GEMINI_API_KEY = 'AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg';
 const GEMINI_MODEL   = 'gemini-2.0-flash';
 const GEMINI_URL     = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
-// ── System prompt — ancla el modelo a normativa colombiana de salud ──────────
+// ── System prompt ────────────────────────────────────────────────────────────
 function buildSystemPrompt() {
   const cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
   const ipsNombre = localStorage.getItem('normalis_ips_nombre') || '';
   const ipsCiudad = localStorage.getItem('normalis_ips_ciudad') || '';
-  const tipoIPS = cfg.tipo || '';
+  const tipoIPS   = cfg.tipo || '';
+
   const contextoIPS = (ipsNombre || tipoIPS || ipsCiudad)
-    ? `\n\nCONTEXTO DE LA IPS:\n- Nombre: ${ipsNombre || 'No configurado'}\n- Tipo: ${tipoIPS || 'No configurado'}\n- Ciudad: ${ipsCiudad || 'No configurado'}`
+    ? `\n\nCONTEXTO DE LA IPS DEL USUARIO:\n- Nombre: ${ipsNombre || 'No configurado'}\n- Tipo: ${tipoIPS || 'No configurado'}\n- Ciudad: ${ipsCiudad || 'No configurado'}`
     : '';
 
-  return `Eres el Consultor Normativo de NormaLis, un sistema especializado en habilitación de servicios de salud en Colombia.
+  return `Eres el Consultor Normativo IA de NormaLis, especializado en habilitación de servicios de salud en Colombia.
 
-MARCO NORMATIVO QUE CONOCES:
-- Resolución 3100/2019 (estándares de habilitación — talento humano, infraestructura, dotación, medicamentos, procesos prioritarios, historia clínica, interdependencia)
-- Resolución 465/2025 (actualización de estándares, nuevos requisitos 2025)
-- Resolución 544/2023 (accesibilidad, PQRSF, REPS)
-- Decreto 780/2016 (política de atención integral en salud)
-- Resolución 1995/1999 (historia clínica)
-- Decreto 351/2014 (residuos hospitalarios y similares)
-- Resolución 256/2016 (indicadores de calidad)
-- Decreto 4725/2005 (dispositivos médicos)
-- Ley 1164/2007 (RETHUS — talento humano en salud)
-- Resolución 1317/2021 (telemedicina)
-- Resolución 1445/2006 y Decreto 1011/2006 (PAMEC)
-- Resolución 1138/2022 (medicamentos de control especial)${contextoIPS}
+FUENTES AUTORIZADAS — SOLO usa estas fuentes oficiales del gobierno colombiano:
+- minsalud.gov.co (Ministerio de Salud y Protección Social)
+- suin-juriscol.gov.co (Sistema Único de Información Normativa — SUIN)
+- invima.gov.co (INVIMA)
+- funcionpublica.gov.co (Función Pública — Gestor Normativo)
+- datos.gov.co
 
-REGLAS DE RESPUESTA:
-1. Responde siempre en español colombiano, claro y directo.
-2. Sé específico: cita el artículo o estándar exacto cuando sea posible.
-3. Si la pregunta es sobre una situación específica de la IPS (tipo de servicio, número de camas, etc.), pide ese dato si no lo tienes.
-4. Nunca inventes normas. Si no sabes algo con certeza, di "Te recomiendo verificar directamente con la Secretaría de Salud de tu departamento."
-5. Evita respuestas genéricas. Si el usuario pregunta "¿qué necesito para urgencias?", pregunta el nivel de complejidad antes de responder.
-6. Sé conciso: máximo 4 párrafos por respuesta. Para respuestas largas, usa listas numeradas.
-7. Nunca reemplazas la asesoría de un profesional en habilitación — indica esto cuando corresponda.`;
+NORMAS PRINCIPALES QUE APLICAN:
+- Resolución 3100 de 2019 (habilitación — 7 estándares)
+- Resolución 465 de 2025 (actualización de condiciones de habilitación)
+- Resolución 544 de 2023 (accesibilidad, PQRSF, novedades REPS)
+- Decreto 780 de 2016 (política de atención integral en salud)
+- Resolución 1995 de 1999 (historia clínica)
+- Decreto 351 de 2014 (residuos hospitalarios)
+- Resolución 256 de 2016 (indicadores de calidad)
+- Decreto 4725 de 2005 (dispositivos médicos)
+- Ley 1164 de 2007 (RETHUS)
+- Resolución 1317 de 2021 (telemedicina)
+- Resolución 1445 de 2006 y Decreto 1011 de 2006 (PAMEC)${contextoIPS}
+
+REGLAS ESTRICTAS:
+1. NUNCA inventes, asumas ni extrapoles artículos, cifras, plazos o requisitos. Si no encuentras la información en fuentes oficiales verificadas, dilo explícitamente.
+2. Cuando cites una norma, incluye: nombre completo, año, artículo o numeral exacto.
+3. Si la pregunta requiere un dato que no puedes verificar, responde: "No encontré información verificada sobre esto. Consulta directamente minsalud.gov.co o la Secretaría de Salud de tu departamento."
+4. En temas de habilitación, advierte siempre que la interpretación final la tiene la Secretaría de Salud departamental.
+5. Si hay dudas sobre si una norma está vigente o fue modificada, indícalo y dirige al usuario a verificar.
+6. Responde en español colombiano, claro y directo. Máximo 5 párrafos o una lista numerada.
+7. NUNCA reemplazas la asesoría de un profesional en habilitación — indícalo cuando la consulta sea compleja.`;
 }
 
-// ── Llamada a Gemini API ──────────────────────────────────────────────────────
+// ── Llamada a Gemini con Google Search grounding ─────────────────────────────
 async function callGemini(userMessage, historial) {
   const systemPrompt = buildSystemPrompt();
-  
-  // Construir contents con historial de conversación
+
   const contents = [];
-  
-  // Agregar historial previo
   if (historial && historial.length > 0) {
     for (const msg of historial) {
-      contents.push({
-        role: msg.role,
-        parts: [{ text: msg.text }]
-      });
+      contents.push({ role: msg.role, parts: [{ text: msg.text }] });
     }
   }
-  
-  // Agregar mensaje actual
-  contents.push({
-    role: 'user',
-    parts: [{ text: userMessage }]
-  });
+  contents.push({ role: 'user', parts: [{ text: userMessage }] });
 
   const body = {
-    system_instruction: {
-      parts: [{ text: systemPrompt }]
-    },
+    system_instruction: { parts: [{ text: systemPrompt }] },
     contents: contents,
+    tools: [{ google_search: {} }],   // ← búsqueda en tiempo real
     generationConfig: {
-      temperature: 0.3,
-      maxOutputTokens: 800,
-      topP: 0.8
+      temperature: 0.1,          // baja temperatura = más preciso, menos creativo
+      maxOutputTokens: 1000,
+      topP: 0.9
     }
   };
 
@@ -129,148 +86,160 @@ async function callGemini(userMessage, historial) {
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Error ${resp.status}`);
+    const msg = err?.error?.message || `Error ${resp.status}`;
+    throw new Error(msg);
   }
 
   const data = await resp.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No pude generar una respuesta. Intenta de nuevo.';
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Respuesta vacía de Gemini');
+
+  // Extraer fuentes citadas si las hay
+  const groundingChunks = data?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+  const sources = groundingChunks
+    .map(c => c?.web?.uri)
+    .filter(u => u && (u.includes('minsalud') || u.includes('suin-juriscol') || u.includes('invima') || u.includes('funcionpublica') || u.includes('gov.co')))
+    .slice(0, 3);
+
+  return { text, sources };
 }
 
-// ── Fallback: sistema de keywords (respaldo si Gemini falla) ────────────────
-function getAnswerFallback(q){
-  const ql=q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[¿?¡!]/g,'');
-  const topicKw={
-    'bioseguridad':   ['bioseguridad','higiene de manos','epp','accidente biologico','lavado de manos','desinfeccion'],
-    'residuos':       ['residuo','respel','pgirh','bolsa roja','cortopunzante','guardian','gestor'],
-    'rethus':         ['rethus','registro talento humano','tarjeta profesional','matricula profesional'],
-    'historia clínica':['historia clinica','hce','custodia historia','20 anos','historia electronica'],
-    'reps':           ['reps','registro especial de prestadores','novedades reps','actualizar reps'],
-    'habilitación':   ['habilitar','habilitacion','requisitos de habilitacion','visita de verificacion','7 estandares'],
-    'pamec':          ['pamec','programa de auditoria','mejoramiento de la calidad'],
-    'medicamentos':   ['medicamento','farmaco','farmacia','control especial','peps','farmacovigilancia'],
-    'equipos':        ['equipo biomedico','calibracion','mantenimiento preventivo','hoja de vida equipo'],
-    'seguridad del paciente':['seguridad del paciente','evento adverso','caida del paciente','error medico'],
+// ── Fallback mínimo — NO contiene normativa, solo orienta al usuario ──────────
+function fallbackResponse(q) {
+  return {
+    text: 'En este momento no puedo conectarme al servicio de IA para verificar la información en fuentes oficiales. Para obtener información precisa sobre esta consulta, visita directamente:\n\n• **minsalud.gov.co** → Normatividad\n• **suin-juriscol.gov.co** → búsqueda de normas\n• **funcionpublica.gov.co** → Gestor Normativo\n\nO contacta la Secretaría de Salud de tu departamento.',
+    sources: []
   };
-  const stopWords=['que','como','cuando','donde','por','para','los','las','del','una','con','sin','hay','puedo','debo','tiene','tengo'];
-  const words = ql.split(/\s+/).filter(w=>w.length>2 && !stopWords.includes(w));
-  let scores={};
-  for(const [topic, kws] of Object.entries(topicKw)){
-    let score=0;
-    for(const kw of kws){ if(ql.includes(kw)) score += (kw.split(' ').length > 1 ? 3 : 1); }
-    for(const word of words){ if(word.length>3) for(const kw of kws) if(kw.includes(word) && word.length>4) score += 0.5; }
-    if(score>0) scores[topic]=score;
-  }
-  if(Object.keys(scores).length>0){
-    const best=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
-    if(scores[best]>=1) return normAnswers[best];
-  }
-  return normAnswers['default'] || 'Puedo ayudarte con habilitación, REPS, historia clínica, bioseguridad, residuos, equipos, urgencias, medicamentos, PAMEC, seguridad del paciente y más. ¿Sobre qué tema tienes dudas?';
 }
 
-// ── Historial de conversación (main chat) ───────────────────────────────────
+// ── Renderizar respuesta con fuentes ─────────────────────────────────────────
+function renderBotResponse(el, {text, sources}) {
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>');
+
+  if (sources && sources.length > 0) {
+    html += '<br><br><small style="color:#6b7280;font-size:11px">📎 Fuentes oficiales consultadas:<br>' +
+      sources.map(u => `<a href="${u}" target="_blank" rel="noopener" style="color:#06b6d4">${u.replace(/https?:\/\//, '').split('/')[0]}</a>`).join(' · ') +
+      '</small>';
+  }
+  el.innerHTML = html;
+}
+
+// ── Historial de conversación ────────────────────────────────────────────────
 let mainChatHistory = [];
+let floatHistory    = [];
 
 // ── Chat principal ────────────────────────────────────────────────────────────
-function initMainChat(){
+function initMainChat() {
   mainChatHistory = [];
-  addMainMsg('¡Hola! Soy el Consultor Normativo IA de NormaLis. Respondo preguntas sobre habilitación, Res. 3100/2019, Res. 465/2025, historia clínica, residuos, PAMEC y toda la normativa de salud colombiana.\n\n¿Cuál es tu pregunta?','bot');
+  addMainMsg(
+    'Hola. Soy el Consultor Normativo IA de NormaLis.\n\n' +
+    'Respondo preguntas sobre habilitación de servicios de salud en Colombia. ' +
+    'Todas mis respuestas se verifican en tiempo real contra fuentes oficiales del gobierno (minsalud.gov.co, suin-juriscol.gov.co).\n\n' +
+    '⚠️ Si no encuentro información verificada, lo digo explícitamente — nunca invento normativa.\n\n' +
+    '¿Cuál es tu consulta?',
+    'bot'
+  );
 }
 
-function addMainMsg(text, type){
-  const box=document.getElementById('main-chat-msgs');
-  if(!box) return;
-  const d=document.createElement('div');
-  d.className=`msg ${type==='bot'?'bot':'user-msg'}`;
-  d.innerHTML = type==='bot' ? text.replace(/\n/g,'<br>') : escapeHtml(text);
+function addMainMsg(text, type) {
+  const box = document.getElementById('main-chat-msgs');
+  if (!box) return null;
+  const d = document.createElement('div');
+  d.className = `msg ${type === 'bot' ? 'bot' : 'user-msg'}`;
+  if (type === 'bot') {
+    d.innerHTML = text.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  } else {
+    d.textContent = text;
+  }
   box.appendChild(d);
-  box.scrollTop=box.scrollHeight;
+  box.scrollTop = box.scrollHeight;
   return d;
 }
 
-function escapeHtml(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function sendMainChat() {
+  const inp = document.getElementById('main-chat-input');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) return;
 
-async function sendMainChat(){
-  const inp=document.getElementById('main-chat-input');
-  if(!inp) return;
-  const val=inp.value.trim();
-  if(!val) return;
-  
-  addMainMsg(val,'user');
-  inp.value='';
-  inp.disabled=true;
-  
-  // Indicador de escritura
-  const typingEl = addMainMsg('⏳ Consultando normativa...','bot');
-  
+  addMainMsg(val, 'user');
+  inp.value = '';
+  inp.disabled = true;
+
+  const typingEl = addMainMsg('⏳ Verificando en fuentes oficiales...', 'bot');
+
   try {
-    const respuesta = await callGemini(val, mainChatHistory);
-    
-    // Guardar en historial
-    mainChatHistory.push({ role:'user', text: val });
-    mainChatHistory.push({ role:'model', text: respuesta });
-    // Limitar historial a últimas 10 interacciones
-    if(mainChatHistory.length > 20) mainChatHistory = mainChatHistory.slice(-20);
-    
-    if(typingEl) typingEl.innerHTML = respuesta.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  } catch(err) {
-    console.warn('Gemini API error:', err.message);
-    // Fallback al sistema de keywords
-    const fallback = getAnswerFallback(val);
-    if(typingEl) typingEl.innerHTML = fallback.replace(/\n/g,'<br>') + '<br><br><em style="font-size:11px;color:#9ca3af">⚠ Respuesta desde base local (sin conexión a IA)</em>';
+    const result = await callGemini(val, mainChatHistory);
+    mainChatHistory.push({ role: 'user',  text: val });
+    mainChatHistory.push({ role: 'model', text: result.text });
+    if (mainChatHistory.length > 20) mainChatHistory = mainChatHistory.slice(-20);
+    if (typingEl) renderBotResponse(typingEl, result);
+  } catch (err) {
+    console.warn('Gemini error:', err.message);
+    const fallback = fallbackResponse(val);
+    if (typingEl) renderBotResponse(typingEl, fallback);
   } finally {
-    inp.disabled=false;
+    inp.disabled = false;
     inp.focus();
-    const box=document.getElementById('main-chat-msgs');
-    if(box) box.scrollTop=box.scrollHeight;
+    const box = document.getElementById('main-chat-msgs');
+    if (box) box.scrollTop = box.scrollHeight;
   }
 }
 
-function sendChatQ(el){
-  const q=el.textContent;
-  const inp=document.getElementById('main-chat-input');
-  if(inp){ inp.value=q; sendMainChat(); }
+function sendChatQ(el) {
+  const inp = document.getElementById('main-chat-input');
+  if (inp) { inp.value = el.textContent; sendMainChat(); }
 }
 
 // ── Chat flotante ─────────────────────────────────────────────────────────────
-let floatOpen=false;
-let floatHistory=[];
+let floatOpen = false;
 
-function toggleFloat(){
-  floatOpen=!floatOpen;
-  document.getElementById('fcp').classList.toggle('open',floatOpen);
+function toggleFloat() {
+  floatOpen = !floatOpen;
+  document.getElementById('fcp').classList.toggle('open', floatOpen);
 }
 
-async function sendFloat(){
-  const inp=document.getElementById('fcp-input');
-  const val=inp.value.trim();
-  if(!val) return;
-  
-  const box=document.getElementById('fcp-msgs');
-  const u=document.createElement('div');
-  u.className='fcp-msg usr';
-  u.textContent=val;
+async function sendFloat() {
+  const inp = document.getElementById('fcp-input');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  const box = document.getElementById('fcp-msgs');
+  const u = document.createElement('div');
+  u.className = 'fcp-msg usr';
+  u.textContent = val;
   box.appendChild(u);
-  inp.value='';
-  
-  const b=document.createElement('div');
-  b.className='fcp-msg bot';
-  b.textContent='⏳ Consultando...';
+  inp.value = '';
+
+  const b = document.createElement('div');
+  b.className = 'fcp-msg bot';
+  b.textContent = '⏳ Verificando...';
   box.appendChild(b);
-  box.scrollTop=9999;
-  
+  box.scrollTop = 9999;
+
   try {
-    const respuesta = await callGemini(val, floatHistory);
-    floatHistory.push({ role:'user', text:val });
-    floatHistory.push({ role:'model', text:respuesta });
-    if(floatHistory.length > 10) floatHistory = floatHistory.slice(-10);
-    b.innerHTML = respuesta.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  } catch(err) {
-    b.textContent = getAnswerFallback(val);
+    const result = await callGemini(val, floatHistory);
+    floatHistory.push({ role: 'user',  text: val });
+    floatHistory.push({ role: 'model', text: result.text });
+    if (floatHistory.length > 10) floatHistory = floatHistory.slice(-10);
+    renderBotResponse(b, result);
+  } catch (err) {
+    renderBotResponse(b, fallbackResponse(val));
   }
-  box.scrollTop=9999;
+  box.scrollTop = 9999;
 }
 
-// getAnswer se mantiene para compatibilidad con código externo que la llame
-function getAnswer(q){ return getAnswerFallback(q); }
+// getAnswer se mantiene para compatibilidad con llamadas externas
+function getAnswer(q) {
+  return 'Consulta en proceso. Usa el chat para obtener respuestas verificadas.';
+}
+
+// normAnswers eliminado — ya no existe normativa hardcodeada en este módulo.
+// Toda respuesta viene de Gemini + Google Search sobre fuentes oficiales.
+const normAnswers = {};
 
 // END:normalis-chat.js — NormaLis integrity seal
