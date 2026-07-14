@@ -2900,6 +2900,7 @@ function obFinish(){
   obStep = OB_STEPS.length;
   obBuildStepper();
 
+  localStorage.setItem('normalis_onboarding_done', 'true');
   setTimeout(function(){
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -2908,7 +2909,14 @@ function obFinish(){
 }
 
 // Iniciar onboarding
-document.addEventListener('DOMContentLoaded', function(){ setTimeout(obRunStep, 300); });
+document.addEventListener('DOMContentLoaded', function(){
+  if (localStorage.getItem('normalis_onboarding_done')) {
+    var ob = document.getElementById('onboarding');
+    if (ob) ob.style.display = 'none';
+    return;
+  }
+  setTimeout(obRunStep, 300);
+});
 
 
 
