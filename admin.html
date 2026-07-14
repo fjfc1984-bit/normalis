@@ -756,8 +756,8 @@ auth.onAuthStateChanged(async user => {
     return;
   }
   try {
-    const token = await user.getIdTokenResult();
-    if (!token.claims.superadmin) {
+    const snap = await db.collection('usuarios').doc(user.uid).get();
+    if (!snap.exists || snap.data().rol !== 'admin') {
       await auth.signOut();
       showAuthError('Tu cuenta no tiene permisos de administrador.');
       showScreen('auth');
