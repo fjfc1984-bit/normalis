@@ -1773,7 +1773,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
           <div class="card" style="padding:0;overflow:hidden">
             <div style="background:var(--sidebar-bg);padding:16px 20px;display:flex;align-items:center;gap:12px">
               <div style="width:36px;height:36px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>
-              <div><div style="font-size:14px;font-weight:700;color:#f1f5f9">Consultor Normativo</div><div style="font-size:11px;color:#94a3b8">Res. 3100/2019 · 544/2023 · Dec. 351/2014 · Dec. 4725/2005</div></div>
+              <div><div style="font-size:14px;font-weight:700;color:#f1f5f9">Consultor Normativo</div><div style="font-size:11px;color:#94a3b8">Res. 3100/2019 · 544/2023 · 465/2025 · Dec. 351/2014</div></div>
               <div style="margin-left:auto"><span class="badge" style="background:rgba(16,185,129,.2);color:#6ee7b7;font-size:11px">● En línea</span></div>
             </div>
             <div class="chat-msgs" id="main-chat-msgs" style="height:380px;border-radius:0;border:none"></div>
@@ -2672,7 +2672,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <div class="view" id="view-simulacro">
   <div style="padding:24px;max-width:900px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🔎 Simulacro Secretaría de Salud</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Lista de verificación para visita de habilitación — Res. 3100/2019 · Res. 544/2023</p></div>
+      <div><h2 style="font-size:22px;font-weight:800;color:#1e293b">🔎 Simulacro Secretaría de Salud</h2><p style="color:#64748b;font-size:14px;margin-top:4px">Lista de verificación para visita de habilitación — Res. 3100/2019 · 544/2023 · 465/2025</p></div>
       <div style="display:flex;gap:10px">
         <button onclick="resetSimulacro()" style="background:#fff;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">🔄 Reiniciar</button>
       </div>
@@ -2948,7 +2948,7 @@ const viewTitles={
   auditoria:['Auditoría Simulada','Inspección por áreas físicas · Res. 3100'],
   resultados:['Resultados de Auditoría','Última evaluación: 5 de julio, 2026'],
   cronograma:['Cronograma de Visita','Plan de 6 semanas · Visita próxima'],
-  chat:['Consultor Normativo','Res. 3100/2019 · 544/2023 · Dec. 351/2014 y normativa colombiana'],
+  chat:['Consultor Normativo','Res. 3100/2019 · 544/2023 · 465/2025 · Dec. 351/2014'],
   establecimiento:['Mi Establecimiento','Datos e información del prestador'],
 };
 
@@ -3101,7 +3101,8 @@ const areasDB={
       '¿Las instalaciones eléctricas tienen concepto técnico vigente emitido por profesional calificado RETIE y los tableros están señalizados e identificados?',
       '¿El establecimiento construido antes de 2010 con servicios críticos (urgencias, cirugía, UCI) cuenta con estudio de vulnerabilidad sísmica y plan de reforzamiento NSR-10?',
       '¿Las áreas de almacenamiento de insumos y medicamentos están separadas de áreas de atención, con temperatura, humedad y luz controladas?',
-      '¿Existe un plan de mantenimiento locativo documentado con cronograma, responsables y registros de intervenciones de los últimos 12 meses?'
+      '¿Existe un plan de mantenimiento locativo documentado con cronograma, responsables y registros de intervenciones de los últimos 12 meses?',
+      '¿Los consultorios donde se atienden menores de 5 años cumplen los requisitos de infraestructura vigentes? (Res. 465/2025 · Art. 19: ya NO se requiere barrera física fija o móvil entre área de entrevista y examen — verificar que el consultorio no tenga restricciones de otro tipo que afecten la habilitación)'
     ]},
     {id:'accesibilidad',icon:'♿',name:'Accesibilidad y Derechos del Paciente',norm:'Res. 3100/2019 Est. 2 · Ley 1618/2013 · Res. 13437/1991 · Dec. 1011/2006',q:[
       '¿El establecimiento garantiza acceso físico sin barreras para personas con discapacidad: rampas con inclinación ≤8%, pasillos ≥1.2 m y baño adaptado?',
@@ -3146,7 +3147,10 @@ const areasDB={
       '¿Hay protocolo de comunicación efectiva entre turnos (entrega de turno SBAR o equivalente) documentado y aplicado en todos los servicios?',
       '¿El establecimiento tiene protocolo de caídas con evaluación de riesgo al ingreso (Escala Morse), intervenciones preventivas y registro de caídas?',
       '¿Existe protocolo de úlceras por presión con escala de valoración (Braden o Norton) para pacientes en cama y registro de lesiones al ingreso?',
-      '¿El plan de emergencias y desastres está actualizado, con simulacros en los últimos 12 meses y evidencia de participación del personal?'
+      '¿El plan de emergencias y desastres está actualizado, con simulacros en los últimos 12 meses y evidencia de participación del personal?',
+      '¿Si el establecimiento tiene cámaras de videovigilancia que graban procedimientos de salud, existe documento escrito de autorización firmado por el paciente/representante Y por el profesional responsable, y dicho documento hace parte de la Historia Clínica? (Res. 465/2025 · Art. 19 · Sentencia T-144/2024)',
+      '¿Si el establecimiento realiza vacunación fuera del servicio habilitado específicamente para ello, documenta en Procesos Prioritarios: garantía de cadena de frío, procedimiento para obtención de biológicos y registros clínicos requeridos? (Res. 465/2025 · Art. 7)',
+      '¿La autoevaluación de las condiciones de habilitación está documentada y actualizada conforme a los 4 momentos obligatorios: previa inscripción, 4° año de vigencia, previa renovación anual, y previa al reporte de novedades? (Res. 465/2025 · Art. 5)'
     ]},
     {id:'historiaclinica',icon:'📄',name:'Historia Clínica y Registros',norm:'Res. 1995/1999 · Res. 3100/2019 Est. 6 · Res. 839/2017 · Ley 1581/2012',q:[
       '¿Las historias clínicas cumplen componentes mínimos: identificación, motivo de consulta, anamnesis, examen físico, diagnóstico CIE-10, plan de manejo y evolución firmada?',
@@ -3229,7 +3233,8 @@ const areasDB={
       '¿El vehículo utilizado para atención domiciliaria está autorizado según el tipo de servicio y normativa vigente de transporte?',
       '¿El conductor tiene licencia de conducción vigente y categoría adecuada para el vehículo utilizado?',
       '¿Existe plan de rutas con protocolos de seguridad vial para personal que se desplaza a domicilios en zonas de difícil acceso?',
-      '¿El establecimiento tiene cobertura de seguro de accidentes para el personal durante los desplazamientos a domicilios?'
+      '¿El establecimiento tiene cobertura de seguro de accidentes para el personal durante los desplazamientos a domicilios?',
+      '¿Si el establecimiento cuenta con ambulancias o vehículos de transporte asistencial, estos portan la "estrella de la vida" (azul o verde reflectivo) en costados, puertas posteriores y techo, y el emblema protector de la Misión Médica? (Res. 465/2025 · Art. 20 · Res. 4481/2012)'
     ]},
     {id:'dom-comunicacion',icon:'📞',name:'Comunicación y Disponibilidad 24 Horas',norm:'Res. 3100/2019 · Estándar Atención al Usuario',q:[
       '¿Existe línea telefónica disponible 24 horas los 7 días de la semana para pacientes y cuidadores del servicio domiciliario?',
@@ -3968,7 +3973,7 @@ const normAnswers={
   'urgencias':'Para prestar servicios de urgencias, el establecimiento debe habilitarse específicamente para este servicio (Estándar 5 de la Res. 3100/2019). Requiere: protocolo de triage documentado y aplicado, acuerdo de referencia con IPS de mayor complejidad (Res. 544/2023 · Art. 17), medicamentos de urgencias disponibles, y disponibilidad 24/7.',
   'referencia':'El Estándar 7 (Interdependencia) de la Res. 3100/2019 y la Res. 544/2023 (Art. 17) exigen un acuerdo formal de referencia y contrarreferencia con al menos una IPS de mayor complejidad. El acuerdo debe estar firmado, vigente, con datos de contacto actualizados, y el personal debe conocerlo. Su ausencia es causal de no conformidad en visita.',
   'manuales':'Los documentos obligatorios según el Manual de Habilitación (Res. 3100/2019) son: Manual de Bioseguridad, Plan de Gestión de Residuos (PGIRH), Protocolo de Historia Clínica, Manual de Procesos y Procedimientos asistenciales, Protocolo de Referencia y Contrarreferencia, Plan de Emergencias, y Protocolo de Seguridad del Paciente. Todos deben estar firmados por el Director Técnico con fecha de revisión vigente.',
-  'res. 465':'La Resolución 465 de 2025 modificó la Res. 3100/2019. Actualizó estándares de talento humano para nuevas especialidades, incorporó requisitos para servicios de salud mental comunitaria, y ajustó los criterios de infraestructura para establecimientos rurales dispersos. Nota: NormaLis está actualizado hasta la Res. 544/2023. Consulta el Ministerio de Salud para cambios posteriores.',
+  'res. 465':'La Resolución 465 del 25 de marzo de 2025 modificó los artículos 4, 5, 7, 19 y 20 de la Res. 3100/2019. Cambios principales: 1) CÁMARAS DE VIDEOVIGILANCIA: si el establecimiento instala cámaras para grabar procedimientos de salud, debe tener autorización escrita firmada por el paciente/representante Y el profesional responsable — ese documento es parte de la Historia Clínica (Sentencia T-144/2024 · Ley 1581/2012). 2) VACUNACIÓN: puede realizarse en cualquier servicio habilitado cuyo talento humano tenga competencias para administrar inmunobiológicos, no solo en el servicio de vacunación — debe documentarse en Procesos Prioritarios: cadena de frío, procedimiento de obtención de vacunas y registros clínicos. 3) CONSULTORIOS MENORES DE 5 AÑOS: ya no se requiere barrera física fija o móvil entre las áreas de entrevista y examen (requisito eliminado). 4) AUTOEVALUACIÓN: es obligatoria antes de inscripción, en el 4° año de vigencia, antes de cada renovación anual, y antes de reportar novedades. 5) TRANSPORTE ASISTENCIAL: ambulancias deben portar "estrella de la vida" (azul o verde reflectivo) en costados, puertas posteriores y techo, y el emblema de la Misión Médica (Res. 4481/2012). Ambulancias aéreas: talento humano debe ser técnico profesional o tecnólogo en atención prehospitalaria.',
   'default':'Con gusto te ayudo con normativa de habilitación colombiana. Puedo responderte sobre: bioseguridad · historia clínica · RETHUS · REPS · proceso de habilitación · urgencias · medicamentos y dispositivos · equipos biomédicos · residuos hospitalarios · consentimiento informado · PAMEC · indicadores Res. 256/2016 · telemedicina · accesibilidad · PQRSF · director técnico · referencia y contrarreferencia · Res. 3100/2019 · Res. 544/2023 · Decreto 351/2014. Soy un consultor de contenido normativo — para interpretaciones jurídicas específicas de tu caso, consulta también con tu Secretaría de Salud.',
 };
 
@@ -4049,7 +4054,7 @@ function sendFloat(){
 // ═══════════════════════════════════════════
 const docPreviews={
   bioseguridad:{title:'Manual de Bioseguridad',html:`<h2 style="font-size:16px;font-weight:800;text-align:center;margin-bottom:4px">MANUAL DE BIOSEGURIDAD</h2>
-<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Adaptado a Resolución 3100/2019 · Res. 544/2023</em></p>
+<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Adaptado a Resolución 3100/2019 · Res. 544/2023 · Res. 465/2025</em></p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">1. Objetivo</h3>
 <p>Establecer los lineamientos de bioseguridad para proteger la salud del personal, pacientes y comunidad, cumpliendo la Resolución 3100 de 2019 y su modificación 465 de 2025.</p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">2. EPP por Área</h3>
@@ -13086,45 +13091,4 @@ function evaluarSuficienciaDatos(ctx) {
     </div>
     <div class="pin-numpad">
    
-      <button class="pin-btn" onclick="pinPress('1')">1</button>
-      <button class="pin-btn" onclick="pinPress('2')">2</button>
-      <button class="pin-btn" onclick="pinPress('3')">3</button>
-      <button class="pin-btn" onclick="pinPress('4')">4</button>
-      <button class="pin-btn" onclick="pinPress('5')">5</button>
-      <button class="pin-btn" onclick="pinPress('6')">6</button>
-      <button class="pin-btn" onclick="pinPress('7')">7</button>
-      <button class="pin-btn" onclick="pinPress('8')">8</button>
-      <button class="pin-btn" onclick="pinPress('9')">9</button>
-      <button class="pin-btn cancel" onclick="pinCancel()" aria-label="Cerrar">✕</button>
-      <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn del" onclick="pinDel()">⌫</button>
-    </div>
-    <div class="pin-error" id="pin-error"></div>
-  </div>
-</div>
-
-<!-- ══════════ USER MANAGEMENT MODAL ══════════ -->
-<div class="um-overlay" id="um-overlay" role="dialog" aria-modal="true" aria-label="Gestión de usuarios" onclick="if(event.target===this)closeUserMgmt()" tabindex="-1">
-  <div class="um-box">
-    <div class="um-header">
-      <div class="um-title">👥 Gestión de Usuarios</div>
-      <button class="btn btn-outline btn-sm" onclick="closeUserMgmt()">✕ Cerrar</button>
-    </div>
-    <div class="um-body">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:700">Perfiles registrados</div>
-        <button class="btn btn-primary btn-sm" onclick="newUser()">+ Nuevo usuario</button>
-      </div>
-      <div id="um-user-list"></div>
-
-      <!-- Formulario edición / creación -->
-      <div id="um-form" style="display:none;margin-top:18px;background:var(--bg-light);border-radius:10px;padding:18px;border:1.5px solid var(--border)">
-        <div style="font-size:13px;font-weight:800;margin-bottom:14px" id="um-form-title">➕ Nuevo Usuario</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Nombre completo</label>
-            <input id="um-form-nombre" class="form-control" placeholder="Ej: Ana López Martínez">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;display:block;margin-bottom:4px">Rol</label>
-            <select id="um-for
+      <button class="pin-btn" onclick="pinPress('1'
