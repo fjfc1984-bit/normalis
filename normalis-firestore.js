@@ -672,3 +672,5 @@ function exportarROIPDF() {
   };
 })();
 
+
+// END:normalis-firestore.js — NormaLis integrity seal

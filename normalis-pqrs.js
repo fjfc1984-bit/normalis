@@ -71,3 +71,5 @@ function exportPQRSReport() {
   w.print();
 }
 
+
+// END:normalis-pqrs.js — NormaLis integrity seal

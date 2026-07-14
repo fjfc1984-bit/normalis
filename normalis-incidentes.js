@@ -62,3 +62,5 @@ function cambiarEstadoInc(i, estado) {
   renderIncidentes();
 }
 
+
+// END:normalis-incidentes.js — NormaLis integrity seal

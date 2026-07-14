@@ -155,3 +155,5 @@ function sendFloat(){
   setTimeout(()=>{const b=document.createElement('div');b.className='fcp-msg bot';b.textContent=getAnswer(val);box.appendChild(b);box.scrollTop=9999;},700);
 }
 
+
+// END:normalis-chat.js — NormaLis integrity seal

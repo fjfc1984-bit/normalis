@@ -64,3 +64,5 @@ function eliminarVenc(i) {
   renderVencimientos();
 }
 
+
+// END:normalis-vencimientos.js — NormaLis integrity seal

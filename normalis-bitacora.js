@@ -218,3 +218,5 @@ window.nav = function(sec) {
 };
 
 
+
+// END:normalis-bitacora.js — NormaLis integrity seal

@@ -136,3 +136,5 @@ function printAuditReport(){
   setTimeout(()=>w.print(),400);
 }
 
+
+// END:normalis-pdf.js — NormaLis integrity seal

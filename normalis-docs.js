@@ -479,3 +479,5 @@ startGen = function(){
   },300);
 };
 
+
+// END:normalis-docs.js — NormaLis integrity seal

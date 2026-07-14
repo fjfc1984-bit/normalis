@@ -110,3 +110,5 @@ window.nav = function(sec) {
 
 
 
+
+// END:normalis-simulacro.js — NormaLis integrity seal

@@ -205,3 +205,5 @@ function renderResultadosDynamic(){
   }
 }
 
+
+// END:normalis-audit-score.js — NormaLis integrity seal
