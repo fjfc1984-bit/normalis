@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "fuentes": ["Resolución 3100 de 2019 (MSPS, 25 nov 2019)", "Resolución 544 de 2023 (modifica Art. 2 y 3)", "Resolución 465 de 2025 (modifica Art. 4, 5, 19, 20)"],
+    "nota": "Cada respuesta correcta fue verificada contra el texto oficial descargado de ICBF/Alcaldía de Bogotá"
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "categoria": "Vigencia REPS",
+      "pregunta": "¿Cuánto tiempo tiene de vigencia la inscripción inicial de una IPS en el REPS?",
+      "respuesta_correcta": "4 años contados desde la fecha en que la Secretaría de Salud realizó la inscripción.",
+      "articulo_fuente": "Artículo 10, Resolución 3100/2019",
+      "trampa_comun": "No son 2 años, no son indefinidos, no son 5 años."
+    },
+    {
+      "id": "T02",
+      "categoria": "Vigencia REPS",
+      "pregunta": "Después de los primeros 4 años de inscripción, ¿por cuánto tiempo se puede renovar y cuál es el requisito?",
+      "respuesta_correcta": "Se renueva por periodos de 1 año. Requisito: haber realizado la autoevaluación y declarado el cumplimiento en el REPS durante el cuarto año de inscripción inicial y antes de su vencimiento.",
+      "articulo_fuente": "Artículo 10, Resolución 3100/2019",
+      "trampa_comun": "La renovación es anual (1 año), no por 4 años adicionales."
+    },
+    {
+      "id": "T03",
+      "categoria": "Consecuencias",
+      "pregunta": "¿Qué sucede si una IPS no realiza la autoevaluación dentro del plazo establecido?",
+      "respuesta_correcta": "Se inactivará la inscripción del prestador en el REPS (Art. 11). La inactivación implica que no puede seguir ofertando servicios.",
+      "articulo_fuente": "Artículo 11, Resolución 3100/2019",
+      "trampa_comun": "No es una multa automática ni suspensión de licencia — es inactivación en REPS."
+    },
+    {
+      "id": "T04",
+      "categoria": "Estándares de habilitación",
+      "pregunta": "¿Cuáles son los 7 estándares de habilitación que deben cumplir las IPS según la Resolución 3100/2019?",
+      "respuesta_correcta": "1. Talento Humano, 2. Infraestructura, 3. Dotación, 4. Medicamentos, dispositivos médicos e insumos, 5. Procesos prioritarios, 6. Historia clínica y registros, 7. Interdependencia.",
+      "articulo_fuente": "Sección 8.3.1 del Manual (Anexo Técnico), Resolución 3100/2019",
+      "trampa_comun": "Son exactamente 7, no 5 ni 8. Los nombres exactos importan en una visita."
+    },
+    {
+      "id": "T05",
+      "categoria": "Condiciones de habilitación",
+      "pregunta": "¿Cuáles son las 3 condiciones principales que debe cumplir un prestador de servicios de salud para entrar y permanecer en el Sistema Único de Habilitación?",
+      "respuesta_correcta": "3.1 Capacidad técnico-administrativa, 3.2 Suficiencia patrimonial y financiera, 3.3 Capacidad tecnológica y científica.",
+      "articulo_fuente": "Artículo 3, Resolución 3100/2019 (modificado por Res. 544/2023)",
+      "trampa_comun": "No es solo calidad y seguridad — son 3 grupos específicos con subcategorías."
+    },
+    {
+      "id": "T06",
+      "categoria": "Costo del trámite",
+      "pregunta": "¿Cuánto cuesta inscribirse en el REPS y habilitar servicios?",
+      "respuesta_correcta": "La inscripción y habilitación en el REPS son trámites completamente GRATUITOS (Art. 22).",
+      "articulo_fuente": "Artículo 22, Resolución 3100/2019",
+      "trampa_comun": "Si alguien cobra por la inscripción ante la Secretaría, es irregular."
+    },
+    {
+      "id": "T07",
+      "categoria": "Visita previa",
+      "pregunta": "¿En qué casos se requiere visita de verificación PREVIA antes de habilitar un servicio?",
+      "respuesta_correcta": "Se requiere visita previa para: nuevos servicios oncológicos, urgencias, atención del parto, transporte asistencial, y todos los servicios de alta complejidad (Art. 14). También cuando se trate de reactivación por medidas de seguridad.",
+      "articulo_fuente": "Artículo 14, Resolución 3100/2019",
+      "trampa_comun": "No todos los servicios requieren visita previa — solo los listados."
+    },
+    {
+      "id": "T08",
+      "categoria": "Autoevaluación",
+      "pregunta": "¿Cuándo es obligatoria la autoevaluación según la Resolución 3100/2019 modificada por la 465/2025?",
+      "respuesta_correcta": "Es obligatoria: 5.1 Antes de la inscripción inicial y habilitación del o los servicios; 5.2 Durante el cuarto año de vigencia de la inscripción inicial; 5.3 Antes del vencimiento del término de renovación anual; 5.4 En los casos adicionales que determine el manual.",
+      "articulo_fuente": "Artículo 5, modificado por Art. 2 Resolución 465/2025",
+      "trampa_comun": "La Res. 465/2025 modificó el Art. 5 — la versión original de 3100/2019 era diferente."
+    },
+    {
+      "id": "T09",
+      "categoria": "Novedades REPS",
+      "pregunta": "¿Qué es una 'novedad' en el contexto del REPS y quién debe reportarla?",
+      "respuesta_correcta": "Son los cambios o modificaciones que afectan la información registrada del prestador (sede, servicios, capacidad instalada). El prestador está obligado a reportarlas ante la Secretaría de Salud Departamental o Distrital (Art. 12).",
+      "articulo_fuente": "Artículo 12 y Sección 10 del Manual, Resolución 3100/2019",
+      "trampa_comun": "El prestador tiene la obligación — no puede esperar a que la Secretaría las detecte."
+    },
+    {
+      "id": "T10",
+      "categoria": "Campo de aplicación",
+      "pregunta": "¿A quiénes aplica la Resolución 3100/2019?",
+      "respuesta_correcta": "Aplica a: 2.1 IPS, 2.2 Profesionales independientes de salud, 2.3 Transporte especial de pacientes, 2.4 Entidades con objeto social diferente a la prestación de servicios de salud, 2.5 Secretarías de salud departamental o distrital, 2.6 Entidades responsables del pago de servicios de salud, 2.7 Superintendencia Nacional de Salud.",
+      "articulo_fuente": "Artículo 2, modificado por Art. 1 Resolución 544/2023",
+      "trampa_comun": "La versión original (2019) no incluía explícitamente las Secretarías ni la Supersalud — fue modificado por 544/2023."
+    },
+    {
+      "id": "T11",
+      "categoria": "Cierre temporal",
+      "pregunta": "¿Por cuánto tiempo máximo puede una IPS cerrar temporalmente sus servicios?",
+      "respuesta_correcta": "Por un periodo máximo de 1 año contado a partir del reporte de la novedad 'Cierre temporal de servicio'. Si vence ese plazo sin reactivación, se cancelará la habilitación del servicio (Art. 13).",
+      "articulo_fuente": "Artículo 13, Resolución 3100/2019",
+      "trampa_comun": "No son 6 meses ni indefinido — es máximo 1 año."
+    },
+    {
+      "id": "T12",
+      "categoria": "Responsabilidad",
+      "pregunta": "Si una IPS contrata a terceros para prestar un servicio habilitado, ¿quién es responsable del cumplimiento de los estándares?",
+      "respuesta_correcta": "El prestador que habilitó el servicio es el ÚNICO responsable del cumplimiento y mantenimiento de todos los estándares y criterios, independientemente de que para su funcionamiento contrate o celebre acuerdos con terceros (Art. 9).",
+      "articulo_fuente": "Artículo 9, Resolución 3100/2019",
+      "trampa_comun": "La responsabilidad NO se puede delegar al tercero contratado."
+    },
+    {
+      "id": "T13",
+      "categoria": "Modalidades de prestación",
+      "pregunta": "¿Cuáles son las 3 modalidades de prestación de servicios de salud que reconoce la Resolución 3100/2019?",
+      "respuesta_correcta": "1. Intramural (en infraestructura física destinada a salud), 2. Extramural (en espacios adaptados: unidad móvil, domiciliaria, jornada de salud), 3. Telemedicina (a distancia mediante TIC).",
+      "articulo_fuente": "Sección 1.3 del Manual, Resolución 3100/2019",
+      "trampa_comun": "Telemedicina es una modalidad oficial en Res. 3100/2019 — no es una novedad de otra norma."
+    },
+    {
+      "id": "T14",
+      "categoria": "Resoluciones derogadas",
+      "pregunta": "¿Qué resoluciones derogó la Resolución 3100 de 2019?",
+      "respuesta_correcta": "Derogó las Resoluciones 2003 de 2014, 5158 de 2015, 226 de 2015 y 1416 de 2016 (Art. 27).",
+      "articulo_fuente": "Artículo 27, Resolución 3100/2019",
+      "trampa_comun": "La Res. 2003/2014 era la anterior norma de habilitación — ya NO está vigente."
+    },
+    {
+      "id": "T15",
+      "categoria": "Visita de certificación",
+      "pregunta": "¿Qué es la visita de certificación y quién la realiza?",
+      "respuesta_correcta": "Es la visita realizada por la Secretaría de Salud Departamental o Distrital (o entidad competente), con posterioridad a la habilitación de los servicios y conforme al plan de visitas. Permite certificar el cumplimiento de las condiciones de habilitación (Art. 15).",
+      "articulo_fuente": "Artículo 15, Resolución 3100/2019",
+      "trampa_comun": "Es posterior a la habilitación — no es requisito previo para habilitar."
+    },
+    {
+      "id": "T16",
+      "categoria": "Grupos de servicios",
+      "pregunta": "¿Cuáles son los grupos principales de servicios de salud habilitables en Colombia según la Res. 3100/2019?",
+      "respuesta_correcta": "Los grupos son: Consulta Externa, Apoyo Diagnóstico y Complementación Terapéutica, Internación, Quirúrgico, y Atención Inmediata (incluye Urgencias).",
+      "articulo_fuente": "Sección 11 del Manual (numerales 11.2 a 11.6), Resolución 3100/2019",
+      "trampa_comun": "Urgencias es un servicio dentro del Grupo 'Atención Inmediata', no un grupo separado."
+    },
+    {
+      "id": "T17",
+      "categoria": "Requisitos REPS",
+      "pregunta": "¿Puede una Secretaría de Salud exigir requisitos adicionales a los de la Res. 3100/2019 en el proceso de inscripción?",
+      "respuesta_correcta": "NO. Las Secretarías de Salud no pueden exigir requisitos distintos a los establecidos en la resolución, ni negar la certificación por razones no previstas en la norma (Art. 18).",
+      "articulo_fuente": "Artículo 18, Resolución 3100/2019",
+      "trampa_comun": "Muchas secretarías intentan imponer requisitos adicionales — esto es contrario a la norma."
+    },
+    {
+      "id": "T18",
+      "categoria": "Res. 465/2025",
+      "pregunta": "¿Qué artículos de la Resolución 3100/2019 fueron modificados por la Resolución 465 de 2025?",
+      "respuesta_correcta": "La Resolución 465 de 2025 modificó los artículos 4, 5, 19 y 20 de la Resolución 3100/2019.",
+      "articulo_fuente": "Resolución 465 de 2025 (marzo 2025)",
+      "trampa_comun": "No modificó todos los artículos — solo 4 artículos específicos."
+    },
+    {
+      "id": "T19",
+      "categoria": "SOGCS",
+      "pregunta": "¿Cuáles son los 4 componentes del Sistema Obligatorio de Garantía de Calidad de la Atención de Salud (SOGCS)?",
+      "respuesta_correcta": "1. Sistema Único de Habilitación, 2. Auditoría para el Mejoramiento de la Calidad de la Atención de Salud (PAMEC), 3. Sistema Único de Acreditación, 4. Sistema de Información para la Calidad.",
+      "articulo_fuente": "Considerandos, Resolución 3100/2019",
+      "trampa_comun": "El PAMEC es el componente 2, no una norma independiente — es parte del SOGCS."
+    },
+    {
+      "id": "T20",
+      "categoria": "Talento Humano",
+      "pregunta": "¿La Resolución 3100/2019 establece las competencias del talento humano en salud?",
+      "respuesta_correcta": "NO. La resolución expresamente NO establece competencias para el talento humano — estas son definidas por los programas académicos aprobados por el Ministerio de Educación Nacional. (Parágrafo, Art. 1)",
+      "articulo_fuente": "Parágrafo, Artículo 1, Resolución 3100/2019",
+      "trampa_comun": "Confusión frecuente — la norma de habilitación no reemplaza los títulos y competencias."
+    }
+  ]
+}
