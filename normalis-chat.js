@@ -5,9 +5,10 @@
 // ─────────────────────────────────────────────────────────────────
 
 // ══════════════════════════════════════════════════════════════════
-// PROXY — apunta a la Firebase Function (API key server-side)
+// PROXY — Cloudflare Worker (reemplaza Firebase Function — sin costo)
+// Actualiza esta URL con tu Worker URL después del deploy en Cloudflare.
 // ══════════════════════════════════════════════════════════════════
-const GEMINI_PROXY_URL = 'https://us-central1-normalis-5587d.cloudfunctions.net/geminiProxy';
+const GEMINI_PROXY_URL = 'https://normalis.fjfc1984.workers.dev';
 
 // ── Contexto de la IPS (enviado al proxy como parte de la pregunta) ───────────
 function buildIPSContext() {
