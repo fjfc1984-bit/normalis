@@ -1,107 +1,52 @@
 // normalis-chat.js
 // NormaLis — Consultor Normativo IA
-// Fuente de verdad: búsqueda en tiempo real en fuentes oficiales del gobierno colombiano
-// (minsalud.gov.co, suin-juriscol.gov.co, invima.gov.co)
-// NO contiene normativa hardcodeada — toda respuesta viene de fuentes verificadas.
+// Toda respuesta pasa por el proxy Firebase Function — la API key NUNCA llega al browser.
+// Proxy URL: https://us-central1-normalis-5587d.cloudfunctions.net/geminiProxy
 // ─────────────────────────────────────────────────────────────────
 
 // ══════════════════════════════════════════════════════════════════
-// CONFIGURACIÓN GEMINI
+// PROXY — apunta a la Firebase Function (API key server-side)
 // ══════════════════════════════════════════════════════════════════
-const GEMINI_API_KEY = 'AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg';
-const GEMINI_MODEL   = 'gemini-2.0-flash';
-const GEMINI_URL     = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_PROXY_URL = 'https://us-central1-normalis-5587d.cloudfunctions.net/geminiProxy';
 
-// ── System prompt ────────────────────────────────────────────────────────────
-function buildSystemPrompt() {
+// ── Contexto de la IPS (enviado al proxy como parte de la pregunta) ───────────
+function buildIPSContext() {
   const cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
   const ipsNombre = localStorage.getItem('normalis_ips_nombre') || '';
   const ipsCiudad = localStorage.getItem('normalis_ips_ciudad') || '';
   const tipoIPS   = cfg.tipo || '';
 
-  const contextoIPS = (ipsNombre || tipoIPS || ipsCiudad)
-    ? `\n\nCONTEXTO DE LA IPS DEL USUARIO:\n- Nombre: ${ipsNombre || 'No configurado'}\n- Tipo: ${tipoIPS || 'No configurado'}\n- Ciudad: ${ipsCiudad || 'No configurado'}`
-    : '';
-
-  return `Eres el Consultor Normativo IA de NormaLis, especializado en habilitación de servicios de salud en Colombia.
-
-FUENTES AUTORIZADAS — SOLO usa estas fuentes oficiales del gobierno colombiano:
-- minsalud.gov.co (Ministerio de Salud y Protección Social)
-- suin-juriscol.gov.co (Sistema Único de Información Normativa — SUIN)
-- invima.gov.co (INVIMA)
-- funcionpublica.gov.co (Función Pública — Gestor Normativo)
-- datos.gov.co
-
-NORMAS PRINCIPALES QUE APLICAN:
-- Resolución 3100 de 2019 (habilitación — 7 estándares)
-- Resolución 465 de 2025 (actualización de condiciones de habilitación)
-- Resolución 544 de 2023 (accesibilidad, PQRSF, novedades REPS)
-- Decreto 780 de 2016 (política de atención integral en salud)
-- Resolución 1995 de 1999 (historia clínica)
-- Decreto 351 de 2014 (residuos hospitalarios)
-- Resolución 256 de 2016 (indicadores de calidad)
-- Decreto 4725 de 2005 (dispositivos médicos)
-- Ley 1164 de 2007 (RETHUS)
-- Resolución 1317 de 2021 (telemedicina)
-- Resolución 1445 de 2006 y Decreto 1011 de 2006 (PAMEC)${contextoIPS}
-
-REGLAS ESTRICTAS:
-1. NUNCA inventes, asumas ni extrapoles artículos, cifras, plazos o requisitos. Si no encuentras la información en fuentes oficiales verificadas, dilo explícitamente.
-2. Cuando cites una norma, incluye: nombre completo, año, artículo o numeral exacto.
-3. Si la pregunta requiere un dato que no puedes verificar, responde: "No encontré información verificada sobre esto. Consulta directamente minsalud.gov.co o la Secretaría de Salud de tu departamento."
-4. En temas de habilitación, advierte siempre que la interpretación final la tiene la Secretaría de Salud departamental.
-5. Si hay dudas sobre si una norma está vigente o fue modificada, indícalo y dirige al usuario a verificar.
-6. Responde en español colombiano, claro y directo. Máximo 5 párrafos o una lista numerada.
-7. NUNCA reemplazas la asesoría de un profesional en habilitación — indícalo cuando la consulta sea compleja.`;
+  if (!ipsNombre && !tipoIPS && !ipsCiudad) return '';
+  return `\n[Contexto IPS: nombre="${ipsNombre}", tipo="${tipoIPS}", ciudad="${ipsCiudad}"]`;
 }
 
-// ── Llamada a Gemini con Google Search grounding ─────────────────────────────
+// ── Llamada al proxy Firebase Function ──────────────────────────────────────
 async function callGemini(userMessage, historial) {
-  const systemPrompt = buildSystemPrompt();
+  const questionWithCtx = userMessage + buildIPSContext();
 
-  const contents = [];
-  if (historial && historial.length > 0) {
-    for (const msg of historial) {
-      contents.push({ role: msg.role, parts: [{ text: msg.text }] });
-    }
-  }
-  contents.push({ role: 'user', parts: [{ text: userMessage }] });
-
-  const body = {
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents: contents,
-    tools: [{ google_search: {} }],   // ← búsqueda en tiempo real
-    generationConfig: {
-      temperature: 0.1,          // baja temperatura = más preciso, menos creativo
-      maxOutputTokens: 1000,
-      topP: 0.9
-    }
-  };
-
-  const resp = await fetch(GEMINI_URL, {
+  const resp = await fetch(GEMINI_PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      question: questionWithCtx,
+      sessionHistory: (historial || []).map(m => ({ role: m.role, text: m.text }))
+    })
   });
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({}));
-    const msg = err?.error?.message || `Error ${resp.status}`;
-    throw new Error(msg);
+    throw new Error(err?.error || `Error ${resp.status}`);
   }
 
   const data = await resp.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Respuesta vacía de Gemini');
+  if (!data.answer) throw new Error('Respuesta vacía del proxy');
 
-  // Extraer fuentes citadas si las hay
-  const groundingChunks = data?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const sources = groundingChunks
-    .map(c => c?.web?.uri)
-    .filter(u => u && (u.includes('minsalud') || u.includes('suin-juriscol') || u.includes('invima') || u.includes('funcionpublica') || u.includes('gov.co')))
+  const sources = (data.sources || [])
+    .map(s => s.uri)
+    .filter(u => u && u.includes('gov.co'))
     .slice(0, 3);
 
-  return { text, sources };
+  return { text: data.answer, sources };
 }
 
 // ── Fallback mínimo — NO contiene normativa, solo orienta al usuario ──────────
