@@ -7703,6 +7703,17 @@ function hideAuthScreen(user){
   // Show user email in sidebar if element exists
   var emailEl = document.getElementById('sb-user-email');
   if(emailEl && user) emailEl.textContent = user.email || '';
+  // FIX pantalla blanca: mostrar #app para usuarios con onboarding ya completado.
+  // Para usuarios nuevos (sin onboarding_done), mostrarOnboarding() se encarga de
+  // mostrar #app al finalizar el wizard. Para usuarios existentes, nadie lo hacía.
+  if(localStorage.getItem('normalis_onboarding_done')){
+    var appEl = document.getElementById('app');
+    if(appEl && appEl.style.display === 'none') appEl.style.display = 'flex';
+    if(!window._initAppCalled && typeof initApp === 'function'){
+      window._initAppCalled = true;
+      try{ initApp(); }catch(e){ console.warn('initApp error:', e); }
+    }
+  }
 }
 
 

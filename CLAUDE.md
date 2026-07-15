@@ -199,116 +199,69 @@ EOF
 
 ---
 
-## Modular Architecture (normativa-app-v2.html)
+## Editing normativa-app-v2.html (858KB)
 
-The main app was refactored from a single 858KB file into 12 external JS modules + 1 CSS file. The HTML file (`normativa-app-v2.html`, ~536KB) now loads them via `<script src>` / `<link>` tags.
-
-| Module | Content | Size |
-|--------|---------|------|
-| `normalis-styles.css` | All CSS | ~60KB |
-| `normalis-data-audit.js` | `areasDB` — all audit questions for every service type | ~99KB |
-| `normalis-chat.js` | `normAnswers` dictionary + `getAnswer()` scoring engine | ~25KB |
-| `normalis-audit-score.js` | `calcAuditScore()`, `showResults()`, `logAuditCompleted()` | ~10KB |
-| `normalis-docs.js` | Document generator (`openDocViewer`, `openDocPreview`) | ~35KB |
-| `normalis-pdf.js` | PDF audit report (`printAuditReport`) | ~9KB |
-| `normalis-pqrs.js` | PQRS module (`savePQRS`, `renderPQRS`) | ~5KB |
-| `normalis-incidentes.js` | Incidents module (`saveIncidente`, `renderIncidentes`) | ~4KB |
-| `normalis-vencimientos.js` | Deadlines module (`saveVenc`, `renderVencimientos`) | ~4KB |
-| `normalis-simulacro.js` | Drill checklist (`renderSimulacro`, `toggleSimItem`) | ~6KB |
-| `normalis-bitacora.js` | Audit log (`logAction`, `renderBitacora`) | ~10KB |
-| `normalis-firestore.js` | Firestore sync, onboarding, ROI, XAI (`buildUserContext`, `xaiResponder`, `mostrarOnboarding`, `renderROI`) | ~50KB |
-
-**Every module ends with an integrity seal** — the last line is a comment like:
-```
-// END:normalis-chat.js — NormaLis integrity seal
-```
-If a module is missing its seal, it was truncated during an edit.
-
-**Editing modules:** always use file tools (Read/Edit), never the GitHub web editor. After any edit, run `bash normalis-validate.sh` before committing.
-
----
-
-## Editing normativa-app-v2.html — REGLA CRÍTICA
-
-**NUNCA usar el tool `Edit` directamente sobre `normativa-app-v2.html`.**
-El archivo supera 500KB. El tool `Edit` trunca silenciosamente archivos grandes, borrando miles de líneas sin error visible.
-
-**Único método permitido para modificar normativa-app-v2.html:**
-```python
-# Siempre leer → modificar en memoria → escribir completo
-with open('normativa-app-v2.html', 'r', encoding='utf-8') as f:
-    content = f.read()
-content = content.replace(OLD, NEW, 1)   # o re.sub(...)
-with open('normativa-app-v2.html', 'w', encoding='utf-8') as f:
-    f.write(content)
-```
-
-O desde bash:
-```bash
-bash normalis-patch.sh "texto_viejo" "texto_nuevo"
-```
-
-- File now properly closes with `</body>` and `</html>` (pin numpad modal is complete)
-- All module `<script src>` tags are near the top of the `<body>`, before the main inline `<script>` block
-- When searching for `</body>` to insert code: check only the LAST occurrence — earlier ones are inside JS template strings
-- **Después de cualquier edición:** `wc -l normativa-app-v2.html` debe dar >9000 líneas. Si da menos, el archivo fue truncado — restaurar con `git checkout HEAD -- normativa-app-v2.html` y rehacer con Python.
+- Use file tools (Read/Edit) — never the GitHub web editor
+- The file is technically truncated (ends mid-HTML of a modal) but renders fine in browser
+- A fix script is appended at the very end (after the last `</body>`) — do not remove it
+- The fix script intercepts `mostrarOnboarding()` and sets `normalis_onboarding_done` from Firestore
+- When searching for `</body>` to insert code: there are 6 occurrences — 5 are inside JS strings (print/export functions), only 1 is the real closing tag. Always use the LAST occurrence or search for the fix script to find the real end.
 
 ---
 
 ## Pre-commit Validation
 
-### Validador maestro (único punto de verdad)
-
-```bash
-bash normalis-validate.sh           # validación normal
-bash normalis-validate.sh --verbose  # con detalles de cada archivo
-```
-
-Cubre 10 categorías — 80+ checks:
-1. Existencia y no-vacío de los 18 archivos críticos
-2. Tamaño mínimo de cada módulo (detecta truncamiento severo)
-3. Sello de integridad al final de cada módulo JS/CSS
-4. `normativa-app-v2.html` — cierre HTML correcto + balance de `<script>` + referencias a los 12 módulos
-5. Funciones críticas presentes en cada módulo (~26 funciones verificadas)
-6. `admin.html` — 9 reglas de integridad (rol piloto, sin Custom Claims, 1 auth listener, etc.)
-7. Firebase config consistente en los 5 archivos HTML
-8. `login.html` — routing y flags de onboarding
-9. Sin etiquetas `<script>` duplicadas para ningún módulo
-10. `registro.html` — asigna rol `pendiente`
-
-Retorna exit 0 si todo pasa, exit 1 si hay errores críticos.
-
-### Scripts individuales (legados — siguen funcionando)
+### Scripts de validación
 
 | Script | Qué valida |
 |--------|-----------|
-| `validate-admin.sh` / `.ps1` | 9 reglas de admin.html |
-| `validate-login.sh` | Funciones críticas de login.html |
-| `validate-registro.sh` | Rol pendiente y esquema Firestore |
-| `validate-firebase.sh` | Config Firebase entre archivos |
+| `validate-admin.sh` / `.ps1` | 9 reglas de integridad de admin.html |
+| `validate-login.sh` | Funciones críticas, routing, flags de onboarding |
+| `validate-registro.sh` | Rol pendiente, esquema Firestore, rollback |
+| `validate-firebase.sh` | Config Firebase idéntica en todos los archivos |
+
+Todos retornan exit code 0 si pasan, no-cero si hay errores críticos.
+
+### Correr manualmente (Cowork / bash)
+
+```bash
+bash /sessions/.../mnt/normalis/validate-admin.sh
+bash /sessions/.../mnt/normalis/validate-login.sh
+bash /sessions/.../mnt/normalis/validate-registro.sh
+bash /sessions/.../mnt/normalis/validate-firebase.sh
+```
+
+### PowerShell (Windows)
+```powershell
+.\validate-admin.ps1
+```
 
 ### Hook automático (corre en cada `git commit`)
 
+El repo tiene hooks en `.githooks/`. Se activan con un comando de una sola vez:
+
 ```bash
-git config core.hooksPath .githooks  # una sola vez por clon
+git config core.hooksPath .githooks
 ```
 
-Cada commit que toque `.html`, `.js`, o `.css` corre el validador maestro automáticamente. Para forzar en cualquier commit:
+Después de eso: cada `git commit` valida automáticamente solo los archivos modificados. Si algo falla, el commit se bloquea con el error impreso. Para forzar validación completa:
 
 ```bash
 NORMALIS_FULL_CHECK=1 git commit -m "mensaje"
 ```
 
+**Este comando ya fue ejecutado en el clon actual.** Si clonas el repo de nuevo, corre `bash .githooks/install.sh` una vez.
+
 ### GitHub Actions
 
-`.github/workflows/validate.yml` corre el validador maestro en cada push a `main`. Si falla, el deploy queda marcado como rojo en la pestaña Actions.
+`.github/workflows/validate.yml` corre en cada push a `main`. Segunda red de seguridad — si algo pasa el hook local, GitHub lo atrapa antes de que llegue a producción. Ver resultados en la pestaña Actions del repo.
 
 ### admin.html — 9 reglas específicas
 1. Exactly 2 inline `<script>` blocks (not counting CDN imports)
 2. Toast div is in HTML between the two script blocks — not inside a script
 3. `crearIPS` uses `rol: 'piloto'`, never `'admin_ips'`
 4. No `token.claims` references (Firebase Custom Claims)
-5. Exactly 1 active `onAuthStateChanged` listener (comments don't count)
+5. Exactly 1 active `onAuthStateChanged` listener
 6. `initApp` defined exactly once
 7. All 8 critical functions present: `doLogin`, `crearIPS`, `cargarSolicitudes`, `cargarLeads`, `showToast`, `escucharProspectos`, `cargarPilotos`, `cargarAnalytics`
 8. File ends with `</body>` and `</html>` (not truncated)
