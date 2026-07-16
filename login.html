@@ -361,6 +361,7 @@ async function routeUser(user) {
     // ── Pre-poblar localStorage del app desde datos de Firestore ──────────────
     // Esto evita que el wizard de onboarding pida datos ya ingresados al registrar
     if (rol !== 'admin') {
+      localStorage.setItem('normalis_onboarding_done', 'true');  // fix: siempre establecer al login
       try {
         prefillAppData(data);
       } catch (_) { /* silencioso — no bloquea el acceso */ }

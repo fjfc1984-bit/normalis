@@ -2197,7 +2197,11 @@ function obFinish(){
 
 // Iniciar onboarding
 document.addEventListener('DOMContentLoaded', function(){
-  if (localStorage.getItem('normalis_onboarding_done')) {
+  // Saltar onboarding si ya fue completado O si hay sesion Firebase activa
+  var yaHizo = localStorage.getItem('normalis_onboarding_done');
+  var tieneSession = sessionStorage.getItem('normalis_uid') && sessionStorage.getItem('normalis_rol');
+  if (yaHizo || tieneSession) {
+    if (tieneSession && !yaHizo) localStorage.setItem('normalis_onboarding_done', 'true');
     var ob = document.getElementById('onboarding');
     if (ob) ob.style.display = 'none';
     var appEl = document.getElementById('app');
