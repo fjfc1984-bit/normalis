@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://normalis.fjfc1984.workers.dev; frame-ancestors 'none';">
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -29,8 +30,31 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     // SW script inline via blob — caches app shell
     const swCode=`
-const CACHE='normalis-v2';
-const ASSETS=['./normativa-app-v2.html'];
+const CACHE='normalis-v3';
+const ASSETS=[
+  './normativa-app-v2.html',
+  './normalis-styles.css',
+  './normalis-pilot.js',
+  './normalis-data-audit.js',
+  './normalis-chat.js',
+  './normalis-audit-score.js',
+  './normalis-docs.js',
+  './normalis-pdf.js',
+  './normalis-pqrs.js',
+  './normalis-incidentes.js',
+  './normalis-vencimientos.js',
+  './normalis-simulacro.js',
+  './normalis-bitacora.js',
+  './normalis-firestore.js',
+  './normalis-tour.js',
+  './normalis-utils.js',
+  './normalis-auth.js',
+  './normalis-pamec.js',
+  './normalis-export.js',
+  './normalis-users.js',
+  './normalis-automations.js',
+  './normalis-checklist.js'
+];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',e=>{
@@ -3794,7 +3818,14 @@ function logActivity(action, module, detail){
 function getActivityLogs(){ try{ return JSON.parse(localStorage.getItem(LOGS_KEY)||'[]'); }catch(e){ return []; } }
 
 /* ── PIN ── */
-function pinHash(p){ return btoa('nrm:'+p); }
+/* ── PIN hash — SHA-256 async con soporte legacy ── */
+function pinHashLegacy(p){ return btoa('nrm:'+p); }
+async function pinHash(p){
+  if(typeof crypto==='undefined'||!crypto.subtle) return pinHashLegacy(p);
+  const data=new TextEncoder().encode('nrm-salt-2026:'+p);
+  const buf=await crypto.subtle.digest('SHA-256',data);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 /* ── User CRUD ── */
 
@@ -3932,7 +3963,7 @@ function renderUserMgmt(){
 }
 
 let _editingUserId=null;
-function saveUserForm(){
+async function saveUserForm(){
   const nombre=document.getElementById('um-form-nombre').value.trim();
   const rol=document.getElementById('um-form-rol').value;
   const pin=document.getElementById('um-form-pin').value.trim();
@@ -5579,8 +5610,8 @@ startSession = function(user, withLog){
 let _pinFails = 0;
 let _pinLockUntil = 0;
 
-const _origVerifyPin = verifyPin;
-verifyPin = function(){
+const const _origVerifyPin = verifyPin;
+verifyPin = async function(){
   const now = Date.now();
   if(_pinLockUntil > now){
     const secs = Math.ceil((_pinLockUntil - now)/1000);
@@ -5589,31 +5620,45 @@ verifyPin = function(){
     _pinBuffer = ''; updatePinDots();
     return;
   }
-  if(window._pinTarget && pinHash(_pinBuffer) === _pinTarget.pinHash){
-    _pinFails = 0;
-    _pinLockUntil = 0;
-    _origVerifyPin();
-  } else {
-    _pinFails++;
-    _pinBuffer = ''; updatePinDots();
-    const errEl = document.getElementById('pin-error');
-    const remaining = 5 - _pinFails;
-    if(_pinFails >= 5){
-      _pinLockUntil = Date.now() + (5 * 60 * 1000); // 5 min block
+  if(window._pinTarget){
+    const h = await pinHash(_pinBuffer);
+    const isLegacy = _pinTarget.pinHash && _pinTarget.pinHash.length < 64;
+    const match = isLegacy ? (pinHashLegacy(_pinBuffer) === _pinTarget.pinHash) : (h === _pinTarget.pinHash);
+    if(match){
       _pinFails = 0;
-      if(errEl) errEl.textContent = '🔒 Demasiados intentos. Bloqueado 5 minutos.';
-      logActivity('pin_blocked','seguridad','5 intentos fallidos de PIN — usuario bloqueado 5 min');
-      // Countdown display
-      const interval = setInterval(function(){
-        const rem = Math.ceil((_pinLockUntil - Date.now())/1000);
-        if(rem <= 0){ clearInterval(interval); if(errEl) errEl.textContent=''; return; }
-        if(errEl) errEl.textContent = '🔒 Bloqueado. Espera '+rem+'s para reintentar.';
-      }, 1000);
+      _pinLockUntil = 0;
+      // Auto-upgrade legacy Base64 hash → SHA-256
+      if(isLegacy){
+        _pinTarget.pinHash = h;
+        const usrs = JSON.parse(localStorage.getItem('normalis_users')||'[]');
+        const ux = usrs.find(function(u){ return u.id===_pinTarget.id; });
+        if(ux){ ux.pinHash=h; localStorage.setItem('normalis_users',JSON.stringify(usrs)); }
+      }
+      _origVerifyPin();
     } else {
-      if(errEl) errEl.textContent = 'PIN incorrecto. '+remaining+' intento'+(remaining===1?'':'s')+' restante'+(remaining===1?'':'')+'.';
+      _pinFails++;
+      _pinBuffer = ''; updatePinDots();
+      const errEl = document.getElementById('pin-error');
+      const remaining = 5 - _pinFails;
+      if(_pinFails >= 5){
+        _pinLockUntil = Date.now() + (5 * 60 * 1000); // 5 min block
+        _pinFails = 0;
+        if(errEl) errEl.textContent = '🔒 Demasiados intentos. Bloqueado 5 minutos.';
+        logActivity('pin_blocked','seguridad','5 intentos fallidos de PIN — usuario bloqueado 5 min');
+        // Countdown display
+        const interval = setInterval(function(){
+          const rem = Math.ceil((_pinLockUntil - Date.now())/1000);
+          if(rem <= 0){ clearInterval(interval); if(errEl) errEl.textContent=''; return; }
+          if(errEl) errEl.textContent = '🔒 Bloqueado. Espera '+rem+'s para reintentar.';
+        }, 1000);
+      } else {
+        if(errEl) errEl.textContent = 'PIN incorrecto. '+remaining+' intento'+(remaining===1?'':'s')+' restante'+(remaining===1?'':'')+'.';
+      }
     }
   }
 };
+
+
 
 // ── 4. Backup / Restore de datos ────────────────────────────────
 const BACKUP_KEYS = [
