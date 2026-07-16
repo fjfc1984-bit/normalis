@@ -237,7 +237,15 @@ function xaiResponder(pregunta) {
   return resp;
 }
 
+// BUG #1 FIX: preservar sendMainChat de normalis-chat.js (Cloudflare Worker) si ya existe
+var _prevSendMainChat = window.sendMainChat;
+
 window.sendMainChat = function() {
+  // Si normalis-chat.js ya definió sendMainChat (Worker Gemini), usarla
+  if (typeof _prevSendMainChat === 'function') {
+    return _prevSendMainChat();
+  }
+  // Fallback: xaiResponder local (sin conexión o sin Worker)
   var input = document.getElementById('main-chat-input');
   if (!input) return;
   var pregunta = input.value.trim();
