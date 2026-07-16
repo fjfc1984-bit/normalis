@@ -30,16 +30,12 @@ var fsSync = {
   _online: true,
 
   init: function() {
+    // BUG #5 FIX: ya no registra onAuthStateChanged aquí.
+    // La sincronización arranca desde hideAuthScreen() (normativa-app-v2.html)
+    // solo después de que el rol del usuario ha sido verificado en Firestore.
     try {
       if (!window.firebase || !firebase.firestore) return;
       this._db = firebase.firestore();
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-          fsSync._userId = user.uid;
-          fsSync.pullAll();
-          logAction('Sistema', 'Datos sincronizados desde la nube', user.email || user.uid);
-        }
-      });
       // Online/offline detection
       window.addEventListener('online', function() {
         fsSync._online = true;
@@ -52,6 +48,16 @@ var fsSync = {
       });
     } catch(e) {
       console.warn('[NormaLis] Firestore no disponible:', e.message);
+    }
+  },
+
+  startForUser: function(uid, email) {
+    // Llamado desde hideAuthScreen() tras verificación de rol exitosa
+    if (!uid) return;
+    this._userId = uid;
+    if (this._db) {
+      this.pullAll();
+      logAction('Sistema', 'Datos sincronizados desde la nube', email || uid);
     }
   },
 
