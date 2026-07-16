@@ -7747,6 +7747,10 @@ function hideAuthScreen(user){
       try{ initApp(); }catch(e){ console.warn('initApp error:', e); }
     }
   }
+  // BUG #5 FIX: arrancar sync de Firestore solo tras verificación de rol exitosa
+  if(user && typeof fsSync !== 'undefined' && typeof fsSync.startForUser === 'function'){
+    fsSync.startForUser(user.uid, user.email || '');
+  }
 }
 
 
