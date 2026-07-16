@@ -30,15 +30,28 @@ function authRegister(){
   authShowMsg('auth-reg-msg','','');
   _fbAuth.createUserWithEmailAndPassword(email, pass)
     .then(function(cred){
-      // Save nombre to cfg
+      // FIX BUG #3: crear documento Firestore con rol pendiente
+      var uid = cred.user.uid;
+      var db2; try { db2 = firebase.firestore(); } catch(fe) { db2 = null; }
+      var fsWrite = db2
+        ? db2.collection('usuarios').doc(uid).set({
+            nombre: nombre,
+            nombreContacto: nombre,
+            email: email,
+            rol: 'pendiente',
+            activo: false,
+            fechaSolicitud: firebase.firestore.FieldValue.serverTimestamp(),
+            estado: 'pendiente'
+          })
+        : Promise.resolve();
       try{
         var cfg2 = JSON.parse(localStorage.getItem('normalis_cfg')||'{}');
         cfg2.nombre = nombre; cfg2.email = email;
         localStorage.setItem('normalis_cfg', JSON.stringify(cfg2));
       }catch(e){}
-      return cred.user.updateProfile({displayName: nombre});
+      return fsWrite.then(function(){ return cred.user.updateProfile({displayName: nombre}); });
     })
-    .then(function(){ authSetLoading('auth-reg-btn',false); authShowMsg('auth-reg-msg','¡Cuenta creada! Bienvenido a NormaLis','success'); })
+    .then(function(){ authSetLoading('auth-reg-btn',false); authShowMsg('auth-reg-msg','¡Solicitud enviada! Un administrador revisará tu cuenta pronto.','success'); })
     .catch(function(err){ authSetLoading('auth-reg-btn',false); authShowMsg('auth-reg-msg', authErrorMsg(err.code), 'error'); });
 }
 
@@ -55,8 +68,27 @@ function authGoogle(){
   if(!_fbAuth){ document.getElementById('auth-screen').style.display='none'; return; }
   var provider = new firebase.auth.GoogleAuthProvider();
   _fbAuth.signInWithPopup(provider)
-    .then(function(){})
-    .catch(function(err){ 
+    .then(function(result){
+      // FIX BUG #3: crear doc Firestore si es primer login con Google
+      var user = result.user;
+      var db2; try { db2 = firebase.firestore(); } catch(fe) { db2 = null; }
+      if(!db2) return;
+      db2.collection('usuarios').doc(user.uid).get().then(function(doc){
+        if(!doc.exists){
+          db2.collection('usuarios').doc(user.uid).set({
+            nombre: user.displayName || '',
+            nombreContacto: user.displayName || '',
+            email: user.email || '',
+            rol: 'pendiente',
+            activo: false,
+            fechaSolicitud: firebase.firestore.FieldValue.serverTimestamp(),
+            estado: 'pendiente'
+          }).catch(function(){});
+          authShowMsg('auth-login-msg','Solicitud enviada. Un administrador revisará tu cuenta.','success');
+        }
+      }).catch(function(){});
+    })
+    .catch(function(err){
       authShowMsg('auth-login-msg', authErrorMsg(err.code), 'error');
       authShowMsg('auth-reg-msg', authErrorMsg(err.code), 'error');
     });
@@ -138,11 +170,21 @@ function logout(){
   if(!confirm('¿Cerrar sesión?')) return;
   logActivity('logout','sistema','Cierre de sesión');
   saveSession(null); _session=null;
-  document.getElementById('sb-session-user').style.display='none';
-  // Remove role restrictions
-  document.querySelectorAll('.sb-item[onclick]').forEach(el=>el.style.display='');
-  document.querySelectorAll('.sb-section').forEach(el=>el.style.display='');
+  // FIX BUG #4: cerrar sesión Firebase + limpiar sessionStorage
+  sessionStorage.clear();
+  if(typeof _fbAuth !== 'undefined' && _fbAuth) _fbAuth.signOut().catch(function(){});
+  var sbUser = document.getElementById('sb-session-user');
+  if(sbUser) sbUser.style.display='none';
+  document.querySelectorAll('.sb-item[onclick]').forEach(function(el){ el.style.display=''; });
+  document.querySelectorAll('.sb-section').forEach(function(el){ el.style.display=''; });
   showLogin();
+}
+
+function forceLogoutFirebase(){
+  // Cierre completo incluyendo Firebase Auth (para timeout o pilot expiry)
+  sessionStorage.clear();
+  if(typeof _fbAuth !== 'undefined' && _fbAuth) _fbAuth.signOut().catch(function(){});
+  window.location.href = 'login.html';
 }
 
 function _getFirebaseCfg(){
