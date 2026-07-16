@@ -6,6 +6,7 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none';">
 <title>NormaLis — Solicitar Acceso</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -403,10 +404,30 @@ document.getElementById('r-pass2').addEventListener('input', function() {
   err.style.display = (this.value && !match) ? 'block' : 'none';
 });
 
+// Rate limiting — máx 3 registros por hora desde el mismo navegador (BUG #6)
+function checkRegisterRateLimit() {
+  var KEY = 'normalis_reg_attempts';
+  var WINDOW_MS = 60 * 60 * 1000; // 1 hora
+  var MAX = 3;
+  var now = Date.now();
+  var attempts;
+  try { attempts = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) { attempts = []; }
+  attempts = attempts.filter(function(ts){ return now - ts < WINDOW_MS; });
+  if(attempts.length >= MAX) {
+    var waitMin = Math.ceil((WINDOW_MS - (now - attempts[0])) / 60000);
+    showError('Demasiados intentos. Espera ' + waitMin + ' minuto(s) antes de volver a registrarte.');
+    return false;
+  }
+  attempts.push(now);
+  try { localStorage.setItem(KEY, JSON.stringify(attempts)); } catch(e) {}
+  return true;
+}
+
 // Submit final ──────────────────────────────────────
 document.getElementById('form-step2').addEventListener('submit', async function(e) {
   e.preventDefault();
   hideError();
+  if(!checkRegisterRateLimit()) return;
 
   var contacto = sanitize(document.getElementById('r-contacto').value.trim());
   var email    = document.getElementById('r-email').value.trim().toLowerCase();
