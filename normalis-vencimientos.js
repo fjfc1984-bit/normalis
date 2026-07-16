@@ -15,7 +15,7 @@ function saveVenc() {
   var profesional = document.getElementById('venc-profesional').value;
   var tipo = document.getElementById('venc-tipo').value;
   var fecha = document.getElementById('venc-fecha').value;
-  if (!profesional || !fecha) { alert('Complete todos los campos'); return; }
+  if (!profesional || !fecha) { if(typeof toast==='function') toast('Complete todos los campos','warning'); return; }
   var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
   docs.push({ id: Date.now(), profesional, tipo, fecha });
   localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
