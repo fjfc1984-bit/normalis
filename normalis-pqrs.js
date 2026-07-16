@@ -16,7 +16,7 @@ function savePQRS() {
   var nombre = document.getElementById('pqrs-nombre').value;
   var desc = document.getElementById('pqrs-desc').value;
   var area = document.getElementById('pqrs-area').value;
-  if (!nombre || !desc) { alert('Por favor complete nombre y descripción'); return; }
+  if (!nombre || !desc) { if(typeof toast==='function') toast('Por favor complete nombre y descripción','warning'); return; }
   var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
   pqrs.push({ id: Date.now(), tipo, nombre, desc, area, estado: 'Pendiente', fecha: new Date().toLocaleDateString('es-CO') });
   localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
