@@ -291,7 +291,7 @@ function pamecAvanzarFase() {
   else if (fase === 3) puedeAvanzar = acciones.length >= 2;
   if (!puedeAvanzar) {
     var mensajes = {1:'Completa al menos 5 ítems de autoevaluación antes de avanzar.',2:'Registra al menos 1 proceso de mejora antes de avanzar.',3:'Registra al menos 2 acciones de mejora antes de avanzar.'};
-    alert(mensajes[fase] || 'Completa los criterios de esta fase primero.');
+    if(typeof toast==='function') toast(mensajes[fase] || 'Completa los criterios de esta fase primero.','warning');
     return;
   }
   localStorage.setItem('normalis_pamec_fase', String(fase + 1));
