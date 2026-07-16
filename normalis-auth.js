@@ -126,8 +126,11 @@ function authSwitchTab(tab){
   document.getElementById('tab-register').classList.toggle('active', tab==='register');
 }
 
-function verifyPin(){
-  if(pinHash(_pinBuffer)===_pinTarget.pinHash){
+async function verifyPin(){
+  const h = await pinHash(_pinBuffer);
+  const isLegacy = _pinTarget && _pinTarget.pinHash && _pinTarget.pinHash.length < 64;
+  const match = isLegacy ? (pinHashLegacy(_pinBuffer) === _pinTarget.pinHash) : (h === _pinTarget.pinHash);
+  if(match){
     document.getElementById('pin-overlay').style.display='none';
     hideLogin();
     startSession(_pinTarget, true);
@@ -167,7 +170,7 @@ function forceLogout(){
 }
 
 function logout(){
-  if(!confirm('¿Cerrar sesión?')) return;
+  if(!confirm('µ×Errar sesión?')) return;
   logActivity('logout','sistema','Cierre de sesión');
   saveSession(null); _session=null;
   // FIX BUG #4: cerrar sesión Firebase + limpiar sessionStorage
