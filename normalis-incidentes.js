@@ -17,7 +17,7 @@ function saveIncidente() {
   var desc = document.getElementById('inc-desc').value;
   var accion = document.getElementById('inc-accion').value;
   var responsable = document.getElementById('inc-responsable').value;
-  if (!desc) { alert('Por favor describa el evento'); return; }
+  if (!desc) { if(typeof toast==='function') toast('Por favor describa el evento','warning'); return; }
   var incs = JSON.parse(localStorage.getItem('normalis_incidentes') || '[]');
   incs.push({ id: Date.now(), tipo, severidad, desc, accion, responsable, estado: 'Abierto', fecha: new Date().toLocaleDateString('es-CO') });
   localStorage.setItem('normalis_incidentes', JSON.stringify(incs));
