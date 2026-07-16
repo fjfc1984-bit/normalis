@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://normalis.fjfc1984.workers.dev; frame-ancestors 'none';">
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Firebase SDK v10 (compat mode) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -7664,20 +7667,50 @@ function initFirebaseAuth(){
   try{
     if(typeof firebase === 'undefined' || !firebase.apps.length) return;
     _fbAuth = firebase.auth();
-    // Listen for auth state changes
     _fbAuth.onAuthStateChanged(function(user){
       if(user){
         _currentUser = user;
-        hideAuthScreen(user);
+        // Verificar rol en Firestore antes de mostrar la app
+        // Esto evita que usuarios con rol pendiente/rechazado accedan por URL directa
+        var _db;
+        try { _db = firebase.firestore(); } catch(fe) { _db = null; }
+        if(!_db){
+          // Sin Firestore — confiar en sessionStorage como fallback
+          var rolSS = sessionStorage.getItem('normalis_rol');
+          if(rolSS === 'cliente' || rolSS === 'piloto'){ hideAuthScreen(user); }
+          else { window.location.href = 'login.html?error=sin_acceso'; }
+          return;
+        }
+        _db.collection('usuarios').doc(user.uid).get().then(function(doc){
+          if(!doc.exists){
+            console.warn('[NormaLis] Usuario sin documento Firestore:', user.uid);
+            _fbAuth.signOut();
+            window.location.href = 'login.html?error=sin_acceso';
+            return;
+          }
+          var rol = doc.data().rol;
+          if(rol !== 'cliente' && rol !== 'piloto'){
+            console.warn('[NormaLis] Acceso denegado — rol:', rol);
+            _fbAuth.signOut();
+            window.location.href = 'login.html?error=sin_acceso';
+            return;
+          }
+          hideAuthScreen(user);
+        }).catch(function(e){
+          console.warn('[NormaLis] Error al verificar rol:', e.message);
+          // Fallback a sessionStorage si hay error de red
+          var rolSS = sessionStorage.getItem('normalis_rol');
+          if(rolSS === 'cliente' || rolSS === 'piloto'){ hideAuthScreen(user); }
+          else { window.location.href = 'login.html'; }
+        });
       } else {
         _currentUser = null;
         showAuthScreen();
       }
     });
   }catch(e){
-    // Firebase not configured — hide auth screen and run in local mode
+    // Firebase no configurado — modo local sin auth
     console.warn('Firebase Auth not available, running in local mode:', e.message);
-    document.getElementById('auth-screen').style.display = 'none';
   }
 }
 
