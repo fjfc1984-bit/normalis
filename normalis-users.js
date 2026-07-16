@@ -2,9 +2,9 @@
 // NormaLis — módulo extraído del inline script de normativa-app-v2.html
 // ─────────────────────────────────────────────
 
-function createUser(nombre, rol, pin){
+async function createUser(nombre, rol, pin){
   const ini = nombre.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const u = { id:Date.now(), nombre, rol, pinHash:pinHash(pin),
+  const u = { id:Date.now(), nombre, rol, pinHash:await pinHash(pin),
     color:ROLE_DEF[rol]?.color||'#64748b', ini, createdAt:new Date().toISOString() };
   _users.push(u); saveUsers(); return u;
 }
