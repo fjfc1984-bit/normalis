@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="X-Frame-Options" content="DENY">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none'; upgrade-insecure-requests;">
 <title>NormaLis — Solicitar Acceso</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -527,28 +529,3 @@ function showError(msg) {
   el.classList.add('show');
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-function hideError() {
-  document.getElementById('msg-error').classList.remove('show');
-}
-function isValidEmail(e) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
-}
-function sanitize(str) {
-  return String(str).replace(/[<>"'`]/g, '').slice(0, 300);
-}
-function friendlyError(code) {
-  var map = {
-    'auth/email-already-in-use':   'Ya existe una cuenta con ese correo. ¿Quieres iniciar sesión?',
-    'auth/invalid-email':          'El correo no es válido.',
-    'auth/weak-password':          'Contraseña muy débil. Usa al menos 8 caracteres con números y letras.',
-    'auth/network-request-failed': 'Sin conexión a internet. Verifica tu red e intenta de nuevo.',
-    'auth/too-many-requests':      'Demasiados intentos. Espera unos minutos.',
-    'auth/operation-not-allowed':  'Registro temporalmente desactivado. Contacta al administrador.',
-    'permission-denied':           'Error de permisos al guardar los datos. Contacta a soporte.',
-    'unavailable':                 'Servicio temporalmente no disponible. Intenta en unos momentos.',
-  };
-  return map[code] || ('Error al crear la cuenta. Intenta de nuevo.' + (code ? ' (' + code + ')' : ''));
-}
-</script>
-</body>
-</html>

@@ -122,15 +122,17 @@ function exportBitacoraCSV() {
 }
 
 function exportBitacoraPDF() {
+  // Escapar HTML para prevenir XSS en document.write con datos de usuario
+  function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   var logs = JSON.parse(localStorage.getItem('normalis_bitacora') || '[]').slice(0,100);
   var w = window.open('','_blank');
   w.document.write('<html><head><title>Bitácora de Gobernanza — NormaLis</title>');
   w.document.write('<style>body{font-family:Arial,sans-serif;padding:30px;font-size:12px}h1{color:#6366f1;margin-bottom:4px}p{color:#64748b;margin-top:0}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#f8fafc;padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;font-size:11px;color:#64748b}td{padding:8px;border-bottom:1px solid #f1f5f9;font-size:11px}tr:hover td{background:#f8fafc}</style></head><body>');
   w.document.write('<h1>📋 Bitácora de Gobernanza</h1>');
-  w.document.write('<p>NormaLis · Generado: ' + new Date().toLocaleString('es-CO') + ' · Mostrando últimos ' + logs.length + ' registros</p>');
+  w.document.write('<p>NormaLis · Generado: ' + new Date().toLocaleString('es-CO') + ' · Mostrando últimos ' + escH(String(logs.length)) + ' registros</p>');
   w.document.write('<table><tr><th>Fecha y Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Detalle</th></tr>');
   logs.forEach(l => {
-    w.document.write('<tr><td>' + new Date(l.ts).toLocaleString('es-CO') + '</td><td>' + l.usuario + '</td><td>' + l.modulo + '</td><td>' + l.accion + '</td><td>' + l.detalle + '</td></tr>');
+    w.document.write('<tr><td>' + escH(new Date(l.ts).toLocaleString('es-CO')) + '</td><td>' + escH(l.usuario) + '</td><td>' + escH(l.modulo) + '</td><td>' + escH(l.accion) + '</td><td>' + escH(l.detalle) + '</td></tr>');
   });
   w.document.write('</table></body></html>');
   w.print();
