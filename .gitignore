@@ -1,0 +1,32 @@
+# NormaLis .gitignore
+
+# Logs generados automáticamente
+*.log
+firebase-check.log
+firebase-deploy.log
+deploy-v3.log
+test-output.txt
+
+# Archivos de trabajo temporales
+apply-onboarding-fix.py
+normalis_test_runner.py
+normalis_test_suite.json
+res3100_clean.txt
+res3100_alcaldia_clean.txt
+
+# Node modules
+node_modules/
+functions/node_modules/
+
+# Claves y secrets
+.env
+*.env
+service-account*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+*.swp

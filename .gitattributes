@@ -1,0 +1,13 @@
+# NormaLis — normalización de line endings
+# Todos los archivos de texto: LF en el repo, conversión automática en Windows
+* text=auto eol=lf
+
+# Archivos binarios — sin conversión
+*.pdf binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
