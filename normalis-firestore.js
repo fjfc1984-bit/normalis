@@ -21,7 +21,11 @@ var FS_KEYS = [
   'normalis_consentimientos',
   'normalis_versiones',
   'normalis_cal_eventos',
-  'normalis_roi_data'
+  'normalis_roi_data',
+  // R2-fix: configuración IPS sincronizada a Firestore
+  'normalis_cfg',
+  'normalis_ips_nombre',
+  'normalis_ips_ciudad'
 ];
 
 var fsSync = {
@@ -59,6 +63,8 @@ var fsSync = {
       this.pullAll();
       logAction('Sistema', 'Datos sincronizados desde la nube', email || uid);
     }
+    // R5c: verificar vencimientos al login y enviar recordatorio si hay urgentes
+    setTimeout(function() { checkVencimientosReminder(email); }, 4000);
   },
 
   getRef: function(key) {
@@ -462,15 +468,17 @@ function iniciarAhaMoment(nombreIPS) {
   toast.textContent = 'Bienvenido a NormaLis, ' + nombreIPS + '! Generando tu diagnostico...';
   document.body.appendChild(toast);
   setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500); }, 3500);
+  // R4: ir directo a auditoría (flujo principal de valor)
+  var tipoInput = document.getElementById('ob-tipo');
+  var tipoServicio = tipoInput ? tipoInput.value : '';
+  if (tipoServicio) localStorage.setItem('normalis_ob_tipo', tipoServicio);
   setTimeout(function() {
-    try { nav('chat'); } catch(e) {}
+    try { nav('auditoria'); } catch(e) { try { nav('chat'); } catch(e2) {} }
     setTimeout(function() {
-      var inp = document.getElementById('main-chat-input');
-      if (inp) {
-        inp.value = 'Analiza mi estado normativo y dime que riesgos tengo antes de una visita de la Secretaria';
-        if (typeof sendMainChat === 'function') sendMainChat();
-      }
-    }, 400);
+      // Mostrar tooltip de bienvenida en la sección de auditoría
+      var cardTitle = document.querySelector('.card-title, [class*="card"] [style*="font-weight:800"]');
+      if (!cardTitle) return;
+    }, 500);
   }, 600);
   localStorage.setItem('normalis_onboarding_done', '1');
   localStorage.setItem('normalis_ips_nombre', nombreIPS);
@@ -686,5 +694,48 @@ function exportarROIPDF() {
   };
 })();
 
+
+
+// ══════════════════════════════════════════
+// R5c — RECORDATORIO VENCIMIENTOS AL LOGIN
+// ══════════════════════════════════════════
+function checkVencimientosReminder(userEmail) {
+  var lastKey = 'normalis_ultimo_recordatorio';
+  var lastTs  = parseInt(localStorage.getItem(lastKey) || '0');
+  var now     = Date.now();
+  if ((now - lastTs) < 86400000) return; // solo una vez por 24h
+
+  var hoy   = new Date(); hoy.setHours(0, 0, 0, 0);
+  var en30  = new Date(hoy); en30.setDate(en30.getDate() + 30);
+  var docs  = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  var venc  = docs.filter(function(d) { return new Date(d.fecha) < hoy; });
+  var prox  = docs.filter(function(d) { var f = new Date(d.fecha); return f >= hoy && f <= en30; });
+  if (venc.length === 0 && prox.length === 0) return;
+
+  var email  = userEmail || sessionStorage.getItem('normalis_email') || '';
+  var nombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
+  if (!email || typeof emailjs === 'undefined') return;
+
+  var resumen = [];
+  if (venc.length > 0) resumen.push(venc.length + ' documento(s) VENCIDO(S)');
+  if (prox.length > 0) resumen.push(prox.length + ' vence(n) en 30 días');
+
+  emailjs.send('normalis_service', 'vencimientos_alerta', {
+    to_email:    email,
+    ips_nombre:  nombre,
+    resumen:     resumen.join(' · '),
+    vencidos:    venc.length,
+    proximos:    prox.length,
+    detalle:     venc.concat(prox).slice(0, 5).map(function(d) {
+      return (d.profesional || d.tipo || '—') + ' (' + (d.tipo || '') + ') → ' + d.fecha;
+    }).join('
+'),
+    app_url:     'https://normalis.co/normativa-app-v2.html'
+  }).then(function() {
+    localStorage.setItem(lastKey, now.toString());
+  }).catch(function(e) {
+    console.warn('[NormaLis] Recordatorio vencimientos:', e);
+  });
+}
 
 // END:normalis-firestore.js — NormaLis integrity seal

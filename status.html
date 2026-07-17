@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NormaLis — Estado del Sistema</title>
+<meta http-equiv="refresh" content="60">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:40px 20px}
+  .container{max-width:680px;margin:0 auto}
+  .header{text-align:center;margin-bottom:40px}
+  .logo{font-size:28px;font-weight:900;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+  .subtitle{font-size:14px;color:#64748b}
+  .card{background:#1e293b;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #334155}
+  .service-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #334155}
+  .service-row:last-child{border-bottom:none}
+  .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;transition:.3s}
+  .dot-green{background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.5)}
+  .dot-red{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.5)}
+  .dot-yellow{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.5)}
+  .dot-grey{background:#64748b}
+  .svc-name{font-size:14px;font-weight:600;flex:1}
+  .svc-status{font-size:12px;color:#64748b}
+  .svc-ms{font-size:11px;color:#475569;margin-left:auto}
+  .overall{text-align:center;padding:20px;border-radius:16px;margin-bottom:24px;font-size:18px;font-weight:700}
+  .overall-ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#10b981}
+  .overall-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+  .overall-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#ef4444}
+  .ts{font-size:11px;color:#475569;text-align:center;margin-top:24px}
+  .refresh-btn{display:inline-block;padding:8px 20px;background:#334155;border-radius:8px;font-size:12px;color:#94a3b8;cursor:pointer;border:none;margin-top:16px}
+  .refresh-btn:hover{background:#475569}
+  .metric{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid #1e293b}
+  .metric:last-child{border-bottom:none}
+  .metric-val{font-weight:700;color:#e2e8f0}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">NormaLis</div>
+    <div class="subtitle">Estado del Sistema — actualización automática cada 60s</div>
+  </div>
+
+  <div class="overall" id="overall-banner">⏳ Verificando servicios...</div>
+
+  <div class="card">
+    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Servicios</div>
+    <div class="service-row">
+      <div class="dot dot-grey" id="dot-firebase"></div>
+      <div class="svc-name">Firebase Auth + Firestore</div>
+      <div class="svc-status" id="status-firebase">Verificando...</div>
+      <div class="svc-ms" id="ms-firebase"></div>
+    </div>
+    <div class="service-row">
+      <div class="dot dot-grey" id="dot-worker"></div>
+      <div class="svc-name">Consultor IA (Cloudflare Worker)</div>
+      <div class="svc-status" id="status-worker">Verificando...</div>
+      <div class="svc-ms" id="ms-worker"></div>
+    </div>
+    <div class="service-row">
+      <div class="dot dot-grey" id="dot-github"></div>
+      <div class="svc-name">GitHub Pages (normalis.co)</div>
+      <div class="svc-status" id="status-github">Verificando...</div>
+      <div class="svc-ms" id="ms-github"></div>
+    </div>
+    <div class="service-row">
+      <div class="dot dot-grey" id="dot-reps"></div>
+      <div class="svc-name">REPS API — MinSalud datos.gov.co</div>
+      <div class="svc-status" id="status-reps">Verificando...</div>
+      <div class="svc-ms" id="ms-reps"></div>
+    </div>
+  </div>
+
+  <div class="card" id="metrics-card" style="display:none">
+    <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px">Métricas de esta verificación</div>
+    <div id="metrics-list"></div>
+  </div>
+
+  <div style="text-align:center">
+    <button class="refresh-btn" onclick="runChecks()">🔄 Verificar ahora</button>
+  </div>
+
+  <div class="ts" id="last-check">Última verificación: —</div>
+</div>
+
+<script>
+const WORKER_URL = 'https://normalis.fjfc1984.workers.dev';
+const REPS_URL   = 'https://www.datos.gov.co/resource/c36g-9fc2.json?$limit=1';
+const GH_URL     = 'https://normalis.co/login.html';
+
+var results = {};
+
+function setDot(id, state) {
+  var d = document.getElementById('dot-' + id);
+  if (!d) return;
+  d.className = 'dot ' + ({ok:'dot-green', error:'dot-red', warn:'dot-yellow', pending:'dot-grey'}[state] || 'dot-grey');
+}
+function setSvc(id, status, ms) {
+  var el = document.getElementById('status-' + id);
+  var msEl = document.getElementById('ms-' + id);
+  if (el) el.textContent = status;
+  if (msEl && ms != null) msEl.textContent = ms + 'ms';
+}
+
+async function checkWorker() {
+  var t0 = Date.now();
+  try {
+    var r = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question: 'ping'}),
+      signal: AbortSignal.timeout(8000)
+    });
+    var ms = Date.now() - t0;
+    var json = await r.json();
+    if (r.ok && json.answer) {
+      setDot('worker', 'ok'); setSvc('worker', 'Operativo', ms);
+      return {ok: true, ms};
+    } else {
+      setDot('worker', 'error'); setSvc('worker', 'Error HTTP ' + r.status, ms);
+      return {ok: false, ms, detail: 'HTTP ' + r.status};
+    }
+  } catch(e) {
+    var ms = Date.now() - t0;
+    setDot('worker', 'error'); setSvc('worker', 'Sin respuesta', ms);
+    return {ok: false, ms, detail: e.message};
+  }
+}
+
+async function checkREPS() {
+  var t0 = Date.now();
+  try {
+    var r = await fetch(REPS_URL, { signal: AbortSignal.timeout(10000) });
+    var ms = Date.now() - t0;
+    if (r.ok) {
+      setDot('reps', 'ok'); setSvc('reps', 'Operativo', ms);
+      return {ok: true, ms};
+    } else {
+      setDot('reps', 'warn'); setSvc('reps', 'HTTP ' + r.status, ms);
+      return {ok: false, ms};
+    }
+  } catch(e) {
+    var ms = Date.now() - t0;
+    setDot('reps', 'warn'); setSvc('reps', 'Lento / sin respuesta', ms);
+    return {ok: null, ms};
+  }
+}
+
+async function checkGitHub() {
+  var t0 = Date.now();
+  try {
+    var r = await fetch(GH_URL, { method: 'HEAD', signal: AbortSignal.timeout(8000) });
+    var ms = Date.now() - t0;
+    if (r.ok || r.status === 304) {
+      setDot('github', 'ok'); setSvc('github', 'Operativo', ms);
+      return {ok: true, ms};
+    } else {
+      setDot('github', 'error'); setSvc('github', 'HTTP ' + r.status, ms);
+      return {ok: false, ms};
+    }
+  } catch(e) {
+    var ms = Date.now() - t0;
+    setDot('github', 'error'); setSvc('github', 'Sin respuesta', ms);
+    return {ok: false, ms};
+  }
+}
+
+function checkFirebase() {
+  return new Promise(function(resolve) {
+    var t0 = Date.now();
+    // Firebase config de NormaLis
+    var config = {
+      apiKey: "AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4",
+      authDomain: "normalis-5587d.firebaseapp.com",
+      projectId: "normalis-5587d"
+    };
+    // Llamada directa a la REST API de Firestore para ping
+    var url = 'https://firestore.googleapis.com/v1/projects/normalis-5587d/databases/(default)/documents/status?key=' + config.apiKey;
+    fetch(url, { signal: AbortSignal.timeout(6000) })
+      .then(function(r) {
+        var ms = Date.now() - t0;
+        // 200 o 404 (colección vacía) ambos significan Firebase responde
+        if (r.status === 200 || r.status === 404) {
+          setDot('firebase', 'ok'); setSvc('firebase', 'Operativo', ms);
+          resolve({ok: true, ms});
+        } else {
+          setDot('firebase', 'warn'); setSvc('firebase', 'HTTP ' + r.status, ms);
+          resolve({ok: false, ms});
+        }
+      })
+      .catch(function(e) {
+        var ms = Date.now() - t0;
+        setDot('firebase', 'error'); setSvc('firebase', 'Sin respuesta', ms);
+        resolve({ok: false, ms, detail: e.message});
+      });
+  });
+}
+
+async function runChecks() {
+  document.getElementById('overall-banner').className = 'overall overall-warn';
+  document.getElementById('overall-banner').textContent = '⏳ Verificando servicios...';
+  ['firebase','worker','github','reps'].forEach(function(id) {
+    setDot(id, 'pending'); setSvc(id, 'Verificando...', null);
+    document.getElementById('ms-' + id).textContent = '';
+  });
+
+  var [fb, worker, gh, reps] = await Promise.all([
+    checkFirebase(), checkWorker(), checkGitHub(), checkREPS()
+  ]);
+
+  var allOk  = fb.ok && worker.ok && gh.ok;
+  var anyErr = !fb.ok || !worker.ok || !gh.ok;
+  var banner = document.getElementById('overall-banner');
+  if (allOk) {
+    banner.className = 'overall overall-ok';
+    banner.textContent = '✅ Todos los servicios operativos';
+  } else if (anyErr) {
+    banner.className = 'overall overall-err';
+    banner.textContent = '🔴 Uno o más servicios con problemas';
+  } else {
+    banner.className = 'overall overall-warn';
+    banner.textContent = '⚠️ Algunos servicios degradados';
+  }
+
+  // Métricas
+  var card = document.getElementById('metrics-card');
+  var list = document.getElementById('metrics-list');
+  card.style.display = 'block';
+  var rows = [
+    ['Firebase', fb.ms + 'ms', fb.ok ? '#10b981' : '#ef4444'],
+    ['Worker IA', worker.ms + 'ms', worker.ok ? '#10b981' : '#ef4444'],
+    ['GitHub Pages', gh.ms + 'ms', gh.ok ? '#10b981' : '#ef4444'],
+    ['REPS API', reps.ms + 'ms', reps.ok ? '#10b981' : '#f59e0b'],
+  ];
+  list.innerHTML = rows.map(function(r) {
+    return '<div class="metric"><span>' + r[0] + '</span><span class="metric-val" style="color:' + r[2] + '">' + r[1] + '</span></div>';
+  }).join('');
+
+  document.getElementById('last-check').textContent =
+    'Última verificación: ' + new Date().toLocaleString('es-CO');
+}
+
+// Correr al cargar
+runChecks();
+</script>
+</body>
+</html>

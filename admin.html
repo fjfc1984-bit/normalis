@@ -1526,11 +1526,30 @@ function renderSolicitudes(lista) {
 
 async function aprobarUsuario(uid) {
   try {
+    // R5b: obtener datos del usuario para email de bienvenida automático
+    const userSnap = await db.collection('usuarios').doc(uid).get();
+    const uData = userSnap.exists ? userSnap.data() : {};
+
     await db.collection('usuarios').doc(uid).update({
       rol: 'cliente', activo: true, estado: 'aprobado',
       fechaAprobacion: firebase.firestore.FieldValue.serverTimestamp()
     });
-    showToast('Usuario aprobado', 'success');
+
+    // Enviar email de bienvenida automáticamente
+    if (uData.email && typeof emailjs !== 'undefined') {
+      emailjs.send(EJS_SERVICE, 'bienvenida_aprobado', {
+        to_email:         uData.email,
+        ips_nombre:       uData.nombre       || uData.email,
+        nombre_contacto:  uData.nombreContacto || '',
+        login_url:        'https://normalis.co/login.html'
+      }).catch(function(ejsErr) {
+        console.warn('[NormaLis] Email bienvenida aprobado:', ejsErr.message);
+      });
+      showToast('Usuario aprobado — email de bienvenida enviado ✉️', 'success');
+    } else {
+      showToast('Usuario aprobado', 'success');
+    }
+    cargarSolicitudes();
   } catch(e) { showToast('Error al aprobar: ' + e.message, 'error'); }
 }
 

@@ -263,3 +263,34 @@ export default {
     }
   },
 };
+
+// ═══════════════════════════════════════════════════════════════
+// SCHEDULED CRON — Daily health ping + uptime log
+// Runs every day at 8am Colombia (configured in wrangler.toml)
+// ═══════════════════════════════════════════════════════════════
+// Note: Per-user vencimientos reminders run client-side (normalis-firestore.js)
+// This cron is a lightweight heartbeat for monitoring uptime.
+
+export async function scheduled(event, env, ctx) {
+  const now = new Date().toISOString();
+  console.log(`[NormaLis Cron] Heartbeat — ${now}`);
+
+  // Self-ping to verify worker is alive
+  try {
+    const selfUrl = 'https://normalis.fjfc1984.workers.dev';
+    const pingBody = JSON.stringify({ question: 'estado del sistema' });
+    const res = await fetch(selfUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Origin': 'https://normalis.co' },
+      body: pingBody,
+    });
+    const data = await res.json();
+    if (data.answer) {
+      console.log('[NormaLis Cron] Worker OK — respuesta recibida');
+    } else {
+      console.error('[NormaLis Cron] Worker sin respuesta válida:', JSON.stringify(data));
+    }
+  } catch (err) {
+    console.error('[NormaLis Cron] Error en self-ping:', String(err));
+  }
+}

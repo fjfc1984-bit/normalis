@@ -1074,17 +1074,18 @@ function submitDemo(){
 
   // ── 3. Notificación por email (mailto fallback) ───────────────────────────
   try{
-    var subj = encodeURIComponent('🔔 Nuevo lead NormaLis — ' + nombre);
-    var body = encodeURIComponent(
-      'Nuevo lead desde normalis.co\n\n'
-      + 'Nombre: '  + nombre + '\n'
-      + 'Email: '   + email  + '\n'
-      + 'Teléfono: '+ tel    + '\n'
-      + 'Tipo IPS: '+ (tipo   || 'N/A') + '\n'
-      + 'Ciudad: '  + (ciudad || 'N/A') + '\n'
-      + 'Fecha: '   + new Date().toLocaleString('es-CO')
-    );
-    window.open('mailto:fjfc1984@gmail.com?subject='+subj+'&body='+body,'_blank','noopener,noreferrer');
+    // R5a: EmailJS automático — sin mailto
+    if(typeof emailjs !== 'undefined'){
+      emailjs.send('normalis_service', 'lead_admin_notify', {
+        admin_email: 'fjfc1984@gmail.com',
+        lead_nombre: nombre,
+        lead_email:  email,
+        lead_tel:    tel,
+        lead_tipo:   tipo   || 'N/A',
+        lead_ciudad: ciudad || 'N/A',
+        lead_fecha:  new Date().toLocaleString('es-CO')
+      }).catch(function(){});
+    }
   }catch(_){}
 
   // ── 4. Mostrar pantalla de éxito ──────────────────────────────────────────
@@ -1105,4 +1106,4 @@ function toggleFaq(el){
   var wasOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); });
   if(!wasOpen) item.classList.add('open');
-}
+}
