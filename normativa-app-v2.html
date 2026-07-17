@@ -7816,6 +7816,8 @@ function initFirebaseAuth(){
 }
 
 function showAuthScreen(){
+  // Firebase respondió (usuario no autenticado) — evitar que el error boundary tape esta pantalla
+  window._initAppCalled = true;
   var el = document.getElementById('auth-screen');
   if(el) el.style.display = 'flex';
 }
