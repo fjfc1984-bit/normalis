@@ -1,0 +1,41 @@
+=== NormaLis Deploy v4 === 
+Fecha: mar 14/07/2026 22:48:11,28 
+[0/3] Enable legacy config commands... 
+Enabled experiment [1mlegacyRuntimeConfigCommands[22m
+[1/3] Config Gemini key... 
+[32m[1m+ [22m[39m Functions config updated.
+
+Please deploy your functions for the change to take effect by running [1mfirebase deploy --only functions[22m
+
+[33m[1m! [22mDEPRECATION NOTICE: Action required before March 2027
+
+The functions.config() API and the Cloud Runtime Config service are deprecated. Deploys that rely on functions.config() will fail once Runtime Config shuts down in March 2027.
+
+The legacy functions:config:* CLI commands are deprecated and will be removed before March 2027.
+
+Learn how to migrate from functions.config() to the params package:
+
+https://firebase.google.com/docs/functions/config-env#migrate-config
+
+To convert existing functions.config() values to params, try the interactive migration command:
+
+  firebase functions:config:export
+[39m
+Config exit: 0 
+[2/3] Deploying functions... 
+
+[1m[37m===[39m Deploying to 'normalis-5587d'...[22m
+
+[36m[1mi [22m[39m deploying [1mfunctions[22m
+[36m[1mi  functions:[22m[39m preparing codebase [1mdefault[22m for deployment
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudfunctions.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudbuild.googleapis.com[22m is enabled...
+[36m[1mi  artifactregistry:[22m[39m ensuring required API [1martifactregistry.googleapis.com[22m is enabled...
+[33m[1m!  functions:[22m[39m missing required API [1mcloudfunctions.googleapis.com[22m. Enabling now...
+[33m[1m!  functions:[22m[39m missing required API [1mcloudbuild.googleapis.com[22m. Enabling now...
+[33m[1m!  artifactregistry:[22m[39m missing required API [1martifactregistry.googleapis.com[22m. Enabling now...
+
+[1m[31mError:[39m[22m Your project [1mnormalis-5587d[22m must be on the Blaze (pay-as-you-go) plan to complete this command. Required API [1martifactregistry.googleapis.com[22m can't be enabled until the upgrade is complete. To upgrade, visit the following URL:
+
+https://console.firebase.google.com/project/normalis-5587d/usage/details
+=== ERROR 1 === 

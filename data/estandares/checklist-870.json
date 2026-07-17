@@ -1,0 +1,423 @@
+{
+  "servicio": {
+    "codigo": "870",
+    "nombre": "Consulta Externa — Medicina General",
+    "grupo": "Consulta Externa",
+    "complejidad": "baja",
+    "resolucion_base": "Resolución 3100 de 2019",
+    "version_checklist": "1.0.0"
+  },
+  "estandares": [
+    {
+      "id": "TH",
+      "nombre": "Talento Humano",
+      "descripcion": "Idoneidad, formación y vinculación del personal que presta el servicio",
+      "peso_porcentual": 20,
+      "criterios": [
+        {
+          "id": "TH-001",
+          "descripcion": "Existe perfil de cargo documentado para el médico general que presta el servicio",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Perfil de cargo firmado por representante legal o médico responsable",
+            "Documento con funciones, requisitos de formación y experiencia"
+          ],
+          "orientacion": "El perfil debe especificar: título requerido, experiencia mínima, funciones específicas del cargo. No se acepta perfil genérico sin adaptación al servicio.",
+          "hallazgo_tipico": "No existe perfil de cargo documentado o es genérico sin especificidad para el servicio"
+        },
+        {
+          "id": "TH-002",
+          "descripcion": "El médico que presta el servicio cuenta con tarjeta profesional vigente inscrita en el RETHUS",
+          "tipo_respuesta": "si_no_na",
+          "peso": 3,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Copia de tarjeta profesional",
+            "Pantallazoo de consulta vigente en RETHUS (www.rethus.minsalud.gov.co)"
+          ],
+          "orientacion": "Verificar que el número de tarjeta corresponde al profesional y que el estado sea ACTIVO en RETHUS. Una tarjeta vencida o suspendida es causal de no habilitación.",
+          "hallazgo_tipico": "Tarjeta profesional no registrada en RETHUS o con estado diferente a ACTIVO",
+          "link_verificacion": "https://www.minsalud.gov.co/Paginas/rethus.aspx"
+        },
+        {
+          "id": "TH-003",
+          "descripcion": "Existe contrato, acuerdo de servicio o vinculación laboral del médico con el prestador",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Contrato laboral o de prestación de servicios vigente",
+            "Resolución de nombramiento (si es entidad pública)"
+          ],
+          "orientacion": "El contrato debe estar vigente al momento de la visita. Para médicos con contrato de prestación de servicios, verificar que el objeto contractual corresponde al servicio habilitado.",
+          "hallazgo_tipico": "Médico sin vínculo contractual formalizado o contrato vencido"
+        },
+        {
+          "id": "TH-004",
+          "descripcion": "El personal de apoyo (auxiliar de enfermería o recepcionista) cuenta con formación y documentos requeridos",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Diploma y acta de grado del auxiliar de enfermería",
+            "Certificado de idoneidad si aplica"
+          ],
+          "orientacion": "Aplica cuando el servicio cuenta con auxiliar de enfermería. El diploma debe estar debidamente apostillado si fue expedido en el exterior.",
+          "hallazgo_tipico": "Auxiliar de enfermería sin diploma o con diploma no reconocido"
+        }
+      ]
+    },
+    {
+      "id": "IF",
+      "nombre": "Infraestructura",
+      "descripcion": "Condiciones de planta física: áreas, iluminación, ventilación, accesibilidad y señalización",
+      "peso_porcentual": 15,
+      "criterios": [
+        {
+          "id": "IF-001",
+          "descripcion": "El consultorio tiene área mínima de 9 m² libres para la atención del paciente",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Plano de planta física con dimensiones del consultorio",
+            "Fotografía general del consultorio mostrando dimensiones"
+          ],
+          "orientacion": "Los 9 m² son el área libre de mobiliario para la circulación y atención. Medir con cinta métrica y registrar en el acta. Si el espacio es compartido con otro servicio, debe garantizarse privacidad.",
+          "hallazgo_tipico": "Consultorio con área menor a 9 m² o sin privacidad para la atención"
+        },
+        {
+          "id": "IF-002",
+          "descripcion": "El consultorio cuenta con lavamanos de accionamiento no manual (codo, pedal o sensor) o suministro de gel antibacterial",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Fotografía del lavamanos o dispensador de gel en el consultorio",
+            "Fotografía del dispensador de jabón líquido y toallas desechables"
+          ],
+          "orientacion": "El lavamanos puede estar dentro o en área adyacente inmediata al consultorio. De no existir lavamanos, debe haber dispensador de gel al 70% mínimo.",
+          "hallazgo_tipico": "Ausencia de lavamanos o gel antibacterial en el área de consulta"
+        },
+        {
+          "id": "IF-003",
+          "descripcion": "El consultorio cuenta con iluminación suficiente (natural o artificial) para la valoración del paciente",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Fotografía del consultorio mostrando la iluminación"
+          ],
+          "orientacion": "La iluminación debe permitir la valoración clínica sin sombras que dificulten el examen físico. Verificar durante la visita con luz encendida.",
+          "hallazgo_tipico": "Iluminación insuficiente o fundidos sin reemplazo"
+        },
+        {
+          "id": "IF-004",
+          "descripcion": "Existe señalización visible de rutas de evacuación, salidas de emergencia y punto de encuentro",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Fotografías de la señalización de emergencia instalada"
+          ],
+          "orientacion": "La señalización debe cumplir NTC 1461 (colores de seguridad). Verificar que las señales estén en sitios visibles y en buen estado.",
+          "hallazgo_tipico": "Ausencia de señalización de emergencia o señales deterioradas/mal ubicadas"
+        },
+        {
+          "id": "IF-005",
+          "descripcion": "Las áreas de circulación y espera son accesibles para personas con discapacidad física (Ley 361/1997)",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Fotografías de rampas, pasillos amplios y/o ascensor",
+            "Fotografía de baño adaptado si existe"
+          ],
+          "orientacion": "Aplica principalmente para servicios ubicados en plantas diferentes al piso de acceso. Si está en primer piso sin escaleras, verificar ancho mínimo de pasillos (90 cm).",
+          "hallazgo_tipico": "Acceso al consultorio solo por escaleras sin rampa alternativa"
+        }
+      ]
+    },
+    {
+      "id": "DO",
+      "nombre": "Dotación",
+      "descripcion": "Equipos, instrumental y mobiliario mínimo requerido para el servicio con mantenimiento y calibración al día",
+      "peso_porcentual": 15,
+      "criterios": [
+        {
+          "id": "DO-001",
+          "descripcion": "Existe inventario actualizado de equipos y dotación del servicio con responsable asignado",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Listado de inventario firmado y fechado",
+            "Fotografía del inventario físico en el consultorio"
+          ],
+          "orientacion": "El inventario debe incluir: nombre del equipo, marca, serial, fecha de adquisición y estado. Debe estar actualizado (máximo 6 meses de antigüedad).",
+          "hallazgo_tipico": "Inventario desactualizado, sin firmar o sin incluir todos los equipos del consultorio"
+        },
+        {
+          "id": "DO-002",
+          "descripcion": "El consultorio cuenta con los equipos básicos mínimos: tensiómetro, estetoscopio, termómetro y martillo de reflejos",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Fotografía de los equipos básicos disponibles y en buen estado",
+            "Registro de inventario con estos equipos incluidos"
+          ],
+          "orientacion": "Los equipos deben estar físicamente en el consultorio al momento de la visita. Un tensiómetro digital puede reemplazar al aneroide, verificar calibración si aplica.",
+          "hallazgo_tipico": "Equipos básicos ausentes, deteriorados o no disponibles al momento de la visita"
+        },
+        {
+          "id": "DO-003",
+          "descripcion": "Existe camilla de examen con cubierta lavable (vinilo, tela impermeable) en buen estado",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Fotografía de la camilla mostrando su estado"
+          ],
+          "orientacion": "La cubierta debe ser de material que permita desinfección entre pacientes. Verificar que esté en buen estado (sin roturas). El papel camilla debe estar disponible.",
+          "hallazgo_tipico": "Camilla sin cubierta lavable, deteriorada o sin papel camilla disponible"
+        },
+        {
+          "id": "DO-004",
+          "descripcion": "Los equipos que requieren calibración (tensiómetros aneroides, básculas) tienen certificado vigente",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Certificados de calibración vigentes (máximo 1 año)"
+          ],
+          "orientacion": "Los tensiómetros digitales de buena marca generalmente no requieren calibración periódica, pero los aneroides sí. Las básculas deben calibrarse al menos anualmente.",
+          "hallazgo_tipico": "Tensiómetro aneroide o báscula sin calibración vigente"
+        },
+        {
+          "id": "DO-005",
+          "descripcion": "Existe programa o cronograma de mantenimiento preventivo de equipos",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Cronograma de mantenimiento del año en curso",
+            "Actas o registros del último mantenimiento realizado"
+          ],
+          "orientacion": "Para consultorios pequeños, un cronograma simple en Excel es suficiente. Debe incluir: equipo, frecuencia de mantenimiento, responsable y fecha próxima.",
+          "hallazgo_tipico": "Ausencia de cronograma de mantenimiento o equipos sin mantenimiento registrado en el último año"
+        }
+      ]
+    },
+    {
+      "id": "MD",
+      "nombre": "Medicamentos y Dispositivos Médicos",
+      "descripcion": "Condiciones de almacenamiento, dispensación y control de medicamentos y dispositivos médicos",
+      "peso_porcentual": 10,
+      "criterios": [
+        {
+          "id": "MD-001",
+          "descripcion": "Los medicamentos disponibles en el consultorio están almacenados en condiciones adecuadas (temperatura, humedad, luz)",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Fotografía del área o botiquín de medicamentos",
+            "Registro de temperatura si hay medicamentos termolábiles"
+          ],
+          "orientacion": "Aplica si el servicio maneja medicamentos (botiquín de urgencias, muestras médicas, etc.). Los medicamentos no deben estar en el piso, expuestos al sol o en zonas húmedas.",
+          "hallazgo_tipico": "Medicamentos vencidos en el botiquín o almacenados en condiciones inadecuadas"
+        },
+        {
+          "id": "MD-002",
+          "descripcion": "Los dispositivos médicos utilizados (jeringas, guantes, gasas, etc.) cuentan con registro INVIMA vigente",
+          "tipo_respuesta": "si_no_na",
+          "peso": 1,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Verificación de registro INVIMA en empaque de dispositivos usados",
+            "Pantallazoo de consulta en INVIMA si se requiere"
+          ],
+          "orientacion": "Verificar que los empaques de dispositivos médicos (guantes, jeringas, vendas) tengan el número de registro INVIMA impreso. Consultar en: www.invima.gov.co",
+          "hallazgo_tipico": "Uso de dispositivos médicos sin registro INVIMA o con registro vencido",
+          "link_verificacion": "https://www.invima.gov.co/consultas-en-linea"
+        }
+      ]
+    },
+    {
+      "id": "PP",
+      "nombre": "Procesos Prioritarios",
+      "descripcion": "Protocolos clínicos y administrativos críticos para la seguridad del paciente documentados y aplicados",
+      "peso_porcentual": 20,
+      "criterios": [
+        {
+          "id": "PP-001",
+          "descripcion": "Existe protocolo documentado de higiene de manos con los 5 momentos de la OMS",
+          "tipo_respuesta": "si_no_na",
+          "peso": 3,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Protocolo escrito firmado y vigente",
+            "Registro de socialización al personal",
+            "Fotografía de afiche de los 5 momentos visible en el consultorio"
+          ],
+          "orientacion": "El protocolo debe incluir los 5 momentos: antes de tocar al paciente, antes de procedimiento aséptico, después de riesgo de exposición a fluidos, después de tocar al paciente y después del entorno del paciente. El afiche OMS debe estar en el área de lavado de manos.",
+          "hallazgo_tipico": "Ausencia de protocolo documentado o personal que desconoce los 5 momentos de higiene de manos"
+        },
+        {
+          "id": "PP-002",
+          "descripcion": "Existe proceso documentado para la identificación correcta del paciente antes de la atención",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Protocolo o procedimiento de identificación del paciente",
+            "Registro o lista de chequeo de verificación aplicada"
+          ],
+          "orientacion": "Mínimo 2 datos de identificación: nombre completo + número de documento de identidad. El proceso debe verificarse antes de cada atención, no solo al registro.",
+          "hallazgo_tipico": "No existe protocolo formal o el personal verifica solo un dato de identificación"
+        },
+        {
+          "id": "PP-003",
+          "descripcion": "Existe proceso documentado para el manejo y disposición adecuada de residuos hospitalarios",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Plan de Gestión Integral de Residuos Hospitalarios (PGIRH) o proceso documentado",
+            "Fotografía de canecas con código de colores (Decreto 351/2014)",
+            "Contrato vigente con empresa gestora de residuos peligrosos"
+          ],
+          "orientacion": "Las canecas deben tener el código de colores: roja (residuos peligrosos biosanitarios), verde (residuos ordinarios). Si se usan jeringas, debe existir recipiente rígido (guardianes) y contrato con empresa recolectora.",
+          "hallazgo_tipico": "Ausencia de canecas con código de colores, guardianes para cortopunzantes o contrato con empresa gestora"
+        },
+        {
+          "id": "PP-004",
+          "descripcion": "Existe proceso documentado de consentimiento informado para procedimientos que lo requieren",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Formato de consentimiento informado general",
+            "Muestra de consentimientos diligenciados en historias clínicas (si aplica)"
+          ],
+          "orientacion": "El consentimiento informado debe ser previo, voluntario, escrito y basado en información comprensible. Para consulta de medicina general, puede ser un consentimiento general de atención.",
+          "hallazgo_tipico": "Ausencia de formato de consentimiento informado o consentimientos en blanco sin diligenciar"
+        },
+        {
+          "id": "PP-005",
+          "descripcion": "Existe programa o actividad documentada de seguridad del paciente (reporte de eventos adversos)",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Formato de reporte de eventos adversos e incidentes",
+            "Registro de eventos reportados (puede estar en cero si no han ocurrido)"
+          ],
+          "orientacion": "La Resolución 1446/2006 obliga a los prestadores a tener un sistema de reporte de eventos adversos. El registro puede estar en cero, pero el formato debe existir y el personal debe conocerlo.",
+          "hallazgo_tipico": "Ausencia total de formato de reporte de eventos adversos o desconocimiento por parte del personal"
+        }
+      ]
+    },
+    {
+      "id": "HC",
+      "nombre": "Historia Clínica y Registros",
+      "descripcion": "Apertura, diligenciamiento, custodia, conservación y acceso a la historia clínica",
+      "peso_porcentual": 15,
+      "criterios": [
+        {
+          "id": "HC-001",
+          "descripcion": "Las historias clínicas cuentan con los componentes mínimos exigidos por la Resolución 1995 de 1999",
+          "tipo_respuesta": "si_no_na",
+          "peso": 3,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Formato de historia clínica adoptado",
+            "Muestra de 3 historias clínicas diligenciadas",
+            "Si es electrónica: pantallazoo del sistema o certificación del software"
+          ],
+          "orientacion": "Componentes mínimos Res. 1995/1999: identificación del usuario, anamnesis, examen físico, diagnóstico, plan de manejo, pronóstico, prescripción y firma del profesional con número de tarjeta. Todos los campos deben estar diligenciados.",
+          "hallazgo_tipico": "Historias clínicas con campos incompletos, sin firma del profesional o sin número de tarjeta profesional"
+        },
+        {
+          "id": "HC-002",
+          "descripcion": "Existe política documentada de custodia y conservación de historias clínicas por mínimo 20 años",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Política o procedimiento de custodia y conservación de HC",
+            "Si están en custodia externa: contrato con empresa custodio"
+          ],
+          "orientacion": "Las historias clínicas deben conservarse mínimo 20 años desde la última atención. Para menores de edad, 15 años después de alcanzar la mayoría de edad. Si son electrónicas, debe haber política de backup y recuperación.",
+          "hallazgo_tipico": "Ausencia de política de custodia o archivos físicos en condiciones inadecuadas de conservación"
+        },
+        {
+          "id": "HC-003",
+          "descripcion": "El acceso a la historia clínica está restringido y controlado según la Ley 1581 de 2012",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Política de acceso a la historia clínica",
+            "Si es electrónica: evidencia de control de acceso por usuario/contraseña"
+          ],
+          "orientacion": "Solo el paciente, sus representantes legales, el equipo de salud tratante y las autoridades competentes pueden acceder a la HC. Para software electrónico, debe existir control de acceso por usuario con registro de log.",
+          "hallazgo_tipico": "Historias clínicas físicas accesibles a personal no autorizado o software sin control de acceso"
+        }
+      ]
+    },
+    {
+      "id": "IS",
+      "nombre": "Interdependencia de Servicios",
+      "descripcion": "Articulación con otros servicios y prestadores para garantizar la continuidad de la atención",
+      "peso_porcentual": 5,
+      "criterios": [
+        {
+          "id": "IS-001",
+          "descripcion": "Existe proceso documentado de referencia y contrarreferencia de pacientes",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": true,
+          "evidencias_requeridas": [
+            "Protocolo o proceso de referencia y contrarreferencia",
+            "Formato de remisión utilizado",
+            "Registro de referencias realizadas en el último trimestre"
+          ],
+          "orientacion": "El proceso debe incluir: criterios de remisión, formato estandarizado, destino habitual de referencia y mecanismo de seguimiento. Para consulta de medicina general, es frecuente remitir a urgencias u especialistas.",
+          "hallazgo_tipico": "Ausencia de proceso documentado o remisiones sin formato estandarizado"
+        },
+        {
+          "id": "IS-002",
+          "descripcion": "Existen contratos o convenios vigentes con prestadores de servicios de apoyo diagnóstico (laboratorio, imágenes)",
+          "tipo_respuesta": "si_no_na",
+          "peso": 2,
+          "obligatorio": false,
+          "evidencias_requeridas": [
+            "Contratos vigentes con laboratorio clínico",
+            "Contratos vigentes con servicio de radiología o imágenes diagnósticas"
+          ],
+          "orientacion": "Si el servicio no cuenta con laboratorio ni imágenes propias, debe tener convenios formalizados con prestadores que los ofrezcan. Los contratos deben estar vigentes al momento de la visita.",
+          "hallazgo_tipico": "Ausencia de contratos vigentes con laboratorio o imágenes, o contratos vencidos"
+        }
+      ]
+    }
+  ],
+  "calculo_puntaje": {
+    "metodo": "ponderado_por_estandar",
+    "escala": {
+      "cumple": 100,
+      "cumple_parcialmente": 50,
+      "no_cumple": 0,
+      "no_aplica": null
+    },
+    "rangos_resultado": [
+      { "min": 90, "max": 100, "estado": "HABILITADO", "color": "#22c55e", "mensaje": "Cumplimiento excelente. Listo para visita de habilitación." },
+      { "min": 75, "max": 89, "estado": "HABILITADO CON PLAN", "color": "#f59e0b", "mensaje": "Cumplimiento aceptable. Subsanar hallazgos antes de la visita." },
+      { "min": 60, "max": 74, "estado": "EN RIESGO", "color": "#f97316", "mensaje": "Hallazgos significativos. Requiere plan de mejoramiento urgente." },
+      { "min": 0, "max": 59, "estado": "NO HABILITADO", "color": "#ef4444", "mensaje": "Incumplimientos críticos. No se recomienda solicitar visita de habilitación." }
+    ]
+  }
+}

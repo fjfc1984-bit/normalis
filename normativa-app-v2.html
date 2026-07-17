@@ -7771,9 +7771,24 @@ function showAuthScreen(){
 }
 
 function hideAuthScreen(user){
+  // Ocultar auth-screen si existe
   var el = document.getElementById('auth-screen');
   if(el) el.style.display = 'none';
-  // Pre-fill cfg with Google user data if first login
+
+  // FIX DEFINITIVO: cualquier usuario autenticado con rol válido siempre llega al app.
+  // No depender de normalis_onboarding_done — puede estar ausente si limpiaron caché
+  // o accedieron por URL directa sin pasar por login.html.
+  localStorage.setItem('normalis_onboarding_done', 'true');
+
+  // Ocultar pantalla de onboarding (visible por defecto en el HTML)
+  var obEl = document.getElementById('onboarding');
+  if(obEl) obEl.style.display = 'none';
+
+  // Mostrar app principal
+  var appEl = document.getElementById('app');
+  if(appEl) appEl.style.display = 'flex';
+
+  // Pre-fill cfg con datos de Google si es primer login
   if(user && user.displayName){
     try{
       var cfg2 = JSON.parse(localStorage.getItem('normalis_cfg')||'{}');
@@ -7784,21 +7799,18 @@ function hideAuthScreen(user){
       }
     }catch(e){}
   }
-  // Show user email in sidebar if element exists
+
+  // Email en sidebar
   var emailEl = document.getElementById('sb-user-email');
   if(emailEl && user) emailEl.textContent = user.email || '';
-  // FIX pantalla blanca: mostrar #app para usuarios con onboarding ya completado.
-  // Para usuarios nuevos (sin onboarding_done), mostrarOnboarding() se encarga de
-  // mostrar #app al finalizar el wizard. Para usuarios existentes, nadie lo hacía.
-  if(localStorage.getItem('normalis_onboarding_done')){
-    var appEl = document.getElementById('app');
-    if(appEl && appEl.style.display === 'none') appEl.style.display = 'flex';
-    if(!window._initAppCalled && typeof initApp === 'function'){
-      window._initAppCalled = true;
-      try{ initApp(); }catch(e){ console.warn('initApp error:', e); }
-    }
+
+  // Llamar initApp una sola vez
+  if(!window._initAppCalled && typeof initApp === 'function'){
+    window._initAppCalled = true;
+    try{ initApp(); }catch(e){ console.warn('initApp error:', e); }
   }
-  // BUG #5 FIX: arrancar sync de Firestore solo tras verificación de rol exitosa
+
+  // Arrancar sync de Firestore tras verificación de rol exitosa
   if(user && typeof fsSync !== 'undefined' && typeof fsSync.startForUser === 'function'){
     fsSync.startForUser(user.uid, user.email || '');
   }

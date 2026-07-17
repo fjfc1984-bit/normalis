@@ -298,4 +298,93 @@ export default {
     try {
       body = await request.json();
     } catch {
-      return new Response(JSON.stringify({ error: 'JSON inválido' }), 
+      return new Response(JSON.stringify({ error: 'JSON inválido' }), {
+        status: 400,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { question, sessionHistory } = body || {};
+    if (!question || typeof question !== 'string' || !question.trim()) {
+      return new Response(JSON.stringify({ error: 'Campo "question" requerido' }), {
+        status: 400,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    if (question.length > 2000) {
+      return new Response(JSON.stringify({ error: 'Pregunta demasiado larga (máx 2000 caracteres)' }), {
+        status: 400,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Servicio no configurado' }), {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Construir historial (máx 6 turnos)
+    const contents = [];
+    if (Array.isArray(sessionHistory)) {
+      for (const turn of sessionHistory.slice(-6)) {
+        if (turn.role && turn.text) {
+          contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+        }
+      }
+    }
+    contents.push({ role: 'user', parts: [{ text: question.trim() }] });
+
+    const geminiBody = {
+      system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+      contents,
+      tools: [{ google_search: {} }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+    };
+
+    try {
+      const geminiRes = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBody),
+      });
+
+      if (!geminiRes.ok) {
+        const errText = await geminiRes.text();
+        return new Response(
+          JSON.stringify({ error: 'Error al consultar Gemini', status: geminiRes.status, detail: errText }),
+          { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const data = await geminiRes.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      if (!text) {
+        return new Response(JSON.stringify({ error: 'Respuesta vacía de Gemini' }), {
+          status: 502,
+          headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Fuentes de grounding
+      const chunks  = data?.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
+      const sources = chunks
+        .filter(c => c?.web?.uri)
+        .map(c => ({ uri: c.web.uri, title: c.web.title ?? c.web.uri }))
+        .slice(0, 4);
+
+      return new Response(JSON.stringify({ answer: text, sources }), {
+        status: 200,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+
+    } catch (err) {
+      return new Response(JSON.stringify({ error: 'Error interno del proxy', detail: String(err) }), {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+  },
+};

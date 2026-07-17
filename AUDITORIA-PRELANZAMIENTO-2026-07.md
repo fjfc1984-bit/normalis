@@ -34,7 +34,7 @@ async function pinHash(p) {
 ```
 > Nota: Cambiar a async requiere actualizar `verifyPin()` con `await pinHash(...)`. Los PINs existentes en localStorage quedarán inválidos — mostrar aviso de "reconfigura tu PIN" al detectar hash antiguo (longitud < 64 chars).
 
-**Estado:** ✅ CORREGIDO — crypto.subtle SHA-256 implementado con fallback legacy btoa.
+**Estado:** ⚠️ Pendiente — corrección manual recomendada antes de lanzamiento masivo.
 
 ---
 
@@ -53,8 +53,6 @@ alert('Complete todos los campos');
 if(typeof toast === 'function') toast('Complete todos los campos','warning'); return;
 ```
 
-**Estado:** ✅ CORREGIDO — alert() reemplazado por toast() en los 4 módulos.
-
 ### 🟡 M-2 — `target="_blank"` sin `rel="noopener noreferrer"` 
 **Archivo:** `normalis-checklist.js:261`
 ```html
@@ -63,8 +61,6 @@ if(typeof toast === 'function') toast('Complete todos los campos','warning'); re
 Sin `rel="noopener noreferrer"` la página destino puede acceder a `window.opener` (tabnapping). Aunque los links apuntan a fuentes oficiales (gov.co), es una práctica mínima requerida.
 
 **Corrección:** Agregar `rel="noopener noreferrer"` al generar el `<a>`.
-
-**Estado:** ✅ CORREGIDO — rel="noopener noreferrer" agregado en normalis-checklist.js.
 
 ### 🟡 M-3 — `Referrer-Policy` faltante en 2 archivos
 **Archivos:** `admin.html`, `normativa-app-v2.html`
@@ -75,8 +71,6 @@ Sin `rel="noopener noreferrer"` la página destino puede acceder a `window.opene
 ```html
 <meta name="referrer" content="strict-origin-when-cross-origin">
 ```
-
-**Estado:** ✅ CORREGIDO — Referrer-Policy agregado en admin.html y normativa-app-v2.html.
 
 ### 🟡 M-4 — Firestore Rules sin cobertura del path `ips/{userId}/data/{key}`
 **Archivo:** Firebase Console (no en repo)
@@ -93,8 +87,6 @@ match /ips/{userId} {
 }
 ```
 
-**Estado:** ⚠️ PENDIENTE — acción manual requerida en Firebase Console (Fernando).
-
 ---
 
 ## HALLAZGOS MENORES
@@ -108,12 +100,21 @@ El CSP de todos los HTML incluye `'unsafe-inline'` en `script-src` y `style-src`
 ### 🟢 m-2 — Scripts de módulos sin `defer`
 Los 23 `<script src>` de los módulos JS se cargan de forma sincrónica. Esto no bloquea visiblemente porque están al final del `<body>` (líneas 2004–2022), pero agregar `defer` reduciría el Time-to-Interactive.
 
-**Estado:** ⏭️ OMITIDO — defer rompería el orden de ejecución con el script inline principal. Deuda técnica futura.
+**Corrección (mejora de performance, no bug):** Cambiar a `<script src="normalis-*.js" defer>`. Verificar compatibilidad con el orden de ejecución.
 
 ### 🟢 m-3 — Service Worker cachea solo `normativa-app-v2.html`
 El SW inline (línea 28) solo cachea el HTML principal, no los módulos JS ni el CSS. En modo offline, la app carga el HTML pero falla al cargar los módulos → pantalla rota.
 
-**Estado:** ✅ CORREGIDO — ASSETS list ampliada a todos los 22 módulos JS + CSS. Cache bump a normalis-v3.
+**Corrección recomendada:**
+```javascript
+const ASSETS = [
+  './normativa-app-v2.html',
+  './normalis-styles.css',
+  './normalis-chat.js',
+  './normalis-firestore.js',
+  // ... todos los módulos
+];
+```
 
 ### 🟢 m-4 — `innerHTML` masivo con datos de localStorage (self-XSS acotado)
 Prácticamente todos los módulos renderizan datos de localStorage directamente en `innerHTML`. Dado que los datos los escribe el mismo usuario autenticado, el riesgo real es self-XSS (el usuario se inyectaría a sí mismo). No hay vector de XSS almacenado cruzado entre usuarios.
@@ -123,7 +124,13 @@ Prácticamente todos los módulos renderizan datos de localStorage directamente 
 ### 🟢 m-5 — Backup import sin validación profunda de keys
 `normalis-export.js:147` valida que el backup tenga `data` y `version`, pero no verifica que las keys sean del dominio de NormaLis antes de restaurarlas. Un backup malicioso podría escribir keys arbitrarias en localStorage.
 
-**Estado:** ✅ CORREGIDO — filtro `.filter(([k]) => k.startsWith('normalis_'))` implementado.
+**Corrección:**
+```javascript
+const ALLOWED_KEYS = new Set(FS_KEYS.concat(['normalis_cfg','normalis_ips_nombre','normalis_bitacora',...]);
+Object.entries(backup.data)
+  .filter(([k]) => k.startsWith('normalis_'))
+  .forEach(([k,v]) => localStorage.setItem(k, v));
+```
 
 ### 🟢 m-6 — Inputs sin `label` explícito (accesibilidad)
 La app tiene 68 `<input>` y 64 `<label>`. Hay aproximadamente 4 inputs sin label correspondiente. Para usuarios de lectores de pantalla (requisito de accesibilidad WCAG 2.1 AA, relevante para instituciones de salud) esto es un gap.
@@ -152,7 +159,7 @@ La app tiene 68 `<input>` y 64 `<label>`. Hay aproximadamente 4 inputs sin label
 | `sendMainChat` Worker | ✅ Correcto | Prioriza Cloudflare Worker sobre fallback local |
 | Pilot expiry | ✅ Completo | Check en login + banner en app + redirect |
 | Registro Firestore doc | ✅ Correcto | `rol: 'pendiente'` creado en auth y Google OAuth |
-| `noopener` en links | ✅ Corregido | normalis-checklist.js actualizado |
+| `noopener` en links | ✅ Mayormente | 1 excepción en normalis-checklist.js |
 | Manejo errores async | ✅ Correcto | `try/catch/finally` en todas las funciones de chat |
 | fsSync null safety | ✅ Correcto | `push()` verifica `_userId` y `_online` antes de operar |
 | Backup validación básica | ✅ Presente | Verifica `data` y `version` |
@@ -177,7 +184,7 @@ La app tiene 68 `<input>` y 64 `<label>`. Hay aproximadamente 4 inputs sin label
 | BUG #4 | `logout()` no cerraba sesión Firebase | ✅ Corregido |
 | BUG #5 | Double `onAuthStateChanged` en fsSync | ✅ Corregido |
 | BUG #6 | Rate limiting en `registro.html` | ✅ Corregido |
-| BUG #7 | Firestore Rules path `ips/{userId}/data/{key}` | ⚠️ Acción manual pendiente (Fernando) |
+| BUG #7 | Firestore Rules path `ips/{userId}/data/{key}` | ⚠️ Acción manual pendiente |
 | BUG #8 | CSP/X-Frame-Options en todos los HTML | ✅ Corregido |
 
 ---
@@ -185,18 +192,18 @@ La app tiene 68 `<input>` y 64 `<label>`. Hay aproximadamente 4 inputs sin label
 ## CHECKLIST DE LANZAMIENTO
 
 ### Obligatorio antes de ir a producción masiva
-- [x] **C-1**: Corregir `pinHash()` a SHA-256 con `crypto.subtle` ✅ HECHO
-- [ ] **M-4**: Agregar regla Firestore para `ips/{userId}/data/{key}` en Firebase Console ⚠️ PENDIENTE (Fernando)
+- [ ] **C-1**: Corregir `pinHash()` a SHA-256 con `crypto.subtle` (normativa-app-v2.html línea 3798)
+- [ ] **M-4**: Agregar regla Firestore para `ips/{userId}/data/{key}` en Firebase Console
 
 ### Recomendado en los próximos 30 días
-- [x] **M-1**: Reemplazar `alert()` por `toast()` en 4 módulos ✅ HECHO
-- [x] **M-2**: Agregar `rel="noopener noreferrer"` en normalis-checklist.js ✅ HECHO
-- [x] **M-3**: Agregar `Referrer-Policy` en admin.html y normativa-app-v2.html ✅ HECHO
-- [x] **m-3**: Ampliar cache del Service Worker a todos los módulos JS ✅ HECHO
-- [x] **m-5**: Filtrar keys de backup contra prefijo `normalis_` ✅ HECHO
+- [ ] **M-1**: Reemplazar `alert()` por `toast()` en 4 módulos
+- [ ] **M-2**: Agregar `rel="noopener noreferrer"` en normalis-checklist.js
+- [ ] **M-3**: Agregar `Referrer-Policy` en admin.html y normativa-app-v2.html
+- [ ] **m-3**: Ampliar cache del Service Worker a todos los módulos JS
 
 ### Deuda técnica (post-lanzamiento)
-- [ ] **m-2**: Agregar `defer` a los 23 scripts de módulos (requiere refactor de orden)
+- [ ] **m-2**: Agregar `defer` a los 23 scripts de módulos
+- [ ] **m-5**: Validar keys de backup contra whitelist de NormaLis
 - [ ] **m-6**: Auditoría WCAG con lector de pantalla, corregir 4 inputs sin label
 - [ ] **m-4**: Evaluar `DOMPurify` para todos los renders de `innerHTML`
 
@@ -204,8 +211,8 @@ La app tiene 68 `<input>` y 64 `<label>`. Hay aproximadamente 4 inputs sin label
 
 ## CONCLUSIÓN
 
-NormaLis está en condición de lanzamiento para los pilotos actuales y nuevos clientes. La arquitectura de seguridad es sólida, la autenticación y autorización están correctamente implementadas, y los datos del usuario están protegidos tanto en tránsito (HTTPS, Cloudflare Worker) como en reposo (Firestore Security Rules con validación de UID).
+NormaLis está en condición de lanzamiento para los pilotos actuales y nuevos clientes. La arquitectura de seguridad es sólida, la autenticación y autorización están correctamente implementadas, y los datos del usuario están protegidos tanto en tránsito (HTTPS, Cloudflare Worker) como en reposo (Firestore Security Rules con validación de UID). 
 
-Todos los hallazgos automatizables de esta auditoría han sido corregidos y committed a `main`. El único ítem pendiente es **M-4** (Firestore Rules), que requiere acceso manual a Firebase Console por parte de Fernando.
+El único hallazgo que merece atención antes de escalar a cientos de usuarios es **C-1** (PIN hash), porque afecta la confidencialidad de perfiles locales en dispositivos compartidos — escenario común en IPS pequeñas donde varios profesionales comparten una tablet o PC.
 
-Con M-4 aplicado en Firebase Console, NormaLis está **listo para mercado**.
+Con C-1 corregido y M-4 aplicado en Firebase Console, NormaLis está **listo para mercado**.
