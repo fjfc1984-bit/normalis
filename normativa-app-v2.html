@@ -32,7 +32,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     // SW script inline via blob — caches app shell
     const swCode=`
-const CACHE='normalis-v3';
+const CACHE='normalis-v4';
 const ASSETS=[
   './normativa-app-v2.html',
   './normalis-styles.css',
@@ -57,8 +57,8 @@ const ASSETS=[
   './normalis-automations.js',
   './normalis-checklist.js'
 ];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting();});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
   if(e.request.url.includes('datos.gov.co')||e.request.url.includes('firebaseio')||e.request.url.includes('googleapis')) return;
   e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
@@ -2197,22 +2197,34 @@ function obFinish(){
   }, 1800);
 }
 
-// Iniciar onboarding
-document.addEventListener('DOMContentLoaded', function(){
-  // Saltar onboarding si ya fue completado O si hay sesion Firebase activa
-  var yaHizo = localStorage.getItem('normalis_onboarding_done');
-  var tieneSession = sessionStorage.getItem('normalis_uid') && sessionStorage.getItem('normalis_rol');
-  if (yaHizo || tieneSession) {
-    if (tieneSession && !yaHizo) localStorage.setItem('normalis_onboarding_done', 'true');
+// Iniciar onboarding — con fallback robusto para acceso directo por URL
+(function(){
+  function _skipOnboarding(){
+    localStorage.setItem('normalis_onboarding_done', 'true');
     var ob = document.getElementById('onboarding');
     if (ob) ob.style.display = 'none';
     var appEl = document.getElementById('app');
     if (appEl) appEl.style.display = 'flex';
-    if (typeof initApp === 'function') setTimeout(initApp, 50);
-    return;
+    if (!window._initAppCalled && typeof initApp === 'function'){
+      window._initAppCalled = true;
+      setTimeout(initApp, 50);
+    }
   }
-  setTimeout(obRunStep, 300);
-});
+
+  function _checkAndRun(){
+    var yaHizo = localStorage.getItem('normalis_onboarding_done');
+    var tieneSession = sessionStorage.getItem('normalis_uid') && sessionStorage.getItem('normalis_rol');
+    if (yaHizo || tieneSession) { _skipOnboarding(); return; }
+    // Sin flags — iniciar wizard de onboarding (solo para usuarios genuinamente nuevos)
+    setTimeout(obRunStep, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _checkAndRun);
+  } else {
+    _checkAndRun();
+  }
+})();
 
 
 
