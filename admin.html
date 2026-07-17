@@ -351,6 +351,9 @@
     <button class="tab-btn" onclick="switchTab('leads')">
       🔔 Leads <span class="tab-badge" id="badge-leads">0</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('usuarios')">
+      👥 Usuarios <span class="tab-badge" id="badge-usuarios">0</span>
+    </button>
   </div>
 </div>
 
@@ -640,6 +643,27 @@
   </div>
 </div>
 
+<div id="tab-usuarios" class="tab-panel" style="display:none">
+  <div class="section-header">
+    <h2 class="section-title">👥 Gestión de Usuarios</h2>
+    <button class="btn btn-ghost btn-sm" onclick="cargarUsuariosActivos()">🔄 Actualizar</button>
+  </div>
+  <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <input type="text" id="usuarios-search" placeholder="🔍 Buscar por nombre o email…"
+      oninput="filtrarUsuarios()" style="flex:1;min-width:200px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+    <select id="usuarios-filter-rol" onchange="filtrarUsuarios()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+      <option value="">Todos los roles</option>
+      <option value="piloto">Piloto</option>
+      <option value="cliente">Cliente</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="rechazado">Rechazado</option>
+    </select>
+  </div>
+  <div id="usuarios-lista">
+    <div class="loading-row"><div class="spinner"></div></div>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <!-- ══════════════════════════════════════════════
@@ -856,6 +880,7 @@ function initApp() {
   cargarAnalytics();
   cargarSolicitudes();
   cargarLeads();
+  cargarUsuariosActivos();
 }
 
 // ──────────────────────────────────────────────
@@ -1489,7 +1514,8 @@ function renderSolicitudes(lista) {
       <td style="font-size:12px;color:var(--text-muted)">${fecha}</td>
       <td>
         <button class="btn btn-success btn-sm" onclick="aprobarUsuario('${u.id}')" style="margin-right:4px">✅ Aprobar</button>
-        <button class="btn btn-danger btn-sm" onclick="rechazarUsuario('${u.id}')">❌ Rechazar</button>
+        <button class="btn btn-danger btn-sm" onclick="rechazarUsuario('${u.id}')" style="margin-right:4px">❌ Rechazar</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetPasswordUsuario('${email}')" title="Enviar email de acceso">🔑 Acceso</button>
       </td>
     </tr>`;
   }).join('');
@@ -1578,6 +1604,80 @@ async function actualizarEstadoLead(id, nuevoEstado) {
     await db.collection('leads').doc(id).update({ estado: nuevoEstado });
     showToast('Estado actualizado', 'success');
   } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── GESTION DE USUARIOS ───────────────────────────────────────────────────
+let _todosUsuarios = [];
+
+function cargarUsuariosActivos() {
+  db.collection('usuarios')
+    .orderBy('fechaSolicitud', 'desc')
+    .onSnapshot(snap => {
+      _todosUsuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const badge = document.getElementById('badge-usuarios');
+      if (badge) badge.textContent = _todosUsuarios.length || '';
+      filtrarUsuarios();
+    }, err => console.error('usuarios:', err));
+}
+
+function filtrarUsuarios() {
+  const q = (document.getElementById('usuarios-search')?.value || '').toLowerCase();
+  const rol = document.getElementById('usuarios-filter-rol')?.value || '';
+  const lista = _todosUsuarios.filter(u => {
+    const matchRol = !rol || u.rol === rol;
+    const matchQ = !q || (u.nombre||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+    return matchRol && matchQ;
+  });
+  renderUsuariosActivos(lista);
+}
+
+function renderUsuariosActivos(lista) {
+  const el = document.getElementById('usuarios-lista');
+  if (!el) return;
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-state"><p>No hay usuarios que coincidan.</p></div>';
+    return;
+  }
+  const ROL_COLOR = { piloto:'#f59e0b', cliente:'#22c55e', pendiente:'#64748b', rechazado:'#ef4444', admin:'#8b5cf6' };
+  const rows = lista.map(u => {
+    const nombre  = (u.nombre          || '—').replace(/[<>]/g,'');
+    const email   = (u.email           || '—').replace(/[<>]/g,'');
+    const contacto= (u.nombreContacto  || '—').replace(/[<>]/g,'');
+    const ciudad  = (u.ciudad          || '—').replace(/[<>]/g,'');
+    const rol     = (u.rol             || '?').replace(/[<>]/g,'');
+    const fecha   = u.fechaSolicitud
+      ? new Date(u.fechaSolicitud.seconds*1000).toLocaleDateString('es-CO')
+      : '—';
+    const expira  = u.expiresAt
+      ? new Date(u.expiresAt.seconds*1000).toLocaleDateString('es-CO')
+      : '—';
+    const rolColor = ROL_COLOR[rol] || '#64748b';
+    const emailSafe = email.replace(/'/g, "\'");
+    return \`<tr>
+      <td><strong>\${nombre}</strong><div style="font-size:11px;color:var(--text-muted)">\${ciudad}</div></td>
+      <td style="font-size:12px">\${email}<div style="font-size:11px;color:var(--text-muted)">\${contacto}</div></td>
+      <td><span style="background:\${rolColor}22;color:\${rolColor};padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600">\${rol}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">\${fecha}</td>
+      <td style="font-size:12px;color:var(--text-muted)">\${expira}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="resetPasswordUsuario('\${emailSafe}')" title="Enviar email de restablecimiento de contraseña">🔑 Reset</button>
+      </td>
+    </tr>\`;
+  }).join('');
+  el.innerHTML = \`<table class="data-table">
+    <thead><tr><th>IPS</th><th>Email</th><th>Rol</th><th>Registro</th><th>Vence</th><th>Acciones</th></tr></thead>
+    <tbody>\${rows}</tbody></table>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">Total: \${lista.length} usuarios</div>\`;
+}
+
+async function resetPasswordUsuario(email) {
+  if (!email || email === '—') { showToast('Email no disponible', 'error'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast('✅ Email de restablecimiento enviado a ' + email, 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 function showToast(msg, type = 'info') {
