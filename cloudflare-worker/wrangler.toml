@@ -1,0 +1,8 @@
+name = "normalis"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# GEMINI_API_KEY se configura como secret (encriptado):
+# npx wrangler secret put GEMINI_API_KEY
+# Pegar la key de https://aistudio.google.com/apikey (proyecto Default Gemini, free tier)
