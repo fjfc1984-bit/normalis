@@ -69,14 +69,57 @@ self.addEventListener('fetch',e=>{
   });
 }
 </script>
-<link rel="stylesheet" href="normalis-styles.css">
+<link rel="stylesheet" href="normalis-styles.css?v=20260717">
 </head>
 <body>
+
+<!-- ═══ NormaLis Error Boundary ═══ -->
+<script>
+(function(){
+  'use strict';
+  var _errShown = false;
+  function _showErrOverlay(msg) {
+    if (_errShown || window._normalisAppLoaded) return;
+    _errShown = true;
+    var div = document.createElement('div');
+    div.id = 'nls-err-boundary';
+    div.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:system-ui,sans-serif;color:#e2e8f0;padding:40px;text-align:center';
+    div.innerHTML =
+      '<div style="font-size:48px">⚠️</div>' +
+      '<div style="font-size:20px;font-weight:700;color:#f8fafc">NormaLis encontró un problema al cargar</div>' +
+      '<div style="font-size:14px;color:#94a3b8;max-width:400px">Esto suele resolverse recargando la página. Si el problema persiste, escríbenos a hola@normalis.co</div>' +
+      '<button onclick="location.reload(true)" style="background:#0ea5e9;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">🔄 Recargar ahora</button>' +
+      '<div style="font-size:11px;color:#475569;margin-top:4px">' + (msg||'') + '</div>';
+    document.body ? document.body.appendChild(div) : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(div); });
+  }
+  // Atrapar errores JS síncronos (SyntaxError, ReferenceError, etc.)
+  window.addEventListener('error', function(e) {
+    var isCritical = e.message && (
+      e.message.indexOf('SyntaxError') !== -1 ||
+      e.filename && e.filename.indexOf('normalis') !== -1
+    );
+    if (isCritical) _showErrOverlay(e.message);
+  });
+  // Atrapar promesas rechazadas no capturadas
+  window.addEventListener('unhandledrejection', function(e) {
+    if (e.reason && String(e.reason).indexOf('Firebase') !== -1) return; // Firebase errors no son fatales
+  });
+  // Timeout de seguridad: si en 8s Firebase no inicializó, mostrar overlay
+  setTimeout(function() {
+    if (!window._normalisAppLoaded && !window._initAppCalled) {
+      _showErrOverlay('Timeout al inicializar');
+    }
+  }, 8000);
+  window._normalisErrBoundary = _showErrOverlay;
+})();
+</script>
+<!-- ═══ /Error Boundary ═══ -->
+
 <a href="#main-content" class="sr-only" style="position:absolute;top:8px;left:8px;z-index:9999;background:var(--accent);color:#fff;padding:8px 14px;border-radius:6px;font-weight:700;text-decoration:none">Saltar al contenido</a>
 
 <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menú">☰</button>
 <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
-  <script src="normalis-pilot.js"></script>
+  <script src="normalis-pilot.js?v=20260717"></script>
 
 <!-- BÚSQUEDA GLOBAL MODAL -->
 <div id="search-overlay" role="dialog" aria-modal="true" aria-label="Búsqueda global" onclick="closeSearch(event)" tabindex="-1">
@@ -2027,25 +2070,25 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 </div>
 
 <!-- NormaLis módulos externos — extraídos para mantenimiento modular -->
-<script src="normalis-data-audit.js"></script>
-<script src="normalis-chat.js"></script>
-<script src="normalis-audit-score.js"></script>
-<script src="normalis-docs.js"></script>
-<script src="normalis-pdf.js"></script>
-<script src="normalis-pqrs.js"></script>
-<script src="normalis-incidentes.js"></script>
-<script src="normalis-vencimientos.js"></script>
-<script src="normalis-simulacro.js"></script>
-<script src="normalis-bitacora.js"></script>
-<script src="normalis-firestore.js"></script>
-<script src="normalis-tour.js"></script>
+<script src="normalis-data-audit.js?v=20260717"></script>
+<script src="normalis-chat.js?v=20260717"></script>
+<script src="normalis-audit-score.js?v=20260717"></script>
+<script src="normalis-docs.js?v=20260717"></script>
+<script src="normalis-pdf.js?v=20260717"></script>
+<script src="normalis-pqrs.js?v=20260717"></script>
+<script src="normalis-incidentes.js?v=20260717"></script>
+<script src="normalis-vencimientos.js?v=20260717"></script>
+<script src="normalis-simulacro.js?v=20260717"></script>
+<script src="normalis-bitacora.js?v=20260717"></script>
+<script src="normalis-firestore.js?v=20260717"></script>
+<script src="normalis-tour.js?v=20260717"></script>
 
-<script src="normalis-utils.js"></script>
-<script src="normalis-auth.js"></script>
-<script src="normalis-pamec.js"></script>
-<script src="normalis-export.js"></script>
-<script src="normalis-users.js"></script>
-<script src="normalis-automations.js"></script>
+<script src="normalis-utils.js?v=20260717"></script>
+<script src="normalis-auth.js?v=20260717"></script>
+<script src="normalis-pamec.js?v=20260717"></script>
+<script src="normalis-export.js?v=20260717"></script>
+<script src="normalis-users.js?v=20260717"></script>
+<script src="normalis-automations.js?v=20260717"></script>
 <script>
 // ═══════════════════════════════════════════
 // CONFIG — cargado PRIMERO para que todos los arrays usen datos reales
@@ -7817,7 +7860,8 @@ function hideAuthScreen(user){
   if(emailEl && user) emailEl.textContent = user.email || '';
 
   // Llamar initApp una sola vez
-  if(!window._initAppCalled && typeof initApp === 'function'){
+  window._normalisAppLoaded = true;
+    if(!window._initAppCalled && typeof initApp === 'function'){
     window._initAppCalled = true;
     try{ initApp(); }catch(e){ console.warn('initApp error:', e); }
   }

@@ -185,7 +185,7 @@ if [[ -f "$APP" ]]; then
     "normalis-styles.css"
   )
   for mod in "${MODULES[@]}"; do
-    if grep -q "src=\"$mod\"\|href=\"$mod\"" "$APP"; then
+    if grep -qE "src=\"$mod(\?v=[0-9]+)?\"|href=\"$mod(\?v=[0-9]+)?\"" "$APP"; then
       pass "normativa-app-v2.html referencia $mod"
     else
       fail "normativa-app-v2.html NO referencia $mod"
@@ -403,7 +403,7 @@ if [[ -f "$APP" ]]; then
     "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
   "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do
-    TAG_COUNT=$(grep -c "<script src=\"$mod\"" "$APP" || true)
+    TAG_COUNT=$(grep -cE "<script src=\"$mod(\?v=[0-9]+)?\"" "$APP" || true)
     if [[ "$TAG_COUNT" -gt 1 ]]; then
       fail "normativa-app-v2.html: <script src=\"$mod\"> duplicado ($TAG_COUNT veces)"
     elif [[ "$TAG_COUNT" -eq 1 ]]; then
