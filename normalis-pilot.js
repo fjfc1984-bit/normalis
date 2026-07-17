@@ -107,7 +107,7 @@
 
       var btnContact = document.createElement('a');
       btnContact.className = 'npe-btn';
-      btnContact.href = 'mailto:hola@normalis.co';
+      btnContact.href = 'mailto:fjfc1984@gmail.com';
       btnContact.textContent = 'Contactar a NormaLis';
 
       var br = document.createElement('br');

@@ -225,7 +225,7 @@ body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%
       </button>
     </form>
     <div class="modal-footer">
-      O escríbenos directamente a <a href="mailto:hola@normalis.co">hola@normalis.co</a>
+      O escríbenos directamente a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a>
     </div>
   </div>
 </div>
@@ -344,13 +344,13 @@ async function routeUser(user) {
 
     // ── Pendiente: en espera de aprobación ──
     if (rol === 'pendiente') {
-      showError('Tu solicitud de acceso está en revisión. Te notificaremos cuando sea aprobada. ¿Dudas? Escríbenos a hola@normalis.co');
+      showError('Tu solicitud de acceso está en revisión. Te notificaremos cuando sea aprobada. ¿Dudas? Escríbenos a fjfc1984@gmail.com');
       await auth.signOut(); sessionStorage.clear(); setLoading(false); return;
     }
 
     // ── Rechazado ──
     if (rol === 'rechazado') {
-      showError('Tu solicitud fue rechazada. Contacta a hola@normalis.co para más información.');
+      showError('Tu solicitud fue rechazada. Contacta a fjfc1984@gmail.com para más información.');
       await auth.signOut(); sessionStorage.clear(); setLoading(false); return;
     }
 
@@ -495,7 +495,7 @@ contactForm.addEventListener('submit', function(e) {
   if (!nombre || !isValidEmail(email) || !msg) return;
   const subject = 'Solicitud NormaLis — ' + nombre;
   const body    = 'Nombre IPS: ' + nombre + '\nCorreo: ' + email + '\n' + (tel ? 'Teléfono: ' + tel + '\n' : '') + '\nMensaje:\n' + msg;
-  window.open('mailto:hola@normalis.co?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_blank', 'noopener');
+  window.open('mailto:fjfc1984@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_blank', 'noopener');
   contactSuccess.classList.add('show');
   contactForm.reset();
 });

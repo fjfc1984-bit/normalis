@@ -87,29 +87,24 @@ self.addEventListener('fetch',e=>{
     div.innerHTML =
       '<div style="font-size:48px">⚠️</div>' +
       '<div style="font-size:20px;font-weight:700;color:#f8fafc">NormaLis encontró un problema al cargar</div>' +
-      '<div style="font-size:14px;color:#94a3b8;max-width:400px">Esto suele resolverse recargando la página. Si el problema persiste, escríbenos a hola@normalis.co</div>' +
+      '<div style="font-size:14px;color:#94a3b8;max-width:400px">Esto suele resolverse recargando la página. Si el problema persiste, escríbenos a fjfc1984@gmail.com</div>' +
       '<button onclick="location.reload(true)" style="background:#0ea5e9;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">🔄 Recargar ahora</button>' +
       '<div style="font-size:11px;color:#475569;margin-top:4px">' + (msg||'') + '</div>';
     document.body ? document.body.appendChild(div) : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(div); });
   }
-  // Atrapar errores JS síncronos (SyntaxError, ReferenceError, etc.)
+  // Solo captura SyntaxErrors fatales del script principal
   window.addEventListener('error', function(e) {
-    var isCritical = e.message && (
-      e.message.indexOf('SyntaxError') !== -1 ||
-      e.filename && e.filename.indexOf('normalis') !== -1
-    );
+    var isCritical = e.message && e.message.indexOf('SyntaxError') !== -1
+      && e.filename && e.filename.indexOf('normativa-app') !== -1;
     if (isCritical) _showErrOverlay(e.message);
   });
-  // Atrapar promesas rechazadas no capturadas
-  window.addEventListener('unhandledrejection', function(e) {
-    if (e.reason && String(e.reason).indexOf('Firebase') !== -1) return; // Firebase errors no son fatales
-  });
-  // Timeout de seguridad: si en 8s Firebase no inicializó, mostrar overlay
+  // Timeout de seguridad: solo si no hay sesión activa ni initApp llamado
   setTimeout(function() {
-    if (!window._normalisAppLoaded && !window._initAppCalled) {
+    var tieneSession = sessionStorage.getItem('normalis_uid');
+    if (!window._normalisAppLoaded && !window._initAppCalled && !tieneSession) {
       _showErrOverlay('Timeout al inicializar');
     }
-  }, 8000);
+  }, 15000);
   window._normalisErrBoundary = _showErrOverlay;
 })();
 </script>
