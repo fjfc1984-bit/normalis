@@ -887,7 +887,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:8px">
               <span style="font-size:16px">🟢</span>
               <div style="flex:1;font-size:11px;color:var(--text-muted)"><strong style="color:var(--success)">Conectado al REPS — Ministerio de Salud y Protección Social</strong><br>Dataset oficial nacional · Actualizado abr. 2026 · Cobertura: todo Colombia</div>
-              <a href="https://www.datos.gov.co/d/c36g-9fc2" target="_blank" style="font-size:10px;color:var(--primary);text-decoration:none">Ver fuente ↗</a>
+              <div style="display:flex;gap:6px;flex-shrink:0"><a href="https://prestadores.minsalud.gov.co/habilitacion/" target="_blank" rel="noopener noreferrer" style="font-size:10px;color:var(--primary);text-decoration:none;white-space:nowrap">REPS oficial ↗</a><a href="https://www.datos.gov.co/d/c36g-9fc2" target="_blank" rel="noopener noreferrer" style="font-size:10px;color:var(--text-muted);text-decoration:none;white-space:nowrap">Datos ↗</a></div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
               <input type="text" id="ips-search" placeholder="Buscar por nombre de IPS o NIT…" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px" onkeydown="if(event.key==='Enter')buscarREPS()">
@@ -919,6 +919,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
                 <option value="Pública">Pública</option>
               </select>
               <button class="btn btn-primary btn-sm" onclick="buscarREPS(0)">🔍 Buscar</button>
+              <button class="btn btn-outline btn-sm" onclick="buscarMiIPS()" title="Pre-llenar con los datos de tu IPS">🎯 Mi IPS</button>
             </div>
             <div id="ips-count" style="font-size:11px;color:var(--text-muted);margin-bottom:8px"></div>
             <div id="ips-list" style="min-height:80px"></div>
@@ -4845,6 +4846,7 @@ function renderIPSListREPS(data){
           ${p.email_prestador?`✉️ <a href="mailto:${p.email_prestador}" style="color:var(--primary)">${p.email_prestador}</a>`:''}
           ${p.codigohabilitacionsede?'🔑 Hab: '+p.codigohabilitacionsede:''}
           ${p.numeroidentificacion?'NIT: '+p.numeroidentificacion:''}
+          ${p.numeroidentificacion?`<a href="https://prestadores.minsalud.gov.co/habilitacion/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-size:10px;text-decoration:none">🔗 REPS ↗</a>`:''}
         </div>
         <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${clase}</div>
       </div>
@@ -4869,6 +4871,17 @@ function renderREPSPagination(){
 }
 
 function filterIPS(){ buscarREPS(0); }
+
+function buscarMiIPS(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem('normalis_cfg')||'{}');
+    const nit=(cfg.nit||'').replace(/[^0-9]/g,'');
+    const nombre=localStorage.getItem('normalis_ips_nombre')||'';
+    const el=document.getElementById('ips-search');
+    if(el){ el.value=nit||nombre||''; }
+    buscarREPS(0);
+  }catch(e){ buscarREPS(0); }
+}
 
 function filterSVC(){
   const q=(document.getElementById('svc-search').value||'').toLowerCase();
