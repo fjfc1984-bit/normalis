@@ -176,13 +176,13 @@ function checkFirebase() {
       authDomain: "normalis-5587d.firebaseapp.com",
       projectId: "normalis-5587d"
     };
-    // Llamada directa a la REST API de Firestore para ping
-    var url = 'https://firestore.googleapis.com/v1/projects/normalis-5587d/databases/(default)/documents/status?key=' + config.apiKey;
+    // Ping al authDomain de Firebase (siempre accesible sin auth)
+    var url = 'https://identitytoolkit.googleapis.com/v1/projects?key=' + config.apiKey;
     fetch(url, { signal: AbortSignal.timeout(6000) })
       .then(function(r) {
         var ms = Date.now() - t0;
-        // 200 o 404 (colección vacía) ambos significan Firebase responde
-        if (r.status === 200 || r.status === 404) {
+        // 200, 400 o 403 todos significan que Firebase Auth responde
+        if (r.status === 200 || r.status === 400 || r.status === 403) {
           setDot('firebase', 'ok'); setSvc('firebase', 'Operativo', ms);
           resolve({ok: true, ms});
         } else {
