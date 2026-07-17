@@ -424,6 +424,56 @@ if [[ -f "$REG" ]]; then
 fi
 
 # ─────────────────────────────────────────────
+section "11. SyntaxErrors comunes — keywords duplicados"
+# ─────────────────────────────────────────────
+# Detecta errores que rompen todo el script (const const, let let, etc.)
+DOUBLE_KW_FILES=("normativa-app-v2.html" "normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pamec.js" "normalis-automations.js")
+for f in "${DOUBLE_KW_FILES[@]}"; do
+  fp="$REPO/$f"
+  [[ ! -f "$fp" ]] && continue
+  if grep -Eq "\bconst const\b|\blet let\b|\bvar var\b|\bfunction function\b" "$fp"; then
+    fail "$f: keyword duplicado (const const / let let / var var) — causa SyntaxError"
+  else
+    pass "$f: sin keywords duplicados"
+  fi
+done
+
+# ─────────────────────────────────────────────
+section "12. Orden de carga — módulos no deben llamar funciones inline al top-level"
+# ─────────────────────────────────────────────
+# Funciones definidas en el inline script de normativa-app-v2.html
+# que los módulos externos NO deben llamar directamente al top-level
+# (deben envolverlas en DOMContentLoaded o typeof check)
+INLINE_FNS=("showGenDone" "startSession" "verifyPin" "initApp" "showView" "toast")
+JS_MODULES=("normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pqrs.js" "normalis-incidentes.js" "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-pamec.js" "normalis-automations.js" "normalis-tour.js" "normalis-export.js" "normalis-users.js")
+for mod in "${JS_MODULES[@]}"; do
+  fp="$REPO/$mod"
+  [[ ! -f "$fp" ]] && continue
+  for fn in "${INLINE_FNS[@]}"; do
+    # Buscar uso directo al top-level: línea que contiene la función
+    # pero NO está dentro de una función/DOMContentLoaded/typeof check
+    # Heurística: si aparece como `= fnName;` o `fnName();` fuera de una función
+    if grep -Eq "^(const|let|var) _orig[A-Za-z]+ = ${fn};" "$fp" 2>/dev/null; then
+      fail "$mod: hook directo a '${fn}' al top-level sin DOMContentLoaded — ReferenceError en carga"
+    fi
+  done
+  pass "$mod: sin hooks top-level peligrosos"
+done
+
+# ─────────────────────────────────────────────
+section "13. normativa-app-v2.html — líneas mínimas post-edición"
+# ─────────────────────────────────────────────
+APP="$REPO/normativa-app-v2.html"
+if [[ -f "$APP" ]]; then
+  LINES=$(wc -l < "$APP")
+  if [[ "$LINES" -lt 8000 ]]; then
+    fail "normativa-app-v2.html: solo $LINES líneas — archivo posiblemente truncado (mínimo 8000)"
+  else
+    pass "normativa-app-v2.html: $LINES líneas — integridad de longitud OK"
+  fi
+fi
+
+# ─────────────────────────────────────────────
 echo ""
 echo -e "${BLU}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 if [[ $ERRORS -eq 0 ]]; then
