@@ -5628,7 +5628,7 @@ startSession = function(user, withLog){
 let _pinFails = 0;
 let _pinLockUntil = 0;
 
-const const _origVerifyPin = verifyPin;
+const _origVerifyPin = verifyPin;
 verifyPin = async function(){
   const now = Date.now();
   if(_pinLockUntil > now){

@@ -411,8 +411,13 @@ function printDoc() {
 }
 
 // ── Hook into generator: replace showGenDone to show real docs ──
-const _origShowGenDone = showGenDone;
-showGenDone = function(){
+// NOTA: se envuelve en DOMContentLoaded porque normalis-docs.js carga ANTES
+// del inline script que define showGenDone (línea ~2355 de normativa-app-v2.html).
+(function _hookShowGenDone(){
+  function _doHook(){
+    if(typeof showGenDone !== 'function'){ return; }
+    const _origShowGenDone = showGenDone;
+    showGenDone = function(){
   document.getElementById('gen-step2').style.display='none';
   document.getElementById('gen-step3').style.display='block';
   const list=document.getElementById('gen-done-list');
@@ -426,9 +431,13 @@ showGenDone = function(){
       <button class="btn btn-primary btn-sm" onclick="openDocViewer('${id}','${genNames[id]||id}')">👁 Ver</button>
       <button class="btn btn-outline btn-sm" onclick="openDocViewer('${id}','${genNames[id]||id}');setTimeout(printDoc,400)">🖨️ PDF</button>
     </div>`).join('');
-  toast('✨ Documentos generados y listos para imprimir','success');
-  setTimeout(()=>showAchieve('📄','¡Documentos Reales!','Tus manuales normativos ya están personalizados y listos.'),800);
-};
+      toast('✨ Documentos generados y listos para imprimir','success');
+      setTimeout(()=>showAchieve('📄','¡Documentos Reales!','Tus manuales normativos ya están personalizados y listos.'),800);
+    };
+  }
+  if(document.readyState !== 'loading'){ _doHook(); }
+  else { document.addEventListener('DOMContentLoaded', _doHook); }
+})();
 
 // Fix old openDocPreview reference
 function openDocPreview(id){ openDocViewer(id, genNames[id]||id); }
