@@ -1,19 +1,15 @@
 /**
- * NormaLis — Gemini Proxy (Cloudflare Worker) v2
+ * NormaLis — Groq Proxy (Cloudflare Worker) v3
  *
- * Sin google_search grounding — usa corpus normativo embebido + Gemini free tier.
- * Compatible con cualquier key de Google AI Studio (free tier, 15 RPM).
+ * Usa Groq free tier: 14,400 req/día, sin tarjeta de crédito.
+ * Modelo: llama-3.1-8b-instant (rápido y preciso para consultas normativas)
  *
- * Deploy:
- *   cd cloudflare-worker
- *   npx wrangler deploy
- *
- * Secret (una sola vez):
- *   npx wrangler secret put GEMINI_API_KEY
+ * Secret requerido (Cloudflare Dashboard → Workers → normalis → Settings → Variables):
+ *   GROQ_API_KEY  → crear en https://console.groq.com/keys
  */
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
-const GEMINI_BASE  = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GROQ_MODEL   = 'llama-3.1-8b-instant';
+const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 const ALLOWED_ORIGINS = [
   'https://normalis.co',
@@ -21,135 +17,63 @@ const ALLOWED_ORIGINS = [
   'https://fjfc1984-bit.github.io',
 ];
 
-// ═══════════════════════════════════════════════════════════════════════
-// CORPUS NORMATIVO VERIFICADO
-// Resolución 3100 de 2019 + modificaciones (Res. 544/2023 y 465/2025)
-// ÚLTIMA VERIFICACIÓN: julio 2026
-// ═══════════════════════════════════════════════════════════════════════
-const CORPUS_NORMATIVO = `
+const SYSTEM_PROMPT = `Eres NormaLis IA, asistente especializado en normativa colombiana de habilitación de servicios de salud.
+
+CORPUS NORMATIVO VERIFICADO (julio 2026):
+
 === RESOLUCIÓN 3100 DE 2019 — MINISTERIO DE SALUD Y PROTECCIÓN SOCIAL ===
-(Diario Oficial No. 51.149 de 26 de noviembre de 2019)
-Por la cual se definen los procedimientos y condiciones de inscripción de los prestadores
-de servicios de salud y de habilitación de los servicios de salud.
 MODIFICADA POR: Resolución 544 de 2023 (Art. 2 y 3), Resolución 465 de 2025 (Art. 4, 5, 19 y 20).
-DEROGÓ: Resoluciones 2003/2014, 5158/2015, 226/2015, 1416/2016.
 
---- ARTÍCULO 1. OBJETO ---
-Definir los procedimientos y las condiciones de inscripción de los prestadores de servicios
-de salud y de habilitación de los servicios de salud, y adoptar el Manual de Inscripción de
-Prestadores y Habilitación de Servicios de Salud (Anexo Técnico).
-PARÁGRAFO: Esta resolución NO establece competencias para el talento humano.
+ARTÍCULO 1. OBJETO: Definir los procedimientos y condiciones de inscripción de prestadores de servicios de salud y de habilitación de los servicios de salud (Anexo Técnico).
 
---- ARTÍCULO 2. CAMPO DE APLICACIÓN (modificado por Art. 1, Resolución 544/2023) ---
-Aplica a: IPS, profesionales independientes, transporte especial de pacientes, entidades con
-objeto social diferente a la prestación de servicios, secretarías de salud departamental o
-distrital, entidades responsables del pago, y la Superintendencia Nacional de Salud.
+ARTÍCULO 2. CAMPO DE APLICACIÓN (modificado Res. 544/2023): Aplica a: IPS, profesionales independientes, transporte especial, entidades con objeto social diferente, secretarías de salud, entidades responsables del pago, Supersalud.
 
---- ARTÍCULO 3. CONDICIONES DE HABILITACIÓN (modificado por Art. 2, Resolución 544/2023) ---
-Los prestadores deben cumplir:
+ARTÍCULO 3. CONDICIONES DE HABILITACIÓN (modificado Res. 544/2023):
 3.1. Capacidad técnico-administrativa.
 3.2. Suficiencia patrimonial y financiera.
 3.3. Capacidad tecnológica y científica (incluye los 7 estándares del Manual).
 
---- ARTÍCULO 4. INSCRIPCIÓN Y HABILITACIÓN (modificado por Art. 1, Resolución 465/2025) ---
-Todo prestador debe estar inscrito en el REPS con mínimo una sede con infraestructura física
-y al menos un servicio habilitado.
+ARTÍCULO 4. INSCRIPCIÓN Y HABILITACIÓN (modificado Res. 465/2025): Todo prestador debe estar inscrito en REPS con mínimo una sede con infraestructura física y al menos un servicio habilitado.
 
---- ARTÍCULO 5. AUTOEVALUACIÓN (modificado por Art. 2, Resolución 465/2025) ---
-Obligatoria en:
-5.1. Previo a la inscripción inicial.
-5.2. Durante el CUARTO AÑO de la vigencia de inscripción inicial.
-5.3. Antes del vencimiento del término de RENOVACIÓN ANUAL.
-5.4. Casos adicionales del Manual.
+ARTÍCULO 5. AUTOEVALUACIÓN (modificado Res. 465/2025):
+Obligatoria: 5.1. Previa a inscripción inicial. 5.2. Durante el CUARTO AÑO de vigencia. 5.3. Antes del vencimiento de renovación anual. 5.4. Casos adicionales del Manual.
 
---- ARTÍCULO 9. RESPONSABILIDAD ---
-El prestador es el ÚNICO RESPONSABLE del cumplimiento de todos los estándares. No puede
-delegar la responsabilidad a terceros contratados.
+ARTÍCULO 9. RESPONSABILIDAD: El prestador es el ÚNICO RESPONSABLE. No puede delegar a terceros contratados.
 
---- ARTÍCULO 10. VIGENCIA DE LA INSCRIPCIÓN EN EL REPS ---
-- Inscripción INICIAL: vigencia de CUATRO (4) AÑOS.
-- Puede renovarse por UN (1) AÑO si realizó autoevaluación en el cuarto año.
-- Renovaciones posteriores: UN (1) AÑO con previa autoevaluación.
+ARTÍCULO 10. VIGENCIA DE LA INSCRIPCIÓN: Inicial: CUATRO (4) AÑOS. Renovación: UN (1) AÑO con autoevaluación previa.
 
---- ARTÍCULO 11. CONSECUENCIAS POR NO AUTOEVALUACIÓN ---
-Se INACTIVARÁ la inscripción si no realiza autoevaluación en el término establecido.
+ARTÍCULO 11. CONSECUENCIAS POR NO AUTOEVALUACIÓN: Se INACTIVARÁ la inscripción si no realiza autoevaluación en el término establecido.
 
---- ARTÍCULO 12. NOVEDADES ---
-Los prestadores deben reportar cambios que afecten su inscripción (sede, servicios, capacidad).
+ARTÍCULO 13. CIERRE TEMPORAL: Máximo UN (1) AÑO.
 
---- ARTÍCULO 13. CIERRE TEMPORAL ---
-Máximo UN (1) AÑO. Si no reactiva al vencimiento, se cancela la habilitación del servicio.
+ARTÍCULO 14. VISITA DE VERIFICACIÓN PREVIA: Requerida para servicios oncológicos, urgencias, atención del parto, transporte asistencial, TODOS los servicios de ALTA COMPLEJIDAD, reactivación por medidas de seguridad.
 
---- ARTÍCULO 14. VISITA DE VERIFICACIÓN PREVIA ---
-Requerida para: servicios oncológicos nuevos, urgencias, atención del parto, transporte
-asistencial, TODOS los servicios de ALTA COMPLEJIDAD, y reactivación por medidas de seguridad.
+ARTÍCULO 22. GRATUIDAD: La inscripción y habilitación en REPS son COMPLETAMENTE GRATUITAS.
 
---- ARTÍCULO 15. VISITA DE CERTIFICACIÓN ---
-Realizada DESPUÉS de la habilitación conforme al plan de visitas. No es requisito previo.
+7 ESTÁNDARES DE HABILITACIÓN:
+1. TALENTO HUMANO  2. INFRAESTRUCTURA  3. DOTACIÓN
+4. MEDICAMENTOS, DISPOSITIVOS MÉDICOS E INSUMOS  5. PROCESOS PRIORITARIOS
+6. HISTORIA CLÍNICA Y REGISTROS  7. INTERDEPENDENCIA
 
---- ARTÍCULO 18. EXIGIBILIDAD ---
-Las Secretarías NO PUEDEN exigir requisitos distintos a los de esta norma.
-
---- ARTÍCULO 19. GARANTÍA DE PRESTACIÓN (modificado por Art. 4, Resolución 465/2025) ---
-Cuando cierre afecta al único prestador en su zona: plan de reubicación en 5 DÍAS PREVIOS.
-
---- ARTÍCULO 22. GRATUIDAD ---
-La inscripción y habilitación en el REPS son COMPLETAMENTE GRATUITAS.
-
-=== MANUAL DE INSCRIPCIÓN (ANEXO TÉCNICO) — SECCIONES CLAVE ===
-
---- 7 ESTÁNDARES DE HABILITACIÓN (Sección 8.3.1) ---
-Aplican a TODOS los servicios:
-8.3.1.1. TALENTO HUMANO
-8.3.1.2. INFRAESTRUCTURA
-8.3.1.3. DOTACIÓN
-8.3.1.4. MEDICAMENTOS, DISPOSITIVOS MÉDICOS E INSUMOS
-8.3.1.5. PROCESOS PRIORITARIOS
-8.3.1.6. HISTORIA CLÍNICA Y REGISTROS
-8.3.1.7. INTERDEPENDENCIA
-
---- GRUPOS DE SERVICIOS HABILITABLES (Sección 11) ---
-11.2. CONSULTA EXTERNA (general, especializada, vacunación, SST)
-11.3. APOYO DIAGNÓSTICO (laboratorio, imágenes, farmacia, etc.)
-11.4. INTERNACIÓN (hospitalización, UCI, cuidado intensivo, salud mental)
-11.5. QUIRÚRGICO (cirugía)
-11.6. ATENCIÓN INMEDIATA (urgencias, transporte, parto prehospitalario)
-
---- MODALIDADES DE PRESTACIÓN (Sección 1.3) ---
-1.3.1. Intramural: en infraestructura física de salud.
-1.3.2. Extramural: unidad móvil, domiciliaria, jornada de salud.
-1.3.3. Telemedicina: interactiva, no interactiva, telexperticia, telemonitoreo.
-
---- DEFINICIONES CLAVE ---
-"CUENTA CON": existencia OBLIGATORIA y PERMANENTE del recurso.
+DEFINICIONES:
+"CUENTA CON": existencia OBLIGATORIA y PERMANENTE.
 "DISPONIBILIDAD": obligatoria, puede estar fuera del servicio pero accesible de inmediato.
-"CRITERIO": unidad básica del estándar para la verificación.
 
-=== RESOLUCIÓN 544 DE 2023 ===
-Modificó Art. 2 y 3 de Res. 3100/2019. Amplió campo de aplicación.
+=== RESOLUCIÓN 465 DE 2025 ===
+Modifica artículos 4, 5, 19 y 20 de la Res. 3100/2019.
+Actualiza procedimientos de inscripción y autoevaluación en el REPS.
 
-=== RESOLUCIÓN 465 DE 2025 (marzo 2025) ===
-Modificó Art. 4, 5, 19 y 20 de Res. 3100/2019.
-Art. 4: exige sede "con infraestructura física".
-Art. 5: restructuró obligatoriedad de autoevaluación.
-Art. 19: modificó procedimiento ante cierres por incumplimiento.
-`;
-
-function buildSystemPrompt() {
-  return `Eres NormaLis IA, asistente especializado en normativa colombiana de habilitación de servicios de salud.
-
-CORPUS NORMATIVO VERIFICADO (texto oficial, verificado julio 2026):
-${CORPUS_NORMATIVO}
+=== PAMEC (Programa de Auditoría para el Mejoramiento de la Calidad) ===
+Obligatorio para todas las IPS habilitadas.
+Componentes: autoevaluación, planes de mejoramiento, seguimiento de indicadores.
 
 REGLAS DE RESPUESTA:
 1. Cita SIEMPRE el artículo exacto y la resolución.
-2. Si la pregunta toca un artículo MODIFICADO, cita la versión VIGENTE.
-3. Si la respuesta NO está en el corpus, di: "No encontré información verificada para esta consulta. Verifica en minsalud.gov.co o contacta tu Secretaría de Salud departamental."
-4. NUNCA inventes artículos, numerales, fechas, plazos o requisitos.
+2. Si el artículo fue MODIFICADO, cita la versión VIGENTE.
+3. Si no está en el corpus, di: "No encontré información verificada. Verifica en minsalud.gov.co o contacta tu Secretaría de Salud."
+4. NUNCA inventes artículos, fechas, plazos o requisitos.
 5. Responde en español colombiano, tono profesional, máximo 5 párrafos.
-6. Advierte que la interpretación final la tiene la Secretaría de Salud departamental competente.
-7. Para estándares específicos de un servicio, indica que el Manual Técnico tiene los criterios detallados.`;
-}
+6. Advierte que la interpretación final la tiene la Secretaría de Salud departamental competente.`;
 
 function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin);
@@ -200,7 +124,7 @@ export default {
       });
     }
 
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = env.GROQ_API_KEY;
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'Servicio no configurado' }), {
         status: 500,
@@ -208,43 +132,45 @@ export default {
       });
     }
 
-    // Construir historial (máx 6 turnos)
-    const contents = [];
+    // Construir mensajes en formato OpenAI
+    const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+
     if (Array.isArray(sessionHistory)) {
       for (const turn of sessionHistory.slice(-6)) {
         if (turn.role && turn.text) {
-          contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+          messages.push({ role: turn.role === 'model' ? 'assistant' : 'user', content: turn.text });
         }
       }
     }
-    contents.push({ role: 'user', parts: [{ text: question.trim() }] });
-
-    // Sin tools — compatible con free tier (15 RPM, sin grounding)
-    const geminiBody = {
-      system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-      contents,
-      generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
-    };
+    messages.push({ role: 'user', content: question.trim() });
 
     try {
-      const geminiRes = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+      const groqRes = await fetch(GROQ_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(geminiBody),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          messages,
+          temperature: 0.1,
+          max_tokens: 1024,
+        }),
       });
 
-      if (!geminiRes.ok) {
-        const errText = await geminiRes.text();
+      if (!groqRes.ok) {
+        const errText = await groqRes.text();
         return new Response(
-          JSON.stringify({ error: 'Error al consultar Gemini', status: geminiRes.status, detail: errText }),
+          JSON.stringify({ error: 'Error al consultar Groq', status: groqRes.status, detail: errText }),
           { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
         );
       }
 
-      const data = await geminiRes.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      const data = await groqRes.json();
+      const text = data?.choices?.[0]?.message?.content ?? null;
       if (!text) {
-        return new Response(JSON.stringify({ error: 'Respuesta vacía de Gemini' }), {
+        return new Response(JSON.stringify({ error: 'Respuesta vacía de Groq' }), {
           status: 502,
           headers: { ...cors, 'Content-Type': 'application/json' },
         });
@@ -264,33 +190,6 @@ export default {
   },
 };
 
-// ═══════════════════════════════════════════════════════════════
-// SCHEDULED CRON — Daily health ping + uptime log
-// Runs every day at 8am Colombia (configured in wrangler.toml)
-// ═══════════════════════════════════════════════════════════════
-// Note: Per-user vencimientos reminders run client-side (normalis-firestore.js)
-// This cron is a lightweight heartbeat for monitoring uptime.
-
 export async function scheduled(event, env, ctx) {
-  const now = new Date().toISOString();
-  console.log(`[NormaLis Cron] Heartbeat — ${now}`);
-
-  // Self-ping to verify worker is alive
-  try {
-    const selfUrl = 'https://normalis.fjfc1984.workers.dev';
-    const pingBody = JSON.stringify({ question: 'estado del sistema' });
-    const res = await fetch(selfUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Origin': 'https://normalis.co' },
-      body: pingBody,
-    });
-    const data = await res.json();
-    if (data.answer) {
-      console.log('[NormaLis Cron] Worker OK — respuesta recibida');
-    } else {
-      console.error('[NormaLis Cron] Worker sin respuesta válida:', JSON.stringify(data));
-    }
-  } catch (err) {
-    console.error('[NormaLis Cron] Error en self-ping:', String(err));
-  }
+  console.log(`[NormaLis Cron] Heartbeat — ${new Date().toISOString()}`);
 }

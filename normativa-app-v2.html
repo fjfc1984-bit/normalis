@@ -19,12 +19,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NormaLis">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#134e4a">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" id="pwa-manifest">
 <script>
 // Inline PWA manifest via Blob
-const _manifest={name:"NormaLis — Copiloto Normativo",short_name:"NormaLis",description:"Sistema de Habilitación y Auditoría Normativa en Salud · Colombia",start_url:"./normativa-app-v2.html",display:"standalone",background_color:"#0f172a",theme_color:"#0ea5e9",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🏥%3C/text%3E%3C/svg%3E",sizes:"any",type:"image/svg+xml"}]};
+const _manifest={name:"NormaLis — Copiloto Normativo",short_name:"NormaLis",description:"Sistema de Habilitación y Auditoría Normativa en Salud · Colombia",start_url:"./normativa-app-v2.html",display:"standalone",background_color:"#134e4a",theme_color:"#0d9488",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Ctext y='.9em' font-size='80' x='10'%3E🏥%3C/text%3E%3C/svg%3E",sizes:"any",type:"image/svg+xml"}]};
 const _blob=new Blob([JSON.stringify(_manifest)],{type:'application/manifest+json'});
 document.getElementById('pwa-manifest').href=URL.createObjectURL(_blob);
 // Service Worker registration
@@ -83,12 +83,12 @@ self.addEventListener('fetch',e=>{
     _errShown = true;
     var div = document.createElement('div');
     div.id = 'nls-err-boundary';
-    div.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:system-ui,sans-serif;color:#e2e8f0;padding:40px;text-align:center';
+    div.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#134e4a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:system-ui,sans-serif;color:#e2e8f0;padding:40px;text-align:center';
     div.innerHTML =
       '<div style="font-size:48px">⚠️</div>' +
       '<div style="font-size:20px;font-weight:700;color:#f8fafc">NormaLis encontró un problema al cargar</div>' +
       '<div style="font-size:14px;color:#94a3b8;max-width:400px">Esto suele resolverse recargando la página. Si el problema persiste, escríbenos a fjfc1984@gmail.com</div>' +
-      '<button onclick="location.reload(true)" style="background:#0ea5e9;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">🔄 Recargar ahora</button>' +
+      '<button onclick="location.reload(true)" style="background:#0d9488;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">🔄 Recargar ahora</button>' +
       '<div style="font-size:11px;color:#475569;margin-top:4px">' + (msg||'') + '</div>';
     document.body ? document.body.appendChild(div) : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(div); });
   }
@@ -267,7 +267,7 @@ self.addEventListener('fetch',e=>{
             <div class="score-ring-wrap">
               <svg width="100" height="100" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"/>
-                <circle id="hero-ring" cx="50" cy="50" r="42" fill="none" stroke="#0ea5e9" stroke-width="8"
+                <circle id="hero-ring" cx="50" cy="50" r="42" fill="none" stroke="#0d9488" stroke-width="8"
                   stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="68.6" class="progress-ring-circle"/>
               </svg>
               <div class="score-ring-center">
@@ -637,12 +637,12 @@ self.addEventListener('fetch',e=>{
       <div class="view" id="view-resultados">
         <div class="g2">
           <div>
-            <div class="res-score-hero card" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border:none;color:#fff;margin-bottom:14px">
+            <div class="res-score-hero card" style="background:linear-gradient(135deg,#134e4a,#0d3d3a);border:none;color:#fff;margin-bottom:14px">
               <div class="text-xs" style="color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Puntaje de Habilitación</div>
               <div class="res-big" id="res-score-big" style="color:#94a3b8">—</div>
               <div class="text-sm" id="res-score-sub" style="color:#94a3b8;margin-top:4px">/ 100 · Sin auditoría realizada</div>
               <div style="margin-top:14px" id="res-risk-badge-wrap"><span class="badge" style="background:rgba(148,163,184,.2);color:#94a3b8;font-size:12px;padding:6px 16px">Realiza la auditoría para ver tu puntaje</span></div>
-              <div id="res-counters-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px"><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#38bdf8" id="res-total">—</div><div style="font-size:10px;color:#94a3b8">Preguntas</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#34d399" id="res-si">—</div><div style="font-size:10px;color:#94a3b8">Cumplen</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#fbbf24" id="res-parcial">—</div><div style="font-size:10px;color:#94a3b8">Parcial</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#f87171" id="res-no">—</div><div style="font-size:10px;color:#94a3b8">No cumplen</div></div></div>
+              <div id="res-counters-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px"><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#2dd4bf" id="res-total">—</div><div style="font-size:10px;color:#94a3b8">Preguntas</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#34d399" id="res-si">—</div><div style="font-size:10px;color:#94a3b8">Cumplen</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#fbbf24" id="res-parcial">—</div><div style="font-size:10px;color:#94a3b8">Parcial</div></div><div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:10px"><div style="font-size:22px;font-weight:900;color:#f87171" id="res-no">—</div><div style="font-size:10px;color:#94a3b8">No cumplen</div></div></div>
         <div class="hero-bars" style="margin-top:16px" id="res-top-bars">
                 <div style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px">Completa la auditoría para ver el resumen por área</div>
               </div>
@@ -866,7 +866,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 
 <div class="view" id="view-ips">
         <div style="margin-bottom:14px">
-          <div class="card" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border:none;color:#fff;padding:20px 24px">
+          <div class="card" style="background:linear-gradient(135deg,#134e4a,#0d3d3a);border:none;color:#fff;padding:20px 24px">
             <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Base de Datos Normativa</div>
             <div style="font-size:20px;font-weight:800">🏥 IPS Colombia — REPS</div>
             <div style="font-size:12px;color:#94a3b8;margin-top:4px">Servicios habilitables · Res. 3100/2019 · Directorio nacional · Comparador por tipo</div>
@@ -965,7 +965,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       <div class="view" id="view-cronograma">
         <div class="g2">
           <div>
-            <div class="card mb" style="margin-bottom:14px;background:linear-gradient(135deg,#0f172a,#1e3a5f);border:none;color:#fff">
+            <div class="card mb" style="margin-bottom:14px;background:linear-gradient(135deg,#134e4a,#0d3d3a);border:none;color:#fff">
               <div class="text-xs" style="color:#94a3b8;text-transform:uppercase;letter-spacing:.07em">Plan Pre-Visita</div>
               <div style="font-size:20px;font-weight:800;margin-top:4px">🗓️ Cronograma 6 Semanas</div>
               <div class="text-xs" style="color:#94a3b8;margin-top:4px" id="cron-semana-label">Completa tu auditoría para calcular el plan</div>
@@ -1230,7 +1230,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       <div class="prof-modal-overlay" id="prof-modal">
         <div class="prof-modal">
           <div class="pm-header">
-            <div class="prof-avatar" id="pm-avatar" style="background:#0ea5e9">DS</div>
+            <div class="prof-avatar" id="pm-avatar" style="background:#0d9488">DS</div>
             <div>
               <div style="font-size:16px;font-weight:800" id="pm-name" data-cfg="director">—</div>
               <div style="font-size:12px;color:var(--text-muted)" id="pm-role">Director Técnico · Medicina Interna</div>
@@ -1393,12 +1393,12 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
               <div style="text-align:center;padding:12px;background:var(--danger-light);border-radius:9px"><div style="font-size:24px;font-weight:900;color:var(--danger)">2</div><div style="font-size:11px;color:var(--danger);font-weight:700">Artículos derogados</div></div>
             </div>
           </div>
-          <div class="card" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border:none;color:#fff">
+          <div class="card" style="background:linear-gradient(135deg,#134e4a,#0d3d3a);border:none;color:#fff">
             <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">Tu estado frente a los cambios</div>
             <div style="font-size:20px;font-weight:800;margin-bottom:12px" id="comp-progress-title">Verifica tu cumplimiento normativo</div>
             <div style="height:8px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden"><div id="comp-progress-bar" style="height:100%;width:0%;background:var(--primary);border-radius:999px;transition:.6s"></div></div>
             <div style="font-size:12px;color:#94a3b8;margin-top:6px" id="comp-progress-sub">Realiza la auditoría para ver tu estado frente a los cambios normativos</div>
-            <button class="btn btn-sm" style="background:rgba(14,165,233,.2);color:#7dd3fc;border:1px solid rgba(14,165,233,.3);margin-top:12px;font-size:11px" onclick="nav('generador')">✨ Actualizar documentos afectados</button>
+            <button class="btn btn-sm" style="background:rgba(13,148,136,.2);color:#5eead4;border:1px solid rgba(13,148,136,.3);margin-top:12px;font-size:11px" onclick="nav('generador')">✨ Actualizar documentos afectados</button>
           </div>
         </div>
         <div class="card">
@@ -1461,7 +1461,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
                 <div class="text-xs text-muted">Visitas anuales a $1,500,000 COP cada una</div>
               </div>
             </div>
-            <div style="margin-top:16px;padding:14px;background:var(--primary-light);border-radius:10px;border:1px solid rgba(14,165,233,.2)">
+            <div style="margin-top:16px;padding:14px;background:var(--primary-light);border-radius:10px;border:1px solid rgba(13,148,136,.2)">
               <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px">⚠️ Multas en Colombia (Ley 1438/2011)</div>
               <div style="font-size:11px;color:var(--text-muted);line-height:1.6">No conf. crítica: hasta 500 SMMLV (~$750,000 COP c/u) · No conf. leve: hasta 50 SMMLV (~$75,000 COP c/u) · Suspensión de servicios posible.</div>
             </div>
@@ -2091,7 +2091,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 // ═══════════════════════════════════════════
 const CFG_KEY = 'normalis_cfg';
 let _cfg = {};
-let _setupColor = '#0ea5e9';
+let _setupColor = '#0d9488';
 
 function loadCfg() {
   try { _cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch(e) { _cfg = {}; }
@@ -2461,7 +2461,7 @@ document.getElementById('doc-modal').addEventListener('click',function(e){if(e.t
 // TALENTO HUMANO
 // ═══════════════════════════════════════════
 const profesionales=[
-  {id:1,nombre:cfg('director','Director Técnico'),rol:cfg('tipo','Director Técnico'),esp:cfg('esp','Medicina Interna'),color:cfg('color','#0ea5e9'),ini:cfg('ini','DT'),
+  {id:1,nombre:cfg('director','Director Técnico'),rol:cfg('tipo','Director Técnico'),esp:cfg('esp','Medicina Interna'),color:cfg('color','#0d9488'),ini:cfg('ini','DT'),
    docs:[{n:'Tarjeta Profesional',f:'2028-03-15',st:'ok'},{n:'Contrato Laboral',f:'2026-12-31',st:'ok'},{n:'Hoja de Vida',f:null,st:'ok'}],
    vacunas:[{n:'Hepatitis B',f:'2027-06-01',st:'ok'},{n:'Tétano',f:'2027-01-10',st:'ok'},{n:'Influenza',f:'2026-11-01',st:'ok'}],
    caps:[true,true,true,false,true]},
@@ -2733,7 +2733,7 @@ function renderComparador(){
       <div class="cmp-cell old">${r.tipo==='new'?'<span style="color:var(--text-muted);font-style:italic">No existía en el texto original de la Res. 3100/2019</span>':r.old}</div>
       <div class="cmp-cell new-text">
         <div>${r.nuevo}</div>
-        ${r.impacto?`<div style="margin-top:8px;padding:6px 10px;background:rgba(14,165,233,.07);border-left:3px solid var(--primary);border-radius:4px;font-size:11px;color:var(--text-muted)">💡 ${r.impacto}</div>`:''}
+        ${r.impacto?`<div style="margin-top:8px;padding:6px 10px;background:rgba(13,148,136,.07);border-left:3px solid var(--primary);border-radius:4px;font-size:11px;color:var(--text-muted)">💡 ${r.impacto}</div>`:''}
       </div>
       <div class="cmp-impact"><div style="text-align:center"><div style="font-size:18px">${impactIcon}</div><span class="cmp-tag ${tipoCls}">${tipoLabel}</span></div></div>
     </div>`;
@@ -2829,7 +2829,7 @@ function showCalDetail(dateStr,day){
 // MULTI-SEDE
 // ═══════════════════════════════════════════
 const sedes=[
-  {id:1,nombre:'Sede Centro',ciudad:'Bogotá',score:74,alertas:4,color:'#0ea5e9',ini:'SC',estado:'warn'},
+  {id:1,nombre:'Sede Centro',ciudad:'Bogotá',score:74,alertas:4,color:'#0d9488',ini:'SC',estado:'warn'},
   {id:2,nombre:'Sede Norte',ciudad:'Bogotá',score:58,alertas:6,color:'#ef4444',ini:'SN',estado:'danger'},
   {id:3,nombre:'Sede Sur',ciudad:'Bogotá',score:88,alertas:1,color:'#10b981',ini:'SS',estado:'ok'},
   {id:4,nombre:'Sede Este',ciudad:'Bogotá',score:65,alertas:3,color:'#f59e0b',ini:'SE',estado:'warn'},
@@ -3610,7 +3610,7 @@ function applyCfg() {
   const rm     = _cfg.rm       || '';
   const esp    = _cfg.esp      || 'Medicina General';
   const tipo   = _cfg.tipo     || 'Prestador de Salud';
-  const color  = _cfg.color    || '#0ea5e9';
+  const color  = _cfg.color    || '#0d9488';
   const words  = dir.replace(/[^A-Za-záéíóúÁÉÍÓÚñÑ ]/g,'').split(' ').filter(Boolean);
   const ini    = words.map(w=>w[0].toUpperCase()).join('').slice(0,2) || 'DT';
 
@@ -3674,7 +3674,7 @@ function applyCfg() {
     profesionales[0].nombre = dir;
     profesionales[0].rol = tipo;
     profesionales[0].ini = ini;
-    profesionales[0].color = (_cfg.color || '#0ea5e9');
+    profesionales[0].color = (_cfg.color || '#0d9488');
     if (typeof renderProfGrid === 'function') try { renderProfGrid(); } catch(e) {}
   }
 
@@ -3710,7 +3710,7 @@ function abrirSetup(modo) {
     document.getElementById('sf-rm').value        = _cfg.rm        || '';
     document.getElementById('sf-esp').value       = _cfg.esp       || '';
     if(document.getElementById('sf-fecha-visita')) document.getElementById('sf-fecha-visita').value = _cfg.fecha_visita || '';
-    _setupColor = _cfg.color || '#0ea5e9';
+    _setupColor = _cfg.color || '#0d9488';
     document.querySelectorAll('.setup-color-swatch').forEach(s => {
       s.classList.toggle('sel', s.dataset.c === _setupColor);
     });
@@ -3847,7 +3847,7 @@ const SESSION_KEY = 'normalis_session';
 const LOGS_KEY    = 'normalis_logs';
 
 const ROLE_DEF = {
-  director:  { label:'Director Técnico',        color:'#0ea5e9', perms:'*' }, // full access incl. automatismos
+  director:  { label:'Director Técnico',        color:'#0d9488', perms:'*' }, // full access incl. automatismos
   auditor:   { label:'Auditor Interno',          color:'#8b5cf6', perms:['dashboard','auditoria','resultados','comparador','calidad','actividad','chat','cronograma','automatismos'] },
   auxiliar:  { label:'Auxiliar Administrativo',  color:'#10b981', perms:['dashboard','documentos','generador','talento','consentimientos','calendario','firma','actividad','chat'] },
   consultor: { label:'Consultor Externo',        color:'#f59e0b', perms:['dashboard','comparador','calidad','chat','actividad'] },
@@ -3920,7 +3920,7 @@ function renderLoginUsers(){
 function loginAsAdmin(){
   // First-time: no users yet, grant director access without PIN
   const fakeUser = { id:0, nombre:(_cfg&&_cfg.director)||'Director Técnico',
-    rol:'director', color:'#0ea5e9', ini:(_cfg&&_cfg.ini)||'DT' };
+    rol:'director', color:'#0d9488', ini:(_cfg&&_cfg.ini)||'DT' };
   hideLogin();
   startSession(fakeUser, false);
 }
@@ -4041,7 +4041,7 @@ async function saveUserForm(){
 }
 
 /* ── Activity view ── */
-const ACT_COLORS={ login:'#0ea5e9',logout:'#64748b',doc_generado:'#8b5cf6',
+const ACT_COLORS={ login:'#0d9488',logout:'#64748b',doc_generado:'#8b5cf6',
   auditoria_completada:'#10b981',nav:'#94a3b8',doc_firmado:'#f59e0b',
   user_created:'#22c55e',user_updated:'#f59e0b',user_deleted:'#ef4444' };
 const ACT_LABELS={ login:'🔑 Login',logout:'🚪 Logout',doc_generado:'📄 Documento',
@@ -4829,11 +4829,11 @@ function renderIPSListREPS(data){
     const isESE = p.ese==='SI';
     const nat = p.naturalezajuridica||'';
     const icon = isESE?'🏛️':isIPS?'🏥':clase.includes('Transporte')?'🚑':'👨‍⚕️';
-    const badgeColor = isESE?'rgba(14,165,233,.15)':nat==='Pública'?'rgba(16,185,129,.15)':'rgba(99,102,241,.15)';
+    const badgeColor = isESE?'rgba(13,148,136,.15)':nat==='Pública'?'rgba(16,185,129,.15)':'rgba(99,102,241,.15)';
     const badgeText = isESE?'ESE':nat||'—';
-    const badgeTxt = isESE?'#0ea5e9':nat==='Pública'?'#10b981':'#6366f1';
+    const badgeTxt = isESE?'#0d9488':nat==='Pública'?'#10b981':'#6366f1';
     return `<div style="padding:13px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light,rgba(14,165,233,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light,rgba(13,148,136,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:var(--text)">${p.nombreprestador||'—'}</div>
         ${p.nombresede&&p.nombresede!==p.nombreprestador?`<div style="font-size:11px;color:var(--primary);margin-top:1px">Sede: ${p.nombresede}</div>`:''}
@@ -4897,7 +4897,7 @@ function renderIPSList(data){
   if(!data.length){ el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-muted)">Sin resultados para ese filtro</div>'; return; }
   el.innerHTML=data.map(i=>`
     <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start">
-      <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light,rgba(14,165,233,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏥</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--primary-light,rgba(13,148,136,.1));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏥</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:var(--text)">${i.n}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">📍 ${i.c} &nbsp;·&nbsp; ${i.t}</div>
@@ -6432,7 +6432,7 @@ function renderProfGrid(){
       '</div>';
     return;
   }
-  var typeColors={'Asistencial':'#0ea5e9','Administrativo':'#8b5cf6','Auditoría':'#f59e0b','Dirección':'#10b981','Auxiliar':'#ec4899'};
+  var typeColors={'Asistencial':'#0d9488','Administrativo':'#8b5cf6','Auditoría':'#f59e0b','Dirección':'#10b981','Auxiliar':'#ec4899'};
   grid.innerHTML = arr.map(function(p){
     var ini=(p.nombre||'?').split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
     var docsCount=Object.values(p.docs||{}).filter(Boolean).length;
@@ -6971,7 +6971,7 @@ if(typeof renderConsultor === 'function'){
       const scoreColor = cl.score>=85?'var(--success)':cl.score>=70?'var(--warning)':'var(--danger)';
       const ini = (cl.nombre||'?').split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
       return '<div class="cliente-row" onclick="openClienteDetail('+cl.id+')">'+
-        '<div class="cliente-avatar" style="background:'+(cl.color||'#0ea5e9')+'">'+ini+'</div>'+
+        '<div class="cliente-avatar" style="background:'+(cl.color||'#0d9488')+'">'+ini+'</div>'+
         '<div style="flex:1;min-width:0"><div class="cliente-name">'+cl.nombre+'</div>'+
         '<div class="cliente-city">'+(cl.ciudad||'')+(cl.plan?' · Plan '+cl.plan:'')+'</div></div>'+
         '<div class="cliente-score-bar"><div style="font-size:11px;color:'+scoreColor+';font-weight:700;text-align:right;margin-bottom:3px">'+cl.score+'/100</div>'+
@@ -7061,9 +7061,9 @@ function updateAuditoriaBadge(){
   if(cfg2.fecha_visita){
     cdBtn.textContent = 'Ver cronograma →';
     cdBtn.onclick = function(){ nav('cronograma'); };
-    cdBtn.style.background = 'rgba(14,165,233,.2)';
-    cdBtn.style.color = '#7dd3fc';
-    cdBtn.style.borderColor = 'rgba(14,165,233,.3)';
+    cdBtn.style.background = 'rgba(13,148,136,.2)';
+    cdBtn.style.color = '#5eead4';
+    cdBtn.style.borderColor = 'rgba(13,148,136,.3)';
   }
 })();
 
@@ -8083,7 +8083,7 @@ function evaluarSuficienciaDatos(ctx) {
         <div class="setup-field">
           <label>Color del establecimiento</label>
           <div class="setup-color-row" id="setup-colors">
-            <div class="setup-color-swatch sel" data-c="#0ea5e9" style="background:#0ea5e9" onclick="pickColor(this)"></div>
+            <div class="setup-color-swatch sel" data-c="#0d9488" style="background:#0d9488" onclick="pickColor(this)"></div>
             <div class="setup-color-swatch" data-c="#6366f1" style="background:#6366f1" onclick="pickColor(this)"></div>
             <div class="setup-color-swatch" data-c="#10b981" style="background:#10b981" onclick="pickColor(this)"></div>
             <div class="setup-color-swatch" data-c="#f59e0b" style="background:#f59e0b" onclick="pickColor(this)"></div>
