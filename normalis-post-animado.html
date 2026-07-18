@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>NormaLis — Post Animado</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',Arial,sans-serif}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideRight{from{width:0}to{width:100%}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,150,.5)}70%{box-shadow:0 0 0 20px rgba(0,200,150,0)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  @keyframes rotateDash{from{stroke-dashoffset:440}to{stroke-dashoffset:0}}
+  @keyframes scanLine{0%{top:-4px}100%{top:100%}}
+  @keyframes glowBorder{0%,100%{border-color:rgba(0,200,150,.3)}50%{border-color:rgba(0,200,150,1)}}
+  @keyframes particleFloat{0%{transform:translateY(0) translateX(0);opacity:0}15%{opacity:1}100%{transform:translateY(-220px) translateX(var(--dx));opacity:0}}
+  @keyframes bgShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  @keyframes countUp{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+  @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+
+  .card{
+    width:1080px;height:1080px;
+    background:linear-gradient(135deg,#04111E 0%,#06192A 50%,#081E32 100%);
+    position:relative;overflow:hidden;
+  }
+
+  /* Fondo con gradiente animado sutil */
+  .card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 80% 20%,rgba(0,200,150,.07) 0%,transparent 60%),
+               radial-gradient(ellipse at 20% 80%,rgba(11,46,74,.8) 0%,transparent 60%);
+    pointer-events:none;
+  }
+
+  /* Línea izquierda */
+  .accent-bar{position:absolute;left:0;top:0;width:7px;height:100%;background:linear-gradient(to bottom,#00C896 0%,#006B4F 100%);}
+
+  /* Scan line */
+  .scan{position:absolute;left:0;right:0;height:3px;background:linear-gradient(to right,transparent,rgba(0,200,150,.25),transparent);animation:scanLine 3.5s linear infinite;pointer-events:none;z-index:10;}
+
+  /* Círculos decorativos */
+  .deco-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,200,150,.1);}
+  .ring1{width:600px;height:600px;top:-200px;right:-150px;}
+  .ring2{width:380px;height:380px;top:-100px;right:-50px;}
+  .ring3{width:700px;height:700px;bottom:-300px;left:-150px;}
+
+  /* Partículas */
+  .particle{position:absolute;border-radius:50%;animation:particleFloat linear infinite;opacity:0;}
+
+  /* Header */
+  .header{position:absolute;top:64px;left:64px;right:64px;animation:fadeUp .7s ease both;}
+  .logo-wrap{display:flex;align-items:center;gap:18px;}
+  .logo-box{
+    width:58px;height:58px;border-radius:14px;
+    background:#00C896;display:flex;align-items:center;justify-content:center;
+    font-size:30px;font-weight:900;color:#06192A;
+    animation:pulse 2.5s infinite 1.5s;
+    flex-shrink:0;
+  }
+  .brand-name{font-size:32px;font-weight:800;color:#00C896;letter-spacing:3px;}
+  .brand-sub{font-size:14px;color:#3A7A96;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+  .divider{height:2px;background:linear-gradient(to right,#00C896,transparent);margin-top:22px;animation:slideRight 1.2s ease both .6s;width:0;animation-fill-mode:forwards;}
+
+  /* Pregunta */
+  .question{position:absolute;top:240px;left:64px;right:64px;animation:fadeUp .8s ease both .4s;opacity:0;animation-fill-mode:forwards;}
+  .q-main{font-size:72px;font-weight:900;color:#fff;line-height:1.15;letter-spacing:-1px;}
+  .q-main span{color:#00C896;}
+  .q-sub{font-size:24px;color:#5A98B4;margin-top:16px;line-height:1.5;}
+  .q-sub strong{color:#00C896;}
+
+  /* Cards métricas */
+  .metrics{position:absolute;top:600px;left:64px;right:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;animation:fadeUp .8s ease both .7s;opacity:0;animation-fill-mode:forwards;}
+  .metric{
+    background:rgba(0,200,150,.07);
+    border:1.5px solid rgba(0,200,150,.25);
+    border-radius:20px;padding:28px 20px;text-align:center;
+    animation:glowBorder 3s ease infinite;
+  }
+  .metric:nth-child(1){animation-delay:1s}
+  .metric:nth-child(2){animation-delay:1.5s}
+  .metric:nth-child(3){animation-delay:2s}
+  .metric svg{display:block;margin:0 auto 12px;animation:float 3.5s ease infinite;}
+  .metric:nth-child(2) svg{animation-delay:.5s}
+  .metric:nth-child(3) svg{animation-delay:1s}
+  .metric-label{font-size:14px;color:#00C896;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+  .metric-desc{font-size:12px;color:#3A7A96;margin-top:4px;}
+
+  /* Badges */
+  .badges{position:absolute;top:852px;left:64px;display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .8s ease both 1s;opacity:0;animation-fill-mode:forwards;}
+  .badge{
+    background:rgba(0,200,150,.1);border:1.5px solid rgba(0,200,150,.35);
+    border-radius:30px;padding:8px 20px;font-size:15px;color:#00C896;font-weight:600;
+  }
+  .badge.muted{background:rgba(123,184,212,.08);border-color:rgba(123,184,212,.3);color:#7BB8D4;}
+
+  /* CTA */
+  .cta{position:absolute;bottom:64px;left:64px;right:64px;animation:fadeUp .8s ease both 1.2s;opacity:0;animation-fill-mode:forwards;}
+  .cta-btn{
+    background:linear-gradient(90deg,#00C896,#00A07A);
+    border-radius:60px;padding:26px 40px;text-align:center;
+    font-size:26px;font-weight:900;color:#06192A;letter-spacing:.5px;
+    animation:pulse 2.2s infinite 2s;
+    background-size:200% auto;
+  }
+  .hashtags{text-align:center;margin-top:14px;font-size:15px;color:#2A5A6E;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="accent-bar"></div>
+  <div class="scan"></div>
+
+  <!-- Decoración -->
+  <div class="deco-ring ring1"></div>
+  <div class="deco-ring ring2"></div>
+  <div class="deco-ring ring3"></div>
+
+  <!-- Partículas -->
+  <div class="particle" style="width:8px;height:8px;background:#00C896;left:12%;bottom:25%;--dx:50px;animation-duration:5s;animation-delay:0s;"></div>
+  <div class="particle" style="width:5px;height:5px;background:#00C896;left:28%;bottom:35%;--dx:-40px;animation-duration:6s;animation-delay:1.2s;"></div>
+  <div class="particle" style="width:7px;height:7px;background:#7BB8D4;left:65%;bottom:18%;--dx:60px;animation-duration:4.5s;animation-delay:2.5s;"></div>
+  <div class="particle" style="width:4px;height:4px;background:#00C896;left:82%;bottom:28%;--dx:-50px;animation-duration:7s;animation-delay:.8s;"></div>
+  <div class="particle" style="width:6px;height:6px;background:#00C896;left:48%;bottom:12%;--dx:30px;animation-duration:5.5s;animation-delay:3.5s;"></div>
+  <div class="particle" style="width:5px;height:5px;background:#7BB8D4;left:55%;bottom:40%;--dx:-35px;animation-duration:6.5s;animation-delay:1.8s;"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-wrap">
+      <div class="logo-box">N</div>
+      <div>
+        <div class="brand-name">NormaLis</div>
+        <div class="brand-sub">Cumplimiento normativo en salud · Colombia</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <!-- Pregunta principal -->
+  <div class="question">
+    <div class="q-main">¿Tu IPS cumple con<br><span>la Res. 3100?</span></div>
+    <div class="q-sub">Autoevaluación de habilitación en <strong>minutos</strong>, no semanas.</div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics">
+    <div class="metric">
+      <svg width="60" height="60" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,200,150,.15)" stroke-width="10"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#00C896" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="264" stroke-dashoffset="264"
+          style="animation:rotateDash 2s ease forwards 1.2s;transform-origin:center;transform:rotate(-90deg);"/>
+        <text x="50" y="58" text-anchor="middle" fill="#00C896" font-size="32" font-weight="900" font-family="Arial">7</text>
+      </svg>
+      <div class="metric-label">Estándares</div>
+      <div class="metric-desc">Habilitación</div>
+    </div>
+    <div class="metric">
+      <svg width="60" height="60" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,200,150,.15)" stroke-width="10"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#00C896" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="264" stroke-dashoffset="264"
+          style="animation:rotateDash 2.5s ease forwards 1.5s;transform-origin:center;transform:rotate(-90deg);"/>
+        <text x="50" y="58" text-anchor="middle" fill="#00C896" font-size="24" font-weight="900" font-family="Arial">IA</text>
+      </svg>
+      <div class="metric-label">Auditoría IA</div>
+      <div class="metric-desc">Automatizada</div>
+    </div>
+    <div class="metric">
+      <svg width="60" height="60" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,200,150,.15)" stroke-width="10"/>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#00C896" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="264" stroke-dashoffset="264"
+          style="animation:rotateDash 3s ease forwards 1.8s;transform-origin:center;transform:rotate(-90deg);"/>
+        <text x="50" y="58" text-anchor="middle" fill="#00C896" font-size="20" font-weight="900" font-family="Arial">PAM</text>
+      </svg>
+      <div class="metric-label">PAMEC</div>
+      <div class="metric-desc">Integrado</div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="badges">
+    <span class="badge">Res. 3100/2019</span>
+    <span class="badge">Res. 465/2025</span>
+    <span class="badge">REPS</span>
+    <span class="badge muted">MINSALUD</span>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <a href="https://normalis.co" target="_blank" style="display:block;text-decoration:none;color:#06192A;" class="cta-btn">Prueba gratis → normalis.co ↗</a>
+    <div class="hashtags">#HabilitacionEnSalud &nbsp;·&nbsp; #IPS &nbsp;·&nbsp; #PAMEC &nbsp;·&nbsp; #CalidadEnSalud &nbsp;·&nbsp; #Res3100</div>
+  </div>
+</div>
+</body>
+</html>
