@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog NormaLis — Habilitación de IPS en Colombia | Resolución 3100</title>
+<meta name="description" content="Guías prácticas sobre habilitación de servicios de salud en Colombia. Resolución 3100 de 2019, PAMEC, REPS y los 7 estándares explicados para IPS.">
+<meta name="keywords" content="habilitación IPS Colombia, Resolución 3100, PAMEC, REPS, estándares habilitación salud, autoevaluación IPS">
+<link rel="canonical" href="https://normalis.co/blog/">
+<meta property="og:title" content="Blog NormaLis — Habilitación de IPS en Colombia">
+<meta property="og:description" content="Guías prácticas sobre habilitación de servicios de salud. Resolución 3100 de 2019, PAMEC y más.">
+<meta property="og:url" content="https://normalis.co/blog/">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --primary:#0d9488;--primary-dark:#0f766e;--primary-light:#f0fdfc;
+    --sidebar-bg:#134e4a;--text:#134e4a;--text-muted:#4d7c77;
+    --border:#d1faf5;--bg:#f0fdfc;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:#fff;color:var(--text);}
+  a{color:var(--primary);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* Nav */
+  nav{background:var(--sidebar-bg);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo-box{width:36px;height:36px;border-radius:8px;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;}
+  .nav-logo-text{font-size:20px;font-weight:800;color:#5eead4;letter-spacing:2px;}
+  nav a.nav-link{color:#5eead4;font-size:15px;font-weight:500;text-decoration:none;margin-left:24px;}
+  nav a.nav-link:hover{color:#fff;text-decoration:none;}
+  .nav-cta{background:var(--primary);color:#fff!important;border-radius:20px;padding:8px 20px;font-weight:600!important;}
+
+  /* Hero blog */
+  .hero{background:var(--primary-light);border-bottom:1px solid var(--border);padding:56px 5% 48px;}
+  .hero .breadcrumb{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+  .hero h1{font-size:40px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:16px;}
+  .hero p{font-size:18px;color:var(--text-muted);max-width:640px;line-height:1.7;}
+
+  /* Grid artículos */
+  .container{max-width:1100px;margin:0 auto;padding:56px 5%;}
+  .section-title{font-size:13px;font-weight:700;color:var(--primary);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px;}
+  .articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:32px;}
+
+  .card{border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+  .card:hover{box-shadow:0 8px 32px rgba(13,148,136,.12);transform:translateY(-3px);}
+  .card-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:56px;}
+  .card-img.teal{background:linear-gradient(135deg,#134e4a,#0d9488);}
+  .card-img.mint{background:linear-gradient(135deg,#0f766e,#2dd4bf);}
+  .card-img.dark{background:linear-gradient(135deg,#042f2e,#134e4a);}
+  .card-body{padding:24px;}
+  .card-tag{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;}
+  .card h2{font-size:22px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:12px;}
+  .card p{font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:20px;}
+  .card-footer{display:flex;align-items:center;justify-content:space-between;}
+  .card-meta{font-size:13px;color:var(--text-muted);}
+  .read-more{font-size:14px;font-weight:700;color:var(--primary);}
+
+  /* Newsletter */
+  .newsletter{background:var(--sidebar-bg);border-radius:20px;padding:48px;text-align:center;margin-top:64px;}
+  .newsletter h3{font-size:28px;font-weight:800;color:#fff;margin-bottom:12px;}
+  .newsletter p{font-size:16px;color:#5eead4;margin-bottom:28px;}
+  .newsletter-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .newsletter-form input{border:none;border-radius:30px;padding:14px 24px;font-size:15px;width:300px;outline:none;}
+  .newsletter-form button{background:var(--primary);color:#fff;border:none;border-radius:30px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;}
+  .newsletter-form button:hover{background:var(--primary-dark);}
+
+  /* Footer */
+  footer{background:var(--sidebar-bg);padding:32px 5%;text-align:center;margin-top:0;}
+  footer p{color:#5eead4;font-size:14px;}
+  footer a{color:#2dd4bf;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="https://normalis.co">
+    <div class="nav-logo-box">N</div>
+    <span class="nav-logo-text">NormaLis</span>
+  </a>
+  <div>
+    <a class="nav-link" href="https://normalis.co">Inicio</a>
+    <a class="nav-link" href="/blog/">Blog</a>
+    <a class="nav-link nav-cta" href="https://normalis.co/registro.html">Prueba gratis</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="breadcrumb"><a href="https://normalis.co">normalis.co</a> / Blog</div>
+  <h1>Habilitación de IPS en Colombia:<br>guías prácticas y actualizadas</h1>
+  <p>Todo lo que necesitas saber sobre la Resolución 3100 de 2019, los 7 estándares, PAMEC y el proceso ante el REPS — explicado sin tecnicismos.</p>
+</div>
+
+<div class="container">
+  <div class="section-title">Artículos destacados</div>
+
+  <div class="articles-grid">
+
+    <a href="/blog/resolucion-3100-habilitacion-ips-colombia.html" style="text-decoration:none;color:inherit;">
+      <div class="card">
+        <div class="card-img teal">📋</div>
+        <div class="card-body">
+          <div class="card-tag">Normativa</div>
+          <h2>Resolución 3100 de 2019: guía completa para IPS</h2>
+          <p>Todo lo que necesitas saber sobre la norma que regula la habilitación de servicios de salud en Colombia: objeto, campo de aplicación, vigencias y proceso.</p>
+          <div class="card-footer">
+            <span class="card-meta">10 min de lectura</span>
+            <span class="read-more">Leer artículo →</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="/blog/7-estandares-habilitacion-servicios-salud.html" style="text-decoration:none;color:inherit;">
+      <div class="card">
+        <div class="card-img mint">🏥</div>
+        <div class="card-body">
+          <div class="card-tag">Estándares</div>
+          <h2>Los 7 estándares de habilitación: qué son y cómo cumplirlos</h2>
+          <p>Talento Humano, Infraestructura, Dotación, Medicamentos, Procesos Prioritarios, Historia Clínica e Interdependencia — explicados con ejemplos prácticos.</p>
+          <div class="card-footer">
+            <span class="card-meta">12 min de lectura</span>
+            <span class="read-more">Leer artículo →</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <div class="card" style="opacity:.6;pointer-events:none;">
+      <div class="card-img dark">📈</div>
+      <div class="card-body">
+        <div class="card-tag">PAMEC</div>
+        <h2>PAMEC paso a paso: cómo implementarlo en tu IPS</h2>
+        <p>El Programa de Auditoría para el Mejoramiento de la Calidad explicado desde cero: autoevaluación, planes de mejoramiento e indicadores.</p>
+        <div class="card-footer">
+          <span class="card-meta">Próximamente</span>
+          <span class="read-more" style="color:#9ca3af;">En preparación</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="newsletter">
+    <h3>Recibe nuevos artículos gratis</h3>
+    <p>Actualizaciones normativas, guías prácticas y tips de habilitación directamente en tu correo.</p>
+    <form class="newsletter-form" onsubmit="handleNewsletter(event)">
+      <input type="email" placeholder="tucorreo@ips.com" required>
+      <button type="submit">Suscribirme</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 <a href="https://normalis.co">NormaLis</a> — Cumplimiento normativo en salud · Colombia &nbsp;|&nbsp; <a href="https://normalis.co/registro.html">Crear cuenta gratis</a></p>
+</footer>
+
+<script>
+function handleNewsletter(e){
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = '✅ Suscrito';
+  btn.style.background = '#059669';
+  btn.disabled = true;
+}
+</script>
+</body>
+</html>

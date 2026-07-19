@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>NormaLis — Carrusel LinkedIn</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#111;font-family:'Segoe UI',Arial,sans-serif;padding:40px 20px;}
+
+  h1{color:#0d9488;text-align:center;font-size:18px;margin-bottom:8px;letter-spacing:1px;}
+  p.hint{color:#5eead4;text-align:center;font-size:13px;margin-bottom:32px;}
+
+  .slides-wrap{display:flex;flex-direction:column;gap:32px;align-items:center;}
+
+  /* Tarjeta base */
+  .slide{
+    width:1080px;height:1080px;
+    position:relative;overflow:hidden;
+    background:linear-gradient(145deg,#042f2e 0%,#134e4a 60%,#0f766e 100%);
+    flex-shrink:0;
+  }
+  .slide::before{
+    content:'';position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 90% 10%,rgba(20,184,166,.18) 0%,transparent 55%),
+      radial-gradient(ellipse at 10% 90%,rgba(13,148,136,.15) 0%,transparent 55%);
+    pointer-events:none;
+  }
+
+  /* Barra lateral */
+  .bar{position:absolute;left:0;top:0;width:8px;height:100%;background:linear-gradient(to bottom,#2dd4bf,#0d9488);}
+
+  /* Número de slide */
+  .slide-num{
+    position:absolute;top:52px;right:60px;
+    font-size:13px;font-weight:700;color:rgba(94,234,212,.5);
+    letter-spacing:3px;
+  }
+
+  /* Logo marca */
+  .logo{position:absolute;top:52px;left:60px;display:flex;align-items:center;gap:14px;}
+  .logo-box{width:46px;height:46px;border-radius:10px;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;}
+  .logo-text{font-size:22px;font-weight:800;color:#2dd4bf;letter-spacing:2px;}
+
+  /* Divider */
+  .divider{position:absolute;top:130px;left:60px;right:60px;height:1.5px;background:linear-gradient(to right,#2dd4bf,transparent);}
+
+  /* ── SLIDE 1 — Portada ── */
+  .s1-num{
+    position:absolute;top:180px;left:60px;
+    font-size:200px;font-weight:900;
+    color:rgba(45,212,191,.06);line-height:1;
+    user-select:none;
+  }
+  .s1-title{position:absolute;top:220px;left:60px;right:60px;}
+  .s1-title .label{font-size:15px;font-weight:700;color:#2dd4bf;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;}
+  .s1-title h2{font-size:88px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-2px;}
+  .s1-title h2 span{color:#2dd4bf;}
+  .s1-title .sub{font-size:26px;color:rgba(255,255,255,.6);margin-top:24px;line-height:1.5;}
+  .s1-footer{position:absolute;bottom:80px;left:60px;right:60px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .s1-footer .tag{background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.3);border-radius:30px;padding:10px 22px;font-size:16px;color:#2dd4bf;font-weight:600;}
+  .s1-footer .swipe{font-size:16px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:8px;}
+  .s1-footer .swipe::after{content:'→';color:#2dd4bf;}
+
+  /* ── SLIDES 2-6 — Estándares ── */
+  .std-hero{position:absolute;top:160px;left:60px;right:60px;}
+  .std-hero .num{font-size:130px;font-weight:900;color:rgba(45,212,191,.12);line-height:1;}
+  .std-hero .title{font-size:62px;font-weight:900;color:#fff;margin-top:-30px;line-height:1.1;}
+  .std-hero .title span{color:#2dd4bf;}
+  .std-hero .pill{
+    display:inline-block;margin-top:18px;
+    background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.35);
+    border-radius:30px;padding:8px 20px;
+    font-size:15px;color:#2dd4bf;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  }
+
+  /* Items de contenido */
+  .items{position:absolute;top:500px;left:60px;right:60px;display:flex;flex-direction:column;gap:22px;}
+  .item-row{display:flex;align-items:flex-start;gap:20px;}
+  .item-icon{
+    width:54px;height:54px;border-radius:12px;flex-shrink:0;
+    background:rgba(45,212,191,.1);border:1.5px solid rgba(45,212,191,.25);
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+  }
+  .item-text .it{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .item-text .id{font-size:16px;color:rgba(255,255,255,.5);line-height:1.4;}
+
+  /* Footer estándares */
+  .std-footer{position:absolute;bottom:64px;left:60px;right:60px;display:flex;justify-content:space-between;align-items:center;}
+  .std-footer .dots{display:flex;gap:8px;}
+  .dot{width:10px;height:10px;border-radius:50%;background:rgba(45,212,191,.25);}
+  .dot.active{background:#2dd4bf;width:28px;border-radius:6px;}
+  .std-footer .url{font-size:16px;color:rgba(45,212,191,.5);font-weight:600;}
+
+  /* ── SLIDE FINAL — CTA ── */
+  .cta-wrap{position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);text-align:center;}
+  .cta-wrap .badge{
+    display:inline-block;margin-bottom:32px;
+    background:rgba(45,212,191,.1);border:1.5px solid rgba(45,212,191,.3);
+    border-radius:30px;padding:10px 24px;
+    font-size:15px;color:#2dd4bf;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  }
+  .cta-wrap h2{font-size:74px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-2px;}
+  .cta-wrap h2 span{color:#2dd4bf;}
+  .cta-wrap p{font-size:24px;color:rgba(255,255,255,.55);margin:24px 0 48px;line-height:1.5;}
+  .cta-btn{
+    display:inline-block;
+    background:linear-gradient(90deg,#0d9488,#2dd4bf);
+    border-radius:60px;padding:28px 64px;
+    font-size:28px;font-weight:900;color:#042f2e;
+    text-decoration:none;
+  }
+  .cta-hash{margin-top:36px;font-size:17px;color:rgba(45,212,191,.4);letter-spacing:.5px;}
+
+  /* Print label */
+  .print-label{
+    text-align:center;font-size:12px;color:#374151;
+    padding:8px 0 0;font-family:monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>CARRUSEL LINKEDIN — NormaLis</h1>
+<p class="hint">Toma screenshot de cada tarjeta (1080×1080 px) · Publica en orden en LinkedIn como "documento"</p>
+
+<div class="slides-wrap">
+
+  <!-- ═══════ SLIDE 1 — Portada ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">01 / 06</div>
+    <div class="divider"></div>
+    <div class="s1-num">7</div>
+    <div class="s1-title">
+      <div class="label">Habilitación en salud</div>
+      <h2>¿Conoces los <span>7 estándares</span> que tu IPS debe cumplir?</h2>
+      <div class="sub">Resolución 3100 de 2019 · Ministerio de Salud de Colombia</div>
+    </div>
+    <div class="s1-footer">
+      <div>
+        <span class="tag">Res. 3100/2019</span>&nbsp;
+        <span class="tag">Res. 465/2025</span>
+      </div>
+      <div class="swipe">Desliza para ver cada estándar</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 1 — Portada</div>
+
+  <!-- ═══════ SLIDE 2 — Talento Humano + Infraestructura ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">02 / 06</div>
+    <div class="divider"></div>
+    <div class="std-hero">
+      <div class="num">01</div>
+      <div class="title">Talento <span>Humano</span></div>
+      <div class="pill">Estándar 1 de 7</div>
+    </div>
+    <div class="items">
+      <div class="item-row">
+        <div class="item-icon">👩‍⚕️</div>
+        <div class="item-text">
+          <div class="it">Perfiles y competencias verificados</div>
+          <div class="id">El personal debe tener títulos habilitantes y estar registrado en RETHUS</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">📋</div>
+        <div class="item-text">
+          <div class="it">Hojas de vida actualizadas</div>
+          <div class="id">Con soportes de formación, experiencia y certificaciones vigentes</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">🏥</div>
+        <div class="item-text">
+          <div class="it">Estándar 2: Infraestructura</div>
+          <div class="id">Plantas físicas, áreas, circulaciones y condiciones de seguridad según manual de habilitación</div>
+        </div>
+      </div>
+    </div>
+    <div class="std-footer">
+      <div class="dots">
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="url">normalis.co</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 2 — Talento Humano e Infraestructura</div>
+
+  <!-- ═══════ SLIDE 3 — Dotación + Medicamentos ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">03 / 06</div>
+    <div class="divider"></div>
+    <div class="std-hero">
+      <div class="num">03</div>
+      <div class="title"><span>Dotación</span> y Equipos</div>
+      <div class="pill">Estándares 3 y 4 de 7</div>
+    </div>
+    <div class="items">
+      <div class="item-row">
+        <div class="item-icon">🔬</div>
+        <div class="item-text">
+          <div class="it">Equipos biomédicos con mantenimiento vigente</div>
+          <div class="id">Hojas de vida de equipos, calibraciones y contratos de mantenimiento al día</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">💊</div>
+        <div class="item-text">
+          <div class="it">Medicamentos, dispositivos e insumos</div>
+          <div class="id">Estándar 4: stock mínimo, cadena de frío, fechas de vencimiento y trazabilidad</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">⚠️</div>
+        <div class="item-text">
+          <div class="it">Clave: "Cuenta con" vs "Disponibilidad"</div>
+          <div class="id">"Cuenta con" = existencia permanente. "Disponibilidad" = accesible de inmediato aunque esté fuera del servicio</div>
+        </div>
+      </div>
+    </div>
+    <div class="std-footer">
+      <div class="dots">
+        <div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="url">normalis.co</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 3 — Dotación y Medicamentos</div>
+
+  <!-- ═══════ SLIDE 4 — Procesos Prioritarios + Historia Clínica ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">04 / 06</div>
+    <div class="divider"></div>
+    <div class="std-hero">
+      <div class="num">05</div>
+      <div class="title">Procesos <span>Prioritarios</span></div>
+      <div class="pill">Estándares 5 y 6 de 7</div>
+    </div>
+    <div class="items">
+      <div class="item-row">
+        <div class="item-icon">🔄</div>
+        <div class="item-text">
+          <div class="it">Protocolos y guías de práctica clínica</div>
+          <div class="id">Deben estar adoptados, socializados y disponibles para el personal — no solo archivados</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">📁</div>
+        <div class="item-text">
+          <div class="it">Historia Clínica y Registros (Est. 6)</div>
+          <div class="id">Integridad, confidencialidad, acceso oportuno y conservación según normativa. Aplica a historias físicas y electrónicas</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">📅</div>
+        <div class="item-text">
+          <div class="it">Autoevaluación obligatoria en año 4</div>
+          <div class="id">Art. 5, Res. 3100: la IPS debe autoevaluarse antes de que venza su inscripción inicial de 4 años</div>
+        </div>
+      </div>
+    </div>
+    <div class="std-footer">
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="url">normalis.co</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 4 — Procesos Prioritarios e Historia Clínica</div>
+
+  <!-- ═══════ SLIDE 5 — Interdependencia + PAMEC ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">05 / 06</div>
+    <div class="divider"></div>
+    <div class="std-hero">
+      <div class="num">07</div>
+      <div class="title"><span>Interdependencia</span></div>
+      <div class="pill">Estándar 7 de 7 + PAMEC</div>
+    </div>
+    <div class="items">
+      <div class="item-row">
+        <div class="item-icon">🔗</div>
+        <div class="item-text">
+          <div class="it">Servicios de apoyo y referencia</div>
+          <div class="id">Contratos vigentes con laboratorio, imágenes, banco de sangre y servicios de mayor complejidad según lo que ofrece la IPS</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">📈</div>
+        <div class="item-text">
+          <div class="it">PAMEC — Auditoría para el Mejoramiento</div>
+          <div class="id">Obligatorio para todas las IPS habilitadas: autoevaluación + plan de mejoramiento + indicadores de seguimiento</div>
+        </div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">🏛️</div>
+        <div class="item-text">
+          <div class="it">REPS — Registro gratuito y obligatorio</div>
+          <div class="id">Art. 22: la inscripción en REPS es COMPLETAMENTE GRATUITA. Nunca pagues a terceros por habilitarte</div>
+        </div>
+      </div>
+    </div>
+    <div class="std-footer">
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div>
+      </div>
+      <div class="url">normalis.co</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 5 — Interdependencia y PAMEC</div>
+
+  <!-- ═══════ SLIDE 6 — CTA ═══════ -->
+  <div class="slide">
+    <div class="bar"></div>
+    <div class="logo"><div class="logo-box">N</div><div class="logo-text">NormaLis</div></div>
+    <div class="slide-num">06 / 06</div>
+    <div class="divider"></div>
+    <div class="cta-wrap">
+      <div class="badge">¿Tu IPS está lista?</div>
+      <h2>Autoevalúate en<br><span>minutos</span>, no semanas.</h2>
+      <p>NormaLis guía a tu IPS por los 7 estándares,<br>genera reportes PDF y responde tus dudas con IA.</p>
+      <a href="https://normalis.co" class="cta-btn">Prueba gratis → normalis.co</a>
+      <div class="cta-hash">#HabilitacionEnSalud &nbsp;·&nbsp; #IPS &nbsp;·&nbsp; #Res3100 &nbsp;·&nbsp; #PAMEC &nbsp;·&nbsp; #CalidadEnSalud</div>
+    </div>
+    <div class="std-footer">
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div>
+      </div>
+      <div class="url">normalis.co</div>
+    </div>
+  </div>
+  <div class="print-label">Slide 6 — CTA Final</div>
+
+</div><!-- /slides-wrap -->
+
+<div style="text-align:center;margin-top:48px;padding:24px;background:#1a1a1a;border-radius:12px;max-width:600px;margin-left:auto;margin-right:auto;">
+  <p style="color:#2dd4bf;font-weight:700;font-size:16px;margin-bottom:12px;">📤 Cómo publicar en LinkedIn</p>
+  <p style="color:#9ca3af;font-size:14px;line-height:1.7;">
+    1. Captura screenshot de cada slide (1080×1080 px)<br>
+    2. En LinkedIn → "Publicar" → ícono de documento (📄)<br>
+    3. Sube las 6 imágenes <strong style="color:#fff">en orden</strong><br>
+    4. LinkedIn las convierte automáticamente en carrusel deslizable<br>
+    5. Copia los hashtags del último slide a la descripción
+  </p>
+</div>
+
+</body>
+</html>

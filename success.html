@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¡Suscripción activada! — NormaLis</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--primary:#0d9488;--primary-dark:#0f766e;--primary-light:#f0fdfc;--sidebar-bg:#134e4a;--text:#134e4a;--text-muted:#4d7c77;--border:#d1faf5;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--primary-light);min-height:100vh;display:flex;flex-direction:column;}
+  nav{background:var(--sidebar-bg);padding:0 5%;display:flex;align-items:center;height:64px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo-box{width:36px;height:36px;border-radius:8px;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;}
+  .nav-logo-text{font-size:20px;font-weight:800;color:#5eead4;letter-spacing:2px;}
+
+  .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 5%;}
+  .card{background:#fff;border:1.5px solid var(--border);border-radius:24px;padding:56px 48px;max-width:560px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(13,148,136,.1);}
+  .icon{font-size:72px;margin-bottom:24px;display:block;}
+  h1{font-size:34px;font-weight:800;color:var(--text);margin-bottom:12px;}
+  .subtitle{font-size:18px;color:var(--text-muted);line-height:1.6;margin-bottom:32px;}
+  .steps{background:var(--primary-light);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:left;margin-bottom:32px;}
+  .steps h3{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
+  .step-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+  .step-item:last-child{margin-bottom:0;}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-text{font-size:15px;color:var(--text);line-height:1.5;padding-top:4px;}
+  .btn-primary{display:inline-block;background:var(--primary);color:#fff;border-radius:30px;padding:16px 40px;font-size:17px;font-weight:700;text-decoration:none;transition:background .2s;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .note{font-size:13px;color:var(--text-muted);margin-top:16px;}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="https://normalis.co">
+    <div class="nav-logo-box">N</div>
+    <span class="nav-logo-text">NormaLis</span>
+  </a>
+</nav>
+
+<div class="main">
+  <div class="card">
+    <span class="icon">🎉</span>
+    <h1>¡Suscripción activada!</h1>
+    <p class="subtitle">Tu IPS ya tiene acceso completo a NormaLis. En unos segundos recibirás un correo de confirmación.</p>
+
+    <div class="steps">
+      <h3>¿Qué sigue?</h3>
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text">Revisa tu correo — ahí estará la confirmación y tu factura de Stripe</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text">Inicia sesión en la app — tu cuenta ya está habilitada</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text">Empieza por la autoevaluación de habilitación para ver el estado real de tu IPS</div>
+      </div>
+    </div>
+
+    <a href="https://normalis.co/login.html" class="btn-primary">Ir a la app →</a>
+    <p class="note">¿Algún problema? Escríbenos al chat de la app o a fjfc1984@gmail.com</p>
+  </div>
+</div>
+
+<script>
+// Actualizar rol en Firestore si hay sesión activa
+// (el webhook de Stripe ya habrá actualizado el rol vía Cloudflare Worker)
+// Este script solo hace un refresh de la sesión para que el usuario no tenga que re-loguear
+
+window.addEventListener('load', () => {
+  // Limpiar parámetros de Stripe de la URL
+  if (window.history.replaceState) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('session_id');
+    window.history.replaceState({}, document.title, url.toString());
+  }
+});
+</script>
+</body>
+</html>
