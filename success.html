@@ -15,19 +15,35 @@
   .nav-logo-text{font-size:20px;font-weight:800;color:#80CBC4;letter-spacing:2px;}
 
   .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 5%;}
-  .card{background:#fff;border:1.5px solid var(--border);border-radius:24px;padding:56px 48px;max-width:560px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,121,107,.1);}
+  .card{background:#fff;border:1.5px solid var(--border);border-radius:24px;padding:56px 48px;max-width:580px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,121,107,.1);}
   .icon{font-size:72px;margin-bottom:24px;display:block;}
   h1{font-size:34px;font-weight:800;color:var(--text);margin-bottom:12px;}
-  .subtitle{font-size:18px;color:var(--text-muted);line-height:1.6;margin-bottom:32px;}
+  .subtitle{font-size:18px;color:var(--text-muted);line-height:1.6;margin-bottom:28px;}
+
+  /* Plan badge */
+  .plan-badge{display:inline-flex;align-items:center;gap:8px;background:var(--primary-light);border:1.5px solid var(--border);border-radius:999px;padding:8px 20px;font-size:15px;font-weight:700;color:var(--primary);margin-bottom:28px;}
+  .plan-dot{width:10px;height:10px;border-radius:50%;background:#00796B;}
+
+  /* Verificando spinner */
+  .verifying{display:flex;align-items:center;justify-content:center;gap:12px;font-size:14px;color:var(--text-muted);margin-bottom:24px;padding:14px;background:var(--primary-light);border-radius:12px;border:1px solid var(--border);}
+  .spinner{width:18px;height:18px;border:2.5px solid rgba(0,121,107,.2);border-top-color:#00796B;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
   .steps{background:var(--primary-light);border:1px solid var(--border);border-radius:16px;padding:24px;text-align:left;margin-bottom:32px;}
-  .steps h3{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
+  .steps h3{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
   .step-item{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
   .step-item:last-child{margin-bottom:0;}
-  .step-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .step-text{font-size:15px;color:var(--text);line-height:1.5;padding-top:4px;}
-  .btn-primary{display:inline-block;background:var(--primary);color:#fff;border-radius:30px;padding:16px 40px;font-size:17px;font-weight:700;text-decoration:none;transition:background .2s;}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+  .step-text{font-size:15px;color:var(--text);line-height:1.5;}
+
+  .btn-primary{display:inline-block;background:var(--primary);color:#fff;border-radius:30px;padding:16px 44px;font-size:17px;font-weight:700;text-decoration:none;transition:background .2s;}
   .btn-primary:hover{background:var(--primary-dark);}
-  .note{font-size:13px;color:var(--text-muted);margin-top:16px;}
+  .note{font-size:13px;color:var(--text-muted);margin-top:16px;line-height:1.6;}
+  .note a{color:var(--primary);text-decoration:none;font-weight:600;}
+
+  /* IPS name tag */
+  .ips-tag{font-size:14px;color:var(--text-muted);margin-bottom:20px;}
+  .ips-tag strong{color:var(--text);}
 </style>
 </head>
 <body>
@@ -42,42 +58,78 @@
   <div class="card">
     <span class="icon">🎉</span>
     <h1>¡Suscripción activada!</h1>
-    <p class="subtitle">Tu IPS ya tiene acceso completo a NormaLis. En unos segundos recibirás un correo de confirmación.</p>
+
+    <!-- Spinner de verificación (oculto tras confirmar) -->
+    <div class="verifying" id="verifying-box">
+      <div class="spinner"></div>
+      <span>Confirmando tu suscripción con Stripe…</span>
+    </div>
+
+    <!-- Info dinámica (oculta hasta confirmar) -->
+    <div id="plan-info" style="display:none">
+      <div class="plan-badge"><div class="plan-dot"></div><span id="plan-name">Plan activo</span></div>
+      <p id="ips-tag" class="ips-tag"></p>
+    </div>
+
+    <p class="subtitle">Tu IPS ya tiene acceso completo a NormaLis. En unos segundos recibirás un correo de confirmación de Stripe.</p>
 
     <div class="steps">
       <h3>¿Qué sigue?</h3>
       <div class="step-item">
         <div class="step-num">1</div>
-        <div class="step-text">Revisa tu correo — ahí estará la confirmación y tu factura de Stripe</div>
+        <div class="step-text">Revisa tu correo — ahí estará la confirmación y tu factura</div>
       </div>
       <div class="step-item">
         <div class="step-num">2</div>
-        <div class="step-text">Inicia sesión en la app — tu cuenta ya está habilitada</div>
+        <div class="step-text">Inicia sesión — tu cuenta ya está habilitada como cliente</div>
       </div>
       <div class="step-item">
         <div class="step-num">3</div>
-        <div class="step-text">Empieza por la autoevaluación de habilitación para ver el estado real de tu IPS</div>
+        <div class="step-text">Empieza por la autoevaluación para ver el estado real de tu IPS</div>
       </div>
     </div>
 
-    <a href="https://normalis.co/login.html" class="btn-primary">Ir a la app →</a>
-    <p class="note">¿Algún problema? Escríbenos al chat de la app o a fjfc1984@gmail.com</p>
+    <a href="https://normalis.co/login.html" class="btn-primary" id="cta-btn">Ir a la app →</a>
+    <p class="note">¿Algún problema? Escríbenos a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a></p>
   </div>
 </div>
 
 <script>
-// Actualizar rol en Firestore si hay sesión activa
-// (el webhook de Stripe ya habrá actualizado el rol vía Cloudflare Worker)
-// Este script solo hace un refresh de la sesión para que el usuario no tenga que re-loguear
-
-window.addEventListener('load', () => {
-  // Limpiar parámetros de Stripe de la URL
-  if (window.history.replaceState) {
-    const url = new URL(window.location.href);
+(function() {
+  // Limpiar session_id de la URL
+  const url = new URL(window.location.href);
+  const sessionId = url.searchParams.get('session_id');
+  if (sessionId && window.history.replaceState) {
     url.searchParams.delete('session_id');
     window.history.replaceState({}, document.title, url.toString());
   }
-});
+
+  // Mostrar info si hay sesión de NormaLis activa (localStorage/sessionStorage)
+  function showPlanInfo() {
+    const planNames = { basico: 'NormaLis Básico', pro: 'NormaLis Pro' };
+    const rol  = sessionStorage.getItem('normalis_rol');
+    const ipsNombre = localStorage.getItem('normalis_ips_nombre');
+
+    // Ocultar spinner
+    const box = document.getElementById('verifying-box');
+    const info = document.getElementById('plan-info');
+    if (box) box.style.display = 'none';
+
+    // Mostrar plan si hay contexto
+    if (rol === 'cliente' && info) {
+      const planEl = document.getElementById('plan-name');
+      const ipsEl  = document.getElementById('ips-tag');
+      // Detectar plan desde sessionStorage (guardado por login) o mostrar genérico
+      const planKey = sessionStorage.getItem('normalis_plan') || '';
+      if (planEl) planEl.textContent = planNames[planKey] || 'Plan cliente activo ✓';
+      if (ipsEl && ipsNombre) ipsEl.innerHTML = 'IPS: <strong>' + ipsNombre + '</strong>';
+      info.style.display = 'block';
+    }
+  }
+
+  // Esperar 2.5s (tiempo para que el webhook de Stripe procese) y luego mostrar info
+  setTimeout(showPlanInfo, 2500);
+})();
 </script>
 </body>
 </html>

@@ -244,9 +244,71 @@ async function activateSubscription(email, plan, customerId, env) {
 }
 
 async function deactivateSubscription(customerId, env) {
-  // Buscar por stripeCustomerId y bajar a 'pendiente' o mantener datos pero marcar activo:false
-  console.log(`[Webhook] Suscripción cancelada para customer: ${customerId}`);
-  // Implementación futura: buscar por stripeCustomerId en Firestore y actualizar activo:false
+  try {
+    const token = await getFirebaseToken(env);
+
+    // Buscar usuario por stripeCustomerId en Firestore
+    const queryRes = await fetch(
+      `${FIRESTORE_BASE}:runQuery`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify({
+          structuredQuery: {
+            from: [{ collectionId: 'usuarios' }],
+            where: {
+              fieldFilter: {
+                field: { fieldPath: 'stripeCustomerId' },
+                op:    'EQUAL',
+                value: { stringValue: customerId },
+              },
+            },
+            limit: 1,
+          },
+        }),
+      }
+    );
+
+    const results = await queryRes.json();
+    const docRef  = results?.[0]?.document?.name;
+
+    if (!docRef) {
+      console.warn(`[Webhook] No se encontró usuario con stripeCustomerId: ${customerId}`);
+      return;
+    }
+
+    const uid = docRef.split('/').pop();
+
+    // Marcar activo:false y bajar a 'pendiente' para bloquear acceso
+    const updateRes = await fetch(
+      `${FIRESTORE_BASE}/usuarios/${uid}?updateMask.fieldPaths=activo&updateMask.fieldPaths=rol`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify({
+          fields: {
+            activo: { booleanValue: false },
+            rol:    { stringValue: 'pendiente' },
+          },
+        }),
+      }
+    );
+
+    if (updateRes.ok) {
+      console.log(`[Webhook] ✅ Suscripción cancelada — usuario ${uid} → pendiente, activo:false`);
+    } else {
+      const err = await updateRes.text();
+      console.error(`[Webhook] Error desactivando en Firestore: ${err}`);
+    }
+  } catch (err) {
+    console.error('[Webhook] deactivateSubscription error:', err.message);
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
