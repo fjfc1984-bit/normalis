@@ -8,8 +8,8 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#111;font-family:'Segoe UI',Arial,sans-serif;padding:40px 20px;}
 
-  h1{color:#0d9488;text-align:center;font-size:18px;margin-bottom:8px;letter-spacing:1px;}
-  p.hint{color:#5eead4;text-align:center;font-size:13px;margin-bottom:32px;}
+  h1{color:#00796B;text-align:center;font-size:18px;margin-bottom:8px;letter-spacing:1px;}
+  p.hint{color:#80CBC4;text-align:center;font-size:13px;margin-bottom:32px;}
 
   .slides-wrap{display:flex;flex-direction:column;gap:32px;align-items:center;}
 
@@ -17,19 +17,19 @@
   .slide{
     width:1080px;height:1080px;
     position:relative;overflow:hidden;
-    background:linear-gradient(145deg,#042f2e 0%,#134e4a 60%,#0f766e 100%);
+    background:linear-gradient(145deg,#001A14 0%,#00251A 60%,#004D40 100%);
     flex-shrink:0;
   }
   .slide::before{
     content:'';position:absolute;inset:0;
     background:
       radial-gradient(ellipse at 90% 10%,rgba(20,184,166,.18) 0%,transparent 55%),
-      radial-gradient(ellipse at 10% 90%,rgba(13,148,136,.15) 0%,transparent 55%);
+      radial-gradient(ellipse at 10% 90%,rgba(0,121,107,.15) 0%,transparent 55%);
     pointer-events:none;
   }
 
   /* Barra lateral */
-  .bar{position:absolute;left:0;top:0;width:8px;height:100%;background:linear-gradient(to bottom,#2dd4bf,#0d9488);}
+  .bar{position:absolute;left:0;top:0;width:8px;height:100%;background:linear-gradient(to bottom,#26A69A,#00796B);}
 
   /* Número de slide */
   .slide-num{
@@ -40,11 +40,11 @@
 
   /* Logo marca */
   .logo{position:absolute;top:52px;left:60px;display:flex;align-items:center;gap:14px;}
-  .logo-box{width:46px;height:46px;border-radius:10px;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;}
-  .logo-text{font-size:22px;font-weight:800;color:#2dd4bf;letter-spacing:2px;}
+  .logo-box{width:46px;height:46px;border-radius:10px;background:#00796B;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;}
+  .logo-text{font-size:22px;font-weight:800;color:#26A69A;letter-spacing:2px;}
 
   /* Divider */
-  .divider{position:absolute;top:130px;left:60px;right:60px;height:1.5px;background:linear-gradient(to right,#2dd4bf,transparent);}
+  .divider{position:absolute;top:130px;left:60px;right:60px;height:1.5px;background:linear-gradient(to right,#26A69A,transparent);}
 
   /* ── SLIDE 1 — Portada ── */
   .s1-num{
@@ -54,25 +54,25 @@
     user-select:none;
   }
   .s1-title{position:absolute;top:220px;left:60px;right:60px;}
-  .s1-title .label{font-size:15px;font-weight:700;color:#2dd4bf;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;}
+  .s1-title .label{font-size:15px;font-weight:700;color:#26A69A;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;}
   .s1-title h2{font-size:88px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-2px;}
-  .s1-title h2 span{color:#2dd4bf;}
+  .s1-title h2 span{color:#26A69A;}
   .s1-title .sub{font-size:26px;color:rgba(255,255,255,.6);margin-top:24px;line-height:1.5;}
   .s1-footer{position:absolute;bottom:80px;left:60px;right:60px;display:flex;justify-content:space-between;align-items:flex-end;}
-  .s1-footer .tag{background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.3);border-radius:30px;padding:10px 22px;font-size:16px;color:#2dd4bf;font-weight:600;}
+  .s1-footer .tag{background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.3);border-radius:30px;padding:10px 22px;font-size:16px;color:#26A69A;font-weight:600;}
   .s1-footer .swipe{font-size:16px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:8px;}
-  .s1-footer .swipe::after{content:'→';color:#2dd4bf;}
+  .s1-footer .swipe::after{content:'→';color:#26A69A;}
 
   /* ── SLIDES 2-6 — Estándares ── */
   .std-hero{position:absolute;top:160px;left:60px;right:60px;}
   .std-hero .num{font-size:130px;font-weight:900;color:rgba(45,212,191,.12);line-height:1;}
   .std-hero .title{font-size:62px;font-weight:900;color:#fff;margin-top:-30px;line-height:1.1;}
-  .std-hero .title span{color:#2dd4bf;}
+  .std-hero .title span{color:#26A69A;}
   .std-hero .pill{
     display:inline-block;margin-top:18px;
     background:rgba(45,212,191,.12);border:1.5px solid rgba(45,212,191,.35);
     border-radius:30px;padding:8px 20px;
-    font-size:15px;color:#2dd4bf;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+    font-size:15px;color:#26A69A;font-weight:700;letter-spacing:2px;text-transform:uppercase;
   }
 
   /* Items de contenido */
@@ -90,7 +90,7 @@
   .std-footer{position:absolute;bottom:64px;left:60px;right:60px;display:flex;justify-content:space-between;align-items:center;}
   .std-footer .dots{display:flex;gap:8px;}
   .dot{width:10px;height:10px;border-radius:50%;background:rgba(45,212,191,.25);}
-  .dot.active{background:#2dd4bf;width:28px;border-radius:6px;}
+  .dot.active{background:#26A69A;width:28px;border-radius:6px;}
   .std-footer .url{font-size:16px;color:rgba(45,212,191,.5);font-weight:600;}
 
   /* ── SLIDE FINAL — CTA ── */
@@ -99,16 +99,16 @@
     display:inline-block;margin-bottom:32px;
     background:rgba(45,212,191,.1);border:1.5px solid rgba(45,212,191,.3);
     border-radius:30px;padding:10px 24px;
-    font-size:15px;color:#2dd4bf;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+    font-size:15px;color:#26A69A;font-weight:700;letter-spacing:3px;text-transform:uppercase;
   }
   .cta-wrap h2{font-size:74px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-2px;}
-  .cta-wrap h2 span{color:#2dd4bf;}
+  .cta-wrap h2 span{color:#26A69A;}
   .cta-wrap p{font-size:24px;color:rgba(255,255,255,.55);margin:24px 0 48px;line-height:1.5;}
   .cta-btn{
     display:inline-block;
-    background:linear-gradient(90deg,#0d9488,#2dd4bf);
+    background:linear-gradient(90deg,#00796B,#26A69A);
     border-radius:60px;padding:28px 64px;
-    font-size:28px;font-weight:900;color:#042f2e;
+    font-size:28px;font-weight:900;color:#001A14;
     text-decoration:none;
   }
   .cta-hash{margin-top:36px;font-size:17px;color:rgba(45,212,191,.4);letter-spacing:.5px;}
@@ -346,7 +346,7 @@
 </div><!-- /slides-wrap -->
 
 <div style="text-align:center;margin-top:48px;padding:24px;background:#1a1a1a;border-radius:12px;max-width:600px;margin-left:auto;margin-right:auto;">
-  <p style="color:#2dd4bf;font-weight:700;font-size:16px;margin-bottom:12px;">📤 Cómo publicar en LinkedIn</p>
+  <p style="color:#26A69A;font-weight:700;font-size:16px;margin-bottom:12px;">📤 Cómo publicar en LinkedIn</p>
   <p style="color:#9ca3af;font-size:14px;line-height:1.7;">
     1. Captura screenshot de cada slide (1080×1080 px)<br>
     2. En LinkedIn → "Publicar" → ícono de documento (📄)<br>

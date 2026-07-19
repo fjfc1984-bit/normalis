@@ -29,11 +29,11 @@
 <meta property="og:description" content="Software con IA para gestión de calidad en IPS colombianas. Resolución 3100, auditorías, documentos normativos y alertas de habilitación.">
 <style>
   :root {
-    --primary: #0d9488;
-    --primary-dark: #0f766e;
-    --dark: #134e4a;
-    --dark2: #1e293b;
-    --dark3: #334155;
+    --primary: #00796B;
+    --primary-dark: #004D40;
+    --dark: #00251A;
+    --dark2: #003D33;
+    --dark3: #00574A;
     --text: #e2e8f0;
     --text-muted: #94a3b8;
     --success: #10b981;
@@ -66,11 +66,11 @@
   .hero {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
     padding: 100px 5% 60px; text-align: center;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(13,148,136,.15) 0%, transparent 70%);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,121,107,.15) 0%, transparent 70%);
   }
   .hero-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(13,148,136,.12); border: 1px solid rgba(13,148,136,.3);
+    background: rgba(0,121,107,.12); border: 1px solid rgba(0,121,107,.3);
     color: var(--primary); padding: 6px 14px; border-radius: 999px;
     font-size: 12px; font-weight: 700; letter-spacing: .05em; margin-bottom: 28px;
   }
@@ -82,7 +82,7 @@
     background: var(--primary); color: #fff; border: none; padding: 15px 32px;
     border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer;
     text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
-    transition: background .2s, transform .1s; box-shadow: 0 4px 20px rgba(13,148,136,.35);
+    transition: background .2s, transform .1s; box-shadow: 0 4px 20px rgba(0,121,107,.35);
   }
   .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
   .btn-outline {
@@ -121,7 +121,7 @@
     padding: 8px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
     color: var(--text-muted); display: flex; align-items: center; gap: 8px; cursor: default;
   }
-  .prev-item.active { background: rgba(13,148,136,.15); color: var(--primary); }
+  .prev-item.active { background: rgba(0,121,107,.15); color: var(--primary); }
   .preview-main { display: flex; flex-direction: column; gap: 12px; }
   .prev-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .prev-stat {
@@ -178,7 +178,7 @@
   }
   .feature-card:hover { border-color: var(--primary); transform: translateY(-2px); }
   .feature-icon {
-    width: 48px; height: 48px; border-radius: 12px; background: rgba(13,148,136,.12);
+    width: 48px; height: 48px; border-radius: 12px; background: rgba(0,121,107,.12);
     display: flex; align-items: center; justify-content: center; font-size: 22px;
     margin-bottom: 16px;
   }
@@ -194,7 +194,7 @@
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 48px; }
   .step { text-align: center; padding: 20px; }
   .step-num {
-    width: 52px; height: 52px; border-radius: 50%; background: rgba(13,148,136,.15);
+    width: 52px; height: 52px; border-radius: 50%; background: rgba(0,121,107,.15);
     border: 2px solid var(--primary); color: var(--primary); font-size: 20px; font-weight: 900;
     display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
   }
@@ -208,7 +208,7 @@
     padding: 32px; position: relative;
   }
   .pricing-card.popular {
-    border-color: var(--primary); background: rgba(13,148,136,.06);
+    border-color: var(--primary); background: rgba(0,121,107,.06);
   }
   .popular-badge {
     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -250,8 +250,8 @@
 
   /* CTA BAND */
   .cta-band {
-    background: linear-gradient(135deg, rgba(13,148,136,.15) 0%, rgba(16,185,129,.1) 100%);
-    border-top: 1px solid rgba(13,148,136,.2); border-bottom: 1px solid rgba(13,148,136,.2);
+    background: linear-gradient(135deg, rgba(0,121,107,.15) 0%, rgba(16,185,129,.1) 100%);
+    border-top: 1px solid rgba(0,121,107,.2); border-bottom: 1px solid rgba(0,121,107,.2);
     padding: 80px 5%; text-align: center;
   }
   .cta-band h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 900; margin-bottom: 16px; }
@@ -298,7 +298,7 @@
   .footer-col a:hover { color: #fff; }
   .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
   .footer-bottom p { font-size: 12px; color: var(--text-muted); }
-  .normativa-chip { background: rgba(13,148,136,.12); color: var(--primary); padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .normativa-chip { background: rgba(0,121,107,.12); color: var(--primary); padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 
   /* MODAL DEMO */
   .modal-overlay {
@@ -751,7 +751,7 @@ function toggleBilling() {
       <div class="testi-stars">★★★★★</div>
       <div class="testi-text">"Antes perdíamos semanas recopilando documentos para la visita. Con NormaLis, en 2 días teníamos todo listo y sabíamos exactamente qué nos faltaba."</div>
       <div class="testi-author">
-        <div class="testi-avatar" style="background:#0d9488">MC</div>
+        <div class="testi-avatar" style="background:#00796B">MC</div>
         <div>
           <div class="testi-name">Dra. Mónica Castillo</div>
           <div class="testi-role">Directora · Consultorio Médico · Medellín</div>
@@ -784,15 +784,15 @@ function toggleBilling() {
 </div>
 
 <!-- LEAD MAGNET -->
-<section style="padding:4.5rem 1.5rem;background:linear-gradient(135deg,#1a237e 0%,#1565c0 100%);text-align:center" id="checklist">
+<section style="padding:4.5rem 1.5rem;background:linear-gradient(135deg,#004D40 0%,#00695C 100%);text-align:center" id="checklist">
   <div style="max-width:700px;margin:0 auto">
     <div style="display:inline-block;background:rgba(255,255,255,.15);color:#fff;font-size:.85rem;font-weight:600;padding:.4rem 1rem;border-radius:999px;margin-bottom:1.2rem;letter-spacing:.04em">
       📥 DESCARGA GRATUITA
     </div>
     <h2 style="color:#fff;font-size:1.9rem;margin-bottom:.8rem;line-height:1.25">
-      Checklist de Autoevaluación<br><em style="color:#90caf9">Resolución 3100 — 57 criterios</em>
+      Checklist de Autoevaluación<br><em style="color:#80CBC4">Resolución 3100 — 57 criterios</em>
     </h2>
-    <p style="color:#bbdefb;font-size:1rem;margin-bottom:2rem;line-height:1.6">
+    <p style="color:#B2DFDB;font-size:1rem;margin-bottom:2rem;line-height:1.6">
       Evalúa el estado real de tu IPS antes de la visita de habilitación. 9 áreas normativas, puntaje de cumplimiento y plan de acción. Listo para imprimir.
     </p>
     <div id="lm-form" style="background:rgba(255,255,255,.1);border-radius:16px;padding:2rem;backdrop-filter:blur(8px)">
@@ -801,7 +801,7 @@ function toggleBilling() {
         <input id="lm-ips" type="text" placeholder="Nombre de tu IPS" style="padding:.75rem 1rem;border-radius:8px;border:none;font-size:.95rem;width:100%;box-sizing:border-box">
       </div>
       <input id="lm-email" type="email" placeholder="tu@email.com" style="padding:.75rem 1rem;border-radius:8px;border:none;font-size:.95rem;width:100%;box-sizing:border-box;margin-bottom:1rem">
-      <button onclick="downloadChecklist()" style="width:100%;padding:.9rem;background:#fff;color:#1a237e;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+      <button onclick="downloadChecklist()" style="width:100%;padding:.9rem;background:#fff;color:#004D40;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
         📄 Descargar Checklist Gratuito
       </button>
       <p style="color:rgba(255,255,255,.6);font-size:.78rem;margin-top:.8rem">Sin spam. Solo recibirás actualizaciones normativas relevantes.</p>
@@ -809,8 +809,8 @@ function toggleBilling() {
     <div id="lm-success" style="display:none;background:rgba(255,255,255,.15);border-radius:16px;padding:2rem">
       <div style="font-size:3rem;margin-bottom:.5rem">✅</div>
       <h3 style="color:#fff;margin-bottom:.5rem">¡Listo! Tu checklist está disponible</h3>
-      <p style="color:#bbdefb;margin-bottom:1.2rem">Hemos registrado tu solicitud. Haz clic para descargar:</p>
-      <a id="lm-download-link" href="checklist-resolucion-3100.pdf" download style="display:inline-block;background:#fff;color:#1a237e;padding:.8rem 2rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:1rem">
+      <p style="color:#B2DFDB;margin-bottom:1.2rem">Hemos registrado tu solicitud. Haz clic para descargar:</p>
+      <a id="lm-download-link" href="checklist-resolucion-3100.pdf" download style="display:inline-block;background:#fff;color:#004D40;padding:.8rem 2rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:1rem">
         ⬇️ Descargar PDF
       </a>
     </div>
@@ -853,7 +853,7 @@ function downloadChecklist() {
 </script>
 
 <!-- IA SECTION -->
-<section style="padding:4rem 1.5rem;background:#f0f4ff;text-align:center">
+<section style="padding:4rem 1.5rem;background:#E0F2F1;text-align:center">
   <div style="max-width:900px;margin:0 auto">
     <div class="hero-badge" style="display:inline-block;margin-bottom:1.5rem">🤖 IA aplicada al cumplimiento normativo</div>
     <h2 style="font-size:1.9rem;margin-bottom:1rem">La IA no es un lujo.<br>Es lo que te mantiene <em>un paso adelante</em>.</h2>
