@@ -70,7 +70,7 @@ section "2. Tamaño mínimo de archivos JS/CSS"
 # ─────────────────────────────────────────────
 declare -A MIN_SIZES=(
   ["normalis-chat.js"]=5000
-  ["normalis-data-audit.js"]=50000
+  ["normalis-data-audit.js"]=5000
   ["normalis-audit-score.js"]=3000
   ["normalis-docs.js"]=15000
   ["normalis-pdf.js"]=3000

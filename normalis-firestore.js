@@ -63,6 +63,10 @@ var fsSync = {
       this.pullAll();
       logAction('Sistema', 'Datos sincronizados desde la nube', email || uid);
     }
+    // Cargar areasDB protegida desde el Worker (auth-gated)
+    if (typeof loadAreasDB === 'function') {
+      loadAreasDB().catch(function(e) { console.warn('[NormaLis] loadAreasDB falló:', e); });
+    }
     // R5c: verificar vencimientos al login y enviar recordatorio si hay urgentes
     setTimeout(function() { checkVencimientosReminder(email); }, 4000);
   },
