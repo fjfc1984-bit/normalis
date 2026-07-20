@@ -9,7 +9,7 @@
 <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://checkout.bold.co; frame-ancestors 'self'; upgrade-insecure-requests;">
 <title>Planes y Precios — NormaLis | Habilitación IPS Colombia</title>
-<meta name="description" content="Elige el plan que mejor se adapta a tu IPS. Desde piloto gratuito hasta plan profesional multi-sede. Cancela cuando quieras.">
+<meta name="description" content="Elige el plan que mejor se adapta a tu IPS. Desde piloto gratuito hasta plan profesional multi-sede. Pago mensual o anual con 2 meses gratis.">
 <link rel="canonical" href="https://normalis.co/pricing.html">
 <style>
   :root{
@@ -32,16 +32,16 @@
   .hero{background:var(--primary-light);border-bottom:1px solid var(--border);padding:64px 5% 56px;text-align:center;}
   .hero .badge{display:inline-block;background:rgba(0,121,107,.1);border:1px solid var(--border);border-radius:30px;padding:6px 18px;font-size:13px;color:var(--primary);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;}
   .hero h1{font-size:44px;font-weight:800;color:var(--text);margin-bottom:16px;line-height:1.2;}
-  .hero p{font-size:18px;color:var(--text-muted);max-width:540px;margin:0 auto 28px;}
+  .hero p{font-size:18px;color:var(--text-muted);max-width:540px;margin:0 auto 32px;}
 
-  /* Toggle COP/USD */
-  .toggle-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:0;}
-  .toggle-label{font-size:15px;font-weight:600;color:var(--text-muted);}
-  .toggle-label.active{color:var(--primary);}
-  .toggle{width:52px;height:28px;border-radius:30px;background:var(--primary);cursor:pointer;position:relative;border:none;transition:background .2s;}
-  .toggle-thumb{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;}
-  .toggle.cop .toggle-thumb{transform:translateX(0);}
-  .toggle.usd .toggle-thumb{transform:translateX(24px);}
+  /* Billing toggle mensual/anual */
+  .billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:4px;}
+  .billing-label{font-size:15px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:color .2s;}
+  .billing-label.active{color:var(--primary);}
+  .billing-switch{width:56px;height:30px;border-radius:30px;background:var(--primary);cursor:pointer;position:relative;border:none;flex-shrink:0;}
+  .billing-thumb{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .25s;}
+  .billing-switch.anual .billing-thumb{transform:translateX(26px);}
+  .billing-save{display:inline-block;background:#004D40;color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;margin-left:4px;}
 
   /* Plans grid */
   .plans-section{padding:64px 5%;}
@@ -56,17 +56,35 @@
   .plan-name{font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;}
   .plan-desc{font-size:15px;color:var(--text-muted);margin-bottom:24px;line-height:1.5;}
 
-  .plan-price{margin-bottom:28px;}
+  .plan-price{margin-bottom:28px;min-height:72px;}
   .price-main{font-size:48px;font-weight:900;color:var(--text);line-height:1;}
   .price-main .currency{font-size:22px;font-weight:700;vertical-align:top;margin-top:8px;display:inline-block;}
   .price-period{font-size:14px;color:var(--text-muted);margin-top:4px;}
-  .price-usd{display:none;font-size:13px;color:var(--text-muted);margin-top:4px;}
+  .price-anual-note{font-size:13px;color:var(--primary);font-weight:600;margin-top:4px;display:none;}
+  .price-tachado{font-size:18px;color:#9ca3af;text-decoration:line-through;margin-right:4px;}
+
+  /* Pago único — sección implementación */
+  .impl-section{max-width:1100px;margin:0 auto 64px;padding:0 0;}
+  .impl-card{border:2px dashed var(--primary);border-radius:20px;padding:36px 40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;background:var(--primary-light);}
+  .impl-left{flex:1;min-width:240px;}
+  .impl-badge{display:inline-block;background:var(--primary);color:#fff;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+  .impl-name{font-size:26px;font-weight:800;color:var(--text);margin-bottom:8px;}
+  .impl-desc{font-size:15px;color:var(--text-muted);line-height:1.6;}
+  .impl-features{list-style:none;margin-top:16px;}
+  .impl-features li{font-size:14px;color:#2a5a4a;padding:5px 0;display:flex;align-items:flex-start;gap:8px;}
+  .impl-right{text-align:center;flex-shrink:0;}
+  .impl-price-note{font-size:13px;color:var(--text-muted);margin-bottom:6px;}
+  .impl-price{font-size:44px;font-weight:900;color:var(--text);line-height:1;}
+  .impl-price .curr{font-size:20px;vertical-align:top;margin-top:6px;display:inline-block;}
+  .impl-price-sub{font-size:13px;color:var(--primary);font-weight:600;margin-top:4px;}
+  .impl-btn{margin-top:20px;display:block;padding:14px 32px;border-radius:30px;background:var(--primary);color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;transition:background .2s;white-space:nowrap;}
+  .impl-btn:hover{background:var(--primary-dark);}
 
   .plan-features{list-style:none;margin-bottom:32px;}
   .plan-features li{font-size:15px;color:#2a5a4a;padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;}
   .plan-features li:last-child{border-bottom:none;}
   .plan-features li .check{color:var(--primary);font-weight:700;flex-shrink:0;}
-  .plan-features li .cross{color:#d1fae5;flex-shrink:0;}
+  .plan-features li .cross{color:#9ca3af;flex-shrink:0;}
 
   .plan-btn{display:block;width:100%;padding:16px;border-radius:30px;font-size:16px;font-weight:700;text-align:center;cursor:pointer;border:none;transition:all .2s;}
   .plan-btn.primary{background:var(--primary);color:#fff;}
@@ -98,9 +116,16 @@
   footer p{color:#80CBC4;font-size:14px;}
   footer a{color:#26A69A;}
 
-  /* Loading state for btn */
   .plan-btn.loading{opacity:.7;cursor:not-allowed;}
   .plan-btn.loading::after{content:' ⏳';}
+  .impl-btn.loading{opacity:.7;cursor:not-allowed;}
+  .impl-btn.loading::after{content:' ⏳';}
+
+  @media(max-width:640px){
+    .hero h1{font-size:30px;}
+    .impl-card{flex-direction:column;}
+    .impl-right{width:100%;}
+  }
 </style>
 </head>
 <body>
@@ -121,7 +146,15 @@
 <div class="hero">
   <div class="badge">Precios</div>
   <h1>Invierte en tu habilitación,<br>no en sorpresas</h1>
-  <p>Sin contratos anuales. Sin letra pequeña. Cancela cuando quieras.</p>
+  <p>Sin letra pequeña. Cancela cuando quieras.</p>
+  <!-- Toggle mensual / anual -->
+  <div class="billing-toggle">
+    <span class="billing-label active" id="lbl-mensual" onclick="setBilling('mensual')">Mensual</span>
+    <button class="billing-switch" id="billing-switch" onclick="toggleBilling()" aria-label="Cambiar ciclo de facturación">
+      <span class="billing-thumb"></span>
+    </button>
+    <span class="billing-label" id="lbl-anual" onclick="setBilling('anual')">Anual <span class="billing-save">2 meses gratis</span></span>
+  </div>
 </div>
 
 <!-- PLANS -->
@@ -132,7 +165,7 @@
     <div class="plan-card">
       <div class="plan-icon">🆓</div>
       <div class="plan-name">Piloto</div>
-      <div class="plan-desc">Para conocer NormaLis y explorar las funcionalidades básicas antes de suscribirte.</div>
+      <div class="plan-desc">Para conocer NormaLis y explorar las funcionalidades antes de suscribirte.</div>
       <div class="plan-price">
         <div class="price-main"><span class="currency"></span>Gratis</div>
         <div class="price-period">14 días de acceso completo</div>
@@ -140,11 +173,11 @@
       <ul class="plan-features">
         <li><span class="check">✓</span> 1 sede, 1 tipo de IPS</li>
         <li><span class="check">✓</span> Autoevaluación de habilitación completa</li>
-        <li><span class="check">✓</span> Chat IA con Groq (consultas normativas)</li>
+        <li><span class="check">✓</span> Chat IA (consultas normativas)</li>
         <li><span class="check">✓</span> Módulo PAMEC básico</li>
         <li><span class="check">✓</span> 1 reporte PDF</li>
-        <li><span class="cross" style="color:#9ca3af">–</span> <span style="color:#9ca3af">Vencimientos y alertas</span></li>
-        <li><span class="cross" style="color:#9ca3af">–</span> <span style="color:#9ca3af">Historial de auditorías</span></li>
+        <li><span class="cross">–</span> <span style="color:#9ca3af">Vencimientos y alertas</span></li>
+        <li><span class="cross">–</span> <span style="color:#9ca3af">Historial de auditorías</span></li>
       </ul>
       <button class="plan-btn ghost" onclick="goRegister()">Empezar gratis</button>
     </div>
@@ -156,9 +189,11 @@
       <div class="plan-name">Básico</div>
       <div class="plan-desc">Para IPS de baja y mediana complejidad que quieren mantener su habilitación en orden todo el año.</div>
       <div class="plan-price">
-        <div class="price-main"><span class="currency cop-symbol">$</span><span class="price-cop">129.000</span></div>
-        <div class="price-period price-cop-period">COP / mes · facturado mensualmente</div>
-        <div class="price-usd price-usd-basic">≈ USD 32 / month</div>
+        <div class="price-main">
+          <span class="currency cop-symbol">$</span><span id="precio-basico">129.000</span>
+        </div>
+        <div class="price-period" id="periodo-basico">COP / mes · facturado mensualmente</div>
+        <div class="price-anual-note" id="ahorro-basico">Pagas $1.290.000 al año · ahorras $258.000</div>
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> 1 sede, todos los servicios</li>
@@ -178,9 +213,11 @@
       <div class="plan-name">Pro</div>
       <div class="plan-desc">Para redes de IPS o prestadores con múltiples sedes que necesitan gestión centralizada.</div>
       <div class="plan-price">
-        <div class="price-main"><span class="currency cop-symbol">$</span><span class="price-cop">249.000</span></div>
-        <div class="price-period price-cop-period">COP / mes · por sede</div>
-        <div class="price-usd price-usd-pro">≈ USD 62 / month per sede</div>
+        <div class="price-main">
+          <span class="currency cop-symbol">$</span><span id="precio-pro">249.000</span>
+        </div>
+        <div class="price-period" id="periodo-pro">COP / mes · por sede</div>
+        <div class="price-anual-note" id="ahorro-pro">Pagas $2.490.000 al año · ahorras $498.000</div>
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> <strong>Sedes ilimitadas</strong></li>
@@ -194,18 +231,44 @@
       <button class="plan-btn outline" id="btn-pro" onclick="checkout('pro')">Suscribirme ahora</button>
     </div>
 
+  </div><!-- /plans-grid -->
+
+  <!-- PAGO ÚNICO — IMPLEMENTACIÓN GUIADA -->
+  <div class="impl-section" style="margin-top:48px;">
+    <div class="impl-card">
+      <div class="impl-left">
+        <div class="impl-badge">⚡ Pago único</div>
+        <div class="impl-name">Implementación Guiada</div>
+        <div class="impl-desc">Para IPS que quieren arrancar con todo configurado desde el primer día, con acompañamiento directo del equipo NormaLis.</div>
+        <ul class="impl-features">
+          <li><span class="check">✓</span> Sesión de onboarding 1:1 (2 horas — videoconferencia)</li>
+          <li><span class="check">✓</span> Configuración completa del perfil de IPS en la plataforma</li>
+          <li><span class="check">✓</span> Primera auditoría guiada con retroalimentación en tiempo real</li>
+          <li><span class="check">✓</span> Plantillas de PAMEC personalizadas para tu tipo de IPS</li>
+          <li><span class="check">✓</span> 30 días de soporte prioritario por WhatsApp</li>
+          <li><span class="check">✓</span> Compatible con cualquier plan de suscripción</li>
+        </ul>
+      </div>
+      <div class="impl-right">
+        <div class="impl-price-note">Pago único — sin recurrencia</div>
+        <div class="impl-price"><span class="curr">$</span>350.000</div>
+        <div class="impl-price-sub">COP · ≈ USD 87</div>
+        <button class="impl-btn" id="btn-impl" onclick="checkout('implementacion')">Contratar ahora</button>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">Incluye 1 mes de plan Básico gratis</div>
+      </div>
+    </div>
   </div>
 
   <div class="trust-bar">
-    <p>Pago 100% seguro</p>
+    <p>Pago 100% seguro · Procesado por Bold Payments Colombia</p>
     <div class="trust-logos">
       <span class="trust-item">🔒 SSL cifrado</span>
-      <span class="trust-item">💳 Bold Payments</span>
+      <span class="trust-item">💳 Tarjetas · PSE · Nequi</span>
       <span class="trust-item">🇨🇴 Precios en COP</span>
-      <span class="trust-item">↩️ Cancela en cualquier momento</span>
+      <span class="trust-item">↩️ Cancela suscripción en cualquier momento</span>
     </div>
   </div>
-</div>
+</div><!-- /plans-section -->
 
 <!-- FAQ -->
 <div class="faq-section">
@@ -215,9 +278,16 @@
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Cuánto ahorro con el plan anual? <span class="arrow">›</span>
+      </div>
+      <div class="faq-a">Con el plan anual pagas 10 meses y recibes 12 — es decir, 2 meses completamente gratis. Básico: ahorras $258.000 COP al año. Pro: ahorras $498.000 COP por sede al año. El cobro es único al inicio del año.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
         ¿Puedo cancelar en cualquier momento? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">Sí. No hay contratos anuales ni penalidades. Cancelas desde tu panel de cuenta y no se te cobra el siguiente mes. Tus datos se conservan por 30 días adicionales.</div>
+      <div class="faq-a">Sí para el plan mensual. El plan anual no tiene cancelación anticipada con reembolso — es un pago único por el año completo. Tus datos se conservan por 30 días adicionales al vencimiento.</div>
     </div>
 
     <div class="faq-item">
@@ -229,16 +299,16 @@
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
-        ¿Cómo se procesa el pago? <span class="arrow">›</span>
+        ¿Qué incluye exactamente la Implementación Guiada? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">El pago se procesa mediante Bold, procesador de pagos colombiano certificado. Aceptamos tarjetas Visa y Mastercard, PSE y Nequi. NormaLis nunca almacena tus datos de tarjeta.</div>
+      <div class="faq-a">Es un servicio de onboarding personalizado: una sesión de 2 horas por videoconferencia donde configuramos la plataforma juntos, hacemos la primera auditoría real de tu IPS y te entregamos plantillas PAMEC listas para usar. También incluye 1 mes de plan Básico y 30 días de soporte por WhatsApp.</div>
     </div>
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">
-        ¿Hay descuento por pago anual? <span class="arrow">›</span>
+        ¿Cómo se procesa el pago? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">Sí — contáctanos en el chat de la app o por WhatsApp y te aplicamos un descuento del 20% en el plan anual. Próximamente disponible directo en esta página.</div>
+      <div class="faq-a">El pago se procesa mediante Bold, procesador de pagos colombiano certificado. Aceptamos tarjetas Visa y Mastercard, PSE y Nequi. NormaLis nunca almacena tus datos de tarjeta.</div>
     </div>
 
     <div class="faq-item">
@@ -256,37 +326,100 @@
 </footer>
 
 <script>
-// ── Bold.co checkout ─────────────────────────────────────────
-// Links de pago Bold (procesador colombiano — acepta PSE, Nequi, tarjetas)
+// ══════════════════════════════════════════════════════════════
+// Bold.co — links de pago
+//
+// MENSUAL (ya creados):
+//   Básico mensual:       LNK_4JND4JELJ4
+//   Pro mensual:          LNK_LRR5ZCRUMB
+//
+// ANUAL (crear en Bold Dashboard → Cobros → Nuevo cobro → Pago único):
+//   Básico anual:         Valor: $1.290.000 COP → reemplazar LNK_ANUAL_BASICO
+//   Pro anual (x1 sede):  Valor: $2.490.000 COP → reemplazar LNK_ANUAL_PRO
+//
+// IMPLEMENTACIÓN (crear en Bold Dashboard → Cobros → Nuevo cobro → Pago único):
+//   Valor: $350.000 COP   → reemplazar LNK_IMPLEMENTACION
+// ══════════════════════════════════════════════════════════════
 const BOLD_LINKS = {
-  basico: 'https://checkout.bold.co/payment/LNK_4JND4JELJ4',
-  pro:    'https://checkout.bold.co/payment/LNK_LRR5ZCRUMB',
+  basico:          'https://checkout.bold.co/payment/LNK_4JND4JELJ4',
+  pro:             'https://checkout.bold.co/payment/LNK_LRR5ZCRUMB',
+  basico_anual:    'https://checkout.bold.co/payment/LNK_ANUAL_BASICO',   // ← reemplazar
+  pro_anual:       'https://checkout.bold.co/payment/LNK_ANUAL_PRO',      // ← reemplazar
+  implementacion:  'https://checkout.bold.co/payment/LNK_IMPLEMENTACION', // ← reemplazar
 };
 
+// ── Estado del toggle ──────────────────────────────────────────
+let billingMode = 'mensual'; // 'mensual' | 'anual'
+
+function toggleBilling() {
+  setBilling(billingMode === 'mensual' ? 'anual' : 'mensual');
+}
+
+function setBilling(mode) {
+  billingMode = mode;
+  const sw = document.getElementById('billing-switch');
+  const lblM = document.getElementById('lbl-mensual');
+  const lblA = document.getElementById('lbl-anual');
+
+  if (mode === 'anual') {
+    sw.classList.add('anual');
+    lblM.classList.remove('active');
+    lblA.classList.add('active');
+    // Básico anual: $107.500/mes efectivo (redondeado), total $1.290.000
+    document.getElementById('precio-basico').textContent = '107.500';
+    document.getElementById('periodo-basico').textContent = 'COP / mes · facturado $1.290.000/año';
+    document.getElementById('ahorro-basico').style.display = 'block';
+    // Pro anual: $207.500/mes efectivo, total $2.490.000
+    document.getElementById('precio-pro').textContent = '207.500';
+    document.getElementById('periodo-pro').textContent = 'COP / mes · facturado $2.490.000/año';
+    document.getElementById('ahorro-pro').style.display = 'block';
+    // Cambiar texto botones
+    document.getElementById('btn-basico').textContent = 'Pagar año completo';
+    document.getElementById('btn-pro').textContent = 'Pagar año completo';
+  } else {
+    sw.classList.remove('anual');
+    lblM.classList.add('active');
+    lblA.classList.remove('active');
+    document.getElementById('precio-basico').textContent = '129.000';
+    document.getElementById('periodo-basico').textContent = 'COP / mes · facturado mensualmente';
+    document.getElementById('ahorro-basico').style.display = 'none';
+    document.getElementById('precio-pro').textContent = '249.000';
+    document.getElementById('periodo-pro').textContent = 'COP / mes · por sede';
+    document.getElementById('ahorro-pro').style.display = 'none';
+    document.getElementById('btn-basico').textContent = 'Suscribirme ahora';
+    document.getElementById('btn-pro').textContent = 'Suscribirme ahora';
+  }
+}
+
+// ── Checkout ──────────────────────────────────────────────────
 function goRegister(){
   window.location.href = 'https://normalis.co/registro.html';
 }
 
 function checkout(plan) {
-  const btn = document.getElementById('btn-' + plan);
-  const link = BOLD_LINKS[plan];
+  // Resolver qué link usar
+  let linkKey = plan;
+  if ((plan === 'basico' || plan === 'pro') && billingMode === 'anual') {
+    linkKey = plan + '_anual';
+  }
 
-  if (!link) {
-    window.location.href = 'https://normalis.co/registro.html?plan=' + plan;
+  const btn = document.getElementById('btn-' + plan) ||
+              document.getElementById('btn-impl');
+  const link = BOLD_LINKS[linkKey];
+
+  // Si el link es un placeholder, redirigir a registro con parámetro
+  if (!link || link.includes('LNK_ANUAL') || link.includes('LNK_IMPLEMENTACION')) {
+    window.location.href = 'https://normalis.co/registro.html?plan=' + linkKey;
     return;
   }
 
-  btn.classList.add('loading');
-  btn.disabled = true;
-  btn.textContent = 'Redirigiendo...';
+  if (btn) {
+    btn.classList.add('loading');
+    btn.disabled = true;
+    btn.textContent = 'Redirigiendo...';
+  }
 
   window.location.href = link;
-}
-
-function getUserEmail() {
-  try {
-    return sessionStorage.getItem('normalis_email') || '';
-  } catch { return ''; }
 }
 
 // ── FAQ ──────────────────────────────────────────────────────
@@ -296,9 +429,6 @@ function toggleFaq(el) {
   document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
 }
-
-// ── Precios USD/COP toggle ────────────────────────────────────
-// Puede agregarse un toggle si se desea mostrar precios en USD
 </script>
 
 </body>
