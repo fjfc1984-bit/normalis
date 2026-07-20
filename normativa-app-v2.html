@@ -4030,11 +4030,11 @@ async function saveUserForm(){
     u.nombre=nombre; u.rol=rol;
     u.color=ROLE_DEF[rol]?.color||u.color;
     u.ini=nombre.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    if(pin){ if(!/^\d{4}$/.test(pin)){toast('PIN debe tener exactamente 4 dígitos','warning');return;} u.pinHash=pinHash(pin); }
+    if(pin){ if(!/^\d{4}$/.test(pin)){toast('PIN debe tener exactamente 4 dígitos','warning');return;} u.pinHash=await pinHash(pin); }
     saveUsers(); logActivity('user_updated','perfiles','Usuario actualizado: '+nombre);
   } else {
     if(!/^\d{4}$/.test(pin)){ toast('PIN debe tener exactamente 4 dígitos','warning'); return; }
-    createUser(nombre,rol,pin); logActivity('user_created','perfiles','Nuevo usuario: '+nombre+' ('+rol+')');
+    await createUser(nombre,rol,pin); logActivity('user_created','perfiles','Nuevo usuario: '+nombre+' ('+rol+')');
   }
   document.getElementById('um-form').style.display='none';
   renderUserMgmt(); toast('✅ Usuario guardado','success');
