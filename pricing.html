@@ -195,7 +195,7 @@
     <p>Pago 100% seguro</p>
     <div class="trust-logos">
       <span class="trust-item">🔒 SSL cifrado</span>
-      <span class="trust-item">💳 Stripe Payments</span>
+      <span class="trust-item">💳 Bold Payments</span>
       <span class="trust-item">🇨🇴 Precios en COP</span>
       <span class="trust-item">↩️ Cancela en cualquier momento</span>
     </div>
@@ -226,7 +226,7 @@
       <div class="faq-q" onclick="toggleFaq(this)">
         ¿Cómo se procesa el pago? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">El pago se procesa mediante Stripe, el procesador de pagos más seguro del mundo. Aceptamos tarjetas Visa, Mastercard y American Express. NormaLis nunca almacena tus datos de tarjeta.</div>
+      <div class="faq-a">El pago se procesa mediante Bold, procesador de pagos colombiano certificado. Aceptamos tarjetas Visa y Mastercard, PSE y Nequi. NormaLis nunca almacena tus datos de tarjeta.</div>
     </div>
 
     <div class="faq-item">
@@ -251,56 +251,31 @@
 </footer>
 
 <script>
-// ── Stripe checkout ──────────────────────────────────────────
-// URL del Cloudflare Worker de pagos
-const STRIPE_WORKER = 'https://normalis-stripe.fjfc1984.workers.dev';
-
-// Payment Link IDs de Stripe — reemplazar con los reales tras crear los productos en Stripe Dashboard
-// Mientras no existan, el botón abre la página de registro
-const PAYMENT_LINKS = {
-  basico: null,  // Ej: 'https://buy.stripe.com/XXXX' — agregar tras crear en Stripe
-  pro:    null,  // Ej: 'https://buy.stripe.com/YYYY'
+// ── Bold.co checkout ─────────────────────────────────────────
+// Links de pago Bold (procesador colombiano — acepta PSE, Nequi, tarjetas)
+const BOLD_LINKS = {
+  basico: 'https://checkout.bold.co/payment/LNK_4JND4JELJ4',
+  pro:    'https://checkout.bold.co/payment/LNK_LRR5ZCRUMB',
 };
 
 function goRegister(){
   window.location.href = 'https://normalis.co/registro.html';
 }
 
-async function checkout(plan) {
+function checkout(plan) {
   const btn = document.getElementById('btn-' + plan);
+  const link = BOLD_LINKS[plan];
 
-  // Si hay Payment Links configurados, redirigir directo
-  if (PAYMENT_LINKS[plan]) {
-    window.location.href = PAYMENT_LINKS[plan] + '?client_reference_id=' + getUserEmail();
+  if (!link) {
+    window.location.href = 'https://normalis.co/registro.html?plan=' + plan;
     return;
   }
 
-  // Fallback: intentar crear sesión via Worker
   btn.classList.add('loading');
   btn.disabled = true;
   btn.textContent = 'Redirigiendo...';
 
-  try {
-    const res = await fetch(STRIPE_WORKER + '/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, email: getUserEmail() })
-    });
-
-    if (!res.ok) throw new Error('Worker no disponible');
-
-    const { url } = await res.json();
-    window.location.href = url;
-  } catch (err) {
-    // Si el worker aún no está desplegado, redirigir a registro
-    btn.classList.remove('loading');
-    btn.disabled = false;
-    btn.textContent = plan === 'basico' ? 'Suscribirme ahora' : 'Suscribirme ahora';
-
-    // Mostrar modal de registro con plan seleccionado
-    alert('Para suscribirte al plan ' + plan + ', primero crea tu cuenta. Te contactaremos para activar el pago.');
-    window.location.href = 'https://normalis.co/registro.html?plan=' + plan;
-  }
+  window.location.href = link;
 }
 
 function getUserEmail() {

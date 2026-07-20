@@ -22,8 +22,8 @@ const ALLOWED_ORIGINS = [
 
 // ─── Reemplaza estos IDs con los de tus productos reales en Stripe Dashboard ───
 const PRICE_IDS = {
-  basico: 'price_1Tv1V9Rpw0Rg1EVk0K2bGzpZ',  // COP 129.000/mes — NormaLis Básico
-  pro:    'price_1Tv1VeRpw0Rg1EVkA80OfYfi',  // COP 249.000/mes — NormaLis Pro
+  basico: 'price_1Tv4n8Rpw0Rg1EVknJlk8ZDc',  // COP 129.000/mes — NormaLis Básico (test)
+  pro:    'price_1Tv51IRpw0Rg1EVkk6uFLBNG',  // COP 249.000/mes — NormaLis Pro (test)
 };
 
 const SUCCESS_URL = 'https://normalis.co/success.html?session_id={CHECKOUT_SESSION_ID}';
