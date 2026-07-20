@@ -343,9 +343,9 @@
 const BOLD_LINKS = {
   basico:          'https://checkout.bold.co/payment/LNK_4JND4JELJ4',
   pro:             'https://checkout.bold.co/payment/LNK_LRR5ZCRUMB',
-  basico_anual:    'https://checkout.bold.co/payment/LNK_ANUAL_BASICO',   // ← reemplazar
-  pro_anual:       'https://checkout.bold.co/payment/LNK_ANUAL_PRO',      // ← reemplazar
-  implementacion:  'https://checkout.bold.co/payment/LNK_IMPLEMENTACION', // ← reemplazar
+  basico_anual:    'https://checkout.bold.co/payment/LNK_QX9QJBBLWW',
+  pro_anual:       'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
+  implementacion:  'https://checkout.bold.co/payment/LNK_8Q26PSJHGW',
 };
 
 // ── Estado del toggle ──────────────────────────────────────────
@@ -407,8 +407,7 @@ function checkout(plan) {
               document.getElementById('btn-impl');
   const link = BOLD_LINKS[linkKey];
 
-  // Si el link es un placeholder, redirigir a registro con parámetro
-  if (!link || link.includes('LNK_ANUAL') || link.includes('LNK_IMPLEMENTACION')) {
+  if (!link) {
     window.location.href = 'https://normalis.co/registro.html?plan=' + linkKey;
     return;
   }
