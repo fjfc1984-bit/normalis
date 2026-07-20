@@ -1,0 +1,109 @@
+// NormaLis — Firestore Security Rules
+// Proyecto: normalis-5587d
+// Aplicar en: Firebase Console > Firestore > Rules
+// O via CLI: firebase deploy --only firestore:rules --project normalis-5587d
+//
+// Colecciones:
+//   usuarios/{uid}           — perfiles de usuario (rol, activo, expiresAt)
+//   ips/{nit}/data/{key}     — datos de auditoría por IPS (sync normalis-firestore.js)
+//   pilotos/{nit}            — seguimiento programa piloto
+//   prospectos/{id}          — CRM (solo admin)
+//   leads/{id}               — solicitudes demo desde index.html (escritura pública)
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper: verifica si el usuario autenticado es admin ──────────────────
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+
+    // ── Helper: verifica si el uid del path coincide con el usuario autenticado
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Helper: usuario activo con rol cliente o piloto ──────────────────────
+    function isActiveClient() {
+      let data = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+      return request.auth != null &&
+        (data.rol == 'cliente' || data.rol == 'piloto') &&
+        data.activo == true;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // usuarios/{uid} — perfil de usuario
+    // ════════════════════════════════════════════════════════════════════════
+    match /usuarios/{uid} {
+      // Leer propio perfil (login.html, normativa-app-v2.html auth guard)
+      // o admin leyendo todos los perfiles
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Crear: solo registro.html (usuario autenticado crea su propio doc)
+      allow create: if isOwner(uid) &&
+        request.resource.data.rol == 'pendiente' &&
+        request.resource.data.activo == false;
+
+      // Actualizar propio perfil (sync normalis_cfg); admin puede actualizar cualquiera
+      allow update: if isOwner(uid) || isAdmin();
+
+      // Eliminar: solo admin
+      allow delete: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ips/{nit}/data/{key} — datos de auditoría, PQRS, incidentes, etc.
+    // Ruta: normalis-firestore.js → db.collection('ips').doc(userId).collection('data')
+    // ════════════════════════════════════════════════════════════════════════
+    match /ips/{nit} {
+      // Admin puede leer IPS para analytics
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+
+      match /data/{key} {
+        // El usuario dueño del nit (userId == uid) puede leer/escribir sus datos
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == nit || isAdmin());
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // pilotos/{nit} — seguimiento del programa piloto
+    // ════════════════════════════════════════════════════════════════════════
+    match /pilotos/{nit} {
+      // Admin gestiona pilotos; el piloto puede leer sus propios datos
+      allow read: if request.auth != null &&
+        (request.auth.uid == nit || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // prospectos/{id} — CRM interno (solo admin)
+    // ════════════════════════════════════════════════════════════════════════
+    match /prospectos/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // leads/{id} — formulario demo público desde index.html
+    // Escritura pública (sin auth); solo admin puede leer/gestionar
+    // ════════════════════════════════════════════════════════════════════════
+    match /leads/{id} {
+      // Cualquiera puede crear un lead (formulario público)
+      allow create: if true;
+
+      // Solo admin puede leer, actualizar o eliminar leads
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Denegar acceso a cualquier otra colección no listada explícitamente
+    // ════════════════════════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

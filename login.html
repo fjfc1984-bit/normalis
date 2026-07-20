@@ -301,6 +301,19 @@ function clearRateData() { try { localStorage.removeItem(RATE_KEY); } catch (_) 
   }
 })();
 
+// Manejar parámetros de error desde redirects de auth guard
+(function() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var err = params.get('error');
+    if (err === 'piloto_expirado') {
+      showError('Tu acceso piloto ha vencido. Contacta a fjfc1984@gmail.com para renovarlo.');
+    } else if (err === 'sin_acceso') {
+      showError('Acceso denegado. Inicia sesión con una cuenta autorizada.');
+    }
+  } catch(_) {}
+})();
+
 auth.onAuthStateChanged(function(user) { if (user) routeUser(user); });
 
 form.addEventListener('submit', async function(e) {

@@ -7802,12 +7802,23 @@ function initFirebaseAuth(){
             window.location.href = 'login.html?error=sin_acceso';
             return;
           }
-          var rol = doc.data().rol;
+          var data = doc.data();
+          var rol = data.rol;
           if(rol !== 'cliente' && rol !== 'piloto'){
             console.warn('[NormaLis] Acceso denegado — rol:', rol);
             _fbAuth.signOut();
             window.location.href = 'login.html?error=sin_acceso';
             return;
+          }
+          // Verificar expiración de pilotos (evita bypass directo de URL)
+          if(rol === 'piloto' && data.expiresAt){
+            var expiresDate = data.expiresAt.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+            if(expiresDate < new Date()){
+              console.warn('[NormaLis] Piloto expirado:', expiresDate);
+              _fbAuth.signOut();
+              window.location.href = 'login.html?error=piloto_expirado';
+              return;
+            }
           }
           hideAuthScreen(user);
         }).catch(function(e){
