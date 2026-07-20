@@ -354,6 +354,24 @@
   .delay-2 { animation-delay: .2s; opacity: 0; }
   .delay-3 { animation-delay: .3s; opacity: 0; }
   .delay-4 { animation-delay: .4s; opacity: 0; }
+
+  /* ── ANIMACIONES LANDING ── */
+  /* Typing cursor */
+  #hero-typing { border-right: 3px solid var(--primary); padding-right: 3px; }
+  @keyframes blink { 0%,100%{border-color:var(--primary)} 50%{border-color:transparent} }
+  #hero-typing { animation: blink 1s step-end infinite; }
+
+  /* Contadores stats — ocultos hasta que IntersectionObserver los activa */
+  .stat-big { transition: opacity .4s; }
+  .stat-big.counting { color: var(--primary); }
+
+  /* Scroll reveal feature cards */
+  .feature-card { opacity: 0; transform: translateY(24px); transition: opacity .5s ease, transform .5s ease; }
+  .feature-card.visible { opacity: 1; transform: translateY(0); }
+
+  /* Scroll reveal — secciones genéricas */
+  .reveal-section { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal-section.visible { opacity: 1; transform: translateY(0); }
 </style>
 <script type="application/ld+json">
 {
@@ -387,7 +405,7 @@
 <section class="hero">
   <div style="max-width:800px">
     <div class="hero-badge animate">🏥 Hecho para IPS en Colombia · Resolución 3100/2019 + 465/2025</div>
-    <h1 class="animate delay-1">Tu IPS, lista para<br><em>la visita de habilitación</em></h1>
+    <h1 class="animate delay-1">Tu IPS, lista para<br><em id="hero-typing"></em></h1>
     <p class="animate delay-2">Normalis automatiza la gestión de calidad y el cumplimiento normativo (ISO 9001 · Resolución 3100) para IPS en Colombia — ahorrando más de 200 horas al año y reduciendo el riesgo de sanciones por incumplimiento.</p>
     <div class="hero-ctas animate delay-3">
       <a href="#" class="btn-primary" onclick="openModal()">🚀 Solicitar demo gratis</a>
@@ -473,27 +491,27 @@
 <div class="stats-band">
   <div class="stats-grid">
     <div>
-      <div class="stat-big">559</div>
+      <div class="stat-big" data-count="559" data-suffix="">559</div>
       <div class="stat-label">criterios de auditoría según Res. 3100</div>
     </div>
     <div>
-      <div class="stat-big">11</div>
+      <div class="stat-big" data-count="11" data-suffix="">11</div>
       <div class="stat-label">segmentos normativos cubiertos</div>
     </div>
     <div>
-      <div class="stat-big">6</div>
+      <div class="stat-big" data-count="6" data-suffix="">6</div>
       <div class="stat-label">documentos normativos generados automáticamente</div>
     </div>
     <div>
-      <div class="stat-big">100%</div>
+      <div class="stat-big" data-count="100" data-suffix="%">100%</div>
       <div class="stat-label">en línea, sin instalación, desde cualquier dispositivo</div>
     </div>
     <div>
-      <div class="stat-big">200+</div>
+      <div class="stat-big" data-count="200" data-suffix="+">200+</div>
       <div class="stat-label">horas ahorradas al año en gestión de calidad</div>
     </div>
     <div>
-      <div class="stat-big">50%</div>
+      <div class="stat-big" data-count="50" data-suffix="%">50%</div>
       <div class="stat-label">más rápido en elaboración de informes y CAPAs</div>
     </div>
   </div>
@@ -1107,3 +1125,112 @@ function toggleFaq(el){
   document.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); });
   if(!wasOpen) item.classList.add('open');
 }
+</script>
+
+<!-- NormaLis Landing Animations -->
+<script>
+(function(){
+  // ── TYPING EFFECT en hero ──────────────────────────────────────────────
+  var words = ['habilitación', 'PAMEC', 'calidad', 'cumplimiento', 'auditoría'];
+  var el = document.getElementById('hero-typing');
+  if (el) {
+    var wi = 0, ci = 0, deleting = false;
+    function typeStep() {
+      var w = words[wi];
+      if (!deleting) {
+        el.textContent = w.slice(0, ci + 1);
+        ci++;
+        if (ci === w.length) {
+          deleting = true;
+          setTimeout(typeStep, 1600);
+          return;
+        }
+      } else {
+        el.textContent = w.slice(0, ci - 1);
+        ci--;
+        if (ci === 0) {
+          deleting = false;
+          wi = (wi + 1) % words.length;
+          setTimeout(typeStep, 300);
+          return;
+        }
+      }
+      setTimeout(typeStep, deleting ? 55 : 85);
+    }
+    setTimeout(typeStep, 500);
+  }
+
+  // ── CONTADORES ANIMADOS (scroll trigger) ──────────────────────────────
+  function animateCounter(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    var suffix = el.getAttribute('data-suffix') || '';
+    var duration = 1600;
+    var start = null;
+    el.classList.add('counting');
+    function step(ts) {
+      if (!start) start = ts;
+      var progress = Math.min((ts - start) / duration, 1);
+      var ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(ease * target) + suffix;
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.classList.remove('counting');
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  var statsTriggered = false;
+  var statsObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !statsTriggered) {
+        statsTriggered = true;
+        document.querySelectorAll('.stat-big[data-count]').forEach(function(el, i) {
+          setTimeout(function() { animateCounter(el); }, i * 120);
+        });
+        statsObs.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  var statsBand = document.querySelector('.stats-band');
+  if (statsBand) statsObs.observe(statsBand);
+
+  // ── SCROLL REVEAL feature cards ───────────────────────────────────────
+  var cardObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        cardObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.feature-card').forEach(function(card, i) {
+    card.style.transitionDelay = (i % 4) * 0.08 + 's';
+    cardObs.observe(card);
+  });
+
+  // ── SCROLL REVEAL genérico — problem-card, step-card, testimonial-card ─
+  var revealObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.problem-card, .step-card, .testimonial-card').forEach(function(el, i) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity .5s ease ' + (i % 3) * 0.1 + 's, transform .5s ease ' + (i % 3) * 0.1 + 's';
+    el.classList.add('reveal-section');
+    revealObs.observe(el);
+  });
+
+})();
+</script>
+</body>
+</html>
