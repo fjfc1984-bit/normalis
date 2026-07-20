@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; frame-ancestors 'self'; upgrade-insecure-requests;">
+<title>Términos y Condiciones — NormaLis</title>
+<meta name="description" content="Términos y Condiciones de uso de NormaLis, plataforma SaaS de cumplimiento normativo para IPS colombianas.">
+<link rel="canonical" href="https://normalis.co/terminos.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #00796B;
+    --primary-dark: #004D40;
+    --accent: #00897B;
+    --text: #1a2e2c;
+    --text-muted: #4a6360;
+    --bg: #f5faf9;
+    --border: #B2DFDB;
+    --white: #ffffff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--primary-dark);
+    color: #fff;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .site-header .logo {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: #fff;
+  }
+  .site-header .logo span { color: #4DB6AC; }
+  .site-header nav a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 13px;
+    margin-left: 20px;
+  }
+  .site-header nav a:hover { color: #fff; }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #fff;
+    padding: 56px 24px 48px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+  .hero p { font-size: 15px; opacity: 0.85; }
+  .hero .updated {
+    display: inline-block;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 48px;
+  }
+  .toc h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .toc ol {
+    padding-left: 18px;
+  }
+  .toc li {
+    margin-bottom: 6px;
+  }
+  .toc a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 48px;
+    scroll-margin-top: 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-num {
+    background: var(--primary);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .section p { margin-bottom: 12px; }
+  .section ul, .section ol {
+    padding-left: 22px;
+    margin-bottom: 12px;
+  }
+  .section li { margin-bottom: 6px; }
+
+  /* ── Callouts ── */
+  .callout {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .callout-warning {
+    background: #FFF8E1;
+    border-left: 4px solid #F9A825;
+    color: #5d4037;
+  }
+  .callout-info {
+    background: #E0F2F1;
+    border-left: 4px solid var(--primary);
+    color: var(--primary-dark);
+  }
+  .callout-important {
+    background: #FCE4EC;
+    border-left: 4px solid #E91E63;
+    color: #880E4F;
+  }
+  .callout strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Footer ── */
+  .site-footer {
+    background: var(--primary-dark);
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    padding: 28px 24px;
+    font-size: 13px;
+  }
+  .site-footer a { color: #4DB6AC; text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 24px; }
+    .container { padding: 32px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <a href="https://normalis.co" class="logo">Norma<span>Lis</span></a>
+  <nav>
+    <a href="https://normalis.co">Inicio</a>
+    <a href="https://normalis.co/pricing.html">Precios</a>
+    <a href="https://normalis.co/registro.html">Registrarse</a>
+  </nav>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Términos y Condiciones</h1>
+  <p>Condiciones de uso de la plataforma NormaLis</p>
+  <span class="updated">Última actualización: julio 2026</span>
+</div>
+
+<!-- Content -->
+<div class="container">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contenido</h2>
+    <ol>
+      <li><a href="#s1">Aceptación de los términos</a></li>
+      <li><a href="#s2">Descripción del servicio</a></li>
+      <li><a href="#s3">Uso de inteligencia artificial — derechos de autor y precisión</a></li>
+      <li><a href="#s4">Exención de responsabilidad normativa</a></li>
+      <li><a href="#s5">Registro y acceso</a></li>
+      <li><a href="#s6">Planes, pagos y cancelación</a></li>
+      <li><a href="#s7">Protección de datos personales (Ley 1581/2012)</a></li>
+      <li><a href="#s8">Propiedad intelectual de NormaLis</a></li>
+      <li><a href="#s9">Limitación de responsabilidad</a></li>
+      <li><a href="#s10">Modificaciones y terminación</a></li>
+      <li><a href="#s11">Ley aplicable y contacto</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>Aceptación de los términos</h2>
+    </div>
+    <p>Al registrarse, acceder o utilizar NormaLis (en adelante "la Plataforma"), el usuario —ya sea una Institución Prestadora de Salud (IPS), un profesional independiente o un administrador designado (en adelante "el Usuario")— acepta de forma expresa e irrevocable los presentes Términos y Condiciones.</p>
+    <p>Si el Usuario actúa en nombre de una organización, declara tener la autorización necesaria para vincularla a estos términos.</p>
+    <p>Si no está de acuerdo con alguna de estas condiciones, debe abstenerse de utilizar la Plataforma.</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>Descripción del servicio</h2>
+    </div>
+    <p>NormaLis es una plataforma SaaS (Software como Servicio) diseñada para apoyar a IPS y profesionales de salud en Colombia en la gestión del cumplimiento normativo, con énfasis en:</p>
+    <ul>
+      <li>Autoevaluaciones de habilitación conforme a la Resolución 3100 de 2019 y la Resolución 465 de 2025.</li>
+      <li>Generación asistida por inteligencia artificial de documentos normativos (manuales, protocolos, planes de mejoramiento, PAMEC, entre otros).</li>
+      <li>Seguimiento de vencimientos, incidentes, PQRS y bitácora de auditoría.</li>
+      <li>Orientación normativa mediante un asistente conversacional basado en IA.</li>
+    </ul>
+    <p>NormaLis es una herramienta de apoyo y automatización. No reemplaza la asesoría jurídica, médica o de auditoría en salud.</p>
+  </div>
+
+  <!-- 3 -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>Uso de inteligencia artificial — derechos de autor y precisión</h2>
+    </div>
+
+    <p><strong>3.1 Naturaleza de los documentos generados</strong></p>
+    <p>Los documentos, protocolos, manuales y textos generados por la Plataforma son producidos mediante modelos de inteligencia artificial (IA). De conformidad con el marco jurídico colombiano vigente y los criterios internacionales sobre autoría, las obras generadas de forma autónoma por sistemas de IA sin intervención creativa humana determinante <strong>no son susceptibles de protección por derechos de autor</strong>.</p>
+
+    <div class="callout callout-info">
+      <strong>¿Qué significa esto para el Usuario?</strong>
+      El Usuario puede usar, adaptar, implementar y presentar ante entidades de salud los documentos generados por NormaLis sin restricciones de propiedad intelectual. No existe un "autor" que reclame derechos sobre el contenido generado.
+    </div>
+
+    <p><strong>3.2 Propiedad de los documentos personalizados</strong></p>
+    <p>Cuando el Usuario personaliza, edita o complementa un documento generado por la IA con contenido propio (datos de la IPS, procedimientos específicos, información institucional), ese contenido adicional sí puede ser de autoría del Usuario y queda bajo su titularidad.</p>
+
+    <p><strong>3.3 Precisión y limitaciones de la IA</strong></p>
+    <p>Los modelos de IA utilizados por NormaLis están entrenados con base en la normativa vigente (Resolución 3100/2019 y Resolución 465/2025), pero pueden cometer errores, omisiones o generar texto desactualizado ante cambios normativos posteriores a su entrenamiento.</p>
+
+    <div class="callout callout-warning">
+      <strong>Advertencia importante</strong>
+      La IA puede generar contenido plausible pero incorrecto. NormaLis actúa como copiloto normativo, no como autoridad. Todo documento generado debe ser revisado y validado por un profesional calificado antes de su uso oficial.
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>Exención de responsabilidad normativa</h2>
+    </div>
+
+    <div class="callout callout-important">
+      <strong>Cláusula esencial — lea con atención</strong>
+      NormaLis es una herramienta de apoyo al cumplimiento normativo. La responsabilidad legal, técnica y administrativa ante la Secretaría de Salud departamental o distrital, el Ministerio de Salud y Protección Social, y cualquier otra entidad de inspección, vigilancia y control, recae exclusiva y completamente sobre la IPS o el profesional independiente que presente, implemente o suscriba los documentos.
+    </div>
+
+    <p>En particular, NormaLis:</p>
+    <ul>
+      <li><strong>No certifica</strong> que los documentos generados cumplan con los requisitos específicos de habilitación de cada IPS, dado que dichos requisitos varían según el tipo de servicio, el departamento y la entidad verificadora.</li>
+      <li><strong>No garantiza</strong> que el uso de la Plataforma resulte en la aprobación del proceso de habilitación, PAMEC o cualquier otro trámite ante autoridades sanitarias.</li>
+      <li><strong>No reemplaza</strong> la figura del auditor en salud, el representante legal de la IPS, ni el asesor jurídico en trámites formales.</li>
+      <li><strong>No asume responsabilidad</strong> por decisiones administrativas, sanciones, cierres o hallazgos de entes de control derivados del uso —correcto o incorrecto— de los documentos generados.</li>
+    </ul>
+
+    <p>El Usuario es el único responsable de revisar, ajustar, firmar y presentar cualquier documento ante las autoridades competentes. NormaLis recomienda siempre contar con el acompañamiento de un profesional de auditoría en salud para procesos de habilitación formales.</p>
+  </div>
+
+  <!-- 5 -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>Registro y acceso</h2>
+    </div>
+    <p>El acceso a NormaLis requiere registro previo. El Usuario se compromete a:</p>
+    <ul>
+      <li>Proporcionar información veraz, completa y actualizada durante el registro.</li>
+      <li>Mantener la confidencialidad de sus credenciales de acceso.</li>
+      <li>Notificar a NormaLis de forma inmediata si sospecha acceso no autorizado a su cuenta.</li>
+      <li>No ceder, vender ni compartir su acceso con terceros no autorizados.</li>
+    </ul>
+    <p>Cada cuenta corresponde a una IPS o a un profesional independiente. El acceso multiusuario dentro de una misma institución debe ser gestionado por el administrador designado.</p>
+    <p>NormaLis se reserva el derecho de suspender o cancelar cuentas que incumplan estos términos, presenten datos falsos o realicen uso indebido de la Plataforma.</p>
+  </div>
+
+  <!-- 6 -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>Planes, pagos y cancelación</h2>
+    </div>
+    <p><strong>6.1 Planes disponibles</strong></p>
+    <p>NormaLis ofrece diferentes planes de suscripción (Básico, Profesional y otros según disponibilidad), cuyos precios y características se publican en <a href="https://normalis.co/pricing.html" style="color:var(--accent)">normalis.co/pricing.html</a>. Los precios están expresados en pesos colombianos (COP) e incluyen IVA cuando aplica.</p>
+
+    <p><strong>6.2 Procesamiento de pagos</strong></p>
+    <p>Los pagos se procesan a través de <strong>Bold.co</strong>, pasarela de pagos colombiana. NormaLis no almacena datos de tarjetas de crédito ni información financiera sensible del Usuario. La seguridad de las transacciones es responsabilidad de Bold.co conforme a sus propios términos.</p>
+
+    <p><strong>6.3 Programa Piloto</strong></p>
+    <p>Los usuarios admitidos al programa piloto tienen acceso temporal y gratuito a la Plataforma por el período definido al momento de su admisión. Al vencer dicho período, el acceso se suspende automáticamente. NormaLis no está obligada a extender ni renovar el acceso piloto.</p>
+
+    <p><strong>6.4 Cancelación</strong></p>
+    <p>El Usuario puede cancelar su suscripción en cualquier momento. La cancelación es efectiva al final del período de facturación en curso; no se realizan reembolsos por períodos no utilizados, salvo falla comprobada imputable a NormaLis.</p>
+
+    <p><strong>6.5 Modificación de precios</strong></p>
+    <p>NormaLis puede modificar sus tarifas con un aviso previo mínimo de 30 días. El Usuario que no acepte los nuevos precios puede cancelar su suscripción antes de que entren en vigencia.</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>Protección de datos personales (Ley 1581/2012)</h2>
+    </div>
+    <p>NormaLis cumple con la Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013 sobre protección de datos personales en Colombia.</p>
+
+    <p><strong>7.1 Datos que recopilamos</strong></p>
+    <ul>
+      <li>Datos de identificación: nombre de la IPS, NIT, nombre del contacto, cargo, ciudad, teléfono y correo electrónico.</li>
+      <li>Datos de uso: actividad dentro de la Plataforma, documentos generados, resultados de autoevaluaciones.</li>
+      <li>Datos técnicos: dirección IP, navegador, sistema operativo (para seguridad y mejora del servicio).</li>
+    </ul>
+
+    <p><strong>7.2 Finalidad del tratamiento</strong></p>
+    <ul>
+      <li>Gestionar el acceso y la cuenta del Usuario.</li>
+      <li>Prestar los servicios contratados.</li>
+      <li>Enviar notificaciones relacionadas con la cuenta (vencimientos, actualizaciones normativas).</li>
+      <li>Mejorar la Plataforma mediante análisis agregado y anónimo de uso.</li>
+    </ul>
+
+    <p><strong>7.3 Derechos del titular</strong></p>
+    <p>El Usuario tiene derecho a conocer, actualizar, rectificar y suprimir sus datos, así como a revocar la autorización otorgada. Para ejercer estos derechos, contacte a <a href="mailto:fjfc1984@gmail.com" style="color:var(--accent)">fjfc1984@gmail.com</a>.</p>
+
+    <p><strong>7.4 Compartición de datos</strong></p>
+    <p>NormaLis no vende ni cede datos personales a terceros. Los datos pueden ser compartidos únicamente con proveedores de infraestructura tecnológica (Firebase/Google Cloud) bajo acuerdos de confidencialidad, exclusivamente para la operación del servicio.</p>
+
+    <p><strong>7.5 Retención</strong></p>
+    <p>Los datos se conservan mientras la cuenta esté activa. Al cancelar la cuenta, el Usuario puede solicitar la eliminación de sus datos; NormaLis los suprimirá en un plazo no mayor a 30 días hábiles, salvo obligación legal de conservación.</p>
+  </div>
+
+  <!-- 8 -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>Propiedad intelectual de NormaLis</h2>
+    </div>
+    <p>La marca "NormaLis", el diseño visual de la Plataforma, el código fuente, la arquitectura de los módulos, los prompts de IA y la base de conocimiento normativa integrada son propiedad exclusiva de NormaLis y están protegidos por las normas de propiedad intelectual aplicables.</p>
+    <p>El Usuario recibe una licencia limitada, no exclusiva e intransferible para usar la Plataforma durante la vigencia de su suscripción. Esta licencia no incluye el derecho a:</p>
+    <ul>
+      <li>Copiar, descompilar o hacer ingeniería inversa del software.</li>
+      <li>Sublicenciar o revender el acceso a la Plataforma.</li>
+      <li>Usar la marca NormaLis sin autorización escrita previa.</li>
+    </ul>
+  </div>
+
+  <!-- 9 -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>Limitación de responsabilidad</h2>
+    </div>
+    <p>En la máxima medida permitida por la ley colombiana, NormaLis no será responsable por:</p>
+    <ul>
+      <li>Daños directos, indirectos, incidentales, especiales o consecuentes derivados del uso o la imposibilidad de uso de la Plataforma.</li>
+      <li>Pérdida de datos, interrupción del servicio por causas fuera de control razonable (fuerza mayor, fallas de terceros proveedores, ataques cibernéticos).</li>
+      <li>Decisiones administrativas, sanciones o resultados desfavorables en procesos de habilitación o auditoría ante entidades de salud.</li>
+      <li>Inexactitudes en los documentos generados por IA que no hayan sido detectadas por el Usuario antes de su uso oficial.</li>
+    </ul>
+    <p>La responsabilidad total de NormaLis, en cualquier caso, no superará el valor de las sumas efectivamente pagadas por el Usuario en los tres (3) meses anteriores al evento que origina la reclamación.</p>
+  </div>
+
+  <!-- 10 -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>Modificaciones y terminación</h2>
+    </div>
+    <p>NormaLis puede modificar estos Términos y Condiciones en cualquier momento. Los cambios serán notificados al Usuario mediante correo electrónico o aviso en la Plataforma con al menos 15 días de anticipación. El uso continuado del servicio después de dicho plazo constituye aceptación de los nuevos términos.</p>
+    <p>NormaLis puede suspender o terminar el servicio, total o parcialmente, con aviso previo de 30 días, salvo en casos de incumplimiento grave por parte del Usuario, en cuyo caso la terminación puede ser inmediata.</p>
+  </div>
+
+  <!-- 11 -->
+  <div class="section" id="s11">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <h2>Ley aplicable y contacto</h2>
+    </div>
+    <p>Estos Términos y Condiciones se rigen por las leyes de la República de Colombia. Para cualquier controversia, las partes intentarán una solución amigable; de no ser posible, se someterán a los jueces y tribunales competentes de Colombia.</p>
+    <p>Para consultas, solicitudes de datos o cualquier comunicación relacionada con estos términos:</p>
+    <ul>
+      <li><strong>Correo:</strong> <a href="mailto:fjfc1984@gmail.com" style="color:var(--accent)">fjfc1984@gmail.com</a></li>
+      <li><strong>Sitio web:</strong> <a href="https://normalis.co" style="color:var(--accent)">normalis.co</a></li>
+    </ul>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>© 2026 NormaLis · <a href="https://normalis.co">normalis.co</a> · Todos los derechos reservados</p>
+  <p style="margin-top:6px; font-size:12px; opacity:0.7;">Plataforma de cumplimiento normativo para IPS colombianas · Res. 3100/2019 y 465/2025</p>
+</footer>
+
+</body>
+</html>
