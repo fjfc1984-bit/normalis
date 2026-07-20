@@ -12,13 +12,11 @@ async function createUser(nombre, rol, pin){
 function editUser(id){
   const u=_users.find(x=>x.id===id); if(!u) return;
   _editingUserId=id;
-  document.getElementById('um-form-nombre').value=u.nombre;
-  document.getElementById('um-form-rol').value=u.rol;
-  document.getElementById('um-form-pin').value='';
-  document.getElementById('um-form-pin').placeholder='Dejar vacío = sin cambios';
-  document.getElementById('um-form-title').textContent='✏️ Editar Usuario';
-  document.getElementById('um-form').style.display='block';
-  document.getElementById('um-form').scrollIntoView({behavior:'smooth'});
+  const fn=document.getElementById('um-form-nombre'); if(fn) fn.value=u.nombre;
+  const fr=document.getElementById('um-form-rol'); if(fr) fr.value=u.rol;
+  const fp=document.getElementById('um-form-pin'); if(fp){ fp.value=''; fp.placeholder='Dejar vacío = sin cambios'; }
+  const ft=document.getElementById('um-form-title'); if(ft) ft.textContent='✏️ Editar Usuario';
+  const form=document.getElementById('um-form'); if(form){ form.style.display='block'; form.scrollIntoView({behavior:'smooth'}); }
 }
 
 function deleteUser(id){ _users=_users.filter(u=>u.id!==id); saveUsers(); }
@@ -32,23 +30,21 @@ function confirmDeleteUser(id){
 
 function newUser(){
   _editingUserId=null;
-  document.getElementById('um-form-nombre').value='';
-  document.getElementById('um-form-rol').value='auxiliar';
-  document.getElementById('um-form-pin').value='';
-  document.getElementById('um-form-pin').placeholder='4 dígitos numéricos';
-  document.getElementById('um-form-title').textContent='➕ Nuevo Usuario';
-  document.getElementById('um-form').style.display='block';
-  document.getElementById('um-form-nombre').focus();
+  const fn=document.getElementById('um-form-nombre'); if(fn){ fn.value=''; fn.focus(); }
+  const fr=document.getElementById('um-form-rol'); if(fr) fr.value='auxiliar';
+  const fp=document.getElementById('um-form-pin'); if(fp){ fp.value=''; fp.placeholder='4 dígitos numéricos'; }
+  const ft=document.getElementById('um-form-title'); if(ft) ft.textContent='➕ Nuevo Usuario';
+  const form=document.getElementById('um-form'); if(form) form.style.display='block';
 }
 
 function openProfModal(id){
   var arr=loadPersonal();
   var p=arr.find(function(x){ return x.id===id; });
   if(!p) return;
-  document.getElementById('pm-name').textContent=p.nombre;
-  document.getElementById('pm-role').textContent=p.cargo+' · '+p.tipo;
+  var pmName=document.getElementById('pm-name'); if(pmName) pmName.textContent=p.nombre;
+  var pmRole=document.getElementById('pm-role'); if(pmRole) pmRole.textContent=p.cargo+' · '+p.tipo;
   var ini=(p.nombre||'?').split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
-  document.getElementById('pm-avatar').textContent=ini;
+  var pmAvatar=document.getElementById('pm-avatar'); if(pmAvatar) pmAvatar.textContent=ini;
   var docNames={titulo:'Título profesional',rethus:'Tarjeta RETHUS',contrato:'Contrato vigente',vacunas:'Esquema vacunas',bioseg:'Capacitación bioseguridad'};
   var docsEl=document.getElementById('pm-docs');
   if(docsEl) docsEl.innerHTML=Object.keys(docNames).map(function(k){
@@ -58,7 +54,6 @@ function openProfModal(id){
       '<span style="font-size:13px;color:'+(ok?'var(--text)':'var(--danger)')+'">'+docNames[k]+'</span>'+
       '</div>';
   }).join('');
-  // Delete button in actions
   var actions=document.querySelector('#prof-modal .pm-actions');
   if(actions&&!actions.querySelector('[data-del]')){
     var delBtn=document.createElement('button');
@@ -72,11 +67,11 @@ function openProfModal(id){
     var existing=actions.querySelector('[data-del]');
     if(existing) existing.setAttribute('data-del',id);
   }
-  document.getElementById('prof-modal').style.display='flex';
+  var modal=document.getElementById('prof-modal'); if(modal) modal.style.display='flex';
 }
 
 function closeProfModal(){
-  document.getElementById('prof-modal').style.display='none';
+  var modal=document.getElementById('prof-modal'); if(modal) modal.style.display='none';
   var actions=document.querySelector('#prof-modal .pm-actions');
   if(actions){ var del=actions.querySelector('[data-del]'); if(del) del.remove(); }
 }

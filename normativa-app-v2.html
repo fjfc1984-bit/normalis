@@ -4183,9 +4183,13 @@ function saveAutoEvents(){ localStorage.setItem(AUTO_LOG_KEY2, JSON.stringify(_a
 /* ── Auto Banner ── */
 let _bannerQueue=[];
 function showAutoBanner(title, body, actions){
-  document.getElementById('auto-banner-title').textContent=title;
-  document.getElementById('auto-banner-body').textContent=body;
+  const titleEl=document.getElementById('auto-banner-title');
+  const bodyEl=document.getElementById('auto-banner-body');
   const actEl=document.getElementById('auto-banner-actions');
+  const banner=document.getElementById('auto-banner');
+  if(!banner||!titleEl||!bodyEl||!actEl) return; // elemento no existe aún
+  titleEl.textContent=title;
+  bodyEl.textContent=body;
   actEl.innerHTML='';
   (actions||[]).forEach(a=>{
     const btn=document.createElement('button');
@@ -4194,11 +4198,13 @@ function showAutoBanner(title, body, actions){
     btn.onclick=()=>{ hideAutoBanner(); if(a.fn) a.fn(); };
     actEl.appendChild(btn);
   });
-  const banner=document.getElementById('auto-banner');
   banner.style.display='block';
   if(actions&&actions.length===0) setTimeout(hideAutoBanner,4000);
 }
-function hideAutoBanner(){ document.getElementById('auto-banner').style.display='none'; }
+function hideAutoBanner(){
+  const banner=document.getElementById('auto-banner');
+  if(banner) banner.style.display='none';
+}
 
 /* ── Expiry Scanner ── */
 
@@ -8246,6 +8252,14 @@ function evaluarSuficienciaDatos(ctx) {
     </div>
 
   </div>
+</div>
+
+
+<!-- AUTO-BANNER — notificaciones flotantes de vencimientos y automatismos -->
+<div id="auto-banner" class="auto-banner" style="display:none;">
+  <div id="auto-banner-title" class="auto-banner-title"></div>
+  <div id="auto-banner-body" style="color:#94a3b8;font-size:12px;margin-top:2px;"></div>
+  <div id="auto-banner-actions" class="auto-banner-actions"></div>
 </div>
 
 </body>
