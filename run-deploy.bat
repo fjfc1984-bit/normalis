@@ -11,7 +11,8 @@ cd /d "%ROOT%"
 call "%FIRE%" experiments:enable legacyRuntimeConfigCommands --project normalis-5587d >> "%LOG%" 2>&1
 
 echo [1/3] Config Gemini key... >> "%LOG%"
-call "%FIRE%" functions:config:set gemini.api_key="AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg" --project normalis-5587d >> "%LOG%" 2>&1
+rem SEGURIDAD: API key removida — usar variable de entorno o configurar manualmente
+rem call "%FIRE%" functions:config:set gemini.api_key="TU_CLAVE_AQUI" --project normalis-5587d >> "%LOG%" 2>&1
 echo Config exit: %errorlevel% >> "%LOG%"
 
 echo [2/3] Deploying functions... >> "%LOG%"

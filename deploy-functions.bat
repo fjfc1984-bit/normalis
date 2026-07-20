@@ -23,7 +23,9 @@ if errorlevel 1 (
 
 echo.
 echo [3/4] Configurando API key de Gemini...
-call npx firebase-tools@latest functions:config:set gemini.api_key="AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg" --project normalis-5587d
+echo INSTRUCCION: pega tu clave de https://aistudio.google.com/app/apikey
+echo Ejecuta manualmente: npx firebase-tools@latest functions:config:set gemini.api_key="TU_CLAVE_AQUI" --project normalis-5587d
+echo (Clave removida del script por seguridad — nunca hardcodear API keys en archivos)
 echo Config establecida.
 
 echo.

@@ -20,16 +20,12 @@ oFile.WriteLine "Fecha: " & Now()
 oFile.Close
 
 ' Paso 1: Set config Gemini API key
-cmd = "cmd /c cd /d """ & sRepo & """ && " & _
-      sFire & " functions:config:set " & _
-      "gemini.api_key=""AQ.Ab8RN6J7U72h-pK2ii8-85wKjGKPp8AWLxSo6RP1ByimOKHocg"" " & _
-      "--project normalis-5587d >> """ & sLog & """ 2>&1"
-
-ret = oShell.Run(cmd, 0, True)
-
+' SEGURIDAD: API key removida del script. Configura manualmente antes de deploy:
+' firebase functions:config:set gemini.api_key="TU_CLAVE_AQUI" --project normalis-5587d
 Set oFile = oFSO.OpenTextFile(sLog, 8)
-oFile.WriteLine "Config set: exit " & ret
+oFile.WriteLine "NOTA: gemini.api_key debe configurarse manualmente (removida por seguridad)"
 oFile.Close
+ret = 0
 
 ' Paso 2: Deploy
 cmd = "cmd /c cd /d """ & sRepo & """ && " & _
