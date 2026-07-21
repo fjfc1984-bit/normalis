@@ -1106,7 +1106,18 @@ function submitDemo(){
     }
   }catch(_){}
 
-  // ── 4. Mostrar pantalla de éxito ──────────────────────────────────────────
+  // ── 4. Auto-reply al lead (inmediato, de por vida) ───────────────────────
+  try{
+    if(typeof emailjs !== 'undefined'){
+      emailjs.send('normalis_service', 'lead_autoreply', {
+        to_email:    email,
+        lead_nombre: nombre,
+        lead_ciudad: ciudad || 'Colombia'
+      }).catch(function(){});
+    }
+  }catch(_){}
+
+  // ── 5. Mostrar pantalla de éxito ──────────────────────────────────────────
   document.getElementById('modal-form-wrap').style.display = 'none';
   document.getElementById('modal-success').style.display  = 'block';
 }
