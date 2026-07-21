@@ -1110,9 +1110,9 @@ function submitDemo(){
   try{
     if(typeof emailjs !== 'undefined'){
       emailjs.send('normalis_service', 'lead_autoreply', {
-        to_email:    email,
-        lead_nombre: nombre,
-        lead_ciudad: ciudad || 'Colombia'
+        to_email: email,
+        name:     nombre,
+        title:    'solicitud de demo en NormaLis — ' + (ciudad || 'Colombia')
       }).catch(function(){});
     }
   }catch(_){}
