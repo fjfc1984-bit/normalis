@@ -2,17 +2,19 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-  <!-- Sentry Error Monitoring -->
-  <script src="https://browser.sentry-cdn.com/7.119.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+  <!-- Sentry Error Monitoring (async — no bloquea carga de página) -->
   <script>
-  Sentry.init({
-    dsn: "https://13a419be1c1a359b1f1b773c115060bc@o4511779171270656.ingest.us.sentry.io/4511779282812928",
-    environment: "production",
-    release: "normalis@1.0",
-    tracesSampleRate: 0.2,
-    integrations: [Sentry.browserTracingIntegration()],
-  });
+  window.__sentryInit = function() {
+    if (typeof Sentry === 'undefined') return;
+    Sentry.init({
+      dsn: "https://13a419be1c1a359b1f1b773c115060bc@o4511779171270656.ingest.us.sentry.io/4511779282812928",
+      environment: "production",
+      release: "normalis@1.0",
+      tracesSampleRate: 0.1,
+    });
+  };
   </script>
+  <script src="https://browser.sentry-cdn.com/7.119.0/bundle.min.js" async crossorigin="anonymous" onload="window.__sentryInit()"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
