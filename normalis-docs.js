@@ -467,26 +467,29 @@ function buildStreamLines(){
   ];
 }
 
-// Override startGen to use dynamic stream lines
-const _origStartGen = startGen;
-startGen = function(){
-  const lines = buildStreamLines();
-  document.getElementById('gen-step1').style.display='none';
-  document.getElementById('gen-step2').style.display='block';
-  const box=document.getElementById('gen-stream');
-  box.innerHTML=''; let i=0;
-  const iv=setInterval(()=>{
-    if(i>=lines.length){clearInterval(iv);showGenDone();return;}
-    document.getElementById('gen-step-label').textContent=lines[i].replace('> ','');
-    const line=document.createElement('div');
-    line.className='gen-stream-line';
-    line.style.color=lines[i].includes('✅')?'#4ade80':'#94a3b8';
-    line.textContent=lines[i];
-    box.appendChild(line);
-    box.scrollTop=box.scrollHeight;
-    i++;
-  },300);
-};
+// Override startGen to use dynamic stream lines (deferred — inline script loads after modules)
+document.addEventListener('DOMContentLoaded', function(){
+  if(typeof startGen === 'function'){
+    startGen = function(){
+      const lines = buildStreamLines();
+      document.getElementById('gen-step1').style.display='none';
+      document.getElementById('gen-step2').style.display='block';
+      const box=document.getElementById('gen-stream');
+      box.innerHTML=''; let i=0;
+      const iv=setInterval(()=>{
+        if(i>=lines.length){clearInterval(iv);showGenDone();return;}
+        document.getElementById('gen-step-label').textContent=lines[i].replace('> ','');
+        const line=document.createElement('div');
+        line.className='gen-stream-line';
+        line.style.color=lines[i].includes('✅')?'#4ade80':'#94a3b8';
+        line.textContent=lines[i];
+        box.appendChild(line);
+        box.scrollTop=box.scrollHeight;
+        i++;
+      },300);
+    };
+  }
+});
 
 
 // END:normalis-docs.js — NormaLis integrity seal

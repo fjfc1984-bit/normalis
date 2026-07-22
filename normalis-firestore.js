@@ -732,8 +732,7 @@ function checkVencimientosReminder(userEmail) {
     proximos:    prox.length,
     detalle:     venc.concat(prox).slice(0, 5).map(function(d) {
       return (d.profesional || d.tipo || '—') + ' (' + (d.tipo || '') + ') → ' + d.fecha;
-    }).join('
-'),
+    }).join('\n'),
     app_url:     'https://normalis.co/normativa-app-v2.html'
   }).then(function() {
     localStorage.setItem(lastKey, now.toString());
