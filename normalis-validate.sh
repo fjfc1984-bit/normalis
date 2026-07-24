@@ -256,14 +256,14 @@ section "6. admin.html — 9 reglas de integridad"
 ADMIN="$REPO/admin.html"
 if [[ -f "$ADMIN" ]]; then
 
-  # Rule 1: Exactly 2 inline script blocks
+  # Rule 1: 2 app script blocks + 1 Sentry block = 3 total (Sentry added in session 136)
   INLINE_SCRIPTS=$(grep -c '^<script>' "$ADMIN" || true)
   # also count <script> not followed by src=
   INLINE_SCRIPTS2=$(grep -c '<script>' "$ADMIN" || true)
-  if [[ "$INLINE_SCRIPTS2" -eq 2 ]]; then
-    pass "admin.html: exactamente 2 bloques <script> inline"
+  if [[ "$INLINE_SCRIPTS2" -eq 3 ]] || [[ "$INLINE_SCRIPTS2" -eq 2 ]]; then
+    pass "admin.html: bloques <script> inline OK ($INLINE_SCRIPTS2 — 2 app + Sentry)"
   else
-    warn "admin.html: $INLINE_SCRIPTS2 bloques <script> inline (esperados: 2)"
+    warn "admin.html: $INLINE_SCRIPTS2 bloques <script> inline (esperados: 2 ó 3)"
   fi
 
   # Rule 2: Toast div in HTML (not inside script)

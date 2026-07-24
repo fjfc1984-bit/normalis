@@ -779,6 +779,29 @@
 ══════════════════════════════════════════════ -->
 <script>
 // ──────────────────────────────────────────────
+// UTILIDADES — nlConfirm (reemplaza confirm() nativo)
+// ──────────────────────────────────────────────
+function nlConfirm(msg, okLabel, okColor) {
+  okLabel = okLabel || 'Confirmar'; okColor = okColor || '#00796B';
+  return new Promise(function(resolve) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML = '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">'
+      + '<p style="color:#e2e8f0;font-size:15px;margin:0 0 24px;line-height:1.6">' + msg + '</p>'
+      + '<div style="display:flex;gap:10px;justify-content:flex-end">'
+      + '<button id="_nlc_cancel" style="background:transparent;border:1px solid #475569;color:#94a3b8;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px">Cancelar</button>'
+      + '<button id="_nlc_ok" style="background:' + okColor + ';border:none;color:#fff;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">' + okLabel + '</button>'
+      + '</div></div>';
+    document.body.appendChild(ov);
+    function close(v) { if(ov.parentNode) document.body.removeChild(ov); resolve(v); }
+    ov.querySelector('#_nlc_ok').onclick = function(){ close(true); };
+    ov.querySelector('#_nlc_cancel').onclick = function(){ close(false); };
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(false); });
+    setTimeout(function(){ var b=ov.querySelector('#_nlc_ok'); if(b) b.focus(); }, 50);
+  });
+}
+
+// ──────────────────────────────────────────────
 // FIREBASE CONFIG
 // ──────────────────────────────────────────────
 const FIREBASE_CONFIG = {
@@ -1567,7 +1590,8 @@ async function aprobarUsuario(uid) {
 }
 
 async function rechazarUsuario(uid) {
-  if (!confirm('¿Rechazar esta solicitud?')) return;
+  const ok = await nlConfirm('¿Rechazar esta solicitud?', 'Rechazar', '#ef4444');
+  if (!ok) return;
   try {
     await db.collection('usuarios').doc(uid).update({ rol: 'rechazado', estado: 'rechazado' });
     showToast('Solicitud rechazada', 'warning');
