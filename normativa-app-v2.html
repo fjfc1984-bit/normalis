@@ -4127,9 +4127,11 @@ function renderActividad(){
 
 function clearActivityLog(){
   if(!_session||_session.rol!=='director'){toast('Solo el Director puede limpiar el log','warning');return;}
-  if(!confirm('¿Eliminar todo el historial de actividad? Esta acción no se puede deshacer.')) return;
-  localStorage.removeItem(LOGS_KEY);
-  toast('Log limpiado','success'); renderActividad();
+  nlConfirm('¿Eliminar todo el historial de actividad?<br><span style="font-size:12px;color:#f87171">Esta acción no se puede deshacer.</span>', 'Eliminar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    localStorage.removeItem(LOGS_KEY);
+    toast('Log limpiado','success'); renderActividad();
+  });
 }
 
 
@@ -5959,10 +5961,12 @@ function loadHistoryEntry(id){
 }
 
 function clearAuditHistory(){
-  if(!confirm('¿Limpiar todo el historial de auditorías?')) return;
-  localStorage.removeItem(AUDIT_HISTORY_KEY);
-  renderAuditHistory();
-  toast('🗑 Historial limpiado','info');
+  nlConfirm('¿Limpiar todo el historial de auditorías?', 'Limpiar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    localStorage.removeItem(AUDIT_HISTORY_KEY);
+    renderAuditHistory();
+    toast('🗑 Historial limpiado','info');
+  });
 }
 
 // ── 4. KPIs por segmento ─────────────────────────────────────────

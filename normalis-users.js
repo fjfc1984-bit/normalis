@@ -23,9 +23,11 @@ function deleteUser(id){ _users=_users.filter(u=>u.id!==id); saveUsers(); }
 
 function confirmDeleteUser(id){
   const u=_users.find(x=>x.id===id); if(!u) return;
-  if(!confirm('¿Eliminar el perfil de '+u.nombre+'? Esta acción no se puede deshacer.')) return;
-  logActivity('user_deleted','perfiles','Usuario eliminado: '+u.nombre);
-  deleteUser(id); renderUserMgmt(); toast('Usuario eliminado','success');
+  nlConfirm('¿Eliminar el perfil de <strong>'+u.nombre+'</strong>?<br><span style="font-size:12px;color:#f87171">Esta acción no se puede deshacer.</span>', 'Eliminar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    logActivity('user_deleted','perfiles','Usuario eliminado: '+u.nombre);
+    deleteUser(id); renderUserMgmt(); toast('Usuario eliminado','success');
+  });
 }
 
 function newUser(){
@@ -61,7 +63,7 @@ function openProfModal(id){
     delBtn.style.cssText='background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)';
     delBtn.textContent='🗑 Eliminar';
     delBtn.setAttribute('data-del',id);
-    delBtn.onclick=function(){ if(confirm('¿Eliminar a '+p.nombre+'?')){ var a=loadPersonal(); savePersonal(a.filter(function(x){ return x.id!==id; })); closeProfModal(); renderProfGrid(); toast('Profesional eliminado','info'); } };
+    delBtn.onclick=function(){ nlConfirm('¿Eliminar a <strong>'+p.nombre+'</strong>?', 'Eliminar', '#ef4444').then(function(ok){ if(!ok) return; var a=loadPersonal(); savePersonal(a.filter(function(x){ return x.id!==id; })); closeProfModal(); renderProfGrid(); toast('Profesional eliminado','info'); }); };
     actions.insertBefore(delBtn,actions.firstChild);
   } else if(actions) {
     var existing=actions.querySelector('[data-del]');

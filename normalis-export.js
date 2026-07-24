@@ -143,25 +143,27 @@ function importarDatos(input){
   if(!file) return;
   const reader = new FileReader();
   reader.onload = function(e){
+    let backup;
     try {
-      const backup = JSON.parse(e.target.result);
+      backup = JSON.parse(e.target.result);
       if(!backup.data || !backup.version){ throw new Error('Archivo no reconocido'); }
-      if(!confirm('¿Restaurar backup de "'+backup.establecimiento+'" ('+new Date(backup.exportedAt).toLocaleDateString('es-CO')+')?\n\nEsto reemplazará TODOS los datos actuales de esta app.')){
-        input.value=''; return;
-      }
-      // Restore all keys
+    } catch(err){
+      const st = document.getElementById('backup-status');
+      if(st) st.innerHTML = '<span style="color:var(--danger)">❌ Error al importar: '+err.message+'</span>';
+      toast('❌ Error al importar backup: '+err.message,'error');
+      input.value = '';
+      return;
+    }
+    nlConfirm('¿Restaurar backup de "'+backup.establecimiento+'" ('+new Date(backup.exportedAt).toLocaleDateString('es-CO')+')?<br><br><span style="color:#f59e0b;font-size:12px">⚠️ Esto reemplazará TODOS los datos actuales.</span>', 'Restaurar', '#ef4444').then(function(ok){
+      if(!ok){ input.value=''; return; }
       Object.entries(backup.data).forEach(function(kv){ localStorage.setItem(kv[0], kv[1]); });
       logActivity('backup_import','datos','Backup restaurado: '+backup.exportedAt);
       const st = document.getElementById('backup-status');
       if(st) st.innerHTML = '<span style="color:var(--success)">✅ Datos restaurados correctamente. Recargando…</span>';
       toast('✅ Datos restaurados. Recargando la app…','success');
       setTimeout(function(){ location.reload(); }, 1500);
-    } catch(err){
-      const st = document.getElementById('backup-status');
-      if(st) st.innerHTML = '<span style="color:var(--danger)">❌ Error al importar: '+err.message+'</span>';
-      toast('❌ Error al importar backup: '+err.message,'error');
-    }
-    input.value = '';
+      input.value = '';
+    });
   };
   reader.readAsText(file);
 }

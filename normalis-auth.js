@@ -157,24 +157,10 @@ function pinCancel(){
 
 function forceLogout(){
   if(!_session) return;
-  logActivity('logout','sistema','Cierre automático por inactividad (30 min)');
+  try{ logActivity('logout','sistema','Cierre automático por inactividad (30 min)'); }catch(e){}
   saveSession(null); _session = null;
   clearTimeout(_sessionTimer);
-  const sb = document.getElementById('sb-session-user');
-  if(sb) sb.style.display = 'none';
-  document.querySelectorAll('.sb-item[onclick]').forEach(function(el){ el.style.display=''; });
-  document.querySelectorAll('.sb-section').forEach(function(el){ el.style.display=''; });
-  if(typeof hideAutoBanner==='function') hideAutoBanner();
-  showLogin();
-  if(typeof toast==='function') toast('🔒 Sesión cerrada por inactividad','info');
-}
-
-function logout(){
-  if(!confirm('¿Cerrar sesión?')) return;
-  try{ logActivity('logout','sistema','Cierre de sesión'); }catch(e){}
-  try{ saveSession(null); }catch(e){} _session=null;
   sessionStorage.clear();
-  localStorage.removeItem('normalis_onboarding_done');
   if(typeof _fbAuth !== 'undefined' && _fbAuth){
     _fbAuth.signOut().catch(function(){}).finally(function(){
       window.location.href = 'login.html';
@@ -182,6 +168,23 @@ function logout(){
   } else {
     window.location.href = 'login.html';
   }
+}
+
+function logout(){
+  nlConfirm('¿Cerrar sesión?', 'Cerrar sesión', '#ef4444').then(function(ok){
+    if(!ok) return;
+    try{ logActivity('logout','sistema','Cierre de sesión'); }catch(e){}
+    try{ saveSession(null); }catch(e){} _session=null;
+    sessionStorage.clear();
+    localStorage.removeItem('normalis_onboarding_done');
+    if(typeof _fbAuth !== 'undefined' && _fbAuth){
+      _fbAuth.signOut().catch(function(){}).finally(function(){
+        window.location.href = 'login.html';
+      });
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
 }
 
 function forceLogoutFirebase(){

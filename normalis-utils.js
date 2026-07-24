@@ -97,4 +97,36 @@ function mostrarInfoBackup(){
   if(el) el.style.display = el.style.display==='none'?'':'none';
 }
 
+/**
+ * nlConfirm — reemplaza confirm() nativo con modal custom.
+ * Funciona correctamente en móvil donde confirm() puede bloquearse.
+ * @param {string} msg - Mensaje a mostrar
+ * @param {string} [okLabel='Confirmar'] - Texto del botón de confirmación
+ * @param {string} [okColor='#00796B'] - Color del botón OK (rojo para acciones destructivas)
+ * @returns {Promise<boolean>}
+ */
+function nlConfirm(msg, okLabel, okColor) {
+  okLabel = okLabel || 'Confirmar';
+  okColor = okColor || '#00796B';
+  return new Promise(function(resolve) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML =
+      '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">' +
+        '<p style="color:#e2e8f0;font-size:15px;margin:0 0 24px;line-height:1.6">' + msg + '</p>' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+          '<button id="_nlc_cancel" style="background:transparent;border:1px solid #475569;color:#94a3b8;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">Cancelar</button>' +
+          '<button id="_nlc_ok" style="background:' + okColor + ';border:none;color:#fff;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">' + okLabel + '</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close(val) { if(overlay.parentNode) document.body.removeChild(overlay); resolve(val); }
+    overlay.querySelector('#_nlc_ok').onclick = function() { close(true); };
+    overlay.querySelector('#_nlc_cancel').onclick = function() { close(false); };
+    overlay.addEventListener('click', function(e) { if(e.target === overlay) close(false); });
+    overlay.addEventListener('keydown', function(e) { if(e.key==='Escape') close(false); if(e.key==='Enter') close(true); });
+    setTimeout(function() { var btn = overlay.querySelector('#_nlc_ok'); if(btn) btn.focus(); }, 50);
+  });
+}
+
 // END:normalis-utils.js — NormaLis integrity seal

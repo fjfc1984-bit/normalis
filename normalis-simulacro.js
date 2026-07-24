@@ -92,10 +92,11 @@ function toggleSimItem(ci, ii, checked) {
   renderSimulacro();
 }
 function resetSimulacro() {
-  if (confirm('¿Reiniciar el simulacro? Se borrarán todas las respuestas.')) {
+  nlConfirm('¿Reiniciar el simulacro?<br><span style="font-size:12px;color:#f87171">Se borrarán todas las respuestas.</span>', 'Reiniciar', '#ef4444').then(function(ok){
+    if(!ok) return;
     localStorage.removeItem('normalis_simulacro');
     renderSimulacro();
-  }
+  });
 }
 
 // Init new modules on nav

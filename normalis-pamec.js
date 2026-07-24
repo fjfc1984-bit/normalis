@@ -312,21 +312,25 @@ function pamecCambiarEstado(i, val){
 }
 
 function pamecEliminarAccion(i){
-  if(!confirm('¿Eliminar esta acción?')) return;
-  const d = loadPamecData();
-  d.acciones.splice(i,1);
-  savePamecData(d);
-  toast('Acción eliminada','info');
-  renderPamecPlan();
+  nlConfirm('¿Eliminar esta acción?', 'Eliminar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    const d = loadPamecData();
+    d.acciones.splice(i,1);
+    savePamecData(d);
+    toast('Acción eliminada','info');
+    renderPamecPlan();
+  });
 }
 
 function pamecEliminarProceso(i){
-  if(!confirm('¿Eliminar este proceso?')) return;
-  const d = loadPamecData();
-  d.procesos.splice(i,1);
-  savePamecData(d);
-  toast('Proceso eliminado','info');
-  renderPamecProcesos();
+  nlConfirm('¿Eliminar este proceso?', 'Eliminar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    const d = loadPamecData();
+    d.procesos.splice(i,1);
+    savePamecData(d);
+    toast('Proceso eliminado','info');
+    renderPamecProcesos();
+  });
 }
 
 function pamecGenerarDoc(){
@@ -575,15 +579,17 @@ function pamecGuiaFase() {
 }
 
 function pamecNuevoCiclo(){
-  if(!confirm('¿Iniciar un nuevo ciclo PAMEC? El ciclo actual quedará archivado.')) return;
-  const d = loadPamecData();
-  if(!d.ciclosAnteriores) d.ciclosAnteriores=[];
-  d.ciclosAnteriores.push({fasesFinalles:d.faseActual||0, fechaInicio:d.fechaInicio, fechaCierre:new Date().toISOString().split('T')[0]});
-  d.faseActual=0;
-  d.fechaInicio=new Date().toISOString().split('T')[0];
-  savePamecData(d);
-  toast('🔁 Nuevo ciclo PAMEC iniciado — '+d.fechaInicio,'success');
-  renderPamecCiclo();
+  nlConfirm('¿Iniciar un nuevo ciclo PAMEC?<br><span style="font-size:12px;color:#94a3b8">El ciclo actual quedará archivado.</span>', 'Nuevo ciclo', '#00796B').then(function(ok){
+    if(!ok) return;
+    const d = loadPamecData();
+    if(!d.ciclosAnteriores) d.ciclosAnteriores=[];
+    d.ciclosAnteriores.push({fasesFinalles:d.faseActual||0, fechaInicio:d.fechaInicio, fechaCierre:new Date().toISOString().split('T')[0]});
+    d.faseActual=0;
+    d.fechaInicio=new Date().toISOString().split('T')[0];
+    savePamecData(d);
+    toast('🔁 Nuevo ciclo PAMEC iniciado — '+d.fechaInicio,'success');
+    renderPamecCiclo();
+  });
 }
 
 function pamecRecalcScore(){
@@ -613,11 +619,13 @@ function pamecRecalcScore(){
 }
 
 function pamecResetAutoeval(){
-  if(!confirm('¿Limpiar toda la autoevaluación?')) return;
-  const d = loadPamecData();
-  d.autoeval={};
-  savePamecData(d);
-  renderPamecAutoeval();
+  nlConfirm('¿Limpiar toda la autoevaluación?<br><span style="font-size:12px;color:#f87171">Esta acción no se puede deshacer.</span>', 'Limpiar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    const d = loadPamecData();
+    d.autoeval={};
+    savePamecData(d);
+    renderPamecAutoeval();
+  });
 }
 
 function pamecTab(tab, btn){

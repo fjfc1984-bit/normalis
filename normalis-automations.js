@@ -136,10 +136,12 @@ function logAutoEvent(ruleId, title, detail, action){
 }
 
 function clearAutoLog(){
-  if(!confirm('¿Limpiar el historial de automatismos?')) return;
-  _autoEvents=[]; saveAutoEvents();
-  const badge=document.getElementById('auto-sb-badge'); if(badge) badge.style.display='none';
-  renderAutoView(); toast('Historial limpiado','success');
+  nlConfirm('¿Limpiar el historial de automatismos?').then(function(ok){
+    if(!ok) return;
+    _autoEvents=[]; saveAutoEvents();
+    const badge=document.getElementById('auto-sb-badge'); if(badge) badge.style.display='none';
+    renderAutoView(); toast('Historial limpiado','success');
+  });
 }
 
 function isRuleActive(id){
@@ -293,18 +295,22 @@ function testEmailJS(){
 }
 
 function clearEmailJSConfig(){
-  if(!confirm('¿Borrar configuración de EmailJS?')) return;
-  localStorage.removeItem('normalis_emailjs');
-  toast('Configuración eliminada','info');
-  renderEmailJSConfig();
+  nlConfirm('¿Borrar configuración de EmailJS?', 'Borrar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    localStorage.removeItem('normalis_emailjs');
+    toast('Configuración eliminada','info');
+    renderEmailJSConfig();
+  });
 }
 
 function clearFirebaseConfig(){
-  if(!confirm('¿Desconectar Firebase? Los datos quedarán solo en este navegador.')) return;
-  localStorage.removeItem('normalis_firebase');
-  _fb=null; _db=null; _fbSyncing=false; _fbOrgId=null;
-  toast('Firebase desconectado','info');
-  renderFirebaseConfig();
+  nlConfirm('¿Desconectar Firebase? Los datos quedarán solo en este navegador.', 'Desconectar', '#ef4444').then(function(ok){
+    if(!ok) return;
+    localStorage.removeItem('normalis_firebase');
+    _fb=null; _db=null; _fbSyncing=false; _fbOrgId=null;
+    toast('Firebase desconectado','info');
+    renderFirebaseConfig();
+  });
 }
 
 // END:normalis-automations.js — NormaLis integrity seal
