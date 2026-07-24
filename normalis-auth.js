@@ -170,17 +170,18 @@ function forceLogout(){
 }
 
 function logout(){
-  if(!confirm('µ×Errar sesión?')) return;
-  logActivity('logout','sistema','Cierre de sesión');
-  saveSession(null); _session=null;
-  // FIX BUG #4: cerrar sesión Firebase + limpiar sessionStorage
+  if(!confirm('¿Cerrar sesión?')) return;
+  try{ logActivity('logout','sistema','Cierre de sesión'); }catch(e){}
+  try{ saveSession(null); }catch(e){} _session=null;
   sessionStorage.clear();
-  if(typeof _fbAuth !== 'undefined' && _fbAuth) _fbAuth.signOut().catch(function(){});
-  var sbUser = document.getElementById('sb-session-user');
-  if(sbUser) sbUser.style.display='none';
-  document.querySelectorAll('.sb-item[onclick]').forEach(function(el){ el.style.display=''; });
-  document.querySelectorAll('.sb-section').forEach(function(el){ el.style.display=''; });
-  showLogin();
+  localStorage.removeItem('normalis_onboarding_done');
+  if(typeof _fbAuth !== 'undefined' && _fbAuth){
+    _fbAuth.signOut().catch(function(){}).finally(function(){
+      window.location.href = 'login.html';
+    });
+  } else {
+    window.location.href = 'login.html';
+  }
 }
 
 function forceLogoutFirebase(){

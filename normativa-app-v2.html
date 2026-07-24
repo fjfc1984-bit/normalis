@@ -7931,7 +7931,7 @@ function hideAuthScreen(user){
         if(sbFooter && !document.getElementById('sb-logout-btn')){
           var btn = document.createElement('button');
           btn.id = 'sb-logout-btn';
-          btn.onclick = authLogout;
+          btn.onclick = logout;
           btn.textContent = '⎋ Cerrar sesión';
           btn.style.cssText = 'width:100%;background:none;border:1px solid rgba(255,255,255,.1);color:#64748b;padding:8px;border-radius:7px;cursor:pointer;font-size:12px;margin-top:8px;transition:.2s';
           btn.onmouseover = function(){ this.style.color='#ef4444'; this.style.borderColor='#ef4444'; };
