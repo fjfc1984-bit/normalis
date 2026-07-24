@@ -229,6 +229,7 @@ self.addEventListener('fetch',e=>{
       <div class="sb-item" onclick="nav('incidentes')"><span class="icon">⚠️</span>Incidentes y Eventos</div>
       <div class="sb-item" onclick="nav('vencimientos-personal')"><span class="icon">🪪</span>Vencimientos Personal</div>
       <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
+      <div class="sb-item" onclick="nav('sst')"><span class="icon">🦺</span>SG-SST</div>
       <div class="sb-item" onclick="nav('bitacora')"><span class="icon">📋</span>Bitácora</div>
 <div class="sb-item" onclick="nav('supervision')"><span class="icon">🔭</span>Supervisión</div>
       <div class="sb-item" onclick="openUserMgmt()"><span class="icon">👤</span>Gestión de Perfiles</div>
@@ -2000,6 +2001,14 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
   </div>
 </div>
 
+<div class="view" id="view-sst">
+  <div id="sst-container" style="padding:24px;max-width:1000px;margin:0 auto">
+    <div style="display:flex;justify-content:center;align-items:center;height:200px;color:#94a3b8;font-size:14px">
+      Cargando módulo SST...
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-bitacora">
   <div style="padding:24px;max-width:1000px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -2098,6 +2107,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-export.js?v=20260717"></script>
 <script src="normalis-users.js?v=20260717"></script>
 <script src="normalis-automations.js?v=20260717"></script>
+<script src="normalis-sst.js?v=20260717"></script>
 <script>
 // ═══════════════════════════════════════════
 // CONFIG — cargado PRIMERO para que todos los arrays usen datos reales

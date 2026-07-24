@@ -50,6 +50,7 @@ CRITICAL_FILES=(
   "normalis-export.js"
   "normalis-users.js"
   "normalis-automations.js"
+  "normalis-sst.js"
 )
 
 for f in "${CRITICAL_FILES[@]}"; do
@@ -87,6 +88,7 @@ declare -A MIN_SIZES=(
   ["normalis-export.js"]=2000
   ["normalis-users.js"]=500
   ["normalis-automations.js"]=3000
+  ["normalis-sst.js"]=15000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=400000
 )
@@ -126,6 +128,7 @@ declare -A SEALS=(
   ["normalis-export.js"]="END:normalis-export.js"
   ["normalis-users.js"]="END:normalis-users.js"
   ["normalis-automations.js"]="END:normalis-automations.js"
+  ["normalis-sst.js"]="END:normalis-sst.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
 )
 
@@ -182,6 +185,7 @@ if [[ -f "$APP" ]]; then
     "normalis-bitacora.js"
     "normalis-firestore.js"
     "normalis-tour.js"
+    "normalis-sst.js"
     "normalis-styles.css"
   )
   for mod in "${MODULES[@]}"; do
@@ -236,6 +240,10 @@ declare -A CRITICAL_FUNCTIONS=(
   ["xaiResponder"]="normalis-firestore.js"
   # tour
   ["startNormalisTour"]="normalis-tour.js"
+  # sst
+  ["renderSST"]="normalis-sst.js"
+  ["calcSSTScore"]="normalis-sst.js"
+  ["sstGuardarActividad"]="normalis-sst.js"
 )
 
 for fn in "${!CRITICAL_FUNCTIONS[@]}"; do
@@ -401,7 +409,7 @@ if [[ -f "$APP" ]]; then
   MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
     "normalis-docs.js" "normalis-pdf.js" "normalis-pqrs.js" "normalis-incidentes.js"
     "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
-  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js")
+  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js" "normalis-sst.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do
     TAG_COUNT=$(grep -cE "<script src=\"$mod(\?v=[0-9]+)?\"" "$APP" || true)
     if [[ "$TAG_COUNT" -gt 1 ]]; then
@@ -445,7 +453,7 @@ section "12. Orden de carga — módulos no deben llamar funciones inline al top
 # que los módulos externos NO deben llamar directamente al top-level
 # (deben envolverlas en DOMContentLoaded o typeof check)
 INLINE_FNS=("showGenDone" "startSession" "verifyPin" "initApp" "showView" "toast")
-JS_MODULES=("normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pqrs.js" "normalis-incidentes.js" "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-pamec.js" "normalis-automations.js" "normalis-tour.js" "normalis-export.js" "normalis-users.js")
+JS_MODULES=("normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pqrs.js" "normalis-incidentes.js" "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-pamec.js" "normalis-automations.js" "normalis-tour.js" "normalis-export.js" "normalis-users.js" "normalis-sst.js")
 for mod in "${JS_MODULES[@]}"; do
   fp="$REPO/$mod"
   [[ ! -f "$fp" ]] && continue
