@@ -887,6 +887,278 @@ async function handleAreas(request, cors) {
   });
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EMAIL SERVICE — Resend API (server-side, clave nunca expuesta al cliente)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Rate limiting simple para endpoints públicos (lead emails)
+// Usa Map en memoria — se resetea en cada nuevo Worker instance (~minutos)
+const _leadRateMap = new Map();
+function checkLeadRateLimit(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 3;      // máx 3 leads por IP por minuto
+  const key = ip || 'unknown';
+  const entry = _leadRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _leadRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
+// Verificar Firebase ID token → retorna { uid, email } o null
+async function verifyFirebaseToken(idToken) {
+  try {
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const user = data?.users?.[0];
+    return user ? { uid: user.localId, email: user.email } : null;
+  } catch { return null; }
+}
+
+// Plantillas HTML de email
+function tplBienvenidaPiloto({ ips_nombre, to_name, email_acceso, password_temporal, fecha_onboarding, meet_link }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:32px 40px;text-align:center}
+  .header h1{color:#fff;margin:0;font-size:24px}
+  .body{padding:32px 40px;color:#1e293b;line-height:1.6}
+  .box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0}
+  .box code{background:#00544B;color:#fff;padding:4px 10px;border-radius:4px;font-size:15px}
+  .btn{display:inline-block;background:#00796B;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>🏥 Bienvenidos a NormaLis</h1></div>
+    <div class="body">
+      <p>Hola <strong>${to_name || ips_nombre}</strong>,</p>
+      <p>Tu IPS <strong>${ips_nombre}</strong> ya está registrada en NormaLis. Aquí están tus credenciales de acceso:</p>
+      <div class="box">
+        <p><strong>📧 Correo:</strong> ${email_acceso}</p>
+        <p><strong>🔑 Contraseña temporal:</strong> <code>${password_temporal || 'NormaLis2026!'}</code></p>
+        <p><em>Por seguridad, cambia tu contraseña en el primer ingreso.</em></p>
+      </div>
+      ${fecha_onboarding ? `<p><strong>📅 Sesión de onboarding:</strong> ${fecha_onboarding}</p>` : ''}
+      ${meet_link ? `<p><strong>🎥 Enlace reunión:</strong> <a href="${meet_link}">${meet_link}</a></p>` : ''}
+      <a href="https://normalis.co/login.html" class="btn">Ingresar a NormaLis →</a>
+      <p style="margin-top:24px;font-size:13px;color:#64748b">¿Tienes preguntas? Escríbenos a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a></p>
+    </div>
+    <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
+  </div></body></html>`;
+}
+
+function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, login_url }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:32px 40px;text-align:center}
+  .header h1{color:#fff;margin:0;font-size:24px}
+  .body{padding:32px 40px;color:#1e293b;line-height:1.6}
+  .badge{display:inline-block;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:20px;padding:6px 16px;font-weight:700;font-size:14px;margin-bottom:16px}
+  .btn{display:inline-block;background:#00796B;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>✅ Acceso Aprobado</h1></div>
+    <div class="body">
+      <div class="badge">✅ Tu cuenta ha sido aprobada</div>
+      <p>Hola <strong>${nombre_contacto || ips_nombre}</strong>,</p>
+      <p>Nos complace informarte que el acceso de <strong>${ips_nombre}</strong> a NormaLis ha sido <strong>aprobado</strong>.</p>
+      <p>Ya puedes ingresar a la plataforma y comenzar a gestionar el cumplimiento normativo de tu IPS con las herramientas de auditoría de la Res. 3100/2019 y Res. 465/2025.</p>
+      <a href="${login_url || 'https://normalis.co/login.html'}" class="btn">Ingresar ahora →</a>
+      <p style="margin-top:24px;font-size:13px;color:#64748b">¿Tienes preguntas? Escríbenos a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a></p>
+    </div>
+    <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
+  </div></body></html>`;
+}
+
+function tplLeadAdmin({ nombre, email, ips, tipo }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#1e293b;padding:24px 40px}
+  .header h1{color:#fff;margin:0;font-size:20px}
+  .body{padding:28px 40px;color:#1e293b;line-height:1.6}
+  .row{display:flex;margin:8px 0;gap:12px}
+  .label{font-weight:700;min-width:80px;color:#64748b}
+  .badge{display:inline-block;background:#fef3c7;color:#92400e;border-radius:12px;padding:3px 12px;font-size:12px;font-weight:700}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>📥 Nuevo Lead — NormaLis</h1></div>
+    <div class="body">
+      <p><strong>Nuevo prospecto capturado:</strong></p>
+      <div class="row"><span class="label">Nombre:</span><span>${nombre}</span></div>
+      <div class="row"><span class="label">Email:</span><span><a href="mailto:${email}">${email}</a></span></div>
+      <div class="row"><span class="label">IPS:</span><span>${ips || '—'}</span></div>
+      <div class="row"><span class="label">Origen:</span><span><span class="badge">${tipo || 'demo'}</span></span></div>
+      <p style="margin-top:16px;font-size:13px;color:#64748b">Contactar dentro de las próximas 24 horas.</p>
+    </div>
+  </div></body></html>`;
+}
+
+function tplLeadAutoreply({ nombre, email }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:32px 40px;text-align:center}
+  .header h1{color:#fff;margin:0;font-size:22px}
+  .body{padding:32px 40px;color:#1e293b;line-height:1.7}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>¡Gracias por tu interés en NormaLis!</h1></div>
+    <div class="body">
+      <p>Hola <strong>${nombre}</strong>,</p>
+      <p>Recibimos tu solicitud. En las próximas <strong>24 horas hábiles</strong> un asesor de NormaLis se pondrá en contacto contigo para mostrarte cómo la plataforma puede simplificar el proceso de habilitación de tu IPS.</p>
+      <p>Mientras tanto, puedes conocer más sobre nuestras funcionalidades en <a href="https://normalis.co">normalis.co</a>.</p>
+      <p style="margin-top:24px;color:#64748b;font-size:13px">Si tienes una pregunta urgente, escríbenos directamente a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a></p>
+    </div>
+    <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
+  </div></body></html>`;
+}
+
+// ── /email handler ─────────────────────────────────────────────────────────────
+async function handleEmail(request, env, cors) {
+  const resendKey = env.RESEND_API_KEY;
+  if (!resendKey) {
+    return new Response(JSON.stringify({ error: 'Servicio de email no configurado' }), {
+      status: 503, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { type, data } = body || {};
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply'];
+  if (!VALID_TYPES.includes(type)) {
+    return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Emails de admin → requieren Firebase ID token válido
+  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado') {
+    const authHeader = request.headers.get('Authorization') || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!idToken) {
+      return new Response(JSON.stringify({ error: 'Autenticación requerida' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    const verified = await verifyFirebaseToken(idToken);
+    if (!verified) {
+      return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  // Emails públicos (lead) → rate limiting por IP
+  if (type === 'lead_admin' || type === 'lead_autoreply') {
+    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
+    if (!checkLeadRateLimit(ip)) {
+      return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta en un minuto.' }), {
+        status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  // Construir payload de email según tipo
+  const SENDER = 'NormaLis <hola@normalis.co>';
+  const SENDER_FALLBACK = 'NormaLis <onboarding@resend.dev>';  // fallback pre-verificación dominio
+  let emailPayload;
+
+  if (type === 'bienvenida_piloto') {
+    if (!data?.to_email) return new Response(JSON.stringify({ error: 'Campo to_email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to_email],
+      subject: `Bienvenido a NormaLis — ${data.ips_nombre || 'Tu IPS'}`,
+      html: tplBienvenidaPiloto(data),
+    };
+  } else if (type === 'bienvenida_aprobado') {
+    if (!data?.to_email) return new Response(JSON.stringify({ error: 'Campo to_email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to_email],
+      subject: `✅ Tu acceso a NormaLis fue aprobado — ${data.ips_nombre || ''}`,
+      html: tplBienvenidaAprobado(data),
+    };
+  } else if (type === 'lead_admin') {
+    if (!data?.email) return new Response(JSON.stringify({ error: 'Campo email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: ['fjfc1984@gmail.com'],
+      subject: `📥 Nuevo lead NormaLis — ${data.nombre || data.email}`,
+      html: tplLeadAdmin(data),
+    };
+  } else if (type === 'lead_autoreply') {
+    if (!data?.email) return new Response(JSON.stringify({ error: 'Campo email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.email],
+      subject: 'Gracias por contactar a NormaLis — Te responderemos pronto',
+      html: tplLeadAutoreply(data),
+    };
+  }
+
+  // Enviar con Resend
+  try {
+    const resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify(emailPayload),
+    });
+
+    const resendData = await resendRes.json();
+
+    if (!resendRes.ok) {
+      // Si el dominio no está verificado, intentar con dominio de fallback
+      if (resendData?.name === 'validation_error' && resendData?.message?.includes('domain')) {
+        emailPayload.from = SENDER_FALLBACK;
+        const retry = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` },
+          body: JSON.stringify(emailPayload),
+        });
+        const retryData = await retry.json();
+        if (!retry.ok) {
+          return new Response(JSON.stringify({ error: 'Error enviando email', detail: retryData }), {
+            status: 502, headers: { ...cors, 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ ok: true, id: retryData.id, fallback: true }), {
+          status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ error: 'Error enviando email', detail: resendData }), {
+        status: 502, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({ ok: true, id: resendData.id }), {
+      status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Error interno email', detail: String(err) }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
@@ -901,6 +1173,11 @@ export default {
     // ── GET /api/areas — datos de auditoría (requiere auth) ──────────────────
     if (request.method === 'GET' && url.pathname === '/api/areas') {
       return handleAreas(request, cors);
+    }
+
+    // ── POST /email — envío de emails via Resend (server-side) ───────────────
+    if (request.method === 'POST' && url.pathname === '/email') {
+      return handleEmail(request, env, cors);
     }
 
     if (request.method !== 'POST') {

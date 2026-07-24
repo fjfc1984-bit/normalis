@@ -20,7 +20,7 @@
   <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none'; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://normalis.fjfc1984.workers.dev; frame-ancestors 'none'; upgrade-insecure-requests;">
 <title>Normalis | Software de Gestión de Calidad para IPS en Colombia</title>
 <meta name="description" content="Software con IA para gestión de calidad en IPS colombianas. Resolución 3100, auditorías internas, generación de documentos normativos y alertas de habilitación.">
 <link rel="canonical" href="https://normalis.co/">
@@ -866,10 +866,17 @@ function downloadChecklist() {
     leads.push({nombre, email, ips, fecha: new Date().toISOString()});
     localStorage.setItem('normalis_leads', JSON.stringify(leads));
   } catch(e) {}
-  // Send via EmailJS if available
-  if (typeof emailjs !== 'undefined') {
-    emailjs.send('normalis_service', 'normalis_lead', {nombre, email, ips, tipo: 'checklist'}).catch(function(){});
-  }
+  // Send via Worker (Resend server-side)
+  fetch('https://normalis.fjfc1984.workers.dev/email', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ type: 'lead_admin', data: {nombre, email, ips, tipo: 'checklist'} })
+  }).catch(function(){});
+  fetch('https://normalis.fjfc1984.workers.dev/email', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ type: 'lead_autoreply', data: {nombre, email} })
+  }).catch(function(){});
   // Show success
   document.getElementById('lm-form').style.display = 'none';
   document.getElementById('lm-success').style.display = 'block';
@@ -1103,31 +1110,24 @@ function submitDemo(){
     localStorage.setItem('normalis_leads', JSON.stringify(leads));
   }catch(_){}
 
-  // ── 3. Notificación por email (mailto fallback) ───────────────────────────
+  // ── 3. Notificación por email (Worker + Resend) ─────────────────────────
   try{
-    // R5a: EmailJS automático — sin mailto
-    if(typeof emailjs !== 'undefined'){
-      emailjs.send('normalis_service', 'lead_admin_notify', {
-        admin_email: 'fjfc1984@gmail.com',
-        lead_nombre: nombre,
-        lead_email:  email,
-        lead_tel:    tel,
-        lead_tipo:   tipo   || 'N/A',
-        lead_ciudad: ciudad || 'N/A',
-        lead_fecha:  new Date().toLocaleString('es-CO')
-      }).catch(function(){});
-    }
+    fetch('https://normalis.fjfc1984.workers.dev/email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ type: 'lead_admin', data: {
+        nombre, email, ips: ciudad || '', tipo: tipo || 'demo'
+      } })
+    }).catch(function(){});
   }catch(_){}
 
-  // ── 4. Auto-reply al lead (inmediato, de por vida) ───────────────────────
+  // ── 4. Auto-reply al lead (Worker + Resend) ─────────────────────────────
   try{
-    if(typeof emailjs !== 'undefined'){
-      emailjs.send('normalis_service', 'lead_autoreply', {
-        to_email: email,
-        name:     nombre,
-        title:    'solicitud de demo en NormaLis — ' + (ciudad || 'Colombia')
-      }).catch(function(){});
-    }
+    fetch('https://normalis.fjfc1984.workers.dev/email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ type: 'lead_autoreply', data: { nombre, email } })
+    }).catch(function(){});
   }catch(_){}
 
   // ── 5. Mostrar pantalla de éxito ──────────────────────────────────────────

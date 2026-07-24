@@ -21,9 +21,9 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none'; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://normalis.fjfc1984.workers.dev; frame-ancestors 'none'; upgrade-insecure-requests;">
 <title>NormaLis Admin — Panel de Administrador</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<!-- EmailJS removed — emails via Cloudflare Worker + Resend -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -813,9 +813,8 @@ const FIREBASE_CONFIG = {
   appId: "1:328915530941:web:8e77246bd2e326e115b3d4"
 };
 
-// EmailJS — actualizar con tu service ID y public key
-const EJS_SERVICE = 'normalis_service';
-const EJS_PUBLIC_KEY = 'gxB8ZBpyoiJ6odC31'; // ← pegar desde EmailJS dashboard
+// Emails via Cloudflare Worker + Resend (server-side)
+const WORKER_EMAIL_URL = 'https://normalis.fjfc1984.workers.dev/email';
 
 // ──────────────────────────────────────────────
 // INIT
@@ -823,11 +822,27 @@ const EJS_PUBLIC_KEY = 'gxB8ZBpyoiJ6odC31'; // ← pegar desde EmailJS dashboard
 let db, auth;
 let prospectoEditId = null;
 let prospectosDatos = [];
+// ── sendWorkerEmail — envío server-side vía Cloudflare Worker ────────────────
+async function sendWorkerEmail(type, data) {
+  try {
+    const user = auth.currentUser;
+    if (!user) { console.warn('[NormaLis] sendWorkerEmail: sin usuario auth'); return; }
+    const idToken = await user.getIdToken();
+    const res = await fetch(WORKER_EMAIL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+      body: JSON.stringify({ type, data })
+    });
+    const json = await res.json();
+    if (!res.ok) console.warn('[NormaLis] Email error:', json);
+    return json;
+  } catch(e) { console.warn('[NormaLis] sendWorkerEmail failed:', e.message); }
+}
+
 
 firebase.initializeApp(FIREBASE_CONFIG);
 db = firebase.firestore();
 auth = firebase.auth();
-emailjs.init(EJS_PUBLIC_KEY);
 
 // Fecha fin auto (inicio + 56 días)
 document.getElementById('ips-fecha-inicio').addEventListener('change', e => {
@@ -1246,20 +1261,15 @@ async function crearIPS() {
 
     // 5. Enviar email de bienvenida
     showAlert('nueva-ips-alert','info','[5/5] Enviando email de bienvenida…');
-    try {
-      await emailjs.send(EJS_SERVICE, 'bienvenida_piloto', {
-        to_email: datos.email_responsable,
-        to_name: datos.nombre_responsable,
-        ips_nombre: datos.nombre,
-        email_acceso: datos.email_responsable,
-        password_temporal: 'NormaLis2026!',
-        fecha_onboarding: datos.fecha_onboarding,
-        meet_link: datos.meet_link,
-        from_name: 'Fernando Fuentes — NormaLis'
-      });
-    } catch(ejsErr) {
-      console.warn('EmailJS no configurado aún:', ejsErr.message);
-    }
+    await sendWorkerEmail('bienvenida_piloto', {
+      to_email:         datos.email_responsable,
+      to_name:          datos.nombre_responsable,
+      ips_nombre:       datos.nombre,
+      email_acceso:     datos.email_responsable,
+      password_temporal: 'NormaLis2026!',
+      fecha_onboarding: datos.fecha_onboarding,
+      meet_link:        datos.meet_link
+    });
 
     // Éxito
     showAlert('nueva-ips-alert','success',`✅ IPS "${datos.nombre}" creada exitosamente.\n👥 Usuario: ${datos.email_responsable} / Clave: NormaLis2026!\n📱 Recuerda crear el grupo WhatsApp: "NormaLis | ${datos.nombre}"`);
@@ -1572,14 +1582,12 @@ async function aprobarUsuario(uid) {
     });
 
     // Enviar email de bienvenida automáticamente
-    if (uData.email && typeof emailjs !== 'undefined') {
-      emailjs.send(EJS_SERVICE, 'bienvenida_aprobado', {
-        to_email:         uData.email,
-        ips_nombre:       uData.nombre       || uData.email,
-        nombre_contacto:  uData.nombreContacto || '',
-        login_url:        'https://normalis.co/login.html'
-      }).catch(function(ejsErr) {
-        console.warn('[NormaLis] Email bienvenida aprobado:', ejsErr.message);
+    if (uData.email) {
+      sendWorkerEmail('bienvenida_aprobado', {
+        to_email:        uData.email,
+        ips_nombre:      uData.nombre        || uData.email,
+        nombre_contacto: uData.nombreContacto || '',
+        login_url:       'https://normalis.co/login.html'
       });
       showToast('Usuario aprobado — email de bienvenida enviado ✉️', 'success');
     } else {
