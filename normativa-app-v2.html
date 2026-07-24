@@ -114,10 +114,11 @@ self.addEventListener('fetch',e=>{
   // Timeout de seguridad: solo si no hay sesión activa ni initApp llamado
   setTimeout(function() {
     var tieneSession = sessionStorage.getItem('normalis_uid');
-    if (!window._normalisAppLoaded && !window._initAppCalled && !tieneSession) {
+    var modulosEnCarga = document.readyState !== "complete";
+    if (!window._normalisAppLoaded && !window._initAppCalled && !tieneSession && !modulosEnCarga) {
       _showErrOverlay('Timeout al inicializar');
     }
-  }, 15000);
+  }, 40000);
   window._normalisErrBoundary = _showErrOverlay;
 })();
 </script>
