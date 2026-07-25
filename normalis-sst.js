@@ -1014,12 +1014,18 @@ function sstExportarTexto() {
 }
 
 // ═══════════════════════════════════════════
-// NAV HOOK — carga Firestore al entrar al módulo
+// NAV HOOK — registra en _moduleHooks tras DOMContentLoaded
+// El módulo carga antes que el script inline (línea 3356+),
+// por eso usamos 'load' para garantizar que _moduleHooks exista.
 // ═══════════════════════════════════════════
-var _navWrap_sst = window.nav;
-window.nav = function(sec) {
-  if (typeof _navWrap_sst === 'function') _navWrap_sst(sec);
-  if (sec === 'sst') { setTimeout(sstLoadFirestore, 100); }
-};
+window.addEventListener('load', function() {
+  if (typeof _moduleHooks !== 'undefined') {
+    _moduleHooks['sst'] = function() { sstLoadFirestore(); };
+  }
+  // También registrar viewTitle si está disponible
+  if (typeof viewTitles !== 'undefined') {
+    viewTitles['sst'] = ['SG-SST','Autoevaluación Res. 0312/2019 · Plan de trabajo · Vencimientos'];
+  }
+});
 
 // END:normalis-sst.js — NormaLis integrity seal
