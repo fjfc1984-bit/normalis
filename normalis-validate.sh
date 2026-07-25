@@ -50,7 +50,8 @@ CRITICAL_FILES=(
   "normalis-export.js"
   "normalis-users.js"
   "normalis-automations.js"
-  "normalis-sst.js"
+  "normalis-sst.js" "normalis-plans.js"
+  "normalis-plans.js"
 )
 
 for f in "${CRITICAL_FILES[@]}"; do
@@ -89,6 +90,7 @@ declare -A MIN_SIZES=(
   ["normalis-users.js"]=500
   ["normalis-automations.js"]=3000
   ["normalis-sst.js"]=50000
+  ["normalis-plans.js"]=3000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=400000
 )
@@ -129,6 +131,7 @@ declare -A SEALS=(
   ["normalis-users.js"]="END:normalis-users.js"
   ["normalis-automations.js"]="END:normalis-automations.js"
   ["normalis-sst.js"]="END:normalis-sst.js"
+  ["normalis-plans.js"]="END:normalis-plans.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
 )
 
@@ -244,6 +247,8 @@ declare -A CRITICAL_FUNCTIONS=(
   ["renderSST"]="normalis-sst.js"
   ["calcSSTScore"]="normalis-sst.js"
   ["sstGuardarActividad"]="normalis-sst.js"
+  ["initPlanGating"]="normalis-plans.js"
+  ["isModuleAllowed"]="normalis-plans.js"
 )
 
 for fn in "${!CRITICAL_FUNCTIONS[@]}"; do
@@ -409,7 +414,7 @@ if [[ -f "$APP" ]]; then
   MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
     "normalis-docs.js" "normalis-pdf.js" "normalis-pqrs.js" "normalis-incidentes.js"
     "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
-  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js" "normalis-sst.js")
+  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js" "normalis-sst.js" "normalis-plans.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do
     TAG_COUNT=$(grep -cE "<script src=\"$mod(\?v=[0-9]+)?\"" "$APP" || true)
     if [[ "$TAG_COUNT" -gt 1 ]]; then

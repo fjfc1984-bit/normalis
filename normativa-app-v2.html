@@ -198,46 +198,46 @@ self.addEventListener('fetch',e=>{
 
       <!-- ── PRINCIPAL ─────────────────────────────── -->
       <div class="sb-section">Principal</div>
-      <div class="sb-item active" onclick="nav('dashboard')"><span class="icon">📊</span>Dashboard</div>
-      <div class="sb-item" onclick="nav('establecimiento')"><span class="icon">🏥</span>Mi Establecimiento</div>
-      <div class="sb-item" onclick="nav('cronograma')"><span class="icon">🗓️</span>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
+      <div class="sb-item active" onclick="nav('dashboard')" data-mod="dashboard"><span class="icon">📊</span>Dashboard</div>
+      <div class="sb-item" onclick="nav('establecimiento')" data-mod="establecimiento"><span class="icon">🏥</span>Mi Establecimiento</div>
+      <div class="sb-item" onclick="nav('cronograma')" data-mod="cronograma"><span class="icon">🗓️</span>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
 
       <!-- ── HABILITACIÓN ───────────────────────────── -->
       <div class="sb-section">Habilitación</div>
-      <div class="sb-item" onclick="nav('auditoria')"><span class="icon">🔍</span>Auditoría Simulada<span class="sb-badge">!</span></div>
-      <div class="sb-item" onclick="nav('resultados')"><span class="icon">📈</span>Resultados</div>
-      <div class="sb-item" onclick="nav('generador')"><span class="icon">✨</span>Generar con IA</div>
-      <div class="sb-item" onclick="nav('documentos')"><span class="icon">📁</span>Biblioteca Documental</div>
+      <div class="sb-item" onclick="nav('auditoria')" data-mod="auditoria"><span class="icon">🔍</span>Auditoría Simulada<span class="sb-badge">!</span></div>
+      <div class="sb-item" onclick="nav('resultados')" data-mod="resultados"><span class="icon">📈</span>Resultados</div>
+      <div class="sb-item" onclick="nav('generador')" data-mod="generador"><span class="icon">✨</span>Generar con IA</div>
+      <div class="sb-item" onclick="nav('documentos')" data-mod="documentos"><span class="icon">📁</span>Biblioteca Documental</div>
 
       <!-- ── CUMPLIMIENTO ───────────────────────────── -->
       <div class="sb-section">Cumplimiento</div>
-      <div class="sb-item" onclick="nav('pamec')"><span class="icon">🔄</span>PAMEC</div>
-      <div class="sb-item" onclick="nav('sst')"><span class="icon">🦺</span>SG-SST</div>
-      <div class="sb-item" onclick="nav('pqrs')"><span class="icon">📮</span>Gestor PQRS</div>
-      <div class="sb-item" onclick="nav('incidentes')"><span class="icon">⚠️</span>Incidentes y Eventos</div>
+      <div class="sb-item" onclick="nav('pamec')" data-mod="pamec"><span class="icon">🔄</span>PAMEC</div>
+      <div class="sb-item" onclick="nav('sst')" data-mod="sst"><span class="icon">🦺</span>SG-SST</div>
+      <div class="sb-item" onclick="nav('pqrs')" data-mod="pqrs"><span class="icon">📮</span>Gestor PQRS</div>
+      <div class="sb-item" onclick="nav('incidentes')" data-mod="incidentes"><span class="icon">⚠️</span>Incidentes y Eventos</div>
 
       <!-- ── EQUIPO ─────────────────────────────────── -->
       <div class="sb-section">Equipo</div>
-      <div class="sb-item" onclick="nav('talento')"><span class="icon">👥</span>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
-      <div class="sb-item" onclick="nav('vencimientos-personal')"><span class="icon">🪪</span>Vencimientos Personal</div>
+      <div class="sb-item" onclick="nav('talento')" data-mod="talento"><span class="icon">👥</span>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
+      <div class="sb-item" onclick="nav('vencimientos-personal')" data-mod="vencimientos-personal"><span class="icon">🪪</span>Vencimientos Personal</div>
 
       <!-- ── ASISTENTE IA ───────────────────────────── -->
       <div class="sb-section">Asistente IA</div>
-      <div class="sb-item" onclick="nav('chat')"><span class="icon">💬</span>Consultor Normativo IA</div>
+      <div class="sb-item" onclick="nav('chat')" data-mod="chat"><span class="icon">💬</span>Consultor Normativo IA</div>
 
       <!-- ── MÁS HERRAMIENTAS (colapsable) ─────────── -->
       <div class="sb-more-toggle" id="sb-more-toggle" onclick="toggleSbMore()">
         <span id="sb-more-arrow">▸</span> Más herramientas
       </div>
       <div class="sb-more-items" id="sb-more-items" style="display:none">
-        <div class="sb-item" onclick="nav('comparador')"><span class="icon">⚖️</span>Comparador Normativo</div>
-        <div class="sb-item" onclick="nav('roi')"><span class="icon">💰</span>Calculadora ROI</div>
-        <div class="sb-item" onclick="nav('calidad')"><span class="icon">🏅</span>Calidad en Salud</div>
-        <div class="sb-item" onclick="nav('calendario')"><span class="icon">📅</span>Calendario</div>
-        <div class="sb-item" onclick="nav('firma')"><span class="icon">✍️</span>Firma y Versiones</div>
-        <div class="sb-item" onclick="nav('consentimientos')"><span class="icon">📝</span>Consentimientos</div>
-        <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
-        <div class="sb-item" onclick="nav('bitacora')"><span class="icon">📋</span>Bitácora</div>
+        <div class="sb-item" onclick="nav('comparador')" data-mod="comparador"><span class="icon">⚖️</span>Comparador Normativo</div>
+        <div class="sb-item" onclick="nav('roi')" data-mod="roi"><span class="icon">💰</span>Calculadora ROI</div>
+        <div class="sb-item" onclick="nav('calidad')" data-mod="calidad"><span class="icon">🏅</span>Calidad en Salud</div>
+        <div class="sb-item" onclick="nav('calendario')" data-mod="calendario"><span class="icon">📅</span>Calendario</div>
+        <div class="sb-item" onclick="nav('firma')" data-mod="firma"><span class="icon">✍️</span>Firma y Versiones</div>
+        <div class="sb-item" onclick="nav('consentimientos')" data-mod="consentimientos"><span class="icon">📝</span>Consentimientos</div>
+        <div class="sb-item" onclick="nav('simulacro')" data-mod="simulacro"><span class="icon">🔎</span>Simulacro Secretaría</div>
+        <div class="sb-item" onclick="nav('bitacora')" data-mod="bitacora"><span class="icon">📋</span>Bitácora</div>
       </div>
 
       <!-- ── OCULTOS (Fase 2 — desbloquear por plan) ── -->
@@ -255,6 +255,7 @@ self.addEventListener('fetch',e=>{
         <div class="sb-avatar" id="sb-avatar">DS</div>
         <div><div class="sb-user-name" id="sb-name" data-cfg="director">Mi Establecimiento</div><div class="sb-user-role" id="sb-role" data-cfg="tipo">Sin configurar</div></div>
       </div>
+      <div id="sb-plan-badge" onclick="window.open('https://normalis.co/#precios','_blank')" style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:20px;cursor:pointer;margin-bottom:4px;display:inline-block;text-align:center;width:calc(100% - 20px)">✦ Profesional</div>
       <div class="sb-score-mini" onclick="nav('resultados')" style="cursor:pointer">
         <div class="sb-score-label">Puntaje Habilitación</div>
         <div class="sb-score-val" id="sb-score-val">—</div>
@@ -2123,6 +2124,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-users.js?v=20260717"></script>
 <script src="normalis-automations.js?v=20260717"></script>
 <script src="normalis-sst.js?v=20260717"></script>
+<script src="normalis-plans.js?v=20260725"></script>
 <script>
 // ═══════════════════════════════════════════
 // CONFIG — cargado PRIMERO para que todos los arrays usen datos reales
@@ -2348,6 +2350,10 @@ function nav(id){
 }
 
 function initApp(){
+  // Phase 2: gating de planes
+  if(typeof initPlanGating === 'function') initPlanGating();
+  if(typeof renderPlanBadge === 'function') renderPlanBadge();
+
   initMainChat();
   toast('✅ Bienvenido a NormaLis','success');
   // alerts now come from real audit data via renderDashboard()

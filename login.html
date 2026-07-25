@@ -386,6 +386,14 @@ async function routeUser(user) {
     sessionStorage.setItem('normalis_nombre', nombre);
     sessionStorage.setItem('normalis_email',  user.email);
 
+    // ── Plan contratado (Phase 2 — permisos por módulo) ──
+    // pilotos y admins tienen acceso total (el módulo normalis-plans.js lo maneja con '*')
+    // clientes leen su plan de Firestore; default 'profesional' si no está definido
+    const planContratado = (rol === 'piloto' || rol === 'admin')
+      ? 'empresarial'
+      : (data.plan || 'profesional');
+    sessionStorage.setItem('normalis_plan', planContratado);
+
     // ── Pre-poblar localStorage del app desde datos de Firestore ──────────────
     // Esto evita que el wizard de onboarding pida datos ya ingresados al registrar
     if (rol !== 'admin') {

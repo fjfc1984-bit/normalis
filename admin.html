@@ -485,11 +485,11 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Plan piloto *</label>
+          <label class="form-label">Plan contratado *</label>
           <select class="form-select" id="ips-plan">
-            <option value="basico">Básico ($199K/mes)</option>
-            <option value="profesional" selected>Profesional ($499K/mes)</option>
-            <option value="institucional">Institucional ($999K/mes)</option>
+            <option value="basico">Esencial — 7 módulos core ($199K/mes)</option>
+            <option value="profesional" selected>Profesional — 16 módulos ($299K/mes)</option>
+            <option value="empresarial">Empresarial — acceso total ($499K/mes)</option>
           </select>
         </div>
       </div>
@@ -1222,6 +1222,7 @@ async function crearIPS() {
       ips_id:          datos.nit,
       ips_nombre:      datos.nombre,
       rol:             'piloto',
+      plan:            datos.plan,       // Phase 2 — permisos por módulo
       activo:          true,
       primer_ingreso:  true,
       expiresAt:       expiresAtDate,
@@ -1571,6 +1572,29 @@ function renderSolicitudes(lista) {
 }
 
 async function aprobarUsuario(uid) {
+  // Pedir plan al aprobar
+  const planSeleccionado = await new Promise(function(resolve) {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.8);display:flex;align-items:center;justify-content:center';
+    div.innerHTML = `
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:28px;max-width:380px;width:90%">
+        <h3 style="color:#f1f5f9;margin:0 0 16px;font-size:16px">📋 Asignar plan al cliente</h3>
+        <select id="_plan-sel" style="width:100%;padding:10px;border-radius:8px;background:#0f172a;color:#f1f5f9;border:1px solid #334155;font-size:13px;margin-bottom:16px">
+          <option value="basico">Esencial — 7 módulos core ($199K/mes)</option>
+          <option value="profesional" selected>Profesional — 16 módulos ($299K/mes)</option>
+          <option value="empresarial">Empresarial — acceso total ($499K/mes)</option>
+        </select>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button onclick="this.closest('div[style]').remove();resolve_plan(null)" style="background:none;border:1px solid #475569;color:#94a3b8;padding:8px 16px;border-radius:8px;cursor:pointer">Cancelar</button>
+          <button onclick="resolve_plan(document.getElementById('_plan-sel').value)" style="background:#0d9488;color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600">✅ Aprobar</button>
+        </div>
+      </div>`;
+    window.resolve_plan = function(val) { div.remove(); delete window.resolve_plan; resolve(val); };
+    document.body.appendChild(div);
+  });
+
+  if (!planSeleccionado) return; // cancelado
+
   try {
     // R5b: obtener datos del usuario para email de bienvenida automático
     const userSnap = await db.collection('usuarios').doc(uid).get();
@@ -1578,6 +1602,7 @@ async function aprobarUsuario(uid) {
 
     await db.collection('usuarios').doc(uid).update({
       rol: 'cliente', activo: true, estado: 'aprobado',
+      plan: planSeleccionado,   // Phase 2 — plan asignado al aprobar
       fechaAprobacion: firebase.firestore.FieldValue.serverTimestamp()
     });
 
