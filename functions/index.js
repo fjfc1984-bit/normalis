@@ -345,48 +345,63 @@ exports.boldWebhook = functions.https.onRequest(async (req, res) => {
   // Solo POST
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // ── Verificación de firma HMAC-SHA256 ──────────────────────────────
+  // ── Verificación de firma HMAC-SHA256 (formato oficial Bold.co) ──────
+  // Bold firma: HMAC-SHA256( base64(rawBody), secretKey ) → hex
+  // Header: x-bold-signature (sin prefijo "sha256=")
   const boldSecret = functions.config().bold?.webhook_secret;
   if (boldSecret && req.rawBody) {
     const sigHeader = (req.headers['x-bold-signature'] || '').trim();
-    const expected  = 'sha256=' + crypto
-      .createHmac('sha256', boldSecret)
-      .update(req.rawBody)
-      .digest('hex');
+    if (sigHeader) {
+      const rawBodyStr = req.rawBody.toString('utf-8');
+      const bodyBase64 = Buffer.from(rawBodyStr).toString('base64');
+      const expected   = crypto
+        .createHmac('sha256', boldSecret)
+        .update(bodyBase64)
+        .digest('hex');
 
-    // timingSafeEqual requiere buffers del mismo tamaño
-    const sigBuf = Buffer.from(sigHeader.padEnd(expected.length, '\0'));
-    const expBuf = Buffer.from(expected.padEnd(sigBuf.length, '\0'));
-    if (!crypto.timingSafeEqual(sigBuf, expBuf)) {
-      functions.logger.warn('boldWebhook: firma inválida', { sigHeader });
-      return res.status(401).send('Firma inválida');
+      const sigBuf = Buffer.from(sigHeader.padEnd(expected.length, '\0'));
+      const expBuf = Buffer.from(expected.padEnd(sigBuf.length, '\0'));
+      if (!crypto.timingSafeEqual(sigBuf, expBuf)) {
+        functions.logger.warn('boldWebhook: firma inválida', { sigHeader });
+        return res.status(401).send('Firma inválida');
+      }
     }
   }
 
-  // ── Parsear payload (Bold puede enviar en varios formatos) ──────────
-  const body     = req.body || {};
-  const event    = body.event || '';
-  // Bold envuelve en body.data.payment o directamente en body.payment
-  const payment  = body.data?.payment || body.payment || body;
-  const status   = (payment?.status || '').toUpperCase();
-  const linkId   = payment?.payment_link?.id || payment?.payment_link_id || '';
-  const rawEmail = payment?.customer?.email || body?.customer?.email || '';
-  const email    = rawEmail.trim().toLowerCase();
+  // ── Parsear payload Bold.co (CloudEvents spec) ──────────────────────
+  // Estructura real:
+  //   body.type    = "SALE_APPROVED" | "SALE_REJECTED" | ...
+  //   body.data.payer_email
+  //   body.data.metadata.reference  → por defecto es el LNK_* del link de pago
+  //   body.data.integration         = "LINK" para links de pago
+  const body  = req.body || {};
+  const type  = (body.type || '').toUpperCase();
+  const data  = body.data || {};
 
-  functions.logger.info('boldWebhook: evento recibido', { event, status, linkId, email });
+  // Email del pagador
+  const rawEmail = (data.payer_email || '').trim().toLowerCase();
+  const email    = rawEmail;
 
-  // Solo procesar pagos aprobados
-  const isApproved = status === 'APPROVED'
-    || event === 'payment.completed'
-    || event === 'PAYMENT_COMPLETED';
-  if (!isApproved) {
-    return res.status(200).json({ ok: true, skipped: 'estado no aprobado', status, event });
+  // Link ID: Bold pone el LNK_* en metadata.reference por defecto
+  const linkId = (data.metadata?.reference || '').trim();
+
+  functions.logger.info('boldWebhook: evento recibido', { type, linkId, email,
+    integration: data.integration, paymentId: data.payment_id });
+
+  // Solo procesar ventas aprobadas
+  if (type !== 'SALE_APPROVED') {
+    return res.status(200).json({ ok: true, skipped: 'tipo no es SALE_APPROVED', type });
+  }
+
+  // Solo si vino de un link de pago
+  if (data.integration && data.integration !== 'LINK') {
+    return res.status(200).json({ ok: true, skipped: 'integración no es LINK', integration: data.integration });
   }
 
   // Validar campos obligatorios
   if (!email || !linkId) {
-    functions.logger.error('boldWebhook: campos faltantes', { email, linkId, body });
-    return res.status(200).json({ ok: true, skipped: 'campos insuficientes' });
+    functions.logger.warn('boldWebhook: campos faltantes', { email, linkId, body });
+    return res.status(200).json({ ok: true, skipped: 'campos insuficientes', email, linkId });
   }
 
   // Resolver plan a partir del link ID
