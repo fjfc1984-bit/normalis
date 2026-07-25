@@ -1,26 +1,26 @@
 /**
- * normalis-analytics.js â Google Analytics 4 para NormaLis
+ * normalis-analytics.js — Google Analytics 4 para NormaLis
  * Measurement ID: G-R74LQ03RWF
- * Setup: analytics.google.com â Admin â Create Property â Web â normalis.co
+ * Propiedad: normalis.co (Google Analytics 4)
  *
  * Eventos personalizados rastreados:
- *   user_register        â nueva IPS completa registro.html
- *   user_login           â usuario autenticado correctamente
- *   audit_started        â usuario inicia una auditorÃ­a de habilitaciÃ³n
- *   audit_completed      â usuario finaliza una auditorÃ­a (con score)
- *   module_viewed        â usuario abre un mÃ³dulo del sidebar
- *   chat_message         â mensaje enviado al asistente IA normativo
- *   document_generated   â documento generado (acta, protocolo, etc.)
- *   demo_requested       â solicitud de demo desde index.html
- *   plan_activated       â plan activado (basico/profesional)
+ *   user_register        — nueva IPS completa registro.html
+ *   user_login           — usuario autenticado correctamente
+ *   audit_started         — usuario inicia una auditoría de habilitación
+ *   audit_completed       — usuario finaliza una auditoría (con score)
+ *   module_viewed         — usuario abre un módulo del sidebar
+ *   chat_message         — mensaje enviado al asistente IA normativo
+ *   document_generated   — documento generado (acta, protocolo, etc.)
+ *   demo_requested       — solicitud de demo desde index.html
+ *   plan_activated       — plan activado (basico/profesional)
  */
 
 (function() {
   'use strict';
 
-  const GA_ID = 'G-XXXXXXXXXX'; // â Reemplaza con tu Measurement ID
+  const GA_ID = 'G-R74LQ03RWF';
 
-  // ââ Cargar gtag.js si no estÃ¡ cargado ââââââââââââââââââââââââââââââââââââââ
+  // ── Cargar gtag.js si no está cargado ──────────────────────────────────────
   if (!window.gtag) {
     var script = document.createElement('script');
     script.async = true;
@@ -36,7 +36,7 @@
     });
   }
 
-  // ââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function track(eventName, params) {
     if (typeof gtag !== 'function') return;
     try {
@@ -52,7 +52,7 @@
     } catch(e) {}
   }
 
-  // ââ API pÃºblica ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── API pública ────────────────────────────────────────────────────────────
   window.NL = window.NL || {};
 
   /** Registro de nueva IPS */
@@ -68,12 +68,12 @@
     track('user_login', { user_role: rol || 'unknown', user_plan: plan || 'unknown' });
   };
 
-  /** Inicio de auditorÃ­a */
+  /** Inicio de auditoría */
   window.NL.trackAuditStart = function(serviceType) {
     track('audit_started', { service_type: serviceType || 'unknown' });
   };
 
-  /** AuditorÃ­a completada */
+  /** Auditoría completada */
   window.NL.trackAuditComplete = function(serviceType, score, totalQuestions) {
     track('audit_completed', {
       service_type:    serviceType || 'unknown',
@@ -83,7 +83,7 @@
     });
   };
 
-  /** MÃ³dulo del sidebar abierto */
+  /** Módulo del sidebar abierto */
   window.NL.trackModule = function(moduleName) {
     track('module_viewed', { module_name: moduleName || 'unknown' });
   };
@@ -108,7 +108,7 @@
     track('plan_activated', { plan_name: plan || 'unknown' });
   };
 
-  // ââ Auto-tracking: clicks en sidebar ââââââââââââââââââââââââââââââââââââââ
+  // ── Auto-tracking: clicks en sidebar ──────────────────────────────────────
   document.addEventListener('click', function(e) {
     var item = e.target.closest('[data-mod]');
     if (item) {
@@ -118,4 +118,4 @@
   }, { passive: true });
 
 })();
-// END:normalis-analytics.js â NormaLis integrity seal
+// END:normalis-analytics.js — NormaLis integrity seal
