@@ -432,7 +432,8 @@ exports.boldWebhook = functions.https.onRequest(async (req, res) => {
       planLinkId:      linkId,
       activo:          true,
       // Si era piloto, mantener rol piloto (no degradar); si era pendiente → cliente
-      ...(userData.rol === 'pendiente' ? { rol: 'cliente' } : {}),
+      // Si era pendiente o rechazado, activar como cliente (ya pagó)
+      ...(userData.rol === 'pendiente' || userData.rol === 'rechazado' ? { rol: 'cliente' } : {}),
     });
     functions.logger.info('boldWebhook: plan activado', { uid, email, plan });
   } catch (updateErr) {

@@ -27,6 +27,11 @@ service-account*.json
 .DS_Store
 Thumbs.db
 
+# Imágenes temporales (generadas por pdftoppm al previsualizar documentos)
+page-*.jpg
+page*.jpg
+
 # Editores
 .vscode/
 *.swp
+.resend-key
