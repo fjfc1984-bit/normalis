@@ -298,3 +298,190 @@ exports.geminiProxy = functions
       return res.status(500).json({ error: 'Error interno del proxy' });
     }
   });
+
+// ═══════════════════════════════════════════════════════════════════════
+// BOLD.CO WEBHOOK — Activación automática de planes
+//
+// URL pública:
+//   https://us-central1-normalis-5587d.cloudfunctions.net/boldWebhook
+//
+// Setup Bold.co (una sola vez en el dashboard):
+//   1. En Bold.co → Webhooks: agregar URL anterior
+//   2. Copiar el "Webhook Secret" que genere Bold.co
+//   3. En terminal: firebase functions:config:set bold.webhook_secret="TU_SECRET"
+//   4. firebase deploy --only functions:boldWebhook
+//
+// Mapeo Bold Link ID → plan (actualizar si se crean nuevos links):
+//   LNK_4JND4JELJ4 → basico      (Esencial mensual)
+//   LNK_QX9QJBBLWW → basico      (Esencial anual)
+//   LNK_LRR5ZCRUMB → profesional (Profesional mensual)
+//   LNK_RG2A6L92PU → profesional (Profesional anual)
+// ═══════════════════════════════════════════════════════════════════════
+
+const admin  = require('firebase-admin');
+const crypto = require('crypto');
+
+// Inicializar Firebase Admin (una sola vez)
+if (!admin.apps.length) admin.initializeApp();
+const db = admin.firestore();
+
+// Mapeo Bold.co link ID → clave de plan (debe coincidir con NORMALIS_PLANS en normalis-plans.js)
+const BOLD_LINK_TO_PLAN = {
+  'LNK_4JND4JELJ4': 'basico',       // Esencial mensual
+  'LNK_QX9QJBBLWW': 'basico',       // Esencial anual
+  'LNK_LRR5ZCRUMB': 'profesional',  // Profesional mensual
+  'LNK_RG2A6L92PU': 'profesional',  // Profesional anual
+  // 'LNK_8Q26PSJHGW': null           // Implementación guiada — pago único, no activa plan
+};
+
+// Nombres legibles para el email de bienvenida
+const PLAN_LABELS = {
+  basico:       'Esencial',
+  profesional:  'Profesional',
+  empresarial:  'Empresarial',
+};
+
+exports.boldWebhook = functions.https.onRequest(async (req, res) => {
+  // Solo POST
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
+  // ── Verificación de firma HMAC-SHA256 ──────────────────────────────
+  const boldSecret = functions.config().bold?.webhook_secret;
+  if (boldSecret && req.rawBody) {
+    const sigHeader = (req.headers['x-bold-signature'] || '').trim();
+    const expected  = 'sha256=' + crypto
+      .createHmac('sha256', boldSecret)
+      .update(req.rawBody)
+      .digest('hex');
+
+    // timingSafeEqual requiere buffers del mismo tamaño
+    const sigBuf = Buffer.from(sigHeader.padEnd(expected.length, '\0'));
+    const expBuf = Buffer.from(expected.padEnd(sigBuf.length, '\0'));
+    if (!crypto.timingSafeEqual(sigBuf, expBuf)) {
+      functions.logger.warn('boldWebhook: firma inválida', { sigHeader });
+      return res.status(401).send('Firma inválida');
+    }
+  }
+
+  // ── Parsear payload (Bold puede enviar en varios formatos) ──────────
+  const body     = req.body || {};
+  const event    = body.event || '';
+  // Bold envuelve en body.data.payment o directamente en body.payment
+  const payment  = body.data?.payment || body.payment || body;
+  const status   = (payment?.status || '').toUpperCase();
+  const linkId   = payment?.payment_link?.id || payment?.payment_link_id || '';
+  const rawEmail = payment?.customer?.email || body?.customer?.email || '';
+  const email    = rawEmail.trim().toLowerCase();
+
+  functions.logger.info('boldWebhook: evento recibido', { event, status, linkId, email });
+
+  // Solo procesar pagos aprobados
+  const isApproved = status === 'APPROVED'
+    || event === 'payment.completed'
+    || event === 'PAYMENT_COMPLETED';
+  if (!isApproved) {
+    return res.status(200).json({ ok: true, skipped: 'estado no aprobado', status, event });
+  }
+
+  // Validar campos obligatorios
+  if (!email || !linkId) {
+    functions.logger.error('boldWebhook: campos faltantes', { email, linkId, body });
+    return res.status(200).json({ ok: true, skipped: 'campos insuficientes' });
+  }
+
+  // Resolver plan a partir del link ID
+  const plan = BOLD_LINK_TO_PLAN[linkId];
+  if (!plan) {
+    functions.logger.info('boldWebhook: link no mapeado a plan', { linkId });
+    return res.status(200).json({ ok: true, skipped: 'link sin plan asignado', linkId });
+  }
+
+  // ── Buscar usuario en Firestore por email ──────────────────────────
+  let userDoc;
+  try {
+    const snap = await db.collection('usuarios')
+      .where('email', '==', email)
+      .limit(1)
+      .get();
+
+    if (snap.empty) {
+      functions.logger.warn('boldWebhook: usuario no encontrado', { email });
+      // Retornar 200 para que Bold no reintente — registrar para revisión manual
+      await db.collection('webhook_sin_usuario').add({
+        email, linkId, plan, event, status,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return res.status(200).json({ ok: true, skipped: 'usuario no encontrado', email });
+    }
+
+    userDoc = snap.docs[0];
+  } catch (firestoreErr) {
+    functions.logger.error('boldWebhook: error buscando usuario', firestoreErr);
+    return res.status(500).send('Error de base de datos');
+  }
+
+  const uid      = userDoc.id;
+  const userData = userDoc.data();
+
+  // ── Activar plan en Firestore ──────────────────────────────────────
+  try {
+    await db.collection('usuarios').doc(uid).update({
+      plan:            plan,
+      planActivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      planSource:      'bold',
+      planLinkId:      linkId,
+      activo:          true,
+      // Si era piloto, mantener rol piloto (no degradar); si era pendiente → cliente
+      ...(userData.rol === 'pendiente' ? { rol: 'cliente' } : {}),
+    });
+    functions.logger.info('boldWebhook: plan activado', { uid, email, plan });
+  } catch (updateErr) {
+    functions.logger.error('boldWebhook: error actualizando plan', updateErr);
+    return res.status(500).send('Error al activar plan');
+  }
+
+  // ── Enviar email de bienvenida vía Worker /email ───────────────────
+  const planLabel   = PLAN_LABELS[plan] || plan;
+  const ipsNombre   = userData.nombre        || '';
+  const contactName = userData.nombreContacto || userData.nombre || 'equipo';
+
+  const emailHtml = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:'Segoe UI',Arial,sans-serif;background:#f0fdfa;margin:0;padding:40px 0;">
+<div style="max-width:540px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,121,107,.12);">
+  <div style="background:linear-gradient(135deg,#0d9488,#0f766e);padding:40px 40px 32px;text-align:center;">
+    <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;margin-bottom:16px;">N</div>
+    <h1 style="color:#fff;font-size:26px;font-weight:800;margin:0;">¡Plan ${planLabel} activado!</h1>
+  </div>
+  <div style="padding:36px 40px;">
+    <p style="color:#1e293b;font-size:16px;line-height:1.6;margin:0 0 20px;">Hola <strong>${contactName}</strong>,</p>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px;">Tu plan <strong style="color:#0d9488;">NormaLis ${planLabel}</strong>${ipsNombre ? ' para <strong>' + ipsNombre + '</strong>' : ''} fue activado exitosamente. Ya tienes acceso completo a todos los módulos incluidos.</p>
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="https://normalis.co/login.html" style="display:inline-block;background:linear-gradient(135deg,#0d9488,#6366f1);color:#fff;padding:14px 36px;border-radius:30px;font-size:16px;font-weight:700;text-decoration:none;">Ingresar a NormaLis →</a>
+    </div>
+    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <p style="color:#0f766e;font-size:14px;font-weight:700;margin:0 0 8px;">¿Qué hacer ahora?</p>
+      <p style="color:#475569;font-size:14px;line-height:1.6;margin:0;">Inicia sesión y lanza tu primera autoevaluación de habilitación. El resultado en tiempo real te mostrará el estado real de cumplimiento de tu IPS.</p>
+    </div>
+    <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin:0;">¿Tienes dudas? Responde este correo — revisamos cada mensaje.<br>Equipo NormaLis</p>
+  </div>
+</div>
+</body></html>`;
+
+  try {
+    await fetch('https://normalis.fjfc1984.workers.dev/email', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to:      email,
+        subject: `¡Tu plan NormaLis ${planLabel} está activo!`,
+        html:    emailHtml,
+      }),
+    });
+    functions.logger.info('boldWebhook: email enviado', { email, plan });
+  } catch (emailErr) {
+    // No fallar el webhook por un error de email
+    functions.logger.warn('boldWebhook: email falló (no crítico)', emailErr.message);
+  }
+
+  return res.status(200).json({ success: true, uid, plan, email });
+});

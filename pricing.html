@@ -418,6 +418,14 @@ function checkout(plan) {
     btn.textContent = 'Redirigiendo...';
   }
 
+  // Guardar plan pendiente en sessionStorage para que success.html lo muestre
+  // mientras espera la confirmación del webhook de Bold.co
+  try {
+    var planKey = (plan === 'pro') ? 'profesional' : plan;
+    sessionStorage.setItem('normalis_pending_plan', planKey);
+    sessionStorage.setItem('normalis_pending_plan_ts', Date.now().toString());
+  } catch(e) {}
+
   window.location.href = link;
 }
 
