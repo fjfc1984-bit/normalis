@@ -1,12 +1,21 @@
-name = "normalis"
-main = "worker.js"
-compatibility_date = "2024-01-01"
+name            = "normalis"
+main            = "worker.js"
+compatibility_date = "2024-09-23"
+
+# ─────────────────────────────────────────────────────────────
+# SECRETS (configurar con wrangler o Cloudflare Dashboard)
+# NUNCA pongas valores reales aquí — solo nombres
+#
+#   npx wrangler secret put GROQ_API_KEY
+#   → Obtener en: https://console.groq.com/keys  (GRATIS)
+#
+#   npx wrangler secret put RESEND_API_KEY
+#   → Obtener en: https://resend.com/api-keys    (GRATIS hasta 100 emails/día)
+# ─────────────────────────────────────────────────────────────
 
 [triggers]
-# Cron diario 8am Colombia (UTC-5 → 1pm UTC)
+# Cron diario 8am Colombia (UTC-5 → 13:00 UTC)
 crons = ["0 13 * * *"]
 
-[vars]
-# GEMINI_API_KEY se configura como secret (encriptado):
-# npx wrangler secret put GEMINI_API_KEY
-# Pegar la key de https://aistudio.google.com/apikey (proyecto Default Gemini, free tier)
+[observability]
+enabled = true
