@@ -88,7 +88,7 @@ declare -A MIN_SIZES=(
   ["normalis-export.js"]=2000
   ["normalis-users.js"]=500
   ["normalis-automations.js"]=3000
-  ["normalis-sst.js"]=15000
+  ["normalis-sst.js"]=50000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=400000
 )
