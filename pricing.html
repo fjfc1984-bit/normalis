@@ -9,7 +9,7 @@
 <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://checkout.bold.co; frame-ancestors 'self'; upgrade-insecure-requests;">
 <title>Planes y Precios — NormaLis | Habilitación IPS Colombia</title>
-<meta name="description" content="Elige el plan que mejor se adapta a tu IPS. Desde piloto gratuito hasta plan profesional multi-sede. Pago mensual o anual con 2 meses gratis.">
+<meta name="description" content="Elige el plan que mejor se adapta a tu IPS. Esencial, Profesional o Empresarial — habilitación, PAMEC, SST, PQRS y más. Pago mensual o anual con 2 meses gratis.">
 <link rel="canonical" href="https://normalis.co/pricing.html">
 <style>
   :root{
@@ -182,11 +182,11 @@
       <button class="plan-btn ghost" onclick="goRegister()">Empezar gratis</button>
     </div>
 
-    <!-- PLAN BÁSICO -->
+    <!-- PLAN ESENCIAL -->
     <div class="plan-card featured">
       <div class="featured-badge">⭐ Más popular</div>
       <div class="plan-icon">🏥</div>
-      <div class="plan-name">Básico</div>
+      <div class="plan-name">Esencial</div>
       <div class="plan-desc">Para IPS de baja y mediana complejidad que quieren mantener su habilitación en orden todo el año.</div>
       <div class="plan-price">
         <div class="price-main">
@@ -196,37 +196,37 @@
         <div class="price-anual-note" id="ahorro-basico">Pagas $1.290.000 al año · ahorras $258.000</div>
       </div>
       <ul class="plan-features">
-        <li><span class="check">✓</span> 1 sede, todos los servicios</li>
-        <li><span class="check">✓</span> Autoevaluación ilimitada</li>
-        <li><span class="check">✓</span> Chat IA sin límite de consultas</li>
-        <li><span class="check">✓</span> PAMEC completo + indicadores</li>
-        <li><span class="check">✓</span> Reportes PDF ilimitados</li>
-        <li><span class="check">✓</span> Módulo de vencimientos y alertas</li>
-        <li><span class="check">✓</span> Historial completo de auditorías</li>
+        <li><span class="check">✓</span> Perfil del establecimiento de salud</li>
+        <li><span class="check">✓</span> Autoevaluación de habilitación ilimitada</li>
+        <li><span class="check">✓</span> Cronograma de mejoramiento</li>
+        <li><span class="check">✓</span> Resultados y reportes PDF</li>
+        <li><span class="check">✓</span> Generación de documentos</li>
+        <li><span class="check">✓</span> Chat IA normativo sin límite</li>
+        <li><span class="cross">–</span> <span style="color:#9ca3af">PAMEC, SST, PQRS e Incidentes</span></li>
       </ul>
       <button class="plan-btn primary" id="btn-basico" onclick="checkout('basico')">Suscribirme ahora</button>
     </div>
 
-    <!-- PLAN PRO -->
+    <!-- PLAN PROFESIONAL -->
     <div class="plan-card">
       <div class="plan-icon">🏢</div>
-      <div class="plan-name">Pro</div>
-      <div class="plan-desc">Para redes de IPS o prestadores con múltiples sedes que necesitan gestión centralizada.</div>
+      <div class="plan-name">Profesional</div>
+      <div class="plan-desc">Para IPS que necesitan cumplimiento integral: habilitación, PAMEC, SST, PQRS y gestión del talento.</div>
       <div class="plan-price">
         <div class="price-main">
           <span class="currency cop-symbol">$</span><span id="precio-pro">249.000</span>
         </div>
-        <div class="price-period" id="periodo-pro">COP / mes · por sede</div>
+        <div class="price-period" id="periodo-pro">COP / mes</div>
         <div class="price-anual-note" id="ahorro-pro">Pagas $2.490.000 al año · ahorras $498.000</div>
       </div>
       <ul class="plan-features">
-        <li><span class="check">✓</span> <strong>Sedes ilimitadas</strong></li>
-        <li><span class="check">✓</span> Todo lo del plan Básico</li>
-        <li><span class="check">✓</span> Panel de gestión multi-sede</li>
-        <li><span class="check">✓</span> Reportes consolidados de red</li>
-        <li><span class="check">✓</span> Exportación a Excel</li>
-        <li><span class="check">✓</span> Acceso para equipo (5 usuarios)</li>
-        <li><span class="check">✓</span> Soporte prioritario por WhatsApp</li>
+        <li><span class="check">✓</span> Todo lo del plan Esencial</li>
+        <li><span class="check">✓</span> PAMEC completo + indicadores de calidad</li>
+        <li><span class="check">✓</span> SG-SST (seguridad en el trabajo)</li>
+        <li><span class="check">✓</span> Gestor PQRS e incidentes</li>
+        <li><span class="check">✓</span> Talento humano y vencimientos</li>
+        <li><span class="check">✓</span> Comparador normativo + Calculadora ROI</li>
+        <li><span class="check">✓</span> Generador de documentos con IA</li>
       </ul>
       <button class="plan-btn outline" id="btn-pro" onclick="checkout('pro')">Suscribirme ahora</button>
     </div>
@@ -254,7 +254,7 @@
         <div class="impl-price"><span class="curr">$</span>350.000</div>
         <div class="impl-price-sub">COP · ≈ USD 87</div>
         <button class="impl-btn" id="btn-impl" onclick="checkout('implementacion')">Contratar ahora</button>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">Incluye 1 mes de plan Básico gratis</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">Incluye 1 mes de plan Esencial gratis</div>
       </div>
     </div>
   </div>
@@ -280,7 +280,7 @@
       <div class="faq-q" onclick="toggleFaq(this)">
         ¿Cuánto ahorro con el plan anual? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">Con el plan anual pagas 10 meses y recibes 12 — es decir, 2 meses completamente gratis. Básico: ahorras $258.000 COP al año. Pro: ahorras $498.000 COP por sede al año. El cobro es único al inicio del año.</div>
+      <div class="faq-a">Con el plan anual pagas 10 meses y recibes 12 — es decir, 2 meses completamente gratis. Esencial: ahorras $258.000 COP al año. Profesional: ahorras $498.000 COP al año. El cobro es único al inicio del año.</div>
     </div>
 
     <div class="faq-item">
@@ -301,7 +301,7 @@
       <div class="faq-q" onclick="toggleFaq(this)">
         ¿Qué incluye exactamente la Implementación Guiada? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">Es un servicio de onboarding personalizado: una sesión de 2 horas por videoconferencia donde configuramos la plataforma juntos, hacemos la primera auditoría real de tu IPS y te entregamos plantillas PAMEC listas para usar. También incluye 1 mes de plan Básico y 30 días de soporte por WhatsApp.</div>
+      <div class="faq-a">Es un servicio de onboarding personalizado: una sesión de 2 horas por videoconferencia donde configuramos la plataforma juntos, hacemos la primera auditoría real de tu IPS y te entregamos plantillas PAMEC listas para usar. También incluye 1 mes de plan Esencial y 30 días de soporte por WhatsApp.</div>
     </div>
 
     <div class="faq-item">
@@ -315,7 +315,7 @@
       <div class="faq-q" onclick="toggleFaq(this)">
         ¿Necesito una IPS grande para usar NormaLis? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">No. NormaLis está diseñado para IPS de todos los tamaños: desde un consultorio médico independiente hasta clínicas de mediana complejidad. El plan Básico funciona perfectamente para la mayoría de prestadores.</div>
+      <div class="faq-a">No. NormaLis está diseñado para IPS de todos los tamaños: desde un consultorio médico independiente hasta clínicas de mediana complejidad. El plan Esencial funciona perfectamente para la mayoría de prestadores.</div>
     </div>
 
   </div>
