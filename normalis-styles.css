@@ -560,6 +560,12 @@ input[type=range].roi-range{width:100%;accent-color:var(--primary);height:4px;cu
 /* Settings cog in sidebar */
 .sb-item-settings{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:9px;cursor:pointer;color:#475569;font-size:12px;font-weight:500;transition:all .15s;margin-bottom:1px}
 .sb-item-settings:hover{background:rgba(255,255,255,.06);color:#94a3b8}
+.sb-more-toggle{display:flex;align-items:center;gap:6px;padding:6px 11px;margin:2px 0;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.06em;color:#64748b;cursor:pointer;user-select:none;text-transform:uppercase;transition:color .2s}
+.sb-more-toggle:hover{color:#6366f1}
+.sb-more-toggle #sb-more-arrow{transition:transform .2s;font-size:10px;display:inline-block}
+.sb-more-toggle.open #sb-more-arrow{transform:rotate(90deg)}
+.sb-more-items .sb-item{opacity:.85}
+.sb-more-items .sb-item:hover{opacity:1}
 /* ── DOCUMENT VIEWER MODAL ── */
 .doc-viewer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .doc-viewer-overlay.open{display:flex}

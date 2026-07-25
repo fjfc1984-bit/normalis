@@ -195,44 +195,58 @@ self.addEventListener('fetch',e=>{
       <button class="sb-ses-logout" onclick="logout()" title="Cerrar sesión">⎋</button>
     </div>
     <nav class="sb-nav">
+
+      <!-- ── PRINCIPAL ─────────────────────────────── -->
       <div class="sb-section">Principal</div>
       <div class="sb-item active" onclick="nav('dashboard')"><span class="icon">📊</span>Dashboard</div>
+      <div class="sb-item" onclick="nav('establecimiento')"><span class="icon">🏥</span>Mi Establecimiento</div>
       <div class="sb-item" onclick="nav('cronograma')"><span class="icon">🗓️</span>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
-      <div class="sb-section">Documentos</div>
-      <div class="sb-item" onclick="nav('documentos')"><span class="icon">📁</span>Biblioteca Documental</div>
-      <div class="sb-item" onclick="nav('generador')"><span class="icon">✨</span>Generar con IA</div>
-      <div class="sb-section">Auditoría</div>
+
+      <!-- ── HABILITACIÓN ───────────────────────────── -->
+      <div class="sb-section">Habilitación</div>
       <div class="sb-item" onclick="nav('auditoria')"><span class="icon">🔍</span>Auditoría Simulada<span class="sb-badge">!</span></div>
       <div class="sb-item" onclick="nav('resultados')"><span class="icon">📈</span>Resultados</div>
-      <div class="sb-section">Equipo</div>
-      <div class="sb-item" onclick="nav('talento')"><span class="icon">👥</span>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
-      <div class="sb-section">Herramientas</div>
-      <div class="sb-item" onclick="nav('comparador')"><span class="icon">⚖️</span>Comparador Normativo</div>
-      <div class="sb-item" onclick="nav('roi')"><span class="icon">💰</span>Calculadora ROI</div>
-      <div class="sb-item" onclick="nav('calidad')"><span class="icon">🏅</span>Calidad en Salud</div>
-      <div class="sb-item" onclick="nav('calendario')"><span class="icon">📅</span>Calendario</div>
-      <div class="sb-item" onclick="nav('firma')"><span class="icon">✍️</span>Firma y Versiones</div>
-      <div class="sb-item" onclick="nav('consentimientos')"><span class="icon">📝</span>Consentimientos</div>
-      <div class="sb-section">Red</div>
-      <div class="sb-item" onclick="nav('multisede')"><span class="icon">🏢</span>Multi-Sede</div>
-      <div class="sb-item" onclick="nav('consultor')"><span class="icon">💼</span>Panel Consultor</div>
-      <div class="sb-section">Consultas</div>
-      <div class="sb-item" onclick="nav('chat')"><span class="icon">💬</span>Consultor Normativo IA</div>
-      <div class="sb-item" onclick="nav('establecimiento')"><span class="icon">🏥</span>Mi Establecimiento</div>
-      <div class="sb-section">Administración</div>
-      <div class="sb-item" onclick="nav('automatismos')"><span class="icon">⚡</span>Automatismos<span class="sb-badge warn" id="auto-sb-badge" style="display:none">!</span></div>
-      <div class="sb-item" onclick="nav('auditoria-externa')"><span class="icon">🔍</span>Auditoría Externa</div>
+      <div class="sb-item" onclick="nav('generador')"><span class="icon">✨</span>Generar con IA</div>
+      <div class="sb-item" onclick="nav('documentos')"><span class="icon">📁</span>Biblioteca Documental</div>
+
+      <!-- ── CUMPLIMIENTO ───────────────────────────── -->
+      <div class="sb-section">Cumplimiento</div>
       <div class="sb-item" onclick="nav('pamec')"><span class="icon">🔄</span>PAMEC</div>
-      <div class="sb-item" onclick="nav('ips')"><span class="icon">🏥</span>IPS Colombia</div>
-      <div class="sb-item" onclick="nav('actividad')"><span class="icon">📊</span>Actividad de Usuarios</div>
-      <div class="sb-section">Novedades 2026</div>
+      <div class="sb-item" onclick="nav('sst')"><span class="icon">🦺</span>SG-SST</div>
       <div class="sb-item" onclick="nav('pqrs')"><span class="icon">📮</span>Gestor PQRS</div>
       <div class="sb-item" onclick="nav('incidentes')"><span class="icon">⚠️</span>Incidentes y Eventos</div>
+
+      <!-- ── EQUIPO ─────────────────────────────────── -->
+      <div class="sb-section">Equipo</div>
+      <div class="sb-item" onclick="nav('talento')"><span class="icon">👥</span>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
       <div class="sb-item" onclick="nav('vencimientos-personal')"><span class="icon">🪪</span>Vencimientos Personal</div>
-      <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
-      <div class="sb-item" onclick="nav('sst')"><span class="icon">🦺</span>SG-SST</div>
-      <div class="sb-item" onclick="nav('bitacora')"><span class="icon">📋</span>Bitácora</div>
-<div class="sb-item" onclick="nav('supervision')"><span class="icon">🔭</span>Supervisión</div>
+
+      <!-- ── ASISTENTE IA ───────────────────────────── -->
+      <div class="sb-section">Asistente IA</div>
+      <div class="sb-item" onclick="nav('chat')"><span class="icon">💬</span>Consultor Normativo IA</div>
+
+      <!-- ── MÁS HERRAMIENTAS (colapsable) ─────────── -->
+      <div class="sb-more-toggle" id="sb-more-toggle" onclick="toggleSbMore()">
+        <span id="sb-more-arrow">▸</span> Más herramientas
+      </div>
+      <div class="sb-more-items" id="sb-more-items" style="display:none">
+        <div class="sb-item" onclick="nav('comparador')"><span class="icon">⚖️</span>Comparador Normativo</div>
+        <div class="sb-item" onclick="nav('roi')"><span class="icon">💰</span>Calculadora ROI</div>
+        <div class="sb-item" onclick="nav('calidad')"><span class="icon">🏅</span>Calidad en Salud</div>
+        <div class="sb-item" onclick="nav('calendario')"><span class="icon">📅</span>Calendario</div>
+        <div class="sb-item" onclick="nav('firma')"><span class="icon">✍️</span>Firma y Versiones</div>
+        <div class="sb-item" onclick="nav('consentimientos')"><span class="icon">📝</span>Consentimientos</div>
+        <div class="sb-item" onclick="nav('simulacro')"><span class="icon">🔎</span>Simulacro Secretaría</div>
+        <div class="sb-item" onclick="nav('bitacora')"><span class="icon">📋</span>Bitácora</div>
+      </div>
+
+      <!-- ── OCULTOS (Fase 2 — desbloquear por plan) ── -->
+      <!-- multisede, consultor, automatismos, auditoria-externa, ips, actividad, supervision -->
+      <!-- auto-sb-badge se mantiene para compatibilidad -->
+      <span id="auto-sb-badge" style="display:none"></span>
+
+      <!-- ── CUENTA ──────────────────────────────────── -->
+      <div class="sb-section" style="margin-top:8px">Cuenta</div>
       <div class="sb-item" onclick="openUserMgmt()"><span class="icon">👤</span>Gestión de Perfiles</div>
       <div class="sb-item-settings" onclick="abrirSetup()"><span>⚙️</span> Configuración</div>
     </nav>
@@ -8041,6 +8055,28 @@ function evaluarSuficienciaDatos(ctx) {
     return resp;
   };
 })();
+
+// ── Toggle "Más herramientas" en sidebar ────────────────────────
+function toggleSbMore() {
+  var items  = document.getElementById('sb-more-items');
+  var toggle = document.getElementById('sb-more-toggle');
+  if (!items || !toggle) return;
+  var open = items.style.display !== 'none';
+  items.style.display  = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+  try { localStorage.setItem('normalis_sb_more', open ? '0' : '1'); } catch(e){}
+}
+(function(){
+  try {
+    if (localStorage.getItem('normalis_sb_more') === '1') {
+      var items  = document.getElementById('sb-more-items');
+      var toggle = document.getElementById('sb-more-toggle');
+      if (items)  items.style.display  = 'block';
+      if (toggle) toggle.classList.add('open');
+    }
+  } catch(e){}
+})();
+
 
 </script>
 
