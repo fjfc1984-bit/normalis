@@ -1024,6 +1024,45 @@ function tplLeadAutoreply({ nombre, email }) {
   </div></body></html>`;
 }
 
+
+function tplNuevaSolicitudAdmin({ ips_nombre, nit, tipo_ips, ciudad, nombre_contacto, cargo, email, telefono, uid }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:24px 40px}
+  .header h1{color:#fff;margin:0;font-size:20px}
+  .header p{color:#a7f3d0;margin:4px 0 0;font-size:13px}
+  .body{padding:28px 40px;color:#1e293b;line-height:1.6}
+  .row{display:flex;margin:8px 0;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:8px}
+  .label{font-weight:700;min-width:110px;color:#64748b;flex-shrink:0}
+  .badge{display:inline-block;background:#d1fae5;color:#065f46;border-radius:12px;padding:3px 12px;font-size:12px;font-weight:700}
+  .actions{margin-top:24px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #00544B}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header">
+      <h1>🏥 Nueva Solicitud de Acceso — NormaLis</h1>
+      <p>Una IPS acaba de completar el formulario de registro</p>
+    </div>
+    <div class="body">
+      <div class="row"><span class="label">IPS:</span><span><strong>${ips_nombre}</strong></span></div>
+      <div class="row"><span class="label">NIT:</span><span>${nit || '—'}</span></div>
+      <div class="row"><span class="label">Tipo IPS:</span><span>${tipo_ips || '—'}</span></div>
+      <div class="row"><span class="label">Ciudad:</span><span>${ciudad || '—'}</span></div>
+      <div class="row"><span class="label">Contacto:</span><span>${nombre_contacto}</span></div>
+      <div class="row"><span class="label">Cargo:</span><span>${cargo || '—'}</span></div>
+      <div class="row"><span class="label">Email:</span><span><a href="mailto:${email}" style="color:#00544B">${email}</a></span></div>
+      <div class="row"><span class="label">Teléfono:</span><span>${telefono || '—'}</span></div>
+      <div class="row"><span class="label">UID Firebase:</span><span style="font-size:12px;color:#94a3b8">${uid || '—'}</span></div>
+      <div class="actions">
+        <p style="margin:0;font-weight:700;color:#065f46">⚡ Acción requerida</p>
+        <p style="margin:6px 0 0;font-size:13px">Ve a <a href="https://normalis.co/admin.html" style="color:#00544B">admin.html → Solicitudes</a> para aprobar o rechazar esta cuenta.</p>
+      </div>
+    </div>
+    <div class="footer">NormaLis — Panel de administración | Este email es automático</div>
+  </div></body></html>`;
+}
+
 // ── /email handler ─────────────────────────────────────────────────────────────
 async function handleEmail(request, env, cors) {
   const resendKey = env.RESEND_API_KEY;
@@ -1038,7 +1077,7 @@ async function handleEmail(request, env, cors) {
   catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
 
   const { type, data } = body || {};
-  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply'];
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin'];
   if (!VALID_TYPES.includes(type)) {
     return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -1063,7 +1102,7 @@ async function handleEmail(request, env, cors) {
   }
 
   // Emails públicos (lead) → rate limiting por IP
-  if (type === 'lead_admin' || type === 'lead_autoreply') {
+  if (type === 'lead_admin' || type === 'lead_autoreply' || type === 'nueva_solicitud_admin') {
     const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
     if (!checkLeadRateLimit(ip)) {
       return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta en un minuto.' }), {
@@ -1108,6 +1147,14 @@ async function handleEmail(request, env, cors) {
       to: [data.email],
       subject: 'Gracias por contactar a NormaLis — Te responderemos pronto',
       html: tplLeadAutoreply(data),
+    };
+  } else if (type === 'nueva_solicitud_admin') {
+    if (!data?.email) return new Response(JSON.stringify({ error: 'Campo email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: ['fjfc1984@gmail.com'],
+      subject: `🏥 Nueva solicitud NormaLis — ${data.ips_nombre || data.email}`,
+      html: tplNuevaSolicitudAdmin(data),
     };
   }
 

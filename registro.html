@@ -21,7 +21,7 @@
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Frame-Options" content="DENY">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com; frame-ancestors 'none'; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.emailjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://normalis.fjfc1984.workers.dev https://www.googletagmanager.com https://www.google-analytics.com; frame-ancestors 'none'; upgrade-insecure-requests;">
 <title>NormaLis — Solicitar Acceso</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -163,6 +163,8 @@ body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%
 .divider{border:none;border-top:1px solid rgba(0,168,150,.1);margin:16px 0;}
 .card-footer{text-align:center;font-size:11px;color:var(--text-dim);}
 </style>
+  <!-- Google Analytics 4 — NormaLis -->
+  <script src="normalis-analytics.js" defer></script>
 </head>
 <body>
 <div class="reg-card">
@@ -493,25 +495,32 @@ document.getElementById('form-step2').addEventListener('submit', async function(
     // 4. Cerrar sesión (espera aprobación del admin)
     await auth.signOut();
 
-    // 5. Notificar admin (best-effort)
+    // 5. Notificar admin por email via Worker (best-effort — no bloquea el flujo)
     try {
-      var subj = encodeURIComponent('Nueva solicitud NormaLis — ' + formData.nombreIPS);
-      var body = encodeURIComponent(
-        'Nueva IPS registrada:\n\n'
-        + 'IPS: '      + formData.nombreIPS      + '\n'
-        + 'NIT: '      + (formData.nit || 'N/A') + '\n'
-        + 'Tipo: '     + (formData.tipoIPS || 'N/A') + '\n'
-        + 'Ciudad: '   + formData.ciudad          + '\n'
-        + 'Contacto: ' + formData.nombreContacto  + '\n'
-        + 'Cargo: '    + (formData.cargo || 'N/A') + '\n'
-        + 'Email: '    + formData.email            + '\n'
-        + 'Teléfono: ' + (formData.telefono || 'N/A') + '\n\n'
-        + 'UID Firebase: ' + uid
-      );
-      window.open('mailto:fjfc1984@gmail.com?subject=' + subj + '&body=' + body, '_blank', 'noopener,noreferrer');
+      fetch('https://normalis.fjfc1984.workers.dev/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'nueva_solicitud_admin',
+          data: {
+            ips_nombre:      formData.nombreIPS,
+            nit:             formData.nit        || '',
+            tipo_ips:        formData.tipoIPS    || '',
+            ciudad:          formData.ciudad     || '',
+            nombre_contacto: formData.nombreContacto,
+            cargo:           formData.cargo      || '',
+            email:           formData.email,
+            telefono:        formData.telefono   || '',
+            uid:             uid
+          }
+        })
+      }).catch(function() {}); // silencioso — el registro ya ocurrió
     } catch(_) {}
 
-    // 6. Mostrar pantalla de éxito
+    // 6. Tracking GA4
+    try { window.NL && window.NL.trackRegister(formData.tipoIPS, formData.ciudad); } catch(_) {}
+
+    // 7. Mostrar pantalla de éxito
     document.getElementById('success-ips').textContent   = formData.nombreIPS;
     document.getElementById('success-email').textContent = formData.email;
     document.getElementById('step2').style.display       = 'none';

@@ -160,6 +160,7 @@ async function sendMainChat() {
   const val = inp.value.trim();
   if (!val) return;
 
+  try { window.NL && window.NL.trackChat(); } catch(_) {}
   addMainMsg(val, 'user');
   inp.value    = '';
   inp.disabled = true;

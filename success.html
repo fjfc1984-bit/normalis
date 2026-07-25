@@ -7,7 +7,7 @@
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=()">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com; frame-ancestors 'none'; upgrade-insecure-requests;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.firebaseapp.com https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com; frame-ancestors 'none'; upgrade-insecure-requests;">
 <title>Procesando pago — NormaLis</title>
 <meta name="robots" content="noindex">
 
@@ -78,6 +78,8 @@
 
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
+  <!-- Google Analytics 4 -->
+  <script src="normalis-analytics.js" defer></script>
 </head>
 <body>
 <nav>
