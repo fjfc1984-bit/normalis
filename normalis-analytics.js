@@ -6,9 +6,9 @@
  * Eventos personalizados rastreados:
  *   user_register        — nueva IPS completa registro.html
  *   user_login           — usuario autenticado correctamente
- *   audit_started         — usuario inicia una auditoría de habilitación
- *   audit_completed       — usuario finaliza una auditoría (con score)
- *   module_viewed         — usuario abre un módulo del sidebar
+ *   audit_started        — usuario inicia una auditoría de habilitación
+ *   audit_completed      — usuario finaliza una auditoría (con score)
+ *   module_viewed        — usuario abre un módulo del sidebar
  *   chat_message         — mensaje enviado al asistente IA normativo
  *   document_generated   — documento generado (acta, protocolo, etc.)
  *   demo_requested       — solicitud de demo desde index.html
@@ -20,7 +20,7 @@
 
   const GA_ID = 'G-R74LQ03RWF';
 
-  // ── Cargar gtag.js si no está cargado ──────────────────────────────────────
+  // ── Cargar gtag.js si no está cargado ──────────────────────────────────────────
   if (!window.gtag) {
     var script = document.createElement('script');
     script.async = true;
@@ -36,7 +36,7 @@
     });
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   function track(eventName, params) {
     if (typeof gtag !== 'function') return;
     try {
@@ -79,7 +79,7 @@
       service_type:    serviceType || 'unknown',
       score:           Math.round(score || 0),
       total_questions: totalQuestions || 0,
-      value:           Math.round(score || 0), // GA4 usa 'value' para avg
+      value:           Math.round(score || 0),
     });
   };
 
