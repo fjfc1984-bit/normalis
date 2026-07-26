@@ -32,6 +32,7 @@ CRITICAL_FILES=(
   "normalis-docs.js"
   "normalis-pdf.js"
   "normalis-capa.js"
+  "normalis-indicadores.js"
   "normalis-pqrs.js"
   "normalis-incidentes.js"
   "normalis-vencimientos.js"
@@ -78,6 +79,7 @@ declare -A MIN_SIZES=(
   ["normalis-docs.js"]=15000
   ["normalis-pdf.js"]=3000
   ["normalis-capa.js"]=5000
+  ["normalis-indicadores.js"]=8000
   ["normalis-pqrs.js"]=2000
   ["normalis-incidentes.js"]=2000
   ["normalis-vencimientos.js"]=2000
@@ -120,6 +122,7 @@ declare -A SEALS=(
   ["normalis-docs.js"]="END:normalis-docs.js"
   ["normalis-pdf.js"]="END:normalis-pdf.js"
   ["normalis-capa.js"]="END:normalis-capa.js"
+  ["normalis-indicadores.js"]="END:normalis-indicadores.js"
   ["normalis-pqrs.js"]="END:normalis-pqrs.js"
   ["normalis-incidentes.js"]="END:normalis-incidentes.js"
   ["normalis-vencimientos.js"]="END:normalis-vencimientos.js"
@@ -185,6 +188,7 @@ if [[ -f "$APP" ]]; then
     "normalis-docs.js"
     "normalis-pdf.js"
     "normalis-capa.js"
+    "normalis-indicadores.js"
     "normalis-pqrs.js"
     "normalis-incidentes.js"
     "normalis-vencimientos.js"
@@ -229,6 +233,10 @@ declare -A CRITICAL_FUNCTIONS=(
   ["saveCAPA"]="normalis-capa.js"
   ["renderCAPAs"]="normalis-capa.js"
   ["cerrarCAPA"]="normalis-capa.js"
+  # indicadores
+  ["renderIndicadores"]="normalis-indicadores.js"
+  ["saveIndicador"]="normalis-indicadores.js"
+  ["exportarIndicadoresPDF"]="normalis-indicadores.js"
   # pqrs
   ["savePQRS"]="normalis-pqrs.js"
   ["renderPQRS"]="normalis-pqrs.js"
@@ -420,7 +428,7 @@ APP="$REPO/normativa-app-v2.html"
 if [[ -f "$APP" ]]; then
   # Check only actual <script src="..."> tags, not comments
   MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
-    "normalis-docs.js" "normalis-pdf.js" "normalis-capa.js" "normalis-pqrs.js" "normalis-incidentes.js"
+    "normalis-docs.js" "normalis-pdf.js" "normalis-capa.js" "normalis-indicadores.js" "normalis-pqrs.js" "normalis-incidentes.js"
     "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
   "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js" "normalis-sst.js" "normalis-plans.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do

@@ -1434,6 +1434,223 @@ export default {
   },
 };
 
+// ── Firestore REST helper ───────────────────────────────────────────────────
+// Autentica como usuario de servicio (cron@normalis.co) via Firebase Auth REST
+async function getFirestoreToken(env) {
+  const apiKey    = env.FIREBASE_API_KEY;
+  const cronEmail = env.CRON_EMAIL;
+  const cronPass  = env.CRON_PASSWORD;
+  if (!apiKey || !cronEmail || !cronPass) throw new Error('CRON secrets not configured');
+
+  const res = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cronEmail, password: cronPass, returnSecureToken: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`Firebase Auth failed: ${res.status}`);
+  const data = await res.json();
+  return data.idToken;
+}
+
+async function firestoreQuery(projectId, collection, filters, token) {
+  // Build structuredQuery
+  const fieldFilters = filters.map(f => ({
+    fieldFilter: {
+      field: { fieldPath: f.field },
+      op: f.op,
+      value: f.value,
+    },
+  }));
+  const query = {
+    structuredQuery: {
+      from: [{ collectionId: collection }],
+      where: fieldFilters.length === 1
+        ? fieldFilters[0]
+        : { compositeFilter: { op: 'AND', filters: fieldFilters } },
+    },
+  };
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(query),
+  });
+  if (!res.ok) throw new Error(`Firestore query failed: ${res.status}`);
+  return res.json();
+}
+
+// ── Scheduled cron — runs daily at 08:00 COT ─────────────────────────────────
 export async function scheduled(event, env, ctx) {
-  console.log(`[NormaLis Cron] Heartbeat — ${new Date().toISOString()}`);
+  const now = new Date();
+  console.log(`[NormaLis Cron] Start — ${now.toISOString()}`);
+
+  const resendKey = env.RESEND_API_KEY;
+  const projectId = 'normalis-5587d';
+
+  if (!resendKey) {
+    console.log('[NormaLis Cron] RESEND_API_KEY not set — skipping email sends');
+    return;
+  }
+
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    console.log('[NormaLis Cron] Auth skipped (CRON secrets not set):', e.message);
+    return;
+  }
+
+  const in7  = new Date(now); in7.setDate(in7.getDate() + 7);
+  const in30 = new Date(now); in30.setDate(in30.getDate() + 30);
+  const fmt  = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
+
+  let emailsSent = 0, errors = 0;
+
+  // ─────────────────────────────────────────────────────
+  // 1. PILOTOS próximos a vencer (expiresAt en 7 días)
+  // ─────────────────────────────────────────────────────
+  try {
+    const rows = await firestoreQuery(projectId, 'usuarios', [
+      { field: 'rol',    op: 'EQUAL',             value: { stringValue: 'piloto' } },
+      { field: 'activo', op: 'EQUAL',             value: { booleanValue: true } },
+    ], token);
+
+    for (const row of rows) {
+      if (!row.document) continue;
+      const fields = row.document.fields || {};
+      const expiresAt = fields.expiresAt?.timestampValue;
+      if (!expiresAt) continue;
+
+      const expDate = new Date(expiresAt);
+      const diasRestantes = Math.round((expDate - now) / 86400000);
+      if (diasRestantes !== 7 && diasRestantes !== 3 && diasRestantes !== 1) continue;
+
+      const email     = fields.email?.stringValue;
+      const nombre    = fields.nombre?.stringValue || 'IPS';
+      const contacto  = fields.nombreContacto?.stringValue || nombre;
+      if (!email) continue;
+
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px">
+        <div style="background:#00A896;padding:20px;border-radius:12px 12px 0 0;text-align:center">
+          <h1 style="color:#fff;margin:0;font-size:22px">⏰ Tu piloto vence en ${diasRestantes} día${diasRestantes>1?'s':''}</h1>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px;border-radius:0 0 12px 12px">
+          <p>Hola ${contacto},</p>
+          <p>Tu acceso piloto a NormaLis para <strong>${nombre}</strong> vence el <strong>${expDate.toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})}</strong>.</p>
+          <p>Para no perder tu progreso, auditorías y documentos generados, activa tu plan:</p>
+          <div style="text-align:center;margin:24px 0">
+            <a href="https://normalis.co/pricing.html" style="background:#00A896;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">
+              Ver planes →
+            </a>
+          </div>
+          <p style="color:#64748b;font-size:13px">¿Preguntas? Responde este email o escríbenos a fjfc1984@gmail.com</p>
+        </div>
+        <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8">NormaLis — Habilitación sin complicaciones · normalis.co</div>
+      </div>`;
+
+      const sendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'NormaLis <fjfc1984@gmail.com>',
+          to: [email],
+          subject: `⏰ Tu piloto NormaLis vence en ${diasRestantes} día${diasRestantes>1?'s':''} — ${nombre}`,
+          html,
+        }),
+      });
+      if (sendRes.ok) emailsSent++;
+      else errors++;
+    }
+  } catch (e) {
+    console.error('[NormaLis Cron] Pilots check error:', e.message);
+    errors++;
+  }
+
+  // ─────────────────────────────────────────────────────
+  // 2. VENCIMIENTOS de personal próximos (7 días)
+  // ─────────────────────────────────────────────────────
+  try {
+    const rows = await firestoreQuery(projectId, 'vencimientos', [
+      { field: 'active', op: 'EQUAL', value: { booleanValue: true } },
+    ], token);
+
+    // Group by user email
+    const byUser = {};
+    for (const row of rows) {
+      if (!row.document) continue;
+      const f = row.document.fields || {};
+      const fechaStr = f.fechaVencimiento?.stringValue;
+      if (!fechaStr) continue;
+
+      const vencDate = new Date(fechaStr + 'T00:00:00');
+      const dias = Math.round((vencDate - now) / 86400000);
+      if (dias < 0 || dias > 7) continue; // Only next 7 days
+
+      const email = f.email?.stringValue;
+      if (!email) continue;
+      if (!byUser[email]) byUser[email] = { nombre: f.ipsNombre?.stringValue || '', items: [] };
+      byUser[email].items.push({
+        profesional: f.profesional?.stringValue || '—',
+        tipo:        f.tipo?.stringValue        || '—',
+        fecha:       fechaStr,
+        dias,
+      });
+    }
+
+    for (const [email, { nombre, items }] of Object.entries(byUser)) {
+      const filas = items.map(i =>
+        `<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">${i.profesional}</td>
+         <td style="padding:8px;border-bottom:1px solid #f1f5f9">${i.tipo}</td>
+         <td style="padding:8px;border-bottom:1px solid #f1f5f9;color:${i.dias===0?'#ef4444':i.dias<=3?'#f59e0b':'#475569'};font-weight:600">
+           ${i.dias===0?'VENCE HOY':'En '+i.dias+' día'+(i.dias>1?'s':'')} (${new Date(i.fecha+'T00:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short'})})</td></tr>`
+      ).join('');
+
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px">
+        <div style="background:#f59e0b;padding:20px;border-radius:12px 12px 0 0;text-align:center">
+          <h1 style="color:#fff;margin:0;font-size:20px">⚠️ Documentos por vencer — ${nombre || 'NormaLis'}</h1>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px;border-radius:0 0 12px 12px">
+          <p>Tienes <strong>${items.length} documento${items.length>1?'s':''}</strong> de personal que vencen en los próximos 7 días:</p>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead><tr style="background:#f8fafc">
+              <th style="padding:8px;text-align:left">Profesional</th>
+              <th style="padding:8px;text-align:left">Tipo</th>
+              <th style="padding:8px;text-align:left">Estado</th>
+            </tr></thead>
+            <tbody>${filas}</tbody>
+          </table>
+          <div style="text-align:center;margin:24px 0">
+            <a href="https://normalis.co/normativa-app-v2.html" style="background:#f59e0b;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700">
+              Gestionar vencimientos →
+            </a>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8">NormaLis · normalis.co</div>
+      </div>`;
+
+      const sendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'NormaLis <fjfc1984@gmail.com>',
+          to: [email],
+          subject: `⚠️ ${items.length} documento${items.length>1?'s':''} por vencer esta semana — NormaLis`,
+          html,
+        }),
+      });
+      if (sendRes.ok) emailsSent++;
+      else errors++;
+    }
+  } catch (e) {
+    console.error('[NormaLis Cron] Vencimientos check error:', e.message);
+    errors++;
+  }
+
+  console.log(`[NormaLis Cron] Done — ${emailsSent} emails sent, ${errors} errors`);
 }

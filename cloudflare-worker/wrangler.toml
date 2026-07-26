@@ -11,6 +11,16 @@ compatibility_date = "2024-09-23"
 #
 #   npx wrangler secret put RESEND_API_KEY
 #   → Obtener en: https://resend.com/api-keys    (GRATIS hasta 100 emails/día)
+#
+# Cron — recordatorios de vencimientos:
+#   npx wrangler secret put FIREBASE_API_KEY
+#   → Valor: AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4 (clave pública del proyecto)
+#
+#   npx wrangler secret put CRON_EMAIL
+#   → Crear en Firebase Auth: cron@normalis.co (contraseña larga, sin acceso web)
+#
+#   npx wrangler secret put CRON_PASSWORD
+#   → La contraseña del usuario cron@normalis.co creado en Firebase
 # ─────────────────────────────────────────────────────────────
 
 [triggers]

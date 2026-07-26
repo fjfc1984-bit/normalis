@@ -1,5 +1,6 @@
 // normalis-vencimientos.js
 // NormaLis — Módulo de control de vencimientos del personal (RETHUS, tarjetas, certificados)
+// Dual-write: localStorage (offline) + Firestore (sync + cron reminders)
 // ─────────────────────────────────────────────
 
 // ═══════════════════════════════════════════
@@ -11,19 +12,46 @@ function openVencForm() {
 function closeVencModal() {
   document.getElementById('venc-modal').style.display = 'none';
 }
-function saveVenc() {
+
+async function saveVenc() {
   var profesional = document.getElementById('venc-profesional').value;
-  var tipo = document.getElementById('venc-tipo').value;
-  var fecha = document.getElementById('venc-fecha').value;
-  if (!profesional || !fecha) { if(typeof toast==='function') toast('Complete todos los campos','warning'); return; }
+  var tipo        = document.getElementById('venc-tipo').value;
+  var fecha       = document.getElementById('venc-fecha').value;
+  if (!profesional || !fecha) {
+    if (typeof toast === 'function') toast('Complete todos los campos', 'warning');
+    return;
+  }
+
+  const entry = { id: Date.now(), profesional, tipo, fecha };
+
+  // ── localStorage (always) ───────────────
   var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
-  docs.push({ id: Date.now(), profesional, tipo, fecha });
+  docs.push(entry);
   localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
+
+  // ── Firestore sync (cuando disponible) ──
+  try {
+    const uid   = sessionStorage.getItem('normalis_uid');
+    const email = sessionStorage.getItem('normalis_email');
+    if (uid && typeof db !== 'undefined') {
+      const ipsNombre = localStorage.getItem('normalis_ips_nombre') || '';
+      await db.collection('vencimientos').add({
+        uid, ipsNombre, email: email || '',
+        profesional, tipo,
+        fechaVencimiento: fecha,         // ISO string "YYYY-MM-DD"
+        localId: entry.id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        active: true,
+      });
+    }
+  } catch (_) { /* sin conexión — OK, ya quedó en localStorage */ }
+
   closeVencModal();
   renderVencimientos();
   document.getElementById('venc-profesional').value = '';
   document.getElementById('venc-fecha').value = '';
 }
+
 function renderVencimientos() {
   var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
   var list = document.getElementById('venc-list');
@@ -56,13 +84,28 @@ function renderVencimientos() {
       </div>`;
     }).join('');
 }
+
 function eliminarVenc(i) {
   var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
   docs.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
-  docs.splice(i,1);
+  // Marcar como inactivo en Firestore (sin borrarlo para que el cron lo ignore)
+  const entry = docs[i];
+  if (entry) {
+    try {
+      const uid = sessionStorage.getItem('normalis_uid');
+      if (uid && typeof db !== 'undefined') {
+        db.collection('vencimientos')
+          .where('uid', '==', uid)
+          .where('localId', '==', entry.id)
+          .get().then(snap => {
+            snap.forEach(d => d.ref.update({ active: false }));
+          }).catch(() => {});
+      }
+    } catch (_) {}
+  }
+  docs.splice(i, 1);
   localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
   renderVencimientos();
 }
-
 
 // END:normalis-vencimientos.js — NormaLis integrity seal
