@@ -18,15 +18,3 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: cloudflare-worker
-          secrets: |
-            GROQ_API_KEY
-            RESEND_API_KEY
-            FIREBASE_API_KEY
-            CRON_EMAIL
-            CRON_PASSWORD
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          CRON_EMAIL: ${{ secrets.CRON_EMAIL }}
-          CRON_PASSWORD: ${{ secrets.CRON_PASSWORD }}
