@@ -54,6 +54,7 @@ const ASSETS=[
   './normalis-audit-score.js',
   './normalis-docs.js',
   './normalis-pdf.js',
+  './normalis-capa.js',
   './normalis-pqrs.js',
   './normalis-incidentes.js',
   './normalis-vencimientos.js',
@@ -214,6 +215,7 @@ self.addEventListener('fetch',e=>{
       <div class="sb-section">Cumplimiento</div>
       <div class="sb-item" onclick="nav('pamec')" data-mod="pamec"><span class="icon">🔄</span>PAMEC</div>
       <div class="sb-item" onclick="nav('sst')" data-mod="sst"><span class="icon">🦺</span>SG-SST</div>
+      <div class="sb-item" onclick="nav('capa')" data-mod="capa"><span class="icon">📋</span>Plan de Mejoramiento</div>
       <div class="sb-item" onclick="nav('pqrs')" data-mod="pqrs"><span class="icon">📮</span>Gestor PQRS</div>
       <div class="sb-item" onclick="nav('incidentes')" data-mod="incidentes"><span class="icon">⚠️</span>Incidentes y Eventos</div>
 
@@ -1877,6 +1879,113 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
   </div>
 </div>
 
+<div class="view" id="view-capa">
+  <div style="padding:24px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2 style="font-size:22px;font-weight:800;color:#1e293b">📋 Plan de Mejoramiento — CAPA</h2>
+        <p style="color:#64748b;font-size:14px;margin-top:4px">Acciones Correctivas y Preventivas · Dec. 1011/2006 · Res. 256/2016</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="exportarPlanMejoramientoPDF()" style="background:#fff;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">📄 Exportar PDF</button>
+        <button onclick="abrirCAPAModal()" style="background:#00A896;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px">+ Nueva CAPA</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px">
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #e2e8f0;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:#64748b" id="capa-total">0</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px">Total</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #fef3c7;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:#f59e0b" id="capa-abiertas">0</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px">Abiertas</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #dbeafe;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:#3b82f6" id="capa-progreso">0</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px">En Progreso</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #d1fae5;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:#10b981" id="capa-cerradas">0</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px">Cerradas</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #fee2e2;text-align:center">
+        <div style="font-size:26px;font-weight:800;color:#ef4444" id="capa-vencidas">0</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px">Vencidas</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="_renderCapaList('todas')" style="background:#00A896;color:#fff;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Todas</button>
+      <button onclick="_renderCapaList('abierta')" style="background:#fff;border:1px solid #e2e8f0;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px">Abiertas</button>
+      <button onclick="_renderCapaList('en_progreso')" style="background:#fff;border:1px solid #e2e8f0;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px">En Progreso</button>
+      <button onclick="_renderCapaList('cerrada')" style="background:#fff;border:1px solid #e2e8f0;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px">Cerradas</button>
+      <button onclick="_renderCapaList('vencidas')" style="background:#fff;border:1px solid #fee2e2;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;color:#ef4444">Vencidas</button>
+    </div>
+
+    <!-- Lista -->
+    <div id="capa-list"></div>
+  </div>
+
+  <!-- Modal crear/editar CAPA -->
+  <div id="capa-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:28px;width:90%;max-width:560px;margin:auto">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;color:#1e293b">📋 CAPA — Acción Correctiva / Preventiva</h3>
+      <form id="capa-form" onsubmit="return false" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">No Conformidad / Hallazgo *</label>
+          <textarea id="capa-desc" rows="3" placeholder="Describa la no conformidad detectada..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Causa Raíz (Análisis 5 ¿Por qué?)</label>
+          <textarea id="capa-causa" rows="2" placeholder="¿Por qué ocurrió? ¿Cuál es la causa raíz?" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Acción Correctiva / Preventiva</label>
+          <textarea id="capa-accion" rows="2" placeholder="¿Qué acción se tomará para corregir y prevenir recurrencia?" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Responsable</label>
+            <input id="capa-responsable" placeholder="Nombre del responsable" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Área / Servicio</label>
+            <input id="capa-area" placeholder="Ej: Urgencias, Consulta..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Fecha Límite</label>
+            <input id="capa-fecha" type="date" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Origen</label>
+            <select id="capa-origen" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box">
+              <option value="auditoria">Auditoría interna</option>
+              <option value="incidente">Incidente / Evento</option>
+              <option value="pqrs">PQRS</option>
+              <option value="seguimiento">Seguimiento PAMEC</option>
+              <option value="externo">Ente externo</option>
+              <option value="manual" selected>Manual</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Evidencia de cierre (completar al cerrar)</label>
+          <input id="capa-evidencia" placeholder="Describe la evidencia que demuestra el cierre..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button onclick="cerrarCAPAModal()" style="flex:1;padding:11px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff;font-size:14px">Cancelar</button>
+          <button onclick="saveCAPA()" style="flex:1;padding:11px;background:#00A896;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-pqrs">
   <div style="padding:24px;max-width:900px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
@@ -2110,6 +2219,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-audit-score.js?v=20260717"></script>
 <script src="normalis-docs.js?v=20260717"></script>
 <script src="normalis-pdf.js?v=20260717"></script>
+<script src="normalis-capa.js?v=20260726"></script>
 <script src="normalis-pqrs.js?v=20260717"></script>
 <script src="normalis-incidentes.js?v=20260717"></script>
 <script src="normalis-vencimientos.js?v=20260717"></script>
@@ -2321,6 +2431,7 @@ const viewTitles={
   cronograma:['Cronograma de Visita','Plan de 6 semanas · Visita próxima'],
   chat:['Consultor Normativo','Res. 3100/2019 · 544/2023 · 465/2025 · Dec. 351/2014'],
   establecimiento:['Mi Establecimiento','Datos e información del prestador'],
+  capa:['Plan de Mejoramiento','Acciones Correctivas y Preventivas · Dec. 1011/2006 · Res. 256/2016'],
 };
 
 function nav(id){
@@ -2341,6 +2452,7 @@ function nav(id){
   if(id==='ips'){setTimeout(()=>{try{renderIPSView();}catch(e){}},80);}
   if(id==='auditoria-externa'){setTimeout(()=>{try{renderAEView();}catch(e){}},80);}
   if(id==='pamec'){setTimeout(()=>{try{renderPamecModule();}catch(e){console.warn('pamec',e);}},80);}
+  if(id==='capa'){setTimeout(()=>{try{renderCAPAs();}catch(e){console.warn('capa',e);}},80);}
   // Log navigation (skip high-frequency nav items to keep log meaningful)
   if(typeof logActivity==='function' && !['dashboard','actividad'].includes(id)){
     logActivity('nav', id, viewTitles[id]?viewTitles[id][0]:'');
