@@ -21,6 +21,42 @@ function calcAuditScore(){
   return {score:raw, si, no, parcial, na, total, effective};
 }
 
+// ══════════════════════════════════════════════
+// TRACKING DE AUDITORÍAS — límite free tier + contador Firestore
+// ══════════════════════════════════════════════
+async function logAuditCompleted() {
+  try {
+    const uid = sessionStorage.getItem('normalis_uid');
+    const rol = sessionStorage.getItem('normalis_rol');
+    if (!uid || rol === 'admin') return;
+
+    const auditLimit = parseInt(sessionStorage.getItem('normalis_audit_limit') || '2', 10);
+    const auditCount = parseInt(sessionStorage.getItem('normalis_audit_count') || '0', 10);
+    const newCount   = auditCount + 1;
+
+    // Actualizar Firestore (fire-and-forget — no bloquea UI)
+    if (typeof db !== 'undefined') {
+      db.collection('usuarios').doc(uid).update({
+        auditCount: firebase.firestore.FieldValue.increment(1),
+        lastAudit:  firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {});
+    }
+
+    // Actualizar sessionStorage para esta sesión
+    sessionStorage.setItem('normalis_audit_count', String(newCount));
+
+    // Si superó el límite free (solo muestra aviso, no bloquea — se puede agregar bloqueo aquí)
+    if (newCount >= auditLimit && rol === 'cliente') {
+      const limitMsg = document.createElement('div');
+      limitMsg.id = 'free-limit-banner';
+      limitMsg.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#00A896;color:#fff;padding:16px 20px;border-radius:12px;max-width:320px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.3);line-height:1.5;';
+      limitMsg.innerHTML = '<strong>Has usado ' + newCount + ' de ' + auditLimit + ' auditorías gratuitas.</strong><br>Actualiza tu plan para auditorías ilimitadas.<br><a href="pricing.html" style="color:#fff;font-weight:700;text-decoration:underline;margin-top:6px;display:inline-block;">Ver planes →</a><button onclick="this.parentNode.remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;color:#fff;font-size:16px;cursor:pointer;">×</button>';
+      document.body.appendChild(limitMsg);
+      setTimeout(() => { if (limitMsg.parentNode) limitMsg.remove(); }, 12000);
+    }
+  } catch (_) {}
+}
+
 function renderResultadosDynamic(){
   const r = calcAuditScore();
   const score = r.score;
@@ -205,5 +241,14 @@ function renderResultadosDynamic(){
   }
 }
 
+
+// Registrar auditoría completada (llamado al final de renderResultadosDynamic)
+if (typeof window !== 'undefined') {
+  const _origRRD_tracking = renderResultadosDynamic;
+  renderResultadosDynamic = function() {
+    _origRRD_tracking.apply(this, arguments);
+    logAuditCompleted().catch(() => {});
+  };
+}
 
 // END:normalis-audit-score.js — NormaLis integrity seal

@@ -397,6 +397,18 @@ async function routeUser(user) {
       : (data.plan || 'profesional');
     sessionStorage.setItem('normalis_plan', planContratado);
 
+    // ── Tracking de uso: lastLogin + loginCount (sin read extra — piggybacking) ──
+    try {
+      const auditLimitPorRol = (rol === 'piloto' || rol === 'admin') ? 9999 : (data.auditLimit || 2);
+      await db.collection('usuarios').doc(user.uid).update({
+        lastLogin:  firebase.firestore.FieldValue.serverTimestamp(),
+        loginCount: firebase.firestore.FieldValue.increment(1),
+        auditLimit: auditLimitPorRol,
+      });
+      sessionStorage.setItem('normalis_audit_count', String(data.auditCount || 0));
+      sessionStorage.setItem('normalis_audit_limit', String(auditLimitPorRol));
+    } catch (_) { /* no bloquea el acceso si falla */ }
+
     // ── Pre-poblar localStorage del app desde datos de Firestore ──────────────
     // Esto evita que el wizard de onboarding pida datos ya ingresados al registrar
     if (rol !== 'admin') {

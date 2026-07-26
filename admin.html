@@ -1742,13 +1742,27 @@ function renderUsuariosActivos(lista) {
     const expira  = u.expiresAt
       ? new Date(u.expiresAt.seconds*1000).toLocaleDateString('es-CO')
       : '—';
+    const lastLogin  = u.lastLogin
+      ? new Date(u.lastLogin.seconds*1000).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'2-digit'})
+      : '—';
+    const loginCount = u.loginCount || 0;
+    const auditCount = u.auditCount || 0;
+    const auditLimit = u.auditLimit || 2;
+    const usoPct     = Math.min(Math.round((auditCount/auditLimit)*100), 100);
+    const usoColor   = usoPct >= 100 ? '#ef4444' : usoPct >= 50 ? '#f59e0b' : '#22c55e';
     const rolColor = ROL_COLOR[rol] || '#64748b';
     const emailSafe = email.replace(/'/g, "\'");
     return \`<tr>
       <td><strong>\${nombre}</strong><div style="font-size:11px;color:var(--text-muted)">\${ciudad}</div></td>
       <td style="font-size:12px">\${email}<div style="font-size:11px;color:var(--text-muted)">\${contacto}</div></td>
       <td><span style="background:\${rolColor}22;color:\${rolColor};padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600">\${rol}</span></td>
-      <td style="font-size:12px;color:var(--text-muted)">\${fecha}</td>
+      <td style="font-size:12px;color:var(--text-muted)">\${lastLogin}<div style="font-size:11px">\${loginCount} ingresos</div></td>
+      <td>
+        <span style="color:\${usoColor};font-weight:700;font-size:13px">\${auditCount}/\${auditLimit}</span>
+        <div style="width:60px;height:4px;background:var(--border);border-radius:2px;margin-top:3px">
+          <div style="width:\${usoPct}%;height:100%;background:\${usoColor};border-radius:2px"></div>
+        </div>
+      </td>
       <td style="font-size:12px;color:var(--text-muted)">\${expira}</td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="resetPasswordUsuario('\${emailSafe}')" title="Enviar email de restablecimiento de contraseña">🔑 Reset</button>
@@ -1756,7 +1770,7 @@ function renderUsuariosActivos(lista) {
     </tr>\`;
   }).join('');
   el.innerHTML = \`<table class="data-table">
-    <thead><tr><th>IPS</th><th>Email</th><th>Rol</th><th>Registro</th><th>Vence</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>IPS</th><th>Email</th><th>Rol</th><th>Último Login</th><th>Auditorías</th><th>Vence</th><th>Acciones</th></tr></thead>
     <tbody>\${rows}</tbody></table>
     <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">Total: \${lista.length} usuarios</div>\`;
 }
