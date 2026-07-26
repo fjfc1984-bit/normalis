@@ -16,7 +16,7 @@ res3100_alcaldia_clean.txt
 
 # Node modules
 node_modules/
-functions/node_modules/
+functions/
 
 # Claves y secrets
 .env
