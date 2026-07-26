@@ -1,0 +1,81 @@
+name: LinkedIn Auto-Post NormaLis
+
+on:
+  # Corre a las 8:00 AM COT (13:00 UTC) cada lunes, miércoles y viernes
+  schedule:
+    - cron: '0 13 * * 1'   # Lunes
+    - cron: '0 13 * * 3'   # Miércoles
+    - cron: '0 13 * * 5'   # Viernes
+
+  # También permite disparar manualmente desde la UI de GitHub Actions
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no publica, solo muestra el post del día)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  post-to-linkedin:
+    name: Publicar en LinkedIn
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verificar post programado para hoy
+        id: check
+        run: |
+          TODAY=$(TZ="America/Bogota" date +%Y-%m-%d)
+          echo "Fecha COT: $TODAY"
+          POST=$(node -e "
+            const posts = require('./normalis-linkedin-posts.json');
+            const today = '$TODAY';
+            const p = posts.find(p => p.date === today);
+            if (p) {
+              console.log('FOUND:' + p.id);
+            } else {
+              console.log('NONE');
+            }
+          ")
+          echo "post_status=$POST" >> $GITHUB_OUTPUT
+          echo "Post status: $POST"
+
+      - name: Publicar en LinkedIn
+        if: ${{ !inputs.dry_run && startsWith(steps.check.outputs.post_status, 'FOUND') }}
+        env:
+          LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+        run: node scripts/linkedin-post.js
+
+      - name: Dry run (mostrar post sin publicar)
+        if: ${{ inputs.dry_run == 'true' }}
+        run: |
+          TODAY=$(TZ="America/Bogota" date +%Y-%m-%d)
+          node -e "
+            const posts = require('./normalis-linkedin-posts.json');
+            const today = '$TODAY';
+            const p = posts.find(p => p.date === today);
+            if (p) {
+              console.log('--- DRY RUN ---');
+              console.log('ID:', p.id);
+              console.log('Fecha:', p.date);
+              console.log('Tema:', p.theme);
+              console.log('---');
+              console.log(p.text);
+              console.log('--- FIN ---');
+            } else {
+              console.log('No hay post programado para', today);
+            }
+          "
+
+      - name: Sin post para hoy
+        if: ${{ !inputs.dry_run && steps.check.outputs.post_status == 'NONE' }}
+        run: echo "ℹ️  No hay post programado para hoy. Nada que publicar."
