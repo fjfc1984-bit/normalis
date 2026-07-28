@@ -11,6 +11,83 @@
 
 var areasDB = {};  // cargado dinámicamente desde Worker (auth-gated)
 
+// ── Fallback mínimo — activa si el Worker /api/areas no responde ─
+// Cubre Estándar 1 (Talento Humano) y Estándar 3 (Infraestructura) de
+// Res. 3100/2019 para el segmento General. Suficiente para demostrar
+// la funcionalidad de auditoría sin dependencia del Worker.
+var _areasDBFallback = {
+  general: [
+    { id:'th', name:'Talento Humano', icon:'👥', norm:'Res. 3100/2019 · Est. 1', q:[
+      'El personal asistencial cuenta con tarjeta profesional vigente registrada en RETHUS',
+      'Se verifica la idoneidad del personal antes de la contratación (títulos, certificados)',
+      'Existen perfiles de cargo documentados para cada rol asistencial',
+      'El personal conoce los protocolos de seguridad del paciente aplicables a su cargo',
+      'Se realizan inducciones y reinducciones al personal asistencial documentadas'
+    ]},
+    { id:'inf', name:'Infraestructura', icon:'🏥', norm:'Res. 3100/2019 · Est. 3', q:[
+      'Las áreas de atención cumplen las dimensiones mínimas establecidas en el Manual',
+      'Se cuenta con señalización de rutas de evacuación y salidas de emergencia vigente',
+      'Los baños cuentan con dotación completa y están en condiciones de aseo',
+      'Existe área diferenciada para manejo de residuos hospitalarios',
+      'La planta física está libre de barreras arquitectónicas para personas con discapacidad'
+    ]},
+    { id:'dt', name:'Dotación y Mantenimiento', icon:'🔧', norm:'Res. 3100/2019 · Est. 4', q:[
+      'Los equipos biomédicos cuentan con hojas de vida y cronograma de mantenimiento preventivo',
+      'Se realiza calibración de equipos de medición según cronograma documentado',
+      'Existe inventario actualizado de dispositivos médicos con fechas de vida útil',
+      'Los medicamentos e insumos están almacenados en condiciones de temperatura y humedad adecuadas',
+      'Se verifica la vigencia de insumos y medicamentos antes de su utilización'
+    ]},
+    { id:'mi', name:'Medicamentos e Insumos', icon:'💊', norm:'Res. 3100/2019 · Est. 5', q:[
+      'Existe un procedimiento documentado para el manejo y dispensación de medicamentos',
+      'Se cuenta con botiquín de urgencias con listado de contenido y fechas de vencimiento',
+      'Los medicamentos de control especial tienen registro de entradas y salidas',
+      'Se realizan devoluciones de medicamentos vencidos al proveedor',
+      'El personal conoce el procedimiento de farmacovigilancia y reporte de eventos adversos'
+    ]},
+    { id:'pi', name:'Procesos Prioritarios', icon:'📋', norm:'Res. 3100/2019 · Est. 6', q:[
+      'Existe política de seguridad del paciente documentada y socializada al personal',
+      'Se implementan los protocolos de London para análisis de eventos adversos',
+      'El servicio cuenta con protocolo de higiene de manos visible y socializado',
+      'Se realiza identificación correcta del paciente en cada procedimiento',
+      'Existe protocolo de prevención de caídas y úlceras por presión documentado'
+    ]},
+    { id:'hc', name:'Historia Clínica y Registros', icon:'📄', norm:'Res. 3100/2019 · Est. 7', q:[
+      'Las historias clínicas cumplen los requisitos del Artículo 15 de la Resolución 1995/1999',
+      'Se garantiza la confidencialidad y custodia adecuada de las historias clínicas',
+      'Los registros clínicos están debidamente diligenciados, fechados y firmados',
+      'Existe procedimiento para el manejo de historias clínicas en soporte electrónico',
+      'El tiempo de conservación de las historias cumple los mínimos legales (15 años)'
+    ]},
+    { id:'ia', name:'Interdependencia', icon:'🔗', norm:'Res. 3100/2019 · Est. 8', q:[
+      'Existen contratos vigentes con los servicios de apoyo requeridos (laboratorio, imágenes)',
+      'Los servicios referenciados y contrareferenciados cuentan con protocolos documentados',
+      'Se cuenta con acuerdo de voluntades con transporte asistencial básico',
+      'Existe directorio de IPS de referencia actualizado y conocido por el personal',
+      'El proceso de referencia y contrarreferencia es monitoreado y evaluado periódicamente'
+    ]},
+    { id:'adm', name:'Capacidad Técnico-Administrativa', icon:'⚙️', norm:'Res. 3100/2019 · Art. 3', q:[
+      'El prestador está inscrito en REPS con todos sus servicios habilitados vigentes',
+      'Se tiene definida la política de calidad del servicio y está publicada',
+      'El responsable del sistema de habilitación está formalmente designado',
+      'Existe cronograma de autoevaluación anual documentado y ejecutado',
+      'Los indicadores de calidad obligatorios (Res. 256/2016) están siendo monitoreados'
+    ]}
+  ]
+};
+
+// Activar fallback si areasDB no carga después de 8 segundos (Worker no disponible)
+setTimeout(function(){
+  if(typeof areasDB.general === 'undefined' || !areasDB.general || areasDB.general.length === 0){
+    Object.assign(areasDB, _areasDBFallback);
+    if(typeof areas !== 'undefined' && typeof segActivo !== 'undefined'){
+      areas = areasDB[segActivo] || areasDB.general;
+    }
+    console.warn('[NormaLis] areasDB: usando fallback local (Worker no disponible)');
+    if(typeof toast === 'function') toast('Modo offline: preguntas básicas de Res. 3100/2019','info');
+  }
+}, 8000);
+
 var segInfo = {
   general:{norm:'📋 Normativa: Res. 3100/2019 + modificaciones (2215/2020, 1317/2021, 1138/2022, 544/2023)',areas:'8 estándares del Manual de Habilitación'},
   domiciliaria:{norm:'📋 Normativa: Decreto 780/2016 · Res. 3100/2019 · Servicios domiciliarios',areas:'7 áreas operativas'},

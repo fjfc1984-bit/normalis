@@ -91,6 +91,38 @@ function corsHeaders(origin) {
   };
 }
 
+// ─── Rate limiter en memoria (por IP, por Worker isolate) ────────
+// Protege la GROQ API key gratuita de abuso.
+// Límites: 20 req/minuto por IP, 200 req/hora por IP.
+const _rl = new Map(); // ip → { min: {count, ts}, hour: {count, ts} }
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  let rec = _rl.get(ip);
+  if (!rec) {
+    rec = { min: { count: 0, ts: now }, hour: { count: 0, ts: now } };
+    _rl.set(ip, rec);
+  }
+  // Reset ventana por minuto
+  if (now - rec.min.ts > 60_000) { rec.min = { count: 0, ts: now }; }
+  // Reset ventana por hora
+  if (now - rec.hour.ts > 3_600_000) { rec.hour = { count: 0, ts: now }; }
+
+  rec.min.count++;
+  rec.hour.count++;
+
+  if (rec.min.count > 20)  return { limited: true, reason: 'Demasiadas solicitudes. Espera 1 minuto.', retry: 60 };
+  if (rec.hour.count > 200) return { limited: true, reason: 'Cuota horaria alcanzada. Espera 1 hora.', retry: 3600 };
+
+  // Limpiar entradas antiguas periódicamente (cada 500 IPs)
+  if (_rl.size > 500) {
+    for (const [k, v] of _rl) {
+      if (now - v.hour.ts > 7_200_000) _rl.delete(k);
+    }
+  }
+  return { limited: false };
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
@@ -104,6 +136,22 @@ export default {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405,
         headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ── Rate limiting ────────────────────────────────────────────
+    const clientIP = request.headers.get('CF-Connecting-IP') ||
+                     request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
+                     'unknown';
+    const rl = checkRateLimit(clientIP);
+    if (rl.limited) {
+      return new Response(JSON.stringify({ error: rl.reason }), {
+        status: 429,
+        headers: {
+          ...cors,
+          'Content-Type': 'application/json',
+          'Retry-After': String(rl.retry),
+        },
       });
     }
 
