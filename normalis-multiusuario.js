@@ -13,6 +13,9 @@ const ROLES_IPS = {
   colaborador: { label: 'Colaborador',          color: '#7c3aed', ico: 'ti-user', desc: 'Consulta y registro de vencimientos propios.' }
 };
 
+// ─── Helpers de seguridad ────────────────────────────────────
+function _escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 // ─── Helpers de sesión ────────────────────────────────────────
 
 function getRolIPS() {
@@ -195,10 +198,10 @@ async function _cargarMiembrosEquipo(nit, uidActual) {
           <div style="width:38px;height:38px;border-radius:50%;background:${def.color}22;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${def.color};flex-shrink:0">${ini}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600">
-              ${m.nombre}
+              ${_escH(m.nombre)}
               ${m.esYo ? '<span style="font-size:10px;background:var(--primary-bg,rgba(0,121,107,.12));color:var(--primary);padding:1px 7px;border-radius:10px;margin-left:4px">tú</span>' : ''}
             </div>
-            <div style="font-size:11px;color:var(--text-muted)">${m.email}${m.cargo ? ' · ' + m.cargo : ''}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${_escH(m.email)}${m.cargo ? ' · ' + _escH(m.cargo) : ''}</div>
           </div>
           <div>
             ${puedeEditar ? `
@@ -244,7 +247,7 @@ async function _cargarInvitacionesPendientes(nit) {
         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
           <i class="ti ti-mail" style="color:var(--text-muted);font-size:15px;flex-shrink:0"></i>
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600">${d.email}</div>
+            <div style="font-size:12px;font-weight:600">${_escH(d.email)}</div>
             <div style="font-size:10px;color:var(--text-muted)">Expira: ${exp}</div>
           </div>
           <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${def.color}22;color:${def.color}">${def.label}</span>
