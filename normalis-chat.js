@@ -143,7 +143,13 @@ function addMainMsg(text, type) {
   const d = document.createElement('div');
   d.className = `msg ${type === 'bot' ? 'bot' : 'user-msg'}`;
   if (type === 'bot') {
-    d.innerHTML = text
+    // Sanitizar primero para prevenir XSS, luego aplicar markdown básico
+    var safe = String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    d.innerHTML = safe
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   } else {

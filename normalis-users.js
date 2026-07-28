@@ -3,10 +3,17 @@
 // ─────────────────────────────────────────────
 
 async function createUser(nombre, rol, pin){
-  const ini = nombre.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  const u = { id:Date.now(), nombre, rol, pinHash:await pinHash(pin),
-    color:ROLE_DEF[rol]?.color||'#64748b', ini, createdAt:new Date().toISOString() };
-  _users.push(u); saveUsers(); return u;
+  try {
+    const ini = nombre.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const hash = await pinHash(pin);
+    const u = { id:Date.now(), nombre, rol, pinHash:hash,
+      color:ROLE_DEF[rol]?.color||'#64748b', ini, createdAt:new Date().toISOString() };
+    _users.push(u); saveUsers(); return u;
+  } catch(e) {
+    console.error('[NormaLis Users] Error creando usuario:', e);
+    if (typeof NormalisAutofix !== 'undefined') NormalisAutofix.report('normalis-users', e, { fn:'createUser', nombre, rol });
+    throw e;
+  }
 }
 
 function editUser(id){

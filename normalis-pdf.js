@@ -131,7 +131,11 @@ function _pdfFooter(normativa) {
 // ─── Ventana de impresión ─────────────────────────────────────
 function _abrirVentanaPDF(titulo, html, accentColor) {
   const w = window.open('', '_blank', 'width=960,height=740');
-  if (!w) { alert('Permite las ventanas emergentes para generar el PDF.'); return; }
+  if (!w) {
+    if (typeof nlToast === 'function') nlToast('Permite las ventanas emergentes en tu navegador para generar el PDF.', 'warning', 5000);
+    else console.warn('[NormaLis PDF] Ventanas emergentes bloqueadas');
+    return;
+  }
   w.document.write(`<!DOCTYPE html>
 <html lang="es">
 <head>

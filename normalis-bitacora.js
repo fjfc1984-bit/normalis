@@ -75,12 +75,13 @@ function renderBitacora() {
     var d = new Date(l.ts);
     var fecha = d.toLocaleDateString('es-CO') + ' ' + d.toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'});
     var color = modColors[l.modulo] || '#64748b';
+    var esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
     return `<tr style="border-bottom:1px solid #f1f5f9;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
       <td style="padding:12px 16px;font-size:12px;color:#64748b;white-space:nowrap">${fecha}</td>
-      <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#1e293b">${l.usuario}</td>
-      <td style="padding:12px 16px"><span style="background:${color}15;color:${color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${l.modulo}</span></td>
-      <td style="padding:12px 16px;font-size:13px;color:#374151">${l.accion}</td>
-      <td style="padding:12px 16px;font-size:12px;color:#64748b">${l.detalle}</td>
+      <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#1e293b">${esc(l.usuario)}</td>
+      <td style="padding:12px 16px"><span style="background:${color}15;color:${color};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${esc(l.modulo)}</span></td>
+      <td style="padding:12px 16px;font-size:13px;color:#374151">${esc(l.accion)}</td>
+      <td style="padding:12px 16px;font-size:12px;color:#64748b">${esc(l.detalle)}</td>
     </tr>`;
   }).join('');
 

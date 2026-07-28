@@ -127,18 +127,26 @@ function authSwitchTab(tab){
 }
 
 async function verifyPin(){
-  const h = await pinHash(_pinBuffer);
-  const isLegacy = _pinTarget && _pinTarget.pinHash && _pinTarget.pinHash.length < 64;
-  const match = isLegacy ? (pinHashLegacy(_pinBuffer) === _pinTarget.pinHash) : (h === _pinTarget.pinHash);
-  if(match){
-    document.getElementById('pin-overlay').style.display='none';
-    hideLogin();
-    startSession(_pinTarget, true);
-  } else {
-    document.getElementById('pin-error').textContent='PIN incorrecto. Intenta de nuevo.';
+  try {
+    const h = await pinHash(_pinBuffer);
+    const isLegacy = _pinTarget && _pinTarget.pinHash && _pinTarget.pinHash.length < 64;
+    const match = isLegacy ? (pinHashLegacy(_pinBuffer) === _pinTarget.pinHash) : (h === _pinTarget.pinHash);
+    if(match){
+      document.getElementById('pin-overlay').style.display='none';
+      hideLogin();
+      startSession(_pinTarget, true);
+    } else {
+      document.getElementById('pin-error').textContent='PIN incorrecto. Intenta de nuevo.';
+      _pinBuffer=''; updatePinDots();
+      const box=document.getElementById('pin-box');
+      if(box){ box.style.animation='none'; void box.offsetWidth; box.style.animation='shake .35s ease'; }
+    }
+  } catch(e) {
+    console.error('[NormaLis Auth] Error verificando PIN:', e);
+    if (typeof NormalisAutofix !== 'undefined') NormalisAutofix.report('normalis-auth', e, { fn:'verifyPin' });
+    const errEl = document.getElementById('pin-error');
+    if (errEl) errEl.textContent = 'Error al verificar PIN. Intenta de nuevo.';
     _pinBuffer=''; updatePinDots();
-    const box=document.getElementById('pin-box');
-    if(box){ box.style.animation='none'; void box.offsetWidth; box.style.animation='shake .35s ease'; }
   }
 }
 

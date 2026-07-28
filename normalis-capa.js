@@ -232,10 +232,7 @@ async function iniciarCAPA(id) {
 }
 
 async function cerrarCAPA(id) {
-  // Reemplazar prompt nativo con modal custom si existe, sino fallback
-  const evidenciaInput = await (typeof nlPrompt === 'function'
-    ? nlPrompt('Evidencia de cierre', 'Describe la evidencia (obligatorio):')
-    : Promise.resolve(prompt('Describe la evidencia de cierre (obligatorio):')));
+  const evidenciaInput = await nlPrompt('Evidencia de cierre', 'Describe la evidencia (obligatorio):');
   if (!evidenciaInput || !evidenciaInput.trim()) return;
   try {
     await db.collection('capas').doc(id).update({
