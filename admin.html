@@ -888,7 +888,7 @@ function showScreen(s) {
 function showAlert(elementId, type, msg) {
   const el = document.getElementById(elementId);
   if (!el) return;
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '&#9888;' };
   el.innerHTML = `<div class="alert alert-${type}">${icons[type] || ''} ${msg.replace(/\n/g,'<br>')}</div>`;
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }

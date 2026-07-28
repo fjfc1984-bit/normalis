@@ -54,7 +54,7 @@ if('serviceWorker' in navigator){
 <script src="normalis-autofix.js?v=20260727"></script>
 <link rel="stylesheet" href="normalis-styles.css?v=20260717">
   <!-- Google Analytics 4 -->
-  <script src="normalis-analytics.js" defer></script>
+  <script src="normalis-analytics.js?v=20260728" defer></script>
 </head>
 <body>
 <!-- Skip link: accesibilidad teclado WCAG 2.4.1 -->
@@ -72,7 +72,7 @@ if('serviceWorker' in navigator){
     div.id = 'nls-err-boundary';
     div.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#00251A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:system-ui,sans-serif;color:#e2e8f0;padding:40px;text-align:center';
     div.innerHTML =
-      '<div style="font-size:48px">⚠️</div>' +
+      '<div style="font-size:48px">&#9888;</div>' +
       '<div style="font-size:20px;font-weight:700;color:#f8fafc">NormaLis encontró un problema al cargar</div>' +
       '<div style="font-size:14px;color:#94a3b8;max-width:400px">Esto suele resolverse recargando la página. Si el problema persiste, escríbenos a fjfc1984@gmail.com</div>' +
       '<button onclick="location.reload(true)" style="background:#00796B;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px">🔄 Recargar ahora</button>' +
@@ -2311,7 +2311,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-auth.js?v=20260717"></script>
 <!-- lazy:pamec — cargado bajo demanda por nlLazyLoad("pamec") -->
 <!-- lazy:export — cargado bajo demanda por nlLazyLoad("export") -->
-<script src="normalis-multiusuario.js" defer></script>
+<script src="normalis-multiusuario.js?v=20260728" defer></script>
 <script src="normalis-users.js?v=20260717"></script>
 <script src="normalis-automations.js?v=20260717"></script>
 <!-- lazy:sst — cargado bajo demanda por nlLazyLoad("sst") -->
@@ -3376,7 +3376,7 @@ function renderIndicadores(){
     const danger=indData.filter(d=>d.status==='danger').length;
     tr.innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
       <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--success)">${ok}</div><div class="text-xs text-muted">Indicadores ✅ OK</div></div>
-      <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--warning)">${warn}</div><div class="text-xs text-muted">En alerta ⚠️</div></div>
+      <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--warning)">${warn}</div><div class="text-xs text-muted">En alerta &#9888;</div></div>
       <div style="text-align:center"><div style="font-size:28px;font-weight:900;color:var(--danger)">${danger}</div><div class="text-xs text-muted">Críticos 🔴</div></div>
       <div style="flex:1;min-width:200px;background:var(--success-light);border-radius:10px;padding:12px 14px;border:1px solid var(--success)">
         <div style="font-size:12px;font-weight:700;color:var(--success)">💡 Acción prioritaria</div>
@@ -3537,7 +3537,7 @@ const areasCalidad=[
      '¿El personal ha recibido capacitación documentada en seguridad del paciente en los últimos 12 meses?',
      '¿Existe un sistema de alerta temprana o protocolo de deterioro clínico del paciente (código de respuesta rápida)?',
    ]},
-  {id:'cal-eventos-aud',icon:'⚠️',name:'Gestión de Eventos Adversos',norm:'Res. 256/2016 · Lineamientos reporte SISPRO',
+  {id:'cal-eventos-aud',icon:'&#9888;',name:'Gestión de Eventos Adversos',norm:'Res. 256/2016 · Lineamientos reporte SISPRO',
    q:[
      '¿Existe un sistema de reporte interno de eventos adversos e incidentes, accesible a todo el personal asistencial?',
      '¿Los eventos adversos graves son analizados mediante análisis de causa raíz (ACR) documentado con plan de mejora?',
@@ -3692,7 +3692,7 @@ const NORMATIVA_UPDATES = {
       norma: 'Res. 544/2023 · Art. 7',
       tipo: 'Modificación',
       descripcion: 'Actualiza los estándares de infraestructura: establecimientos con construcción anterior a 2010 deben presentar concepto de vulnerabilidad sísmica firmado por ingeniero civil o arquitecto certificado.',
-      impacto: '⚠️ Obligatorio antes de la próxima visita de habilitación. Solicitar el concepto si no lo tiene.',
+      impacto: '&#9888; Obligatorio antes de la próxima visita de habilitación. Solicitar el concepto si no lo tiene.',
       fecha: '2023-03-14',
     },
     {
@@ -3807,7 +3807,7 @@ function renderUpdPanel() {
         ${!seen.includes(it.id) ? '<span class="badge b-blue upd-item-badge">Nuevo</span>' : ''}
       </div>
       <div class="upd-item-desc">${it.descripcion}</div>
-      ${it.impacto ? `<div style="font-size:11px;color:var(--warning);margin-top:4px">⚠️ ${it.impacto}</div>` : ''}
+      ${it.impacto ? `<div style="font-size:11px;color:var(--warning);margin-top:4px">&#9888; ${it.impacto}</div>` : ''}
       <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${it.fecha}</div>
     </div>`).join('') +
     `<div class="upd-last">NormaLis v2 · ${NORMATIVA_UPDATES.version}</div>`;
@@ -3973,13 +3973,13 @@ function setupNext(step) {
     const nombre = document.getElementById('sf-nombre').value.trim();
     const tipo   = document.getElementById('sf-tipo').value;
     const nit    = document.getElementById('sf-nit').value.trim();
-    if (!nombre) { document.getElementById('sf-nombre').focus(); toast('⚠️ Ingresa el nombre del establecimiento','warning'); return; }
-    if (!tipo)   { document.getElementById('sf-tipo').focus();   toast('⚠️ Selecciona el tipo de prestador','warning');      return; }
-    if (!nit)    { document.getElementById('sf-nit').focus();    toast('⚠️ Ingresa el NIT','warning');                       return; }
+    if (!nombre) { document.getElementById('sf-nombre').focus(); toast('&#9888; Ingresa el nombre del establecimiento','warning'); return; }
+    if (!tipo)   { document.getElementById('sf-tipo').focus();   toast('&#9888; Selecciona el tipo de prestador','warning');      return; }
+    if (!nit)    { document.getElementById('sf-nit').focus();    toast('&#9888; Ingresa el NIT','warning');                       return; }
     gotoSetupStep(2);
   } else if (step === 2) {
     const director = document.getElementById('sf-director').value.trim();
-    if (!director) { document.getElementById('sf-director').focus(); toast('⚠️ Ingresa el nombre del Director Técnico','warning'); return; }
+    if (!director) { document.getElementById('sf-director').focus(); toast('&#9888; Ingresa el nombre del Director Técnico','warning'); return; }
     // Build confirm screen
     const nombre = document.getElementById('sf-nombre').value.trim();
     const tipo   = document.getElementById('sf-tipo').value;
@@ -4377,7 +4377,7 @@ const AUTO_RULES_DEF = [
   { id:'expire_7',    icon:'🚨', name:'Alerta urgente — 7 días o menos',
     desc:'Notificación crítica para ítems próximos a vencer esta semana',
     trigger:'on_open', active:true },
-  { id:'audit_low',   icon:'⚠️', name:'Plan de acción si auditoría < 70%',
+  { id:'audit_low',   icon:'&#9888;', name:'Plan de acción si auditoría < 70%',
     desc:'Al completar auditoría con puntaje bajo, crea lista de acciones correctivas',
     trigger:'audit_complete', active:true },
   { id:'audit_nc_docs', icon:'📄', name:'Sugerir documentos por no conformidades',
@@ -4625,7 +4625,7 @@ function scoreColor(pct){
 }
 function scoreLabel(pct){
   if(pct>=85) return '✅ Estado: Habilitación en regla';
-  if(pct>=70) return '⚠️ Estado: Riesgo moderado';
+  if(pct>=70) return '&#9888; Estado: Riesgo moderado';
   if(pct>0)   return '🔴 Estado: Riesgo alto — acción urgente';
   return '⬜ Sin auditoría realizada';
 }
@@ -4656,7 +4656,7 @@ function renderDashboard(){
   // ── Aviso snapshot corrupto (bug v1 — antes del fix 14-jul-2026) ──
   if(snap._corrupted){
     const _al=document.getElementById('dash-alerts-list');
-    if(_al) _al.innerHTML='<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:16px;margin-bottom:12px"><div style="font-weight:700;color:#ef4444;margin-bottom:6px">⚠️ Auditoría anterior con datos inválidos</div><div style="font-size:13px;color:var(--text-muted)">Los datos de tu última auditoría no se registraron correctamente (problema técnico ya corregido). <strong>Realiza la auditoría nuevamente</strong> para obtener un diagnóstico real.</div><button class="btn btn-primary" style="margin-top:10px;font-size:12px" onclick="localStorage.removeItem(AUDIT_SAVE_KEY);renderDashboard();nav(\'auditoria\')">🔄 Borrar y auditar de nuevo</button></div>'+(_al.innerHTML||'');
+    if(_al) _al.innerHTML='<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:16px;margin-bottom:12px"><div style="font-weight:700;color:#ef4444;margin-bottom:6px">&#9888; Auditoría anterior con datos inválidos</div><div style="font-size:13px;color:var(--text-muted)">Los datos de tu última auditoría no se registraron correctamente (problema técnico ya corregido). <strong>Realiza la auditoría nuevamente</strong> para obtener un diagnóstico real.</div><button class="btn btn-primary" style="margin-top:10px;font-size:12px" onclick="localStorage.removeItem(AUDIT_SAVE_KEY);renderDashboard();nav(\'auditoria\')">🔄 Borrar y auditar de nuevo</button></div>'+(_al.innerHTML||'');
   }
 
   // ── Has audit data ──────────────────────────────────────────
@@ -4686,7 +4686,7 @@ function renderDashboard(){
   // Sidebar score
   const sbv=document.getElementById('sb-score-val'); if(sbv) sbv.textContent=sc;
   const sbn=document.querySelector('.sb-score-note');
-  if(sbn) sbn.textContent=(sc>=85?'✅ Listo para visita':sc>=70?'⚠️ Riesgo moderado · Meta: 85+':'🔴 Riesgo alto · Acción urgente');
+  if(sbn) sbn.textContent=(sc>=85?'✅ Listo para visita':sc>=70?'&#9888; Riesgo moderado · Meta: 85+':'🔴 Riesgo alto · Acción urgente');
 
   // Urgency
   const urg=document.getElementById('dash-urgency');
@@ -5062,7 +5062,7 @@ function buscarREPS(offset){
       if(listEl) {
         const q2=(document.getElementById('ips-search')?.value||'').toLowerCase();
         const fallback=IPS_DB.filter(i=>!q2||(i.n+i.c+i.s).toLowerCase().includes(q2));
-        if(cntEl) cntEl.textContent='⚠️ Sin conexión a la API. Mostrando '+fallback.length+' registros del directorio local.';
+        if(cntEl) cntEl.textContent='&#9888; Sin conexión a la API. Mostrando '+fallback.length+' registros del directorio local.';
         renderIPSList(fallback);
       }
     });
@@ -5524,7 +5524,7 @@ function renderPamecAutoeval(){
             <label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 8px;border-radius:6px;border:1.5px solid ${val==='si'?'var(--success)':'var(--border)'};background:${val==='si'?'var(--success-light)':'#fff'}">
               <input type="radio" name="ae_${item.id}" value="si" ${val==='si'?'checked':''} onchange="pamecAEChange('${item.id}',this.value)" style="display:none"> ✅ Sí</label>
             <label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 8px;border-radius:6px;border:1.5px solid ${val==='parcial'?'var(--warning)':'var(--border)'};background:${val==='parcial'?'#fffbea':'#fff'}">
-              <input type="radio" name="ae_${item.id}" value="parcial" ${val==='parcial'?'checked':''} onchange="pamecAEChange('${item.id}',this.value)" style="display:none"> ⚠️ Parcial</label>
+              <input type="radio" name="ae_${item.id}" value="parcial" ${val==='parcial'?'checked':''} onchange="pamecAEChange('${item.id}',this.value)" style="display:none"> &#9888; Parcial</label>
             <label style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;padding:4px 8px;border-radius:6px;border:1.5px solid ${val==='no'?'var(--danger)':'var(--border)'};background:${val==='no'?'#fff0f0':'#fff'}">
               <input type="radio" name="ae_${item.id}" value="no" ${val==='no'?'checked':''} onchange="pamecAEChange('${item.id}',this.value)" style="display:none"> ❌ No</label>
           </div>
@@ -5740,7 +5740,7 @@ function syncToFirestore(){
     .then(function(){ _updateFbStatusUI('🟢 Sincronizado · '+new Date().toLocaleTimeString('es-CO'), 'success'); })
     .catch(function(e){ 
       console.warn('[Firebase] Sync error:', e); 
-      _updateFbStatusUI('⚠️ Error sync: '+e.code, 'warn');
+      _updateFbStatusUI('&#9888; Error sync: '+e.code, 'warn');
     });
 }
 
@@ -5881,7 +5881,7 @@ window.onerror = function(msg, src, line, col, err){
   console.error('[NormaLis Error]', msg, 'at', src, line+':'+col, err);
   // Only show toast for non-trivial errors
   if(msg && !msg.includes('ResizeObserver') && !msg.includes('Non-Error')){
-    if(typeof toast === 'function') toast('⚠️ Error interno: '+String(msg).slice(0,80),'warn');
+    if(typeof toast === 'function') toast('&#9888; Error interno: '+String(msg).slice(0,80),'warn');
   }
   return false; // don't suppress
 };
@@ -5998,7 +5998,7 @@ window.addEventListener('online', function(){
   if(_fbSyncing) syncToFirestore();
 });
 window.addEventListener('offline', function(){
-  toast('⚠️ Sin conexión — los cambios se guardan localmente','warn');
+  toast('&#9888; Sin conexión — los cambios se guardan localmente','warn');
 });
 
 // ── 6. Keyboard shortcut: Ctrl+S to save / Ctrl+B to backup ─────
@@ -7109,7 +7109,7 @@ function updateCountdownLabel(){
   }
   const days = Math.ceil((new Date(cfg2.fecha_visita)-new Date())/(1000*60*60*24));
   if(urgEl){
-    if(days <= 0) urgEl.textContent = '⚠️ Fecha de visita vencida';
+    if(days <= 0) urgEl.textContent = '&#9888; Fecha de visita vencida';
     else if(days <= 14) urgEl.textContent = '🚨 Urgente — Inicia auditoría ya';
     else if(days <= 30) urgEl.textContent = '⏰ Poco tiempo — Revisa cronograma';
     else urgEl.textContent = '✅ En buen tiempo · Sigue el plan';
@@ -7290,7 +7290,7 @@ function updateSatisfaccionPanel(){
       if(ultimo) ultimo.textContent = 'Meta ≥80% · Res. 256/2016 · Última medición registrada: '+new Date().toLocaleDateString('es-CO');
     } else {
       el.textContent = '—';
-      if(badge) badge.innerHTML = '<span class="badge b-yellow">⚠️ Sin datos — ve a Indicadores</span>';
+      if(badge) badge.innerHTML = '<span class="badge b-yellow">&#9888; Sin datos — ve a Indicadores</span>';
     }
   }
 }
@@ -7381,7 +7381,7 @@ function updateSidebarScore(){
   if(audit.score){
     if(noteEl){
       if(audit.score >= 85) noteEl.textContent = '✅ ¡Habilitación en orden!';
-      else if(audit.score >= 70) noteEl.textContent = '⚠️ Riesgo moderado · Meta: 85+';
+      else if(audit.score >= 70) noteEl.textContent = '&#9888; Riesgo moderado · Meta: 85+';
       else noteEl.textContent = '🚨 Riesgo alto · Actúa ahora';
     }
   } else {
@@ -7762,7 +7762,7 @@ if(typeof renderResultadosDynamic === 'function'){
     const sbNote = document.getElementById('sb-score-note');
     const r = calcAuditScore();
     const scoreColor = r.score>=85?'#10b981':r.score>=70?'#f59e0b':'#ef4444';
-    const riskLabel = r.score>=85?'✅ Habilitación probable':r.score>=70?'⚠️ Riesgo moderado':'🔴 Riesgo alto';
+    const riskLabel = r.score>=85?'✅ Habilitación probable':r.score>=70?'&#9888; Riesgo moderado':'🔴 Riesgo alto';
     const today = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
 
     if(r.total > 0){
@@ -8471,7 +8471,7 @@ function evaluarSuficienciaDatos(ctx) {
     if (!suf.suficiente && suf.vacios.length > 0) {
       var mods = {'vencimientos de personal':'vencimientos-personal','incidentes y eventos adversos':'incidentes','PQRS':'pqrs','simulacro de Secretaría':'simulacro'};
       var aviso = '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:12px;color:#92400e">';
-      aviso += '<b>⚠️ Diagnóstico preliminar</b> — Para mayor precisión, registra datos en: ';
+      aviso += '<b>&#9888; Diagnóstico preliminar</b> — Para mayor precisión, registra datos en: ';
       aviso += suf.vacios.map(function(v){ return '<b>'+v+'</b>'; }).join(', ') + '. ';
       aviso += 'Con más datos, el análisis será más exacto y accionable.';
       aviso += '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';

@@ -43,8 +43,8 @@ function runPostAuditAutomations(){
       });
     }
     const detail='Puntaje: '+sc.score+'% · '+sc.no+' no conformidades detectadas'+(ncAreas.length?' en: '+ncAreas.slice(0,3).map(a=>a.name).join(', '):'');
-    logAutoEvent('audit_low','⚠️ Plan de acción generado (puntaje <70%)',detail,'nav:cronograma');
-    showAutoBanner('⚠️ Puntaje crítico: '+sc.score+'%',
+    logAutoEvent('audit_low','&#9888; Plan de acción generado (puntaje <70%)',detail,'nav:cronograma');
+    showAutoBanner('&#9888; Puntaje crítico: '+sc.score+'%',
       'Se han identificado '+sc.no+' no conformidades. ¿Ver plan de acción?',
       [{label:'Ver plan',primary:true,fn:()=>nav('cronograma')},{label:'Ver NC',primary:false,fn:()=>nav('resultados')}]);
     pushNotification('Auditoría completada','Puntaje: '+sc.score+'% — Requiere acción correctiva.');
@@ -233,7 +233,7 @@ function sendEmailReport(){
       toast('✅ Email enviado correctamente via EmailJS','success');
     }).catch(function(err){
       console.warn('EmailJS error:',err);
-      toast('⚠️ Error EmailJS: '+JSON.stringify(err)+'. Abriendo cliente de correo…','warn');
+      toast('&#9888; Error EmailJS: '+JSON.stringify(err)+'. Abriendo cliente de correo…','warn');
       window.open('mailto:?subject='+subject+'&body='+body,'_blank');
     });
   } else {

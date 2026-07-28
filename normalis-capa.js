@@ -86,7 +86,7 @@ function _renderCapaList(filtro) {
     const fechaL   = c.fechaLimite ? new Date(c.fechaLimite).toLocaleDateString('es-CO', {day:'2-digit',month:'short',year:'numeric'}) : '—';
     const fechaC   = c.fechaCreacion ? new Date(c.fechaCreacion.seconds ? c.fechaCreacion.seconds*1000 : c.fechaCreacion).toLocaleDateString('es-CO', {day:'2-digit',month:'short'}) : '—';
     const diasRest = c.fechaLimite && c.estado !== 'cerrada' ? Math.ceil((new Date(c.fechaLimite) - new Date()) / 86400000) : null;
-    const diasLabel = diasRest !== null ? (diasRest < 0 ? `⚠️ Venció hace ${Math.abs(diasRest)}d` : diasRest === 0 ? '🔴 Vence hoy' : `${diasRest}d restantes`) : '';
+    const diasLabel = diasRest !== null ? (diasRest < 0 ? `&#9888; Venció hace ${Math.abs(diasRest)}d` : diasRest === 0 ? '🔴 Vence hoy' : `${diasRest}d restantes`) : '';
 
     return `
     <div style="background:#fff;border-radius:12px;padding:18px 20px;border:1px solid ${vencida ? '#fca5a5' : '#e2e8f0'};margin-bottom:10px">

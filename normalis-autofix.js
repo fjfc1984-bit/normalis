@@ -369,7 +369,7 @@ var NormalisAutofix = (function() {
       var log = this.getLog();
       console.group('[NormaLis AutoFix] Log de errores (' + log.length + ' entradas)');
       log.forEach(function(e) {
-        var icon = e.severity === 'fix' ? '🔧' : e.severity === 'warn' ? '⚠️' : e.severity === 'info' ? 'ℹ️' : '❌';
+        var icon = e.severity === 'fix' ? '🔧' : e.severity === 'warn' ? '&#9888;' : e.severity === 'info' ? 'ℹ️' : '❌';
         console.log(icon, e.ts, e.patternId, '—', e.detail);
       });
       console.groupEnd();

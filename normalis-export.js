@@ -154,7 +154,7 @@ function importarDatos(input){
       input.value = '';
       return;
     }
-    nlConfirm('¿Restaurar backup de "'+backup.establecimiento+'" ('+new Date(backup.exportedAt).toLocaleDateString('es-CO')+')?<br><br><span style="color:#f59e0b;font-size:12px">⚠️ Esto reemplazará TODOS los datos actuales.</span>', 'Restaurar', '#ef4444').then(function(ok){
+    nlConfirm('¿Restaurar backup de "'+backup.establecimiento+'" ('+new Date(backup.exportedAt).toLocaleDateString('es-CO')+')?<br><br><span style="color:#f59e0b;font-size:12px">&#9888; Esto reemplazará TODOS los datos actuales.</span>', 'Restaurar', '#ef4444').then(function(ok){
       if(!ok){ input.value=''; return; }
       Object.entries(backup.data).forEach(function(kv){ localStorage.setItem(kv[0], kv[1]); });
       logActivity('backup_import','datos','Backup restaurado: '+backup.exportedAt);
@@ -173,7 +173,7 @@ function shareWhatsApp(){
   const est = (_cfg&&_cfg.nombre)||'Establecimiento de Salud';
   const dir = (_cfg&&_cfg.director)||'Director';
   const score = sc.score||0;
-  const status = score>=85?'✅ Habilitación probable':score>=70?'⚠️ Riesgo moderado':'🔴 Requiere acción urgente';
+  const status = score>=85?'✅ Habilitación probable':score>=70?'&#9888; Riesgo moderado':'🔴 Requiere acción urgente';
   const fecha = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
   const msg = encodeURIComponent(
     '\uD83C\uDFE5 Reporte NormaLis - '+est+'\n\n'+

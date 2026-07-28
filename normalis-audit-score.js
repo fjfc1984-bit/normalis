@@ -61,8 +61,8 @@ function renderResultadosDynamic(){
   const r = calcAuditScore();
   const score = r.score;
   const scoreColor = score>=85?'#10b981':score>=70?'#f59e0b':'#ef4444';
-  const scoreLabel = score>=85?'✅ Habilitación probable':score>=70?'⚠️ Riesgo moderado':'🔴 Riesgo alto';
-  const riskLabel  = score>=85?'✅ Habilitación probable':score>=70?'⚠️ Riesgo moderado':'🔴 Riesgo alto';
+  const scoreLabel = score>=85?'✅ Habilitación probable':score>=70?'&#9888; Riesgo moderado':'🔴 Riesgo alto';
+  const riskLabel  = score>=85?'✅ Habilitación probable':score>=70?'&#9888; Riesgo moderado':'🔴 Riesgo alto';
   const today = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
   const segLabel = {general:'Establecimiento General',domiciliaria:'Salud Domiciliaria',imagenologia:'Imagenología',calidad:'Calidad en Salud',urgencias:'Urgencias',internacion:'Internación',quirurgicos:'Quirúrgicos',laboratorio:'Laboratorio Clínico',transporte:'Transporte Asistencial',rehabilitacion:'Rehabilitación',salud_mental:'Salud Mental',odontologia:'Odontología'}[segActivo]||'Auditoría';
 

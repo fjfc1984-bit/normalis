@@ -176,7 +176,7 @@ function renderAuditQ(idx){
     <div class="audit-q-norm text-xs text-muted" style="margin-bottom:14px">📋 Criterio de habilitación · ${q.norm||'Res. 3100/2019'}</div>
     <div class="audit-opts">
       <div class="aopt ${cur==='si'?'y':''}" onclick="setAns(this,'si','${ansKey}')">✅ Cumple completamente</div>
-      <div class="aopt ${cur==='parcial'?'p':''}" onclick="setAns(this,'parcial','${ansKey}')">⚠️ Cumple parcialmente</div>
+      <div class="aopt ${cur==='parcial'?'p':''}" onclick="setAns(this,'parcial','${ansKey}')">&#9888; Cumple parcialmente</div>
       <div class="aopt ${cur==='no'?'n':''}" onclick="setAns(this,'no','${ansKey}')">❌ No cumple</div>
     </div>
     <div class="photo-upload" id="ev-btn-${ansKey}" onclick="uploadEvidencia('${ansKey}')" role="button" aria-label="Subir evidencia fotográfica para este criterio" style="cursor:pointer">

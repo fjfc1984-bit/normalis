@@ -142,7 +142,7 @@ function nlToast(msg, type, duration) {
   duration = duration || 3400;
 
   // Ícono por tipo
-  var icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+  var icons = { success: '✅', warning: '&#9888;', error: '❌', info: 'ℹ️' };
 
   var container = document.getElementById('toast-container');
   if (!container) {

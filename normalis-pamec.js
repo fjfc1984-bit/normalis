@@ -46,7 +46,7 @@ function aeFinish(){
 
   if(moderadas.length>0){
     html+=`<div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:10px">⚠️ NO CONFORMIDADES MODERADAS — Plan de mejoramiento en 30 días</div>`;
+      <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:10px">&#9888; NO CONFORMIDADES MODERADAS — Plan de mejoramiento en 30 días</div>`;
     moderadas.forEach(nc=>{
       html+=`<div style="background:#f59e0b11;border:1px solid #f59e0b33;border-radius:8px;padding:12px 14px;margin-bottom:8px">
         <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px">${nc.fase}</div>
@@ -199,7 +199,7 @@ function aeRenderPhase(idx){
   items.forEach((item,i)=>{
     const sev=item.sev;
     const sevColor=sev==='critica'?'#ef4444':sev==='moderada'?'#f59e0b':'#6ee7b7';
-    const sevLabel=sev==='critica'?'⛔ CRÍTICA':sev==='moderada'?'⚠️ MODERADA':'ℹ️ MENOR';
+    const sevLabel=sev==='critica'?'⛔ CRÍTICA':sev==='moderada'?'&#9888; MODERADA':'ℹ️ MENOR';
     const savedAns=(aeAnswers[phase.id]||[])[i];
     html+=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px" id="ae-item-${idx}-${i}">
       <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px">
@@ -387,7 +387,7 @@ function pamecGenerarDoc(){
           <div style="flex:1;min-width:200px">
             <table style="width:100%;border-collapse:collapse;font-size:11px">
               <tr><td style="padding:4px">✅ Cumple:</td><td style="font-weight:700">${si} ítems</td></tr>
-              <tr><td style="padding:4px">⚠️ Cumple parcialmente:</td><td style="font-weight:700">${parcial} ítems</td></tr>
+              <tr><td style="padding:4px">&#9888; Cumple parcialmente:</td><td style="font-weight:700">${parcial} ítems</td></tr>
               <tr><td style="padding:4px">❌ No cumple:</td><td style="font-weight:700">${no} ítems</td></tr>
               <tr><td style="padding:4px">○ Sin evaluar:</td><td style="font-weight:700">${nc} ítems</td></tr>
             </table>

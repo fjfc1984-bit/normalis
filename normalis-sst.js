@@ -592,7 +592,7 @@ function _sstPlan(data) {
       html += '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">' + act.actividad + '</div>';
       html += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text-muted)">';
       html += '<span>👤 ' + (act.responsable || '—') + '</span>';
-      html += '<span' + (vencido?' style="color:#ef4444;font-weight:700"':'') + '>📅 ' + (act.fecha || '—') + (vencido?' ⚠️ VENCIDA':'') + '</span>';
+      html += '<span' + (vencido?' style="color:#ef4444;font-weight:700"':'') + '>📅 ' + (act.fecha || '—') + (vencido?' &#9888; VENCIDA':'') + '</span>';
       if (act.recurso) html += '<span>💰 ' + act.recurso + '</span>';
       if (act.indicador) html += '<span>📏 ' + act.indicador + '</span>';
       html += '</div></div>';
@@ -676,7 +676,7 @@ function _sstVencimientos(data) {
       var urgency = dias < 0 ? 'vencido' : dias <= 7 ? 'critico' : dias <= 30 ? 'proximo' : 'ok';
       var colors  = { vencido:'#ef4444', critico:'#f97316', proximo:'#f59e0b', ok:'#10b981' };
       var bgColors= { vencido:'rgba(239,68,68,.08)', critico:'rgba(249,115,22,.08)', proximo:'rgba(245,158,11,.06)', ok:'transparent' };
-      var diasLabel = urgency==='vencido' ? '⚠️ VENCIDO' : 'Vence en ' + dias + 'd';
+      var diasLabel = urgency==='vencido' ? '&#9888; VENCIDO' : 'Vence en ' + dias + 'd';
       html += '<div style="background:var(--card);border:1px solid var(--border);background:' + bgColors[urgency] + ';border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">';
       html += '<div style="width:8px;height:8px;border-radius:50%;background:' + colors[urgency] + ';flex-shrink:0"></div>';
       html += '<div style="flex:1">';
@@ -751,7 +751,7 @@ function _sstDashboard(data, score) {
     { label:'No cumplen',val: noCumple, color:'#ef4444', icon:'✗' },
     { label:'Plan pendiente', val: pendientes, color:'#f59e0b', icon:'⏳' },
     { label:'Venc. próximos', val: vencProximos, color:'#f97316', icon:'⏰' },
-    { label:'Venc. vencidos', val: vencidos, color:'#ef4444', icon:'⚠️' },
+    { label:'Venc. vencidos', val: vencidos, color:'#ef4444', icon:'&#9888;' },
   ].forEach(function(c){
     html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer" onclick="sstSetTab(\'autoevaluacion\')">';
     html += '<div style="font-size:18px;margin-bottom:2px">' + c.icon + '</div>';
@@ -786,7 +786,7 @@ function _sstDashboard(data, score) {
   html += '<h3 style="font-size:13px;font-weight:700;color:var(--text);margin:0 0 12px">🎯 Acciones recomendadas</h3>';
   var acciones = [];
   if (evaluados < totalItems) acciones.push({ icon:'📋', txt:'Completar autoevaluación — ' + (totalItems-evaluados) + ' estándar(es) sin responder', tab:'autoevaluacion', color:'#6366f1' });
-  if (vencidos > 0) acciones.push({ icon:'⚠️', txt: vencidos + ' vencimiento(s) SST vencido(s) — atención urgente', tab:'vencimientos', color:'#ef4444' });
+  if (vencidos > 0) acciones.push({ icon:'&#9888;', txt: vencidos + ' vencimiento(s) SST vencido(s) — atención urgente', tab:'vencimientos', color:'#ef4444' });
   if (vencProximos > 0) acciones.push({ icon:'⏰', txt: vencProximos + ' vencimiento(s) en los próximos 30 días', tab:'vencimientos', color:'#f97316' });
   if (pendientes > 3) acciones.push({ icon:'📝', txt: pendientes + ' actividades pendientes en el plan de trabajo', tab:'plan', color:'#f59e0b' });
   if (noCumple > 0) acciones.push({ icon:'✗', txt: noCumple + ' estándar(es) sin cumplir — revisar plan de mejora', tab:'autoevaluacion', color:'#ef4444' });

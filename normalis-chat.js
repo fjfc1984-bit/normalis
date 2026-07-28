@@ -111,11 +111,19 @@ function renderBotResponse(el, { text, sources }) {
     .replace(/`(.+?)`/g, '<code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;font-size:12px">$1</code>');
 
   if (sources && sources.length > 0) {
-    html += '<br><br><small style="color:#6b7280;font-size:11px">📎 Fuentes oficiales:<br>' +
-      sources.map(u =>
-        `<a href="${u}" target="_blank" rel="noopener noreferrer" style="color:#0d9488">${u.replace(/https?:\/\//, '').split('/')[0]}</a>`
-      ).join(' · ') +
-      '</small>';
+    // Sanitizar URLs: solo https:// hacia dominios gov.co / minsalud para prevenir javascript: / data: XSS
+    var safeUrls = sources.filter(function(u) {
+      return typeof u === 'string' && /^https:\/\/[a-z0-9._-]+(\.gov\.co|minsalud|sispro|suin-juriscol|funcionpublica)\b/i.test(u);
+    });
+    if (safeUrls.length > 0) {
+      html += '<br><br><small style="color:#6b7280;font-size:11px">&#128206; Fuentes oficiales:<br>' +
+        safeUrls.map(function(u) {
+          var safeHref = u.replace(/"/g, '%22').replace(/'/g, '%27').replace(/</g, '%3C').replace(/>/g, '%3E');
+          var display  = u.replace(/https?:\/\//, '').split('/')[0];
+          return '<a href="' + safeHref + '" target="_blank" rel="noopener noreferrer" style="color:#0d9488">' + display + '</a>';
+        }).join(' &middot; ') +
+        '</small>';
+    }
   }
   // Aviso legal IA — Circular SIC 002/2024 · AI Act EU 2024/1689
   html += '<div style="margin-top:10px;padding:7px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">&#9888; <strong>Contenido generado por Inteligencia Artificial.</strong> No reemplaza asesor&iacute;a jur&iacute;dica profesional. Verifique con un experto antes de tomar decisiones oficiales. &middot; <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Pol&iacute;tica de privacidad</a></div>';
