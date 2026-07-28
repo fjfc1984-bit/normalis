@@ -49,7 +49,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     // SW script inline via blob — caches app shell
     const swCode=`
-const CACHE='normalis-v5';
+const CACHE='normalis-v6';
 const ASSETS=[
   './normativa-app-v2.html',
   './normalis-styles.css',
@@ -93,6 +93,7 @@ self.addEventListener('fetch',e=>{
 }
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="normalis-autofix.js?v=20260727"></script>
 <link rel="stylesheet" href="normalis-styles.css?v=20260717">
   <!-- Google Analytics 4 -->
   <script src="normalis-analytics.js" defer></script>

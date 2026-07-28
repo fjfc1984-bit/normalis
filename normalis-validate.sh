@@ -46,6 +46,7 @@ CRITICAL_FILES=(
   "index.html"
   "normalis-pilot.js"
   "normalis-tour.js"
+  "normalis-autofix.js"
   "normalis-utils.js"
   "normalis-auth.js"
   "normalis-pamec.js"
@@ -87,6 +88,7 @@ declare -A MIN_SIZES=(
   ["normalis-bitacora.js"]=5000
   ["normalis-firestore.js"]=10000
   ["normalis-tour.js"]=3000
+  ["normalis-autofix.js"]=3000
   ["normalis-utils.js"]=500
   ["normalis-auth.js"]=1000
   ["normalis-pamec.js"]=5000
@@ -130,6 +132,7 @@ declare -A SEALS=(
   ["normalis-bitacora.js"]="END:normalis-bitacora.js"
   ["normalis-firestore.js"]="END:normalis-firestore.js"
   ["normalis-tour.js"]="END:normalis-tour.js"
+  ["normalis-autofix.js"]="END:normalis-autofix.js"
   ["normalis-utils.js"]="END:normalis-utils.js"
   ["normalis-auth.js"]="END:normalis-auth.js"
   ["normalis-pamec.js"]="END:normalis-pamec.js"
