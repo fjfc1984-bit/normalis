@@ -1,80 +1,180 @@
 // NormaLis — Firestore Security Rules
 // Proyecto: normalis-5587d
-// Aplicar en: Firebase Console > Firestore > Rules
-// O via CLI: firebase deploy --only firestore:rules --project normalis-5587d
+// Aplicar via CLI: firebase deploy --only firestore:rules --project normalis-5587d
 //
 // Colecciones:
-//   usuarios/{uid}           — perfiles de usuario (rol, activo, expiresAt)
-//   ips/{nit}/data/{key}     — datos de auditoría por IPS (sync normalis-firestore.js)
+//   usuarios/{uid}           — perfiles de usuario (rol, activo, expiresAt, rol_ips, nit_ips)
+//   ips/{nit}/data/{key}     — datos de auditoría por IPS (normalis-firestore.js)
 //   pilotos/{nit}            — seguimiento programa piloto
 //   prospectos/{id}          — CRM (solo admin)
 //   leads/{id}               — solicitudes demo desde index.html (escritura pública)
+//   capas/{id}               — módulo CAPA / Plan de Mejoramiento PAMEC
+//   vencimientos/{id}        — módulo de vencimientos personal
+//   indicadores/{id}         — módulo indicadores Res. 256/2016
+//   invitaciones/{code}      — sistema de invitaciones de equipo IPS
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Helper: verifica si el usuario autenticado es admin ──────────────────
+    // ────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ────────────────────────────────────────────────────────────────────────
+
     function isAdmin() {
       return request.auth != null &&
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
     }
 
-    // ── Helper: verifica si el uid del path coincide con el usuario autenticado
     function isOwner(uid) {
       return request.auth != null && request.auth.uid == uid;
     }
 
-    // ── Helper: usuario activo con rol cliente o piloto ──────────────────────
     function isActiveClient() {
-      let data = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+      let userData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
       return request.auth != null &&
-        (data.rol == 'cliente' || data.rol == 'piloto') &&
-        data.activo == true;
+        (userData.rol == 'cliente' || userData.rol == 'piloto') &&
+        userData.activo == true;
+    }
+
+    // Usuario activo (cliente, piloto o admin)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // El usuario pertenece al mismo NIT que el documento (para consultas de equipo)
+    function sameNIT(nitField) {
+      let myData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+      return request.auth != null && myData.nit == nitField;
+    }
+
+    // El usuario es director de la IPS (nit en su propio doc = nit del recurso)
+    function isDirectorOf(nit) {
+      let myData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
+      return request.auth != null &&
+        myData.nit == nit &&
+        (myData.rol == 'cliente' || myData.rol == 'piloto' || myData.rol == 'admin');
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // usuarios/{uid} — perfil de usuario
+    // usuarios/{uid} — perfiles de usuario
     // ════════════════════════════════════════════════════════════════════════
     match /usuarios/{uid} {
-      // Leer propio perfil (login.html, normativa-app-v2.html auth guard)
-      // o admin leyendo todos los perfiles
-      allow read: if isOwner(uid) || isAdmin();
+      // Leer propio perfil; admin puede leer todos;
+      // usuarios del mismo NIT pueden leerse entre sí (vista de equipo)
+      allow read: if isOwner(uid) || isAdmin() ||
+        (isAuthenticated() &&
+         get(/databases/$(database)/documents/usuarios/$(uid)).data.nit ==
+         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit) ||
+        (isAuthenticated() &&
+         get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips ==
+         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit);
 
-      // Crear: solo registro.html (usuario autenticado crea su propio doc)
+      // Crear: solo registro.html — usuario autenticado crea su propio doc
+      // Permite nit_ips y rol_ips para usuarios que se registran por invitación
       allow create: if isOwner(uid) &&
         request.resource.data.rol == 'pendiente' &&
         request.resource.data.activo == false;
 
-      // Actualizar propio perfil (sync normalis_cfg); admin puede actualizar cualquiera
-      allow update: if isOwner(uid) || isAdmin();
+      // Actualizar propio perfil; admin puede actualizar cualquiera;
+      // director puede actualizar rol_ips de miembros de su IPS
+      allow update: if isOwner(uid) || isAdmin() ||
+        (isAuthenticated() &&
+         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ==
+         get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips);
 
       // Eliminar: solo admin
       allow delete: if isAdmin();
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // ips/{nit}/data/{key} — datos de auditoría, PQRS, incidentes, etc.
-    // Ruta: normalis-firestore.js → db.collection('ips').doc(userId).collection('data')
+    // ips/{nit}/data/{key} — datos de auditoría por IPS
     // ════════════════════════════════════════════════════════════════════════
     match /ips/{nit} {
-      // Admin puede leer IPS para analytics
       allow read: if isAdmin();
       allow write: if isAdmin();
 
       match /data/{key} {
-        // El usuario dueño del nit (userId == uid) puede leer/escribir sus datos
-        allow read, write: if request.auth != null &&
-          (request.auth.uid == nit || isAdmin());
+        allow read, write: if isAuthenticated() &&
+          (request.auth.uid == nit ||
+           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit_ips == nit ||
+           isAdmin());
       }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // capas/{id} — módulo CAPA / Plan de Mejoramiento PAMEC
+    // ════════════════════════════════════════════════════════════════════════
+    match /capas/{id} {
+      // Leer/escribir si eres el dueño (uid) o admin
+      allow read: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // vencimientos/{id} — módulo de vencimientos personal
+    // ════════════════════════════════════════════════════════════════════════
+    match /vencimientos/{id} {
+      allow read: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // indicadores/{id} — módulo indicadores Res. 256/2016
+    // ════════════════════════════════════════════════════════════════════════
+    match /indicadores/{id} {
+      allow read: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // invitaciones/{code} — sistema de invitaciones de equipo IPS
+    // ════════════════════════════════════════════════════════════════════════
+    match /invitaciones/{code} {
+      // Cualquier usuario autenticado puede leer una invitación por su código
+      // (necesario durante el flujo de registro con ?invite=CODE)
+      allow read: if isAuthenticated();
+
+      // Solo clientes/pilotos/admin (directores) pueden crear invitaciones
+      allow create: if isAuthenticated() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in
+          ['cliente', 'piloto', 'admin'] &&
+        request.resource.data.creadoPor == request.auth.uid;
+
+      // Actualizar para marcar como usado (registro) o revocar (director)
+      // Solo puede actualizar el creador, el invitado, o admin
+      allow update: if isAuthenticated() &&
+        (resource.data.creadoPor == request.auth.uid || isAdmin() ||
+         resource.data.email == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email);
+
+      // Solo admin o creador puede eliminar
+      allow delete: if isAuthenticated() &&
+        (resource.data.creadoPor == request.auth.uid || isAdmin());
     }
 
     // ════════════════════════════════════════════════════════════════════════
     // pilotos/{nit} — seguimiento del programa piloto
     // ════════════════════════════════════════════════════════════════════════
     match /pilotos/{nit} {
-      // Admin gestiona pilotos; el piloto puede leer sus propios datos
-      allow read: if request.auth != null &&
+      allow read: if isAuthenticated() &&
         (request.auth.uid == nit || isAdmin());
       allow write: if isAdmin();
     }
@@ -88,18 +188,14 @@ service cloud.firestore {
 
     // ════════════════════════════════════════════════════════════════════════
     // leads/{id} — formulario demo público desde index.html
-    // Escritura pública (sin auth); solo admin puede leer/gestionar
     // ════════════════════════════════════════════════════════════════════════
     match /leads/{id} {
-      // Cualquiera puede crear un lead (formulario público)
       allow create: if true;
-
-      // Solo admin puede leer, actualizar o eliminar leads
       allow read, update, delete: if isAdmin();
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // Denegar acceso a cualquier otra colección no listada explícitamente
+    // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;
