@@ -1,3 +1,6 @@
+// XSS-safe HTML escaper (local fallback)
+var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
 // normalis-vencimientos.js
 // NormaLis — Módulo de control de vencimientos del personal (RETHUS, tarjetas, certificados)
 // Dual-write: localStorage (offline) + Firestore (sync + cron reminders)
@@ -73,8 +76,8 @@ function renderVencimientos() {
       var label = dias < 0 ? 'VENCIDO hace '+Math.abs(dias)+' días' : dias === 0 ? 'VENCE HOY' : 'Vence en '+dias+' días';
       return `<div style="border:1px solid ${color}40;border-left:4px solid ${color};border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
-          <div style="font-weight:600;font-size:14px">${d.profesional}</div>
-          <div style="color:#64748b;font-size:13px">${d.tipo}</div>
+          <div style="font-weight:600;font-size:14px">${escH(d.profesional)}</div>
+          <div style="color:#64748b;font-size:13px">${escH(d.tipo)}</div>
           <div style="font-size:12px;color:#94a3b8;margin-top:2px">Vence: ${new Date(d.fecha).toLocaleDateString('es-CO')}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">

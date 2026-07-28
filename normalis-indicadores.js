@@ -1,3 +1,6 @@
+// XSS-safe HTML escaper (local fallback)
+var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
 // normalis-indicadores.js
 // NormaLis — Módulo de Indicadores de Calidad
 // Base legal: Resolución 256/2016 — Sistema de Información para la Calidad (SIC)
@@ -255,7 +258,7 @@ function _renderIndicadoresList() {
         semaforoBg = cumple ? '#d1fae5' : '#fee2e2';
       }
       const histHTML = registros.slice(0, 3).map(r =>
-        `<span style="font-size:11px;background:#f1f5f9;padding:2px 8px;border-radius:6px;color:#475569">${r.periodo}: <strong>${r.valor}${ind.unidad !== '%' && ind.unidad !== 'días' ? '' : ind.unidad === '%' ? '%' : 'd'}</strong></span>`
+        `<span style="font-size:11px;background:#f1f5f9;padding:2px 8px;border-radius:6px;color:#475569">${escH(r.periodo)}: <strong>${escH(r.valor)}${ind.unidad !== '%' && ind.unidad !== 'días' ? '' : ind.unidad === '%' ? '%' : 'd'}</strong></span>`
       ).join(' ');
 
       html += `

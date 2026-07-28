@@ -149,7 +149,7 @@ function importarDatos(input){
       if(!backup.data || !backup.version){ throw new Error('Archivo no reconocido'); }
     } catch(err){
       const st = document.getElementById('backup-status');
-      if(st) st.innerHTML = '<span style="color:var(--danger)">❌ Error al importar: '+err.message+'</span>';
+      if(st) st.innerHTML = '<span style="color:var(--danger)">❌ Error al importar: '+(typeof escH==='function'?escH(err.message):err.message)+'</span>';
       toast('❌ Error al importar backup: '+err.message,'error');
       input.value = '';
       return;

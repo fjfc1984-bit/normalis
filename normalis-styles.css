@@ -1008,4 +1008,16 @@ button:focus-visible,
 }
 
 
+/* ── 480px — phones pequeños ──────────────────────────────────── */
+@media (max-width: 480px) {
+  .main-content { padding: 8px !important; }
+  .card { border-radius: 10px; padding: 14px; }
+  .modal-box, .doc-viewer-box { width: 98vw !important; border-radius: 10px; }
+  h1 { font-size: 18px !important; }
+  .section-title { font-size: 15px !important; }
+  .results-radar { display: none; }
+  .upd-panel { width: 100vw !important; }
+  .pricing-grid, .steps-grid { grid-template-columns: 1fr !important; }
+  .dash-widgets, .card-grid, .stats-grid { grid-template-columns: 1fr !important; }
+}
 /* END:normalis-styles.css — NormaLis integrity seal */

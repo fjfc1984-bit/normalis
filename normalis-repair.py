@@ -412,6 +412,147 @@ def repair_seals():
         else:
             skipped(f'{filename} (sello OK)')
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REPAIR 5 — Verificar sanitizeHTML en normalis-utils.js
+# ─────────────────────────────────────────────────────────────────────────────
+def repair_sanitize_html():
+    path = os.path.join(ROOT, 'normalis-utils.js')
+    if not os.path.exists(path):
+        log('  · OMITIDO: normalis-utils.js no existe')
+        return
+    content = read(path)
+    if 'function sanitizeHTML' in content:
+        skipped('normalis-utils.js (sanitizeHTML OK)')
+        return
+    # Inject sanitizeHTML before the integrity seal
+    sanitize_fn = """
+function sanitizeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on[a-z]+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:/gi, '');
+}
+"""
+    seal = 'END:normalis-utils.js'
+    if seal in content:
+        content = content.replace(
+            '// ' + seal + ' — NormaLis integrity seal',
+            sanitize_fn + '\n// ' + seal + ' — NormaLis integrity seal'
+        )
+    else:
+        content = content.rstrip() + sanitize_fn
+    write(path, content)
+    applied('normalis-utils.js → sanitizeHTML agregada')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REPAIR 6 — Verificar sitemap.xml y robots.txt existen
+# ─────────────────────────────────────────────────────────────────────────────
+SITEMAP_CONTENT = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://normalis.co/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://normalis.co/pricing.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://normalis.co/registro.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://normalis.co/login.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://normalis.co/terminos.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://normalis.co/status.html</loc><changefreq>daily</changefreq><priority>0.3</priority></url>
+</urlset>
+"""
+
+ROBOTS_CONTENT = """User-agent: *
+Allow: /
+
+# Bloquear panel admin y app (requieren autenticación)
+Disallow: /admin.html
+Disallow: /normativa-app-v2.html
+Disallow: /success.html
+
+# Sitemap
+Sitemap: https://normalis.co/sitemap.xml
+"""
+
+def repair_seo_files():
+    # sitemap.xml
+    sitemap = os.path.join(ROOT, 'sitemap.xml')
+    if not os.path.exists(sitemap):
+        write(sitemap, SITEMAP_CONTENT.strip() + '\n')
+        applied('sitemap.xml creado')
+    else:
+        skipped('sitemap.xml (existe)')
+
+    # robots.txt
+    robots = os.path.join(ROOT, 'robots.txt')
+    if not os.path.exists(robots):
+        write(robots, ROBOTS_CONTENT.strip() + '\n')
+        applied('robots.txt creado')
+    else:
+        skipped('robots.txt (existe)')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REPAIR 7 — Verificar og: meta en páginas públicas
+# ─────────────────────────────────────────────────────────────────────────────
+OG_PAGES = {
+    'pricing.html':  ('NormaLis — Planes y Precios', 'Software de habilitación IPS en Colombia. Gestiona Resolución 3100/2019 y 465/2025 desde COP 99.000/mes.', 'https://normalis.co/pricing.html'),
+    'terminos.html': ('Términos y Condiciones — NormaLis', 'Términos y condiciones de uso de NormaLis, plataforma de gestión normativa para IPS colombianas.', 'https://normalis.co/terminos.html'),
+    'status.html':   ('Estado del Servicio — NormaLis', 'Verificación del estado en tiempo real de los servicios de NormaLis.', 'https://normalis.co/status.html'),
+}
+
+def repair_og_meta():
+    for filename, (title, desc, url) in OG_PAGES.items():
+        path = os.path.join(ROOT, filename)
+        if not os.path.exists(path):
+            log(f'  · OMITIDO: {filename} no existe')
+            continue
+        content = read(path)
+        if 'og:title' in content:
+            skipped(f'{filename} (og:title OK)')
+            continue
+        og_block = f"""  <meta property="og:title" content="{title}">
+  <meta property="og:description" content="{desc}">
+  <meta property="og:url" content="{url}">
+  <meta property="og:image" content="https://normalis.co/og-image.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">"""
+        # Insert before </head>
+        if '</head>' in content:
+            content = content.replace('</head>', og_block + '\n</head>', 1)
+            write(path, content)
+            applied(f'{filename} → og: meta agregada')
+        else:
+            log(f'  · WARNING: {filename} sin </head>')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REPAIR 8 — Verificar escH en módulos con innerHTML de datos usuario
+# ─────────────────────────────────────────────────────────────────────────────
+ESC_MODULES = [
+    'normalis-vencimientos.js',
+    'normalis-capa.js',
+    'normalis-indicadores.js',
+]
+ESC_FALLBACK = """// XSS-safe HTML escaper (local fallback)
+var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+"""
+
+def repair_escH_modules():
+    for filename in ESC_MODULES:
+        path = os.path.join(ROOT, filename)
+        if not os.path.exists(path):
+            continue
+        content = read(path)
+        if 'escH' in content or 'var escH' in content:
+            skipped(f'{filename} (escH OK)')
+            continue
+        content = ESC_FALLBACK + content
+        write(path, content)
+        applied(f'{filename} → escH fallback agregado')
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
@@ -431,6 +572,18 @@ def main():
 
     print('\n[4/4] Sellos de integridad JS')
     repair_seals()
+
+    print('\n[5/8] normalis-utils.js — sanitizeHTML')
+    repair_sanitize_html()
+
+    print('\n[6/8] SEO — sitemap.xml + robots.txt')
+    repair_seo_files()
+
+    print('\n[7/8] og: meta en páginas públicas')
+    repair_og_meta()
+
+    print('\n[8/8] escH en módulos con innerHTML de usuario')
+    repair_escH_modules()
 
     print('\n' + '─' * 60)
     if _fixes_applied:

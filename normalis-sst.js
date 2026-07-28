@@ -298,7 +298,7 @@ function sstLoadFirestore() {
     _sstFirestoreEnabled = true;
     db.collection('usuarios').doc(uid).collection('sst').doc('main').get().then(function(doc) {
       if (doc.exists) {
-        var fsData = doc.data();
+        var fsData = doc.data().catch(function(e){ console.error('[NormaLis SST]', e); });
         delete fsData.updatedAt;
         // Merge con localStorage (Firestore tiene prioridad)
         localStorage.setItem('normalis_sst', JSON.stringify(fsData));

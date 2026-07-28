@@ -202,4 +202,20 @@ function nlPrompt(title, placeholder, defaultVal) {
   });
 }
 
+/**
+ * sanitizeHTML(str) — elimina scripts y on* handlers de HTML antes de
+ * insertarlo con innerHTML. Para texto plano, usar escH() en su lugar.
+ * @param {string} str
+ * @returns {string}
+ */
+function sanitizeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/on[a-z]+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on[a-z]+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:/gi, '');
+}
+
 // END:normalis-utils.js — NormaLis integrity seal

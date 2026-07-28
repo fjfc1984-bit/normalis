@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Bloquear panel admin y app (requieren autenticación)
+Disallow: /admin.html
+Disallow: /normativa-app-v2.html
+Disallow: /success.html
+
+# Sitemap
+Sitemap: https://normalis.co/sitemap.xml

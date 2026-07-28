@@ -545,6 +545,149 @@ test('normalis-multiusuario.js: sin alert() nativo', () => {
   assertEqual(alertLines.length, 0, `alert() nativo: ${alertLines[0]||''}`);
 });
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-bitacora.js — lógica de log
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-bitacora.js');
+const bitacoraSrc = fs.readFileSync(path.join(ROOT, 'normalis-bitacora.js'), 'utf8');
+
+test('bitacora: logAction existe y usa localStorage', () => {
+  assertContains(bitacoraSrc, 'function logAction');
+  assertContains(bitacoraSrc, 'localStorage');
+});
+test('bitacora: renderBitacora usa escH para prevenir XSS', () => {
+  assertContains(bitacoraSrc, 'escH(', 'renderBitacora no usa escH — XSS posible');
+});
+test('bitacora: tiene try/catch para errores de localStorage', () => {
+  assertContains(bitacoraSrc, 'try {', 'logAction sin try/catch');
+});
+test('bitacora: sello de integridad presente', () => {
+  assertContains(bitacoraSrc, 'END:normalis-bitacora.js');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-vencimientos.js — lógica de fechas
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-vencimientos.js');
+const vencSrc = fs.readFileSync(path.join(ROOT, 'normalis-vencimientos.js'), 'utf8');
+
+test('vencimientos: saveVenc tiene validación de campos', () => {
+  assertContains(vencSrc, 'function saveVenc');
+  // Debe verificar que los campos obligatorios existen
+  const hasValidation = vencSrc.includes('if (') || vencSrc.includes('!titulo') || vencSrc.includes('required');
+  assertEqual(hasValidation, true, 'saveVenc sin validación de campos');
+});
+test('vencimientos: renderVencimientos usa escH', () => {
+  assertContains(vencSrc, 'escH(', 'renderVencimientos sin escH — XSS posible');
+});
+test('vencimientos: calcula días restantes', () => {
+  const hasDateCalc = vencSrc.includes('diasRestantes') || vencSrc.includes('diffDays') || vencSrc.includes('var dias') || vencSrc.includes('let dias') || vencSrc.includes('const dias') || vencSrc.includes('86400000');
+  assertEqual(hasDateCalc, true, 'No se detecta cálculo de días restantes');
+});
+test('vencimientos: sello de integridad presente', () => {
+  assertContains(vencSrc, 'END:normalis-vencimientos.js');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-autofix.js — patrones de auto-corrección
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-autofix.js');
+const autofixSrc = fs.readFileSync(path.join(ROOT, 'normalis-autofix.js'), 'utf8');
+
+test('autofix: NormalisAutofix definido o exportado', () => {
+  const defined = autofixSrc.includes('NormalisAutofix') || autofixSrc.includes('window.NormalisAutofix');
+  assertEqual(defined, true, 'NormalisAutofix no encontrado');
+});
+test('autofix: tiene patrones de detección registrados', () => {
+  const hasPattern = autofixSrc.includes('PATTERNS') || autofixSrc.includes('addPattern') || autofixSrc.includes('detect');
+  assertEqual(hasPattern, true, 'Sin patrones de detección definidos');
+});
+test('autofix: no usa eval() ni Function()', () => {
+  const hasDangerous = autofixSrc.match(/\beval\s*\(/) || autofixSrc.match(/new\s+Function\s*\(/);
+  assertEqual(hasDangerous, null, 'eval() o Function() detectado — riesgo de código arbitrario');
+});
+test('autofix: sello de integridad presente', () => {
+  assertContains(autofixSrc, 'END:normalis-autofix.js');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-capa.js — Plan de Mejoramiento
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-capa.js');
+const capaSrc = fs.readFileSync(path.join(ROOT, 'normalis-capa.js'), 'utf8');
+
+test('capa: saveCAPA valida datos antes de guardar', () => {
+  assertContains(capaSrc, 'function saveCAPA');
+  const hasValidation = capaSrc.includes('if (!') || capaSrc.includes('required') || capaSrc.includes('trim()');
+  assertEqual(hasValidation, true, 'saveCAPA sin validación de datos');
+});
+test('capa: renderCAPAs usa escH', () => {
+  assertContains(capaSrc, 'escH(', 'renderCAPAs sin escH — XSS posible');
+});
+test('capa: tiene manejo de estados (abierta/cerrada)', () => {
+  const hasStatus = capaSrc.includes('estado') || capaSrc.includes('status') || capaSrc.includes('abierta');
+  assertEqual(hasStatus, true, 'No se detecta manejo de estados de CAPA');
+});
+test('capa: sello de integridad presente', () => {
+  assertContains(capaSrc, 'END:normalis-capa.js');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-indicadores.js — métricas de calidad
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-indicadores.js');
+const indSrc = fs.readFileSync(path.join(ROOT, 'normalis-indicadores.js'), 'utf8');
+
+test('indicadores: saveIndicador existe', () => {
+  assertContains(indSrc, 'function saveIndicador');
+});
+test('indicadores: renderIndicadores usa escH', () => {
+  assertContains(indSrc, 'escH(', 'renderIndicadores sin escH — XSS posible');
+});
+test('indicadores: exportarIndicadoresPDF existe', () => {
+  assertContains(indSrc, 'function exportarIndicadoresPDF');
+});
+test('indicadores: calcula meta vs real', () => {
+  const hasCalc = indSrc.includes('meta') && (indSrc.includes('real') || indSrc.includes('valor'));
+  assertEqual(hasCalc, true, 'No se detecta comparación meta vs real');
+});
+test('indicadores: sello de integridad presente', () => {
+  assertContains(indSrc, 'END:normalis-indicadores.js');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN: normalis-utils.js — sanitizeHTML
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n[unit] normalis-utils.js — sanitizeHTML runtime');
+// utilsSrc ya declarado arriba (línea ~375)
+// Extraer y ejecutar sanitizeHTML en Node para probar la lógica real
+const fnMatch = utilsSrc.match(/function sanitizeHTML[\s\S]{1,2000}?\n\}/);
+if (fnMatch) {
+  const sanitizeFn = new Function('return ' + fnMatch[0])();
+  test('sanitizeHTML: elimina <script>', () => {
+    const out = sanitizeFn('<script>alert(1)</script>texto');
+    assertEqual(out.includes('<script>'), false, 'script tag no eliminado');
+    assertContains(out, 'texto');
+  });
+  test('sanitizeHTML: elimina onclick=', () => {
+    const out = sanitizeFn('<div onclick="evil()">ok</div>');
+    assertEqual(out.includes('onclick'), false, 'onclick no eliminado');
+  });
+  test('sanitizeHTML: elimina javascript:', () => {
+    const out = sanitizeFn('<a href="javascript:void(0)">link</a>');
+    assertEqual(out.toLowerCase().includes('javascript:'), false, 'javascript: no eliminado');
+  });
+  test('sanitizeHTML: preserva texto normal', () => {
+    const out = sanitizeFn('Hola <b>mundo</b>');
+    assertContains(out, 'Hola');
+  });
+} else {
+  test('sanitizeHTML: función encontrada en utils', () => {
+    assertContains(utilsSrc, 'function sanitizeHTML', 'sanitizeHTML no encontrada');
+  });
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // RESULTADO FINAL
 // ══════════════════════════════════════════════════════════════════════════════

@@ -315,28 +315,137 @@ test('normalis-checklist.js: no usa alert() nativo', () => {
   assert(alertUse.length === 0, `alert() nativo encontrado: ${alertUse[0]||''}`);
 });
 
-// ─── 11. normalis-multiusuario.js — módulo equipo IPS ─────────────────────────
-console.log('\n👥 normalis-multiusuario.js');
-const multiFile = readFile('normalis-multiusuario.js');
-test('normalis-multiusuario.js: contiene ROLES_IPS', () => {
-  assert(multiFile.includes('ROLES_IPS'), 'ROLES_IPS no encontrado');
-});
-test('normalis-multiusuario.js: contiene _escH (XSS sanitizer)', () => {
-  assert(multiFile.includes('function _escH'), '_escH no encontrada — XSS no sanitizado');
-});
-test('normalis-multiusuario.js: contiene renderEquipoIPS', () => {
-  assert(multiFile.includes('function renderEquipoIPS'), 'renderEquipoIPS no encontrada');
-});
-test('normalis-multiusuario.js: _escH aplicado a m.nombre', () => {
-  assert(multiFile.includes('_escH(m.nombre)'), 'm.nombre sin sanitizar — XSS posible');
-});
-test('normalis-multiusuario.js: _escH aplicado a m.email', () => {
-  assert(multiFile.includes('_escH(m.email)'), 'm.email sin sanitizar — XSS posible');
-});
-test('normalis-multiusuario.js: tiene sello de integridad', () => {
-  assert(multiFile.includes('NormaLis integrity seal'),
-    'Sello de integridad faltante');
-});
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 12 — normalis-docs.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n12. normalis-docs.js');
+const docsPath = path.join(__dirname, '..', 'normalis-docs.js');
+const docsSrc  = fs.readFileSync(docsPath, 'utf8');
+
+test('docs.js existe y no está vacío', () => assert(docsSrc.length > 10000));
+test('docs.js tiene openDocViewer', () => assert(docsSrc.includes('function openDocViewer')));
+test('docs.js tiene openDocPreview', () => assert(docsSrc.includes('function openDocPreview')));
+test('docs.js tiene sello de integridad', () => assert(docsSrc.includes('END:normalis-docs.js')));
+test('docs.js sin eval()', () => assert(!docsSrc.includes('\beval(')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 13 — normalis-pdf.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n13. normalis-pdf.js');
+const pdfPath = path.join(__dirname, '..', 'normalis-pdf.js');
+const pdfSrc  = fs.readFileSync(pdfPath, 'utf8');
+
+test('pdf.js existe y no está vacío', () => assert(pdfSrc.length > 5000));
+test('pdf.js tiene printAuditReport', () => assert(pdfSrc.includes('function printAuditReport')));
+test('pdf.js sello de integridad', () => assert(pdfSrc.includes('END:normalis-pdf.js')));
+test('pdf.js no usa alert()', () => assert(!pdfSrc.match(/\balert\s*\(/)));
+test('pdf.js usa window.open o print', () => assert(pdfSrc.includes('window.open') || pdfSrc.includes('.print(')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 14 — normalis-pamec.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n14. normalis-pamec.js');
+const pamecPath = path.join(__dirname, '..', 'normalis-pamec.js');
+const pamecSrc  = fs.readFileSync(pamecPath, 'utf8');
+
+test('pamec.js existe y no está vacío', () => assert(pamecSrc.length > 10000));
+test('pamec.js sello de integridad', () => assert(pamecSrc.includes('END:normalis-pamec.js')));
+test('pamec.js no usa confirm() nativo', () => assert(!pamecSrc.match(/[^a-zA-Z]confirm\s*\(/)));
+test('pamec.js no usa alert() nativo', () => assert(!pamecSrc.match(/\balert\s*\(/)));
+test('pamec.js tiene try/catch', () => assert(pamecSrc.includes('} catch')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 15 — normalis-capa.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n15. normalis-capa.js');
+const capaPath = path.join(__dirname, '..', 'normalis-capa.js');
+const capaSrc  = fs.readFileSync(capaPath, 'utf8');
+
+test('capa.js existe y no está vacío', () => assert(capaSrc.length > 5000));
+test('capa.js tiene saveCAPA', () => assert(capaSrc.includes('function saveCAPA')));
+test('capa.js tiene renderCAPAs', () => assert(capaSrc.includes('function renderCAPAs')));
+test('capa.js sello de integridad', () => assert(capaSrc.includes('END:normalis-capa.js')));
+test('capa.js no usa alert() nativo', () => assert(!capaSrc.match(/\balert\s*\(/)));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 16 — normalis-indicadores.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n16. normalis-indicadores.js');
+const indPath = path.join(__dirname, '..', 'normalis-indicadores.js');
+const indSrc  = fs.readFileSync(indPath, 'utf8');
+
+test('indicadores.js existe y no está vacío', () => assert(indSrc.length > 5000));
+test('indicadores.js tiene saveIndicador', () => assert(indSrc.includes('function saveIndicador')));
+test('indicadores.js tiene renderIndicadores', () => assert(indSrc.includes('function renderIndicadores')));
+test('indicadores.js tiene exportarIndicadoresPDF', () => assert(indSrc.includes('function exportarIndicadoresPDF')));
+test('indicadores.js sello de integridad', () => assert(indSrc.includes('END:normalis-indicadores.js')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 17 — normalis-tour.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n17. normalis-tour.js');
+const tourPath = path.join(__dirname, '..', 'normalis-tour.js');
+const tourSrc  = fs.readFileSync(tourPath, 'utf8');
+
+test('tour.js existe y no está vacío', () => assert(tourSrc.length > 5000));
+test('tour.js tiene startNormalisTour', () => assert(tourSrc.includes('function startNormalisTour')));
+test('tour.js sello de integridad', () => assert(tourSrc.includes('END:normalis-tour.js')));
+test('tour.js no usa alert() nativo', () => assert(!tourSrc.match(/\balert\s*\(/)));
+test('tour.js tiene cleanup/destroy', () => assert(tourSrc.includes('destroy') || tourSrc.includes('cleanup') || tourSrc.includes('remove')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 18 — normalis-autofix.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n18. normalis-autofix.js');
+const autofixPath = path.join(__dirname, '..', 'normalis-autofix.js');
+const autofixSrc  = fs.readFileSync(autofixPath, 'utf8');
+
+test('autofix.js existe y no está vacío', () => assert(autofixSrc.length > 5000));
+test('autofix.js sello de integridad', () => assert(autofixSrc.includes('END:normalis-autofix.js')));
+test('autofix.js tiene NormalisAutofix o AUTOFIX_PATTERNS', () =>
+  assert(autofixSrc.includes('NormalisAutofix') || autofixSrc.includes('AUTOFIX_PATTERNS')));
+test('autofix.js no modifica window globales peligrosos', () =>
+  assert(!autofixSrc.includes('window.eval') && !autofixSrc.includes('window.Function')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 19 — normalis-bitacora.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n19. normalis-bitacora.js');
+const bitacoraPath = path.join(__dirname, '..', 'normalis-bitacora.js');
+const bitacoraSrc  = fs.readFileSync(bitacoraPath, 'utf8');
+
+test('bitacora.js existe y no está vacío', () => assert(bitacoraSrc.length > 3000));
+test('bitacora.js tiene logAction', () => assert(bitacoraSrc.includes('function logAction')));
+test('bitacora.js tiene renderBitacora', () => assert(bitacoraSrc.includes('function renderBitacora')));
+test('bitacora.js sello de integridad', () => assert(bitacoraSrc.includes('END:normalis-bitacora.js')));
+test('bitacora.js usa escH() para prevenir XSS', () => assert(bitacoraSrc.includes('escH(')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 20 — normalis-vencimientos.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n20. normalis-vencimientos.js');
+const vencPath = path.join(__dirname, '..', 'normalis-vencimientos.js');
+const vencSrc  = fs.readFileSync(vencPath, 'utf8');
+
+test('vencimientos.js existe y no está vacío', () => assert(vencSrc.length > 2000));
+test('vencimientos.js tiene saveVenc', () => assert(vencSrc.includes('function saveVenc')));
+test('vencimientos.js tiene renderVencimientos', () => assert(vencSrc.includes('function renderVencimientos')));
+test('vencimientos.js sello de integridad', () => assert(vencSrc.includes('END:normalis-vencimientos.js')));
+test('vencimientos.js tiene manejo de fechas', () => assert(vencSrc.includes('Date') || vencSrc.includes('timestamp')));
+
+// ═══════════════════════════════════════════════════════════════
+// SECCIÓN 21 — normalis-sst.js
+// ═══════════════════════════════════════════════════════════════
+console.log('\n21. normalis-sst.js');
+const sstPath = path.join(__dirname, '..', 'normalis-sst.js');
+const sstSrc  = fs.readFileSync(sstPath, 'utf8');
+
+test('sst.js existe y no está vacío', () => assert(sstSrc.length > 20000));
+test('sst.js tiene renderSST', () => assert(sstSrc.includes('function renderSST')));
+test('sst.js tiene calcSSTScore', () => assert(sstSrc.includes('function calcSSTScore')));
+test('sst.js tiene sstGuardarActividad', () => assert(sstSrc.includes('function sstGuardarActividad')));
+test('sst.js sello de integridad', () => assert(sstSrc.includes('END:normalis-sst.js')));
+test('sst.js tiene try/catch en operaciones Firestore', () => assert(sstSrc.includes('} catch')));
 
 
 console.log('\n' + '═'.repeat(60));

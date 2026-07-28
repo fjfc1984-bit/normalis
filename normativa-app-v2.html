@@ -5716,7 +5716,7 @@ function _updateFbStatusUI(msg, type){
   const el = document.getElementById('fb-status');
   if(!el) return;
   const colors = {success:'var(--success)',error:'var(--danger)',info:'var(--primary)',warn:'var(--warning)'};
-  el.innerHTML = '<span style="color:'+( colors[type]||'var(--text-muted)')+'">'+msg+'</span>';
+  el.innerHTML = '<span style="color:'+( colors[type]||'var(--text-muted)')+'">'+(typeof escH==='function'?escH(msg):msg)+'</span>';
   _fbLastSync = new Date();
   const tsEl = document.getElementById('fb-lastsync');
   if(tsEl && _fbLastSync) tsEl.textContent = 'Última sincronización: '+_fbLastSync.toLocaleTimeString('es-CO');
@@ -6101,7 +6101,7 @@ function runSearch(q){
   });
   // Limit
   const shown = hits.slice(0,30);
-  if(shown.length===0){ res.innerHTML='<div class="sr-empty">Sin resultados para "'+q+'"</div>'; if(cnt) cnt.textContent=''; return; }
+  if(shown.length===0){ res.innerHTML='<div class="sr-empty">Sin resultados para &ldquo;'+escH(q)+'&rdquo;</div>'; if(cnt) cnt.textContent=''; return; }
   if(cnt) cnt.textContent = hits.length+' resultado'+(hits.length===1?'':'s');
   res.innerHTML = shown.map(function(h,i){
     return '<div class="sr-item" data-idx="'+i+'" onclick="searchSelect('+i+')" onmouseenter="searchHover('+i+')">'+

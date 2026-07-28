@@ -58,7 +58,7 @@ function cargarChecklist(codigoServicio, containerId, orgId, sedeId, auditoriaId
     })
     .catch(function(err) {
       console.error('[Normalis Checklist]', err);
-      container.innerHTML = '<div style="color:#ef4444;padding:20px;text-align:center">❌ ' + err.message + '</div>';
+      container.innerHTML = '<div style="color:#ef4444;padding:20px;text-align:center">❌ ' + (typeof escH==='function'?escH(err.message):err.message) + '</div>';
     });
 }
 
