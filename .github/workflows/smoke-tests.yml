@@ -7,45 +7,94 @@ on:
     branches: [ main ]
 
 jobs:
+  # ─── 1. Smoke Tests ──────────────────────────────────────────────
   smoke-tests:
     name: Smoke Tests — análisis estático (Node.js)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Run smoke tests
         run: node tests/smoke.test.js
 
+  # ─── 2. Unit Tests ───────────────────────────────────────────────
   unit-tests:
     name: Unit Tests — lógica runtime (Node.js)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Run unit tests
         run: node tests/unit.test.js
 
+  # ─── 3. Validate ─────────────────────────────────────────────────
   validate:
     name: NormaLis Validator — integridad completa
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Run master validator
         run: bash normalis-validate.sh
+
+  # ─── 4. Auto-Repair ──────────────────────────────────────────────
+  # Solo se ejecuta en pushes a main (no en PRs) y solo si validate falló.
+  # Si el reparador corrige algo, lo commitea automáticamente al branch.
+  auto-repair:
+    name: Auto-Repair — restaurar integridad si falla validación
+    runs-on: ubuntu-latest
+    needs: validate
+    if: |
+      failure() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout (con permisos de escritura)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configurar Git
+        run: |
+          git config user.name  "normalis-bot[auto-repair]"
+          git config user.email "noreply@normalis.co"
+
+      - name: Ejecutar reparación automática
+        run: |
+          echo "=== Diagnóstico previo ==="
+          bash normalis-validate.sh 2>&1 | grep -E '(✗|ERROR|WARN|❌)' || true
+
+          echo ""
+          echo "=== Aplicando reparaciones ==="
+          python3 normalis-repair.py
+
+      - name: Re-validar tras reparación
+        run: bash normalis-validate.sh
+
+      - name: Commitear reparaciones (si hubo cambios)
+        run: |
+          git diff --quiet && git diff --staged --quiet && echo "Sin cambios — nada que commitear." && exit 0
+          git add -A
+          git commit -m "chore(auto-repair): restaurar integridad automáticamente [skip ci]"
+          git push origin main
+          echo "✔ Reparaciones commiteadas y pusheadas."
+
+  # ─── 5. Notify on persistent failure ────────────────────────────
+  # Si el auto-repair también falla, al menos queda registrado en el log.
+  notify-failure:
+    name: Notificar falla persistente
+    runs-on: ubuntu-latest
+    needs: [ smoke-tests, unit-tests, validate, auto-repair ]
+    if: failure()
+    steps:
+      - name: Reportar estado
+        run: |
+          echo "❌ NormaLis CI falló en uno o más jobs."
+          echo "   Revisar: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "Jobs fallidos detectados — se requiere revisión manual."

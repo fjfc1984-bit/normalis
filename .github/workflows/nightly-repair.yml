@@ -1,0 +1,86 @@
+name: NormaLis Nightly Integrity Check
+
+on:
+  # Corre todos los días a las 04:00 UTC
+  schedule:
+    - cron: '0 4 * * *'
+  # También se puede lanzar manualmente desde GitHub → Actions
+  workflow_dispatch:
+
+jobs:
+  integrity-check-and-repair:
+    name: Verificar y reparar integridad del codebase
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configurar Git
+        run: |
+          git config user.name  "normalis-bot[nightly]"
+          git config user.email "noreply@normalis.co"
+
+      - name: Setup Node.js (para los tests)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ─── Paso 1: Tests ─────────────────────────────────────────
+      - name: Smoke tests
+        id: smoke
+        run: node tests/smoke.test.js
+        continue-on-error: true
+
+      - name: Unit tests
+        id: unit
+        run: node tests/unit.test.js
+        continue-on-error: true
+
+      # ─── Paso 2: Validación ────────────────────────────────────
+      - name: Validación maestro
+        id: validate
+        run: bash normalis-validate.sh
+        continue-on-error: true
+
+      # ─── Paso 3: Reparación si algo falló ─────────────────────
+      - name: Auto-repair si hubo fallos
+        if: |
+          steps.smoke.outcome == 'failure' ||
+          steps.unit.outcome  == 'failure' ||
+          steps.validate.outcome == 'failure'
+        run: |
+          echo "=== Fallos detectados — iniciando reparación ==="
+          python3 normalis-repair.py --verbose
+
+      # ─── Paso 4: Re-validar ────────────────────────────────────
+      - name: Re-validar tras reparación
+        if: |
+          steps.smoke.outcome == 'failure' ||
+          steps.unit.outcome  == 'failure' ||
+          steps.validate.outcome == 'failure'
+        run: bash normalis-validate.sh
+
+      # ─── Paso 5: Commitear cambios si los hubo ─────────────────
+      - name: Commitear reparaciones automáticas
+        run: |
+          git diff --quiet && git diff --staged --quiet \
+            && echo "✔ Sin cambios — codebase íntegro." \
+            && exit 0
+          git add -A
+          git commit -m "chore(nightly-repair): corrección automática de integridad [skip ci]"
+          git push origin main
+          echo "✔ Reparaciones commiteadas."
+
+      # ─── Paso 6: Resumen ───────────────────────────────────────
+      - name: Resumen del estado
+        if: always()
+        run: |
+          echo "=== NormaLis Nightly Report ==="
+          echo "Smoke tests : ${{ steps.smoke.outcome  || 'skipped' }}"
+          echo "Unit tests  : ${{ steps.unit.outcome   || 'skipped' }}"
+          echo "Validación  : ${{ steps.validate.outcome || 'skipped' }}"
+          echo "================================"

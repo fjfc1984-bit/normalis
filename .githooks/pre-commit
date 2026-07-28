@@ -3,6 +3,11 @@
 # Compatible con Linux/Mac (bash) y Windows (Git for Windows sh)
 # Instalacion: git config core.hooksPath .githooks
 # Corre automaticamente en cada git commit.
+#
+# Flujo:
+#   1. Si normalis-repair.sh existe → validate + auto-repair + re-validate
+#   2. Fallback: solo validador maestro
+#   3. Fallback: validadores individuales
 
 if ! command -v bash >/dev/null 2>&1; then
   echo "  [INFO] bash no disponible — saltando validacion NormaLis"
@@ -13,7 +18,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 echo ""
 echo "============================================================"
-echo "  NormaLis — Validacion pre-commit (validador maestro)"
+echo "  NormaLis — Validacion pre-commit (auto-repair activo)"
 echo "============================================================"
 
 # Determinar si algun archivo JS/HTML/CSS fue modificado
@@ -28,8 +33,38 @@ if [ "$JS_HTML_CHANGED" = "0" ] && [ "${NORMALIS_FULL_CHECK:-0}" != "1" ]; then
   exit 0
 fi
 
-# Correr el validador maestro
-if [ -f "$REPO_ROOT/normalis-validate.sh" ]; then
+# ── CAMINO PRINCIPAL: repair-then-validate ────────────────────────
+if [ -f "$REPO_ROOT/normalis-repair.sh" ]; then
+
+  if bash "$REPO_ROOT/normalis-repair.sh" 2>&1; then
+    # El repair + validate pasaron
+    # Si el reparador modificó archivos, agregarlos al staging automáticamente
+    REPAIRED=$(git diff --name-only 2>/dev/null || true)
+    if [ -n "$REPAIRED" ]; then
+      echo ""
+      echo "  [AUTO-REPAIR] Archivos reparados y agregados al commit:"
+      echo "$REPAIRED" | while IFS= read -r f; do echo "    + $f"; done
+      git add -u "$REPO_ROOT" 2>/dev/null || true
+    fi
+    echo ""
+    echo "============================================================"
+    echo "  COMMIT AUTORIZADO"
+    echo "============================================================"
+    echo ""
+    exit 0
+  else
+    echo ""
+    echo "============================================================"
+    echo "  COMMIT BLOQUEADO — reparacion automatica no suficiente"
+    echo "  Ejecuta manualmente: bash normalis-repair.sh --verbose"
+    echo "  Luego: bash normalis-validate.sh --verbose"
+    echo "============================================================"
+    echo ""
+    exit 1
+  fi
+
+# ── FALLBACK: solo validador maestro ─────────────────────────────
+elif [ -f "$REPO_ROOT/normalis-validate.sh" ]; then
   if bash "$REPO_ROOT/normalis-validate.sh" 2>&1; then
     echo ""
     echo "============================================================"
@@ -46,8 +81,9 @@ if [ -f "$REPO_ROOT/normalis-validate.sh" ]; then
     echo ""
     exit 1
   fi
+
+# ── FALLBACK: validadores individuales ───────────────────────────
 else
-  # Fallback: validadores individuales si no existe el maestro
   echo "  [WARN] normalis-validate.sh no encontrado, usando validadores individuales"
   ERRORS=0
 
