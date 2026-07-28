@@ -291,7 +291,8 @@ window.sendMainChat = function() {
     if (t) t.remove();
     var respuesta = xaiResponder(pregunta);
     var ts = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-    msgs.innerHTML += '<div style="display:flex;align-items:flex-start;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="flex:1">'+respuesta+'<div style="font-size:10px;color:#94a3b8;margin-top:4px">XAI - datos reales - '+ts+'</div></div></div>';
+    var disclaimerIA = '<div style="margin-top:8px;padding:6px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">⚠️ <strong>Contenido generado por IA.</strong> No reemplaza asesoría jurídica. · <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Política de privacidad</a></div>';
+    msgs.innerHTML += '<div style="display:flex;align-items:flex-start;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="flex:1">'+respuesta+disclaimerIA+'<div style="font-size:10px;color:#94a3b8;margin-top:4px">NormaLis IA · '+ts+' · Circular SIC 002/2024</div></div></div>';
     msgs.scrollTop = msgs.scrollHeight;
     if (typeof logAction === 'function') logAction('Sistema','Consulta XAI',pregunta.substring(0,60));
   }, 800);

@@ -117,6 +117,8 @@ function renderBotResponse(el, { text, sources }) {
       ).join(' · ') +
       '</small>';
   }
+  // Aviso legal IA — Circular SIC 002/2024 · AI Act EU 2024/1689
+  html += '<div style="margin-top:10px;padding:7px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">⚠️ <strong>Contenido generado por Inteligencia Artificial.</strong> No reemplaza asesoría jurídica profesional. Verifique con un experto antes de tomar decisiones oficiales. · <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Política de privacidad</a></div>';
   el.innerHTML = html;
 }
 
