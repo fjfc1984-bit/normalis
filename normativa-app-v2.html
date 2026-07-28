@@ -57,6 +57,8 @@ if('serviceWorker' in navigator){
   <script src="normalis-analytics.js" defer></script>
 </head>
 <body>
+<!-- Skip link: accesibilidad teclado WCAG 2.4.1 -->
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
 <!-- ═══ NormaLis Error Boundary ═══ -->
 <script>
@@ -180,49 +182,49 @@ if('serviceWorker' in navigator){
 
       <!-- ── PRINCIPAL ─────────────────────────────── -->
       <div class="sb-section">Principal</div>
-      <div class="sb-item active" onclick="nav('dashboard')" data-mod="dashboard"><i class="ti ti-chart-bar" aria-hidden="true"></i>Dashboard</div>
-      <div class="sb-item" onclick="nav('establecimiento')" data-mod="establecimiento"><i class="ti ti-building-hospital" aria-hidden="true"></i>Mi Establecimiento</div>
-      <div class="sb-item" onclick="nav('cronograma')" data-mod="cronograma"><i class="ti ti-calendar-event" aria-hidden="true"></i>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
+      <div class="sb-item active" role="button" tabindex="0" onclick="nav('dashboard')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('dashboard');}" data-mod="dashboard"><i class="ti ti-chart-bar" aria-hidden="true"></i>Dashboard</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('establecimiento')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('establecimiento');}" data-mod="establecimiento"><i class="ti ti-building-hospital" aria-hidden="true"></i>Mi Establecimiento</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('cronograma')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('cronograma');}" data-mod="cronograma"><i class="ti ti-calendar-event" aria-hidden="true"></i>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
 
       <!-- ── HABILITACIÓN ───────────────────────────── -->
       <div class="sb-section">Habilitación</div>
-      <div class="sb-item" onclick="nav('auditoria')" data-mod="auditoria"><i class="ti ti-clipboard-check" aria-hidden="true"></i>Auditoría Simulada<span class="sb-badge">!</span></div>
-      <div class="sb-item" onclick="nav('resultados')" data-mod="resultados"><i class="ti ti-trending-up" aria-hidden="true"></i>Resultados</div>
-      <div class="sb-item" onclick="nav('generador')" data-mod="generador"><i class="ti ti-sparkles" aria-hidden="true"></i>Generar con IA</div>
-      <div class="sb-item" onclick="nav('documentos')" data-mod="documentos"><i class="ti ti-folders" aria-hidden="true"></i>Biblioteca Documental</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('auditoria')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('auditoria');}" data-mod="auditoria"><i class="ti ti-clipboard-check" aria-hidden="true"></i>Auditoría Simulada<span class="sb-badge">!</span></div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('resultados')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('resultados');}" data-mod="resultados"><i class="ti ti-trending-up" aria-hidden="true"></i>Resultados</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('generador')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('generador');}" data-mod="generador"><i class="ti ti-sparkles" aria-hidden="true"></i>Generar con IA</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('documentos')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('documentos');}" data-mod="documentos"><i class="ti ti-folders" aria-hidden="true"></i>Biblioteca Documental</div>
 
       <!-- ── CUMPLIMIENTO ───────────────────────────── -->
       <div class="sb-section">Cumplimiento</div>
-      <div class="sb-item" onclick="nav('pamec')" data-mod="pamec"><i class="ti ti-refresh" aria-hidden="true"></i>PAMEC</div>
-      <div class="sb-item" onclick="nav('sst')" data-mod="sst"><i class="ti ti-shield-check" aria-hidden="true"></i>SG-SST</div>
-      <div class="sb-item" onclick="nav('capa')" data-mod="capa"><i class="ti ti-checklist" aria-hidden="true"></i>Plan de Mejoramiento</div>
-      <div class="sb-item" onclick="nav('indicadores')" data-mod="indicadores"><i class="ti ti-chart-line" aria-hidden="true"></i>Indicadores Res. 256</div>
-      <div class="sb-item" onclick="nav('pqrs')" data-mod="pqrs"><i class="ti ti-mail" aria-hidden="true"></i>Gestor PQRS</div>
-      <div class="sb-item" onclick="nav('incidentes')" data-mod="incidentes"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Incidentes y Eventos</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('pamec')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('pamec');}" data-mod="pamec"><i class="ti ti-refresh" aria-hidden="true"></i>PAMEC</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('sst')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('sst');}" data-mod="sst"><i class="ti ti-shield-check" aria-hidden="true"></i>SG-SST</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('capa')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('capa');}" data-mod="capa"><i class="ti ti-checklist" aria-hidden="true"></i>Plan de Mejoramiento</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('indicadores')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('indicadores');}" data-mod="indicadores"><i class="ti ti-chart-line" aria-hidden="true"></i>Indicadores Res. 256</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('pqrs')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('pqrs');}" data-mod="pqrs"><i class="ti ti-mail" aria-hidden="true"></i>Gestor PQRS</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('incidentes')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('incidentes');}" data-mod="incidentes"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Incidentes y Eventos</div>
 
       <!-- ── EQUIPO ─────────────────────────────────── -->
       <div class="sb-section">Equipo</div>
-      <div class="sb-item" onclick="nav('talento')" data-mod="talento"><i class="ti ti-users" aria-hidden="true"></i>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
-      <div class="sb-item" onclick="nav('equipo')" data-mod="equipo"><i class="ti ti-user-plus" aria-hidden="true"></i>Equipo IPS</div>
-      <div class="sb-item" onclick="nav('vencimientos-personal')" data-mod="vencimientos-personal"><i class="ti ti-id-badge" aria-hidden="true"></i>Vencimientos Personal</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('talento')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('talento');}" data-mod="talento"><i class="ti ti-users" aria-hidden="true"></i>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('equipo')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('equipo');}" data-mod="equipo"><i class="ti ti-user-plus" aria-hidden="true"></i>Equipo IPS</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('vencimientos-personal')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('vencimientos-personal');}" data-mod="vencimientos-personal"><i class="ti ti-id-badge" aria-hidden="true"></i>Vencimientos Personal</div>
 
       <!-- ── ASISTENTE IA ───────────────────────────── -->
       <div class="sb-section">Asistente IA</div>
-      <div class="sb-item" onclick="nav('chat')" data-mod="chat"><i class="ti ti-message-dots" aria-hidden="true"></i>Consultor Normativo IA</div>
+      <div class="sb-item" role="button" tabindex="0" onclick="nav('chat')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('chat');}" data-mod="chat"><i class="ti ti-message-dots" aria-hidden="true"></i>Consultor Normativo IA</div>
 
       <!-- ── MÁS HERRAMIENTAS (colapsable) ─────────── -->
-      <div class="sb-more-toggle" id="sb-more-toggle" onclick="toggleSbMore()">
+      <div class="sb-more-toggle" id="sb-more-toggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleSbMore()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSbMore();}">
         <span id="sb-more-arrow">▸</span> Más herramientas
       </div>
       <div class="sb-more-items" id="sb-more-items" style="display:none">
-        <div class="sb-item" onclick="nav('comparador')" data-mod="comparador"><i class="ti ti-scale" aria-hidden="true"></i>Comparador Normativo</div>
-        <div class="sb-item" onclick="nav('roi')" data-mod="roi"><i class="ti ti-calculator" aria-hidden="true"></i>Calculadora ROI</div>
-        <div class="sb-item" onclick="nav('calidad')" data-mod="calidad"><i class="ti ti-award" aria-hidden="true"></i>Calidad en Salud</div>
-        <div class="sb-item" onclick="nav('calendario')" data-mod="calendario"><i class="ti ti-calendar" aria-hidden="true"></i>Calendario</div>
-        <div class="sb-item" onclick="nav('firma')" data-mod="firma"><i class="ti ti-signature" aria-hidden="true"></i>Firma y Versiones</div>
-        <div class="sb-item" onclick="nav('consentimientos')" data-mod="consentimientos"><i class="ti ti-file-text" aria-hidden="true"></i>Consentimientos</div>
-        <div class="sb-item" onclick="nav('simulacro')" data-mod="simulacro"><i class="ti ti-search" aria-hidden="true"></i>Simulacro Secretaría</div>
-        <div class="sb-item" onclick="nav('bitacora')" data-mod="bitacora"><i class="ti ti-clock-record" aria-hidden="true"></i>Bitácora</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('comparador')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('comparador');}" data-mod="comparador"><i class="ti ti-scale" aria-hidden="true"></i>Comparador Normativo</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('roi')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('roi');}" data-mod="roi"><i class="ti ti-calculator" aria-hidden="true"></i>Calculadora ROI</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('calidad')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('calidad');}" data-mod="calidad"><i class="ti ti-award" aria-hidden="true"></i>Calidad en Salud</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('calendario')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('calendario');}" data-mod="calendario"><i class="ti ti-calendar" aria-hidden="true"></i>Calendario</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('firma')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('firma');}" data-mod="firma"><i class="ti ti-signature" aria-hidden="true"></i>Firma y Versiones</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('consentimientos')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('consentimientos');}" data-mod="consentimientos"><i class="ti ti-file-text" aria-hidden="true"></i>Consentimientos</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('simulacro')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('simulacro');}" data-mod="simulacro"><i class="ti ti-search" aria-hidden="true"></i>Simulacro Secretaría</div>
+        <div class="sb-item" role="button" tabindex="0" onclick="nav('bitacora')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nav('bitacora');}" data-mod="bitacora"><i class="ti ti-clock-record" aria-hidden="true"></i>Bitácora</div>
       </div>
 
       <!-- ── OCULTOS (Fase 2 — desbloquear por plan) ── -->
@@ -271,7 +273,7 @@ if('serviceWorker' in navigator){
         <span id="sync-text">Listo</span>
       </div>
     </div>
-    <div class="content" id="main-content" role="main" aria-label="Contenido principal">
+    <div class="content" id="main-content" role="main" aria-label="Contenido principal" tabindex="-1">
 
       <!-- ══ DASHBOARD ══ -->
       <div class="view active" id="view-dashboard">
@@ -1861,7 +1863,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
   <span class="conn-dot"></span>
   <span id="conn-label">Sin conexión</span>
 </div>
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <!-- ══════════ ACHIEVEMENT POPUP ══════════ -->
 <div class="achieve-pop" id="achieve-pop">
@@ -8492,6 +8494,7 @@ function toggleSbMore() {
   var open = items.style.display !== 'none';
   items.style.display  = open ? 'none' : 'block';
   toggle.classList.toggle('open', !open);
+  toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
   try { localStorage.setItem('normalis_sb_more', open ? '0' : '1'); } catch(e){}
 }
 (function(){
@@ -8753,6 +8756,68 @@ function toggleSbMore() {
   <div id="auto-banner-body" style="color:#94a3b8;font-size:12px;margin-top:2px;"></div>
   <div id="auto-banner-actions" class="auto-banner-actions"></div>
 </div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────────
+   ACCESIBILIDAD: Keyboard Navigation
+   ─────────────────────────────────────────────────────────────── */
+(function(){
+  // Arrow keys en sidebar
+  document.addEventListener('keydown', function(e) {
+    var active = document.activeElement;
+    if (!active) return;
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') &&
+        active.classList && active.classList.contains('sb-item')) {
+      e.preventDefault();
+      var items = Array.from(document.querySelectorAll(
+        '.sidebar .sb-item:not([style*="display:none"])'));
+      var idx = items.indexOf(active);
+      if (e.key === 'ArrowDown' && idx < items.length - 1) items[idx + 1].focus();
+      if (e.key === 'ArrowUp'   && idx > 0)                items[idx - 1].focus();
+      return;
+    }
+    // Alt+1..8 shortcuts
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      var sh = {'1':'dashboard','2':'auditoria','3':'resultados',
+                '4':'chat','5':'vencimientos','6':'pamec','7':'capa','8':'pqrs'};
+      var t = sh[e.key];
+      if (t && typeof nav === 'function') { e.preventDefault(); nav(t); }
+    }
+    // Escape cierra overlays
+    if (e.key === 'Escape') {
+      var so = document.getElementById('search-overlay');
+      if (so && so.style.display !== 'none' && typeof closeSearch === 'function') closeSearch();
+    }
+  });
+  // Scroll sb-item enfocado a la vista
+  document.addEventListener('focusin', function(e) {
+    if (e.target && e.target.classList && e.target.classList.contains('sb-item'))
+      e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+  // Live region para screen readers
+  var _lr = null;
+  function _ann(msg) {
+    if (!_lr) {
+      _lr = document.createElement('div');
+      _lr.className = 'sr-only';
+      _lr.setAttribute('aria-live', 'polite');
+      _lr.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(_lr);
+    }
+    _lr.textContent = ''; setTimeout(function(){ _lr.textContent = msg; }, 50);
+  }
+  // Parchear nav() para anunciar vista a SR
+  document.addEventListener('DOMContentLoaded', function(){
+    if (typeof nav !== 'function') return;
+    var _orig = nav;
+    window.nav = function(v) {
+      _orig(v);
+      var el = document.querySelector('.sb-item.active');
+      _ann('Vista: ' + (el ? el.textContent.trim() : v));
+    };
+  });
+})();
+</script>
 
 </body>
 </html>

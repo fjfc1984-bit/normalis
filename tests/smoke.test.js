@@ -52,6 +52,7 @@ const criticalFiles = [
   'normalis-firestore.js', 'normalis-utils.js', 'normalis-auth.js',
   'normalis-tour.js', 'normalis-sst.js', 'normalis-pamec.js',
   'normalis-plans.js', 'normalis-export.js',
+  'normalis-checklist.js', 'normalis-multiusuario.js',
   'firestore.rules', 'normalis-validate.sh',
 ];
 
@@ -73,6 +74,7 @@ const jsModules = [
   'normalis-incidentes.js', 'normalis-vencimientos.js', 'normalis-simulacro.js',
   'normalis-bitacora.js', 'normalis-utils.js', 'normalis-auth.js',
   'normalis-tour.js', 'normalis-sst.js', 'normalis-plans.js',
+  'normalis-checklist.js', 'normalis-multiusuario.js',
 ];
 
 for (const f of jsModules) {
@@ -288,6 +290,55 @@ test('tiene función isModuleAllowed o initPlanGating', () => {
 });
 
 // ─── 10. Resultados finales ────────────────────────────────────────────────────
+// ─── 10. normalis-checklist.js — módulo de checklist ─────────────────────────
+console.log('\n✅ normalis-checklist.js');
+const checklistFile = readFile('normalis-checklist.js');
+test('normalis-checklist.js: contiene función cargarChecklist', () => {
+  assert(checklistFile.includes('function cargarChecklist'),
+    'cargarChecklist no encontrada — checklist no se puede inicializar');
+});
+test('normalis-checklist.js: contiene _renderChecklist', () => {
+  assert(checklistFile.includes('function _renderChecklist'),
+    '_renderChecklist no encontrada — render roto');
+});
+test('normalis-checklist.js: contiene registrarRespuestaChecklist', () => {
+  assert(checklistFile.includes('function registrarRespuestaChecklist'),
+    'registrarRespuestaChecklist no encontrada — guardar respuestas roto');
+});
+test('normalis-checklist.js: tiene sello de integridad', () => {
+  assert(checklistFile.includes('NormaLis integrity seal'),
+    'Sello de integridad faltante — archivo posiblemente truncado');
+});
+test('normalis-checklist.js: no usa alert() nativo', () => {
+  const alertUse = checklistFile.split('\n').filter(l =>
+    l.match(/\balert\(/) && !l.trim().startsWith('//'));
+  assert(alertUse.length === 0, `alert() nativo encontrado: ${alertUse[0]||''}`);
+});
+
+// ─── 11. normalis-multiusuario.js — módulo equipo IPS ─────────────────────────
+console.log('\n👥 normalis-multiusuario.js');
+const multiFile = readFile('normalis-multiusuario.js');
+test('normalis-multiusuario.js: contiene ROLES_IPS', () => {
+  assert(multiFile.includes('ROLES_IPS'), 'ROLES_IPS no encontrado');
+});
+test('normalis-multiusuario.js: contiene _escH (XSS sanitizer)', () => {
+  assert(multiFile.includes('function _escH'), '_escH no encontrada — XSS no sanitizado');
+});
+test('normalis-multiusuario.js: contiene renderEquipoIPS', () => {
+  assert(multiFile.includes('function renderEquipoIPS'), 'renderEquipoIPS no encontrada');
+});
+test('normalis-multiusuario.js: _escH aplicado a m.nombre', () => {
+  assert(multiFile.includes('_escH(m.nombre)'), 'm.nombre sin sanitizar — XSS posible');
+});
+test('normalis-multiusuario.js: _escH aplicado a m.email', () => {
+  assert(multiFile.includes('_escH(m.email)'), 'm.email sin sanitizar — XSS posible');
+});
+test('normalis-multiusuario.js: tiene sello de integridad', () => {
+  assert(multiFile.includes('NormaLis integrity seal'),
+    'Sello de integridad faltante');
+});
+
+
 console.log('\n' + '═'.repeat(60));
 console.log(`📊 Resultados: ${passed} pasados, ${failed} fallidos de ${passed + failed} total`);
 

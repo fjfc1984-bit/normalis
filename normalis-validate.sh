@@ -53,8 +53,10 @@ CRITICAL_FILES=(
   "normalis-export.js"
   "normalis-users.js"
   "normalis-automations.js"
-  "normalis-sst.js" "normalis-plans.js"
+  "normalis-sst.js"
   "normalis-plans.js"
+  "normalis-checklist.js"
+  "normalis-multiusuario.js"
 )
 
 for f in "${CRITICAL_FILES[@]}"; do
@@ -97,6 +99,8 @@ declare -A MIN_SIZES=(
   ["normalis-automations.js"]=3000
   ["normalis-sst.js"]=50000
   ["normalis-plans.js"]=3000
+  ["normalis-checklist.js"]=5000
+  ["normalis-multiusuario.js"]=5000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=400000
 )
@@ -141,6 +145,8 @@ declare -A SEALS=(
   ["normalis-automations.js"]="END:normalis-automations.js"
   ["normalis-sst.js"]="END:normalis-sst.js"
   ["normalis-plans.js"]="END:normalis-plans.js"
+  ["normalis-checklist.js"]="END:normalis-checklist.js"
+  ["normalis-multiusuario.js"]="END:normalis-multiusuario.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
 )
 
@@ -271,6 +277,14 @@ declare -A CRITICAL_FUNCTIONS=(
   ["xaiResponder"]="normalis-firestore.js"
   # tour
   ["startNormalisTour"]="normalis-tour.js"
+  # checklist
+  ["cargarChecklist"]="normalis-checklist.js"
+  ["_renderChecklist"]="normalis-checklist.js"
+  ["registrarRespuestaChecklist"]="normalis-checklist.js"
+  # multiusuario
+  ["renderEquipoIPS"]="normalis-multiusuario.js"
+  ["_escH"]="normalis-multiusuario.js"
+  ["getRolIPS"]="normalis-multiusuario.js"
   # sst
   ["renderSST"]="normalis-sst.js"
   ["calcSSTScore"]="normalis-sst.js"
