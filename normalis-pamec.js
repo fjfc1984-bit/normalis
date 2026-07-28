@@ -280,26 +280,26 @@ function pamecAgregarProceso(){
 }
 
 function pamecAvanzarFase() {
-  var fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
+  let fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
   if (fase >= 4) return;
-  var autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
-  var procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
-  var acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
-  var puedeAvanzar = false;
+  let autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
+  let procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
+  let acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
+  let puedeAvanzar = false;
   if (fase === 1) puedeAvanzar = Object.keys(autoeval).length >= 5;
   else if (fase === 2) puedeAvanzar = procesos.length >= 1;
   else if (fase === 3) puedeAvanzar = acciones.length >= 2;
   if (!puedeAvanzar) {
-    var mensajes = {1:'Completa al menos 5 ítems de autoevaluación antes de avanzar.',2:'Registra al menos 1 proceso de mejora antes de avanzar.',3:'Registra al menos 2 acciones de mejora antes de avanzar.'};
+    const mensajes = {1:'Completa al menos 5 ítems de autoevaluación antes de avanzar.',2:'Registra al menos 1 proceso de mejora antes de avanzar.',3:'Registra al menos 2 acciones de mejora antes de avanzar.'};
     if(typeof toast==='function') toast(mensajes[fase] || 'Completa los criterios de esta fase primero.','warning');
     return;
   }
   localStorage.setItem('normalis_pamec_fase', String(fase + 1));
   if (typeof logAction === 'function') logAction('PAMEC', 'Avance de fase', 'Fase ' + fase + ' → Fase ' + (fase + 1));
   if (typeof trackEvent === 'function') trackEvent('pamec', 'avance_fase', 'fase_' + (fase + 1));
-  var guiaContainer = document.getElementById('pamec-guia-container');
+  const guiaContainer = document.getElementById('pamec-guia-container');
   if (guiaContainer) guiaContainer.innerHTML = pamecGuiaFase();
-  var toast = document.createElement('div');
+  const toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(16,185,129,.4)';
   toast.textContent = '¡Avanzaste a la Fase ' + (fase + 1) + ' del PAMEC!';
   document.body.appendChild(toast);
@@ -502,12 +502,12 @@ function pamecGuardarProceso(){
 }
 
 function pamecGuiaFase() {
-  var fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
-  var autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
-  var procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
-  var acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
+  let fase = parseInt(localStorage.getItem('normalis_pamec_fase') || '1');
+  let autoeval = JSON.parse(localStorage.getItem('normalis_pamec_autoeval') || '{}');
+  let procesos = JSON.parse(localStorage.getItem('normalis_pamec_procesos') || '[]');
+  let acciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones') || '[]');
 
-  var fases = [
+  const fases = [
     {
       num: 1, nombre: 'Autoevaluación',
       descripcion: 'Evalúa el cumplimiento actual de los estándares de calidad.',
@@ -542,19 +542,19 @@ function pamecGuiaFase() {
     }
   ];
 
-  var html = '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-top:16px">';
+  let html = '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-top:16px">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
   html += '<div style="font-weight:700;font-size:15px">Guía del ciclo PAMEC</div>';
   html += '<div style="font-size:12px;color:#64748b">Decreto 1011/2006 — SOGC</div></div>';
   html += '<div style="display:flex;flex-direction:column;gap:12px">';
   fases.forEach(function(f) {
-    var esActual = f.num === fase;
-    var completada = f.completado;
-    var bloqueada = f.num > fase + 1;
-    var borderColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#e2e8f0' : '#f59e0b';
-    var bgColor = completada ? '#f0fdf4' : esActual ? '#eef2ff' : bloqueada ? '#f8fafc' : '#fffbeb';
-    var iconColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#cbd5e1' : '#f59e0b';
-    var icon = completada ? '✅' : esActual ? '🔄' : bloqueada ? '🔒' : '⏳';
+    const esActual = f.num === fase;
+    const completada = f.completado;
+    const bloqueada = f.num > fase + 1;
+    let borderColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#e2e8f0' : '#f59e0b';
+    const bgColor = completada ? '#f0fdf4' : esActual ? '#eef2ff' : bloqueada ? '#f8fafc' : '#fffbeb';
+    const iconColor = completada ? '#10b981' : esActual ? '#6366f1' : bloqueada ? '#cbd5e1' : '#f59e0b';
+    const icon = completada ? '✅' : esActual ? '🔄' : bloqueada ? '🔒' : '⏳';
     html += '<div style="border:2px solid '+borderColor+';background:'+bgColor+';border-radius:10px;padding:14px">';
     html += '<div style="display:flex;align-items:flex-start;gap:12px">';
     html += '<div style="font-size:20px;flex-shrink:0">'+icon+'</div>';

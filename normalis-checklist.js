@@ -6,7 +6,7 @@
 // ══════════════════════════════════════════════
 // ESTADO GLOBAL DEL CHECKLIST
 // ══════════════════════════════════════════════
-var checklistState = {
+const checklistState = {
   data: null,          // JSON del servicio cargado
   respuestas: {},      // { 'TH-001': 'cumple', ... }
   auditoriaId: null,
@@ -15,21 +15,21 @@ var checklistState = {
   guardadoTimer: null
 };
 
-var ETIQUETAS_RESP = {
+const ETIQUETAS_RESP = {
   cumple: 'Cumple',
   cumple_parcialmente: 'Cumple Parcialmente',
   no_cumple: 'No Cumple',
   no_aplica: 'No Aplica'
 };
 
-var VALORES_RESP = { cumple: 100, cumple_parcialmente: 50, no_cumple: 0, no_aplica: null };
-var ICONOS_EST   = { TH:'👤', IF:'🏗️', DO:'🔧', MD:'💊', PP:'📋', HC:'📁', IS:'🔗' };
+const VALORES_RESP = { cumple: 100, cumple_parcialmente: 50, no_cumple: 0, no_aplica: null };
+const ICONOS_EST   = { TH:'👤', IF:'🏗️', DO:'🔧', MD:'💊', PP:'📋', HC:'📁', IS:'🔗' };
 
 // ══════════════════════════════════════════════
 // FUNCIÓN PRINCIPAL — cargar checklist de un servicio
 // ══════════════════════════════════════════════
 function cargarChecklist(codigoServicio, containerId, orgId, sedeId, auditoriaId) {
-  var container = document.getElementById(containerId || 'checklist-container');
+  const container = document.getElementById(containerId || 'checklist-container');
   if (!container) { console.warn('[Normalis] Contenedor no encontrado'); return; }
 
   checklistState.orgId  = orgId  || (window.currentUser && window.currentUser.orgId) || 'demo';
@@ -67,12 +67,12 @@ function cargarChecklist(codigoServicio, containerId, orgId, sedeId, auditoriaId
 // ══════════════════════════════════════════════
 function _crearAuditoriaFirestore() {
   if (typeof firebase === 'undefined') return;
-  var ref = firebase.firestore()
+  const ref = firebase.firestore()
     .collection('organizations').doc(checklistState.orgId)
     .collection('sedes').doc(checklistState.sedeId)
     .collection('auditorias').doc(checklistState.auditoriaId);
 
-  var user = firebase.auth().currentUser;
+  const user = firebase.auth().currentUser;
   ref.set({
     codigoServicio: checklistState.data.servicio.codigo,
     nombreServicio: checklistState.data.servicio.nombre,
@@ -103,7 +103,7 @@ function _guardarFirestore() {
   clearTimeout(checklistState.guardadoTimer);
   checklistState.guardadoTimer = setTimeout(function() {
     _actualizarEstadoGuardado('guardando');
-    var puntaje = _calcularPuntaje();
+    let puntaje = _calcularPuntaje();
 
     if (typeof firebase !== 'undefined') {
       firebase.firestore()
@@ -136,19 +136,19 @@ function _guardarFirestore() {
 // ══════════════════════════════════════════════
 function _calcularPuntaje() {
   if (!checklistState.data) return { total: 0, porEstandar: {} };
-  var porEstandar = {};
-  var totalPonderado = 0;
+  const porEstandar = {};
+  let totalPonderado = 0;
 
   checklistState.data.estandares.forEach(function(est) {
-    var suma = 0, pesoTotal = 0;
+    let suma = 0, pesoTotal = 0;
     est.criterios.forEach(function(crit) {
-      var resp = checklistState.respuestas[crit.id];
+      let resp = checklistState.respuestas[crit.id];
       if (!resp || resp === 'no_aplica') return;
-      var valor = VALORES_RESP[resp] !== undefined ? VALORES_RESP[resp] : 0;
+      const valor = VALORES_RESP[resp] !== undefined ? VALORES_RESP[resp] : 0;
       suma += valor * crit.peso;
       pesoTotal += crit.peso * 100;
     });
-    var puntaje = pesoTotal > 0 ? Math.round((suma / pesoTotal) * 100) : 0;
+    let puntaje = pesoTotal > 0 ? Math.round((suma / pesoTotal) * 100) : 0;
     porEstandar[est.id] = { nombre: est.nombre, puntaje: puntaje, peso: est.peso_porcentual };
     totalPonderado += puntaje * (est.peso_porcentual / 100);
   });
@@ -179,12 +179,12 @@ function _totalCriterios() {
 // RENDER PRINCIPAL
 // ══════════════════════════════════════════════
 function _renderChecklist(container) {
-  var d = checklistState.data;
-  var puntaje = _calcularPuntaje();
-  var color = _colorDesde(puntaje.total);
-  var total = _totalCriterios();
+  let d = checklistState.data;
+  let puntaje = _calcularPuntaje();
+  let color = _colorDesde(puntaje.total);
+  let total = _totalCriterios();
 
-  var html = '<div class="chk-wrap">';
+  let html = '<div class="chk-wrap">';
 
   // ─── Cabecera ───
   html += '<div class="chk-header">';
@@ -198,8 +198,8 @@ function _renderChecklist(container) {
   html += '</div></div>';
 
   // ─── Barra de progreso ───
-  var respondidos = Object.keys(checklistState.respuestas).length;
-  var pct = total > 0 ? Math.round((respondidos / total) * 100) : 0;
+  let respondidos = Object.keys(checklistState.respuestas).length;
+  const pct = total > 0 ? Math.round((respondidos / total) * 100) : 0;
   html += '<div class="chk-progreso">';
   html += '<div class="chk-progreso-label"><span>Progreso</span><span id="chk-criterios-txt">' + respondidos + ' / ' + total + ' criterios</span></div>';
   html += '<div class="chk-barra-fondo"><div class="chk-barra-fill" id="chk-barra-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
@@ -208,7 +208,7 @@ function _renderChecklist(container) {
   // ─── Chips de estándares ───
   html += '<div class="chk-chips">';
   d.estandares.forEach(function(est) {
-    var p = (puntaje.porEstandar[est.id] || {}).puntaje || 0;
+    let p = (puntaje.porEstandar[est.id] || {}).puntaje || 0;
     html += '<span class="chk-chip" onclick="document.getElementById(\'chk-est-' + est.id + '\').scrollIntoView({behavior:\'smooth\'})">';
     html += ICONOS_EST[est.id] + ' ' + est.nombre + ' <strong id="chk-chip-' + est.id + '">' + p + '%</strong></span>';
   });
@@ -216,7 +216,7 @@ function _renderChecklist(container) {
 
   // ─── Estándares ───
   d.estandares.forEach(function(est) {
-    var p = (puntaje.porEstandar[est.id] || {}).puntaje || 0;
+    let p = (puntaje.porEstandar[est.id] || {}).puntaje || 0;
     html += '<div class="chk-estandar" id="chk-est-' + est.id + '">';
     html += '<div class="chk-est-header">';
     html += '<span class="chk-est-icon">' + (ICONOS_EST[est.id] || '📌') + '</span>';
@@ -226,8 +226,8 @@ function _renderChecklist(container) {
     html += '<div class="chk-criterios">';
 
     est.criterios.forEach(function(crit) {
-      var resp = checklistState.respuestas[crit.id] || '';
-      var cardClass = 'chk-criterio' + (resp ? ' chk-resp-' + resp : '');
+      let resp = checklistState.respuestas[crit.id] || '';
+      const cardClass = 'chk-criterio' + (resp ? ' chk-resp-' + resp : '');
       html += '<div class="' + cardClass + '" id="chk-crit-' + crit.id + '" data-estandar="' + est.id + '">';
 
       // Header del criterio
@@ -243,7 +243,7 @@ function _renderChecklist(container) {
       // Opciones de respuesta
       html += '<div class="chk-opciones">';
       ['cumple', 'cumple_parcialmente', 'no_cumple', 'no_aplica'].forEach(function(valor) {
-        var checked = resp === valor ? 'checked' : '';
+        const checked = resp === valor ? 'checked' : '';
         html += '<label class="chk-opcion">';
         html += '<input type="radio" name="crit-' + crit.id + '" value="' + valor + '" ' + checked + ' onchange="registrarRespuestaChecklist(\'' + crit.id + '\',\'' + valor + '\',\'' + est.id + '\')">';
         html += '<span class="chk-opcion-txt chk-opt-' + valor + '">' + ETIQUETAS_RESP[valor] + '</span>';
@@ -252,7 +252,7 @@ function _renderChecklist(container) {
       html += '</div>';
 
       // Evidencias (ocultas por defecto, se muestran si no cumple / parcial)
-      var showEv = (resp === 'no_cumple' || resp === 'cumple_parcialmente') ? '' : 'display:none';
+      const showEv = (resp === 'no_cumple' || resp === 'cumple_parcialmente') ? '' : 'display:none';
       html += '<div class="chk-evidencias" id="chk-ev-' + crit.id + '" style="' + showEv + '">';
       html += '<p class="chk-ev-titulo">📎 Evidencias requeridas:</p><ul>';
       crit.evidencias_requeridas.forEach(function(ev) { html += '<li>' + ev + '</li>'; });
@@ -301,7 +301,7 @@ function registrarRespuestaChecklist(criterioId, valor, estandarId) {
   _actualizarEstiloCriterio(criterioId, valor);
 
   // Mostrar/ocultar evidencias
-  var evDiv = document.getElementById('chk-ev-' + criterioId);
+  const evDiv = document.getElementById('chk-ev-' + criterioId);
   if (evDiv) {
     evDiv.style.display = (valor === 'no_cumple' || valor === 'cumple_parcialmente') ? 'block' : 'none';
   }
@@ -312,7 +312,7 @@ function registrarRespuestaChecklist(criterioId, valor, estandarId) {
 }
 
 function _actualizarEstiloCriterio(criterioId, valor) {
-  var card = document.getElementById('chk-crit-' + criterioId);
+  const card = document.getElementById('chk-crit-' + criterioId);
   if (!card) return;
   card.className = card.className.replace(/chk-resp-\S+/g, '').trim();
   if (valor) card.classList.add('chk-resp-' + valor);
@@ -322,31 +322,31 @@ function _actualizarEstiloCriterio(criterioId, valor) {
 // ACTUALIZACIÓN DE UI
 // ══════════════════════════════════════════════
 function _actualizarUI() {
-  var puntaje  = _calcularPuntaje();
-  var color    = _colorDesde(puntaje.total);
-  var respondidos = Object.keys(checklistState.respuestas).length;
-  var total    = _totalCriterios();
+  let puntaje  = _calcularPuntaje();
+  let color    = _colorDesde(puntaje.total);
+  let respondidos = Object.keys(checklistState.respuestas).length;
+  let total    = _totalCriterios();
 
   // Puntaje total
-  var numEl = document.getElementById('chk-puntaje-num');
+  const numEl = document.getElementById('chk-puntaje-num');
   if (numEl) { numEl.textContent = puntaje.total + '%'; numEl.style.color = color; }
 
-  var estadoEl = document.getElementById('chk-estado-badge');
+  const estadoEl = document.getElementById('chk-estado-badge');
   if (estadoEl) { estadoEl.textContent = _estadoDesde(puntaje.total); estadoEl.style.background = color; }
 
   // Barra
-  var barraEl = document.getElementById('chk-barra-fill');
+  const barraEl = document.getElementById('chk-barra-fill');
   if (barraEl) { barraEl.style.width = (total > 0 ? Math.round((respondidos / total) * 100) : 0) + '%'; barraEl.style.background = color; }
 
-  var textoEl = document.getElementById('chk-criterios-txt');
+  const textoEl = document.getElementById('chk-criterios-txt');
   if (textoEl) textoEl.textContent = respondidos + ' / ' + total + ' criterios';
 
   // Chips y puntaje por estándar
   Object.keys(puntaje.porEstandar).forEach(function(id) {
-    var p = puntaje.porEstandar[id].puntaje;
-    var chipEl = document.getElementById('chk-chip-' + id);
+    let p = puntaje.porEstandar[id].puntaje;
+    const chipEl = document.getElementById('chk-chip-' + id);
     if (chipEl) chipEl.textContent = p + '%';
-    var pEl = document.getElementById('chk-est-p-' + id);
+    const pEl = document.getElementById('chk-est-p-' + id);
     if (pEl) pEl.textContent = p + '%';
   });
 
@@ -354,19 +354,19 @@ function _actualizarUI() {
   if (respondidos >= total && total > 0) _renderHallazgos();
 
   // Actualizar sidebar global de Normalis si existe
-  var sbScore = document.getElementById('sb-score-val');
+  const sbScore = document.getElementById('sb-score-val');
   if (sbScore) sbScore.textContent = puntaje.total;
 }
 
 function _renderHallazgos() {
-  var panel = document.getElementById('chk-hallazgos-panel');
-  var lista = document.getElementById('chk-lista-hallazgos');
+  const panel = document.getElementById('chk-hallazgos-panel');
+  const lista = document.getElementById('chk-lista-hallazgos');
   if (!panel || !lista || !checklistState.data) return;
 
-  var hallazgos = [];
+  let hallazgos = [];
   checklistState.data.estandares.forEach(function(est) {
     est.criterios.forEach(function(crit) {
-      var resp = checklistState.respuestas[crit.id];
+      let resp = checklistState.respuestas[crit.id];
       if (resp === 'no_cumple' || resp === 'cumple_parcialmente') {
         hallazgos.push({ est: est.nombre, crit: crit, resp: resp });
       }
@@ -376,9 +376,9 @@ function _renderHallazgos() {
   if (hallazgos.length === 0) {
     lista.innerHTML = '<p style="color:#22c55e;font-weight:700">✅ Sin hallazgos. El servicio cumple todos los criterios.</p>';
   } else {
-    var html = '';
+    let html = '';
     hallazgos.forEach(function(h) {
-      var color = h.resp === 'no_cumple' ? '#ef4444' : '#f59e0b';
+      let color = h.resp === 'no_cumple' ? '#ef4444' : '#f59e0b';
       html += '<div style="border-left:3px solid ' + color + ';padding:10px 14px;margin-bottom:10px;background:#f8fafc;border-radius:0 8px 8px 0">';
       html += '<div style="display:flex;gap:8px;font-size:12px;font-weight:700;margin-bottom:4px">';
       html += '<span style="color:#005294">' + h.est + '</span>';
@@ -393,9 +393,9 @@ function _renderHallazgos() {
 }
 
 function _actualizarEstadoGuardado(estado) {
-  var el = document.getElementById('chk-guardado-status');
+  const el = document.getElementById('chk-guardado-status');
   if (!el) return;
-  var textos = { guardando: '⏳ Guardando...', guardado: '✅ Guardado', error: '❌ Error al guardar' };
+  const textos = { guardando: '⏳ Guardando...', guardado: '✅ Guardado', error: '❌ Error al guardar' };
   el.textContent = textos[estado] || '';
 }
 
@@ -405,38 +405,38 @@ function _actualizarEstadoGuardado(estado) {
 // ══════════════════════════════════════════════
 function exportarInformeChecklist() {
   if (!checklistState.data) return;
-  var puntaje   = _calcularPuntaje();
-  var hallazgos = _obtenerHallazgos();
-  var d         = checklistState.data;
-  var color     = _colorDesde(puntaje.total);
-  var estado    = _estadoDesde(puntaje.total);
-  var hoy       = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  let puntaje   = _calcularPuntaje();
+  let hallazgos = _obtenerHallazgos();
+  let d         = checklistState.data;
+  let color     = _colorDesde(puntaje.total);
+  const estado    = _estadoDesde(puntaje.total);
+  const hoy       = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
   // Plan de mejoramiento automático por estándar
-  var PLAZOS = { TH:'30 días', IF:'60 días', DO:'30 días', MD:'15 días', PP:'30 días', HC:'30 días', IS:'45 días' };
-  var RESPONSABLES = { TH:'Rep. Legal / RRHH', IF:'Rep. Legal / Infraestructura', DO:'Coord. Dotación', MD:'Responsable Farmacia', PP:'Coord. Calidad', HC:'Coord. Asistencial', IS:'Rep. Legal' };
+  const PLAZOS = { TH:'30 días', IF:'60 días', DO:'30 días', MD:'15 días', PP:'30 días', HC:'30 días', IS:'45 días' };
+  const RESPONSABLES = { TH:'Rep. Legal / RRHH', IF:'Rep. Legal / Infraestructura', DO:'Coord. Dotación', MD:'Responsable Farmacia', PP:'Coord. Calidad', HC:'Coord. Asistencial', IS:'Rep. Legal' };
 
-  var areasHTML = '';
+  let areasHTML = '';
   Object.keys(puntaje.porEstandar).forEach(function(id) {
-    var p = puntaje.porEstandar[id];
-    var c = p.puntaje >= 85 ? '#10b981' : p.puntaje >= 60 ? '#f59e0b' : '#ef4444';
+    let p = puntaje.porEstandar[id];
+    let c = p.puntaje >= 85 ? '#10b981' : p.puntaje >= 60 ? '#f59e0b' : '#ef4444';
     areasHTML += '<tr><td>' + (ICONOS_EST[id] || '') + ' ' + p.nombre + '</td>';
     areasHTML += '<td style="text-align:center;font-weight:700;color:' + c + '">' + p.puntaje + '%</td>';
     areasHTML += '<td>' + p.peso + '%</td></tr>';
   });
 
-  var hallazgosHTML = '';
-  var planHTML = '';
+  let hallazgosHTML = '';
+  let planHTML = '';
   if (hallazgos.length === 0) {
     hallazgosHTML = '<tr><td colspan="3" style="color:#10b981;text-align:center">✅ Sin hallazgos detectados</td></tr>';
     planHTML = '<tr><td colspan="4" style="color:#10b981;text-align:center">✅ Sin acciones correctivas requeridas</td></tr>';
   } else {
     hallazgos.forEach(function(h, i) {
-      var c = h.resp === 'no_cumple' ? '#ef4444' : '#f59e0b';
+      let c = h.resp === 'no_cumple' ? '#ef4444' : '#f59e0b';
       hallazgosHTML += '<tr><td style="color:' + c + '">' + ETIQUETAS_RESP[h.resp] + '</td>';
       hallazgosHTML += '<td>' + h.estandarNombre + ' — ' + h.crit.id + '</td>';
       hallazgosHTML += '<td style="font-size:11px">' + h.crit.descripcion.slice(0, 100) + '…</td></tr>';
-      var estId = h.crit.id.split('-')[0];
+      const estId = h.crit.id.split('-')[0];
       planHTML += '<tr><td>' + (i+1) + '</td><td>' + h.crit.id + '</td>';
       planHTML += '<td style="font-size:11px">' + h.crit.hallazgo_tipico.replace(/^(No existe|Ausencia de|Ausencia total de)/, 'Implementar') + '</td>';
       planHTML += '<td>' + (RESPONSABLES[estId] || 'Responsable asignado') + '</td>';
@@ -444,7 +444,7 @@ function exportarInformeChecklist() {
     });
   }
 
-  var w = window.open('', '_blank', 'width=900,height=700');
+  const w = window.open('', '_blank', 'width=900,height=700');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Informe NormaLis — ' + d.servicio.nombre + '</title>');
   w.document.write('<style>');
   w.document.write('*{box-sizing:border-box}body{font-family:\'Segoe UI\',sans-serif;font-size:12px;color:#1e293b;margin:0;padding:30px 40px;max-width:860px}');
@@ -488,11 +488,11 @@ function exportarInformeChecklist() {
 }
 
 function _obtenerHallazgos() {
-  var hallazgos = [];
+  let hallazgos = [];
   if (!checklistState.data) return hallazgos;
   checklistState.data.estandares.forEach(function(est) {
     est.criterios.forEach(function(crit) {
-      var resp = checklistState.respuestas[crit.id];
+      let resp = checklistState.respuestas[crit.id];
       if (resp === 'no_cumple' || resp === 'cumple_parcialmente') {
         hallazgos.push({ estandarId: est.id, estandarNombre: est.nombre, crit: crit, resp: resp });
       }
@@ -506,7 +506,7 @@ function _obtenerHallazgos() {
 // ══════════════════════════════════════════════
 (function() {
   if (document.getElementById('normalis-checklist-styles')) return;
-  var style = document.createElement('style');
+  let style = document.createElement('style');
   style.id = 'normalis-checklist-styles';
   style.textContent = [
     '.chk-wrap{max-width:860px;margin:0 auto}',

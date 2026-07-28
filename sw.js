@@ -1,7 +1,7 @@
 // sw.js — NormaLis Service Worker
 // Estrategia: cache-first para assets estáticos, network-first para HTML
 // Versión: incrementar CACHE_VERSION para forzar actualización
-const CACHE_VERSION = 'normalis-v7';
+const CACHE_VERSION = 'normalis-v8';
 const CACHE_STATIC  = CACHE_VERSION + '-static';
 
 // Todos los módulos JS y CSS del proyecto
@@ -25,6 +25,7 @@ const STATIC_ASSETS = [
   '/normalis-firestore.js',
   '/normalis-incidentes.js',
   '/normalis-indicadores.js',
+  '/normalis-main.js',
   '/normalis-multiusuario.js',
   '/normalis-pamec.js',
   '/normalis-pdf.js',

@@ -57,6 +57,7 @@ CRITICAL_FILES=(
   "normalis-plans.js"
   "normalis-checklist.js"
   "normalis-multiusuario.js"
+  "normalis-main.js"
 )
 
 for f in "${CRITICAL_FILES[@]}"; do
@@ -102,7 +103,8 @@ declare -A MIN_SIZES=(
   ["normalis-checklist.js"]=5000
   ["normalis-multiusuario.js"]=5000
   ["normalis-styles.css"]=30000
-  ["normativa-app-v2.html"]=400000
+  ["normativa-app-v2.html"]=150000
+  ["normalis-main.js"]=300000
 )
 
 for f in "${!MIN_SIZES[@]}"; do
@@ -148,6 +150,7 @@ declare -A SEALS=(
   ["normalis-checklist.js"]="END:normalis-checklist.js"
   ["normalis-multiusuario.js"]="END:normalis-multiusuario.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
+  ["normalis-main.js"]="END:normalis-main.js"
 )
 
 for f in "${!SEALS[@]}"; do
@@ -194,7 +197,6 @@ if [[ -f "$APP" ]]; then
     "normalis-data-audit.js"
     "normalis-chat.js"
     "normalis-audit-score.js"
-    "normalis-docs.js"
     "normalis-pdf.js"
     "normalis-capa.js"
     "normalis-indicadores.js"
@@ -205,9 +207,10 @@ if [[ -f "$APP" ]]; then
     "normalis-bitacora.js"
     "normalis-firestore.js"
     "normalis-tour.js"
-    "normalis-sst.js"
+    "normalis-main.js"
     "normalis-styles.css"
   )
+  # normalis-docs.js y normalis-sst.js son lazy-loaded desde normalis-main.js — no tienen <script src> directo
   # Módulos que se cargan de forma lazy (via nlLazyLoad) en vez de <script src>
   LAZY_MODULES=("normalis-sst.js" "normalis-pamec.js" "normalis-docs.js" "normalis-export.js")
   for mod in "${MODULES[@]}"; do
@@ -454,9 +457,9 @@ APP="$REPO/normativa-app-v2.html"
 if [[ -f "$APP" ]]; then
   # Check only actual <script src="..."> tags, not comments
   MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
-    "normalis-docs.js" "normalis-pdf.js" "normalis-capa.js" "normalis-indicadores.js" "normalis-pqrs.js" "normalis-incidentes.js"
+     "normalis-pdf.js" "normalis-capa.js" "normalis-indicadores.js" "normalis-pqrs.js" "normalis-incidentes.js"
     "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
-  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js" "normalis-sst.js" "normalis-plans.js")
+  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js"  "normalis-plans.js")
   for mod in "${MODULES_TO_CHECK[@]}"; do
     TAG_COUNT=$(grep -cE "<script src=\"$mod(\?v=[0-9]+)?\"" "$APP" || true)
     if [[ "$TAG_COUNT" -gt 1 ]]; then
@@ -521,8 +524,8 @@ section "13. normativa-app-v2.html — líneas mínimas post-edición"
 APP="$REPO/normativa-app-v2.html"
 if [[ -f "$APP" ]]; then
   LINES=$(wc -l < "$APP")
-  if [[ "$LINES" -lt 8000 ]]; then
-    fail "normativa-app-v2.html: solo $LINES líneas — archivo posiblemente truncado (mínimo 8000)"
+  if [[ "$LINES" -lt 2000 ]]; then
+    fail "normativa-app-v2.html: solo $LINES líneas — archivo posiblemente truncado (mínimo 2000)"
   else
     pass "normativa-app-v2.html: $LINES líneas — integridad de longitud OK"
   fi

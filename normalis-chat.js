@@ -112,14 +112,14 @@ function renderBotResponse(el, { text, sources }) {
 
   if (sources && sources.length > 0) {
     // Sanitizar URLs: solo https:// hacia dominios gov.co / minsalud para prevenir javascript: / data: XSS
-    var safeUrls = sources.filter(function(u) {
+    const safeUrls = sources.filter(function(u) {
       return typeof u === 'string' && /^https:\/\/[a-z0-9._-]+(\.gov\.co|minsalud|sispro|suin-juriscol|funcionpublica)\b/i.test(u);
     });
     if (safeUrls.length > 0) {
       html += '<br><br><small style="color:#6b7280;font-size:11px">&#128206; Fuentes oficiales:<br>' +
         safeUrls.map(function(u) {
-          var safeHref = u.replace(/"/g, '%22').replace(/'/g, '%27').replace(/</g, '%3C').replace(/>/g, '%3E');
-          var display  = u.replace(/https?:\/\//, '').split('/')[0];
+          const safeHref = u.replace(/"/g, '%22').replace(/'/g, '%27').replace(/</g, '%3C').replace(/>/g, '%3E');
+          const display  = u.replace(/https?:\/\//, '').split('/')[0];
           return '<a href="' + safeHref + '" target="_blank" rel="noopener noreferrer" style="color:#0d9488">' + display + '</a>';
         }).join(' &middot; ') +
         '</small>';
@@ -154,7 +154,7 @@ function addMainMsg(text, type) {
   d.className = `msg ${type === 'bot' ? 'bot' : 'user-msg'}`;
   if (type === 'bot') {
     // Sanitizar primero para prevenir XSS, luego aplicar markdown básico
-    var safe = String(text || '')
+    const safe = String(text || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')

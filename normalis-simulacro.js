@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════
 // MÓDULO SIMULACRO SECRETARÍA
 // ═══════════════════════════════════════════
-var SIMULACRO_CRITERIOS = [
+const SIMULACRO_CRITERIOS = [
   { cat:'🏗️ Infraestructura y Dotación', items:[
     'Las áreas cumplen con metros cuadrados mínimos por servicio habilitado',
     'Señalización de emergencias, rutas de evacuación y extintores vigentes',
@@ -48,13 +48,13 @@ var SIMULACRO_CRITERIOS = [
 ];
 
 function renderSimulacro() {
-  var container = document.getElementById('simulacro-sections');
+  const container = document.getElementById('simulacro-sections');
   if (!container) return;
-  var saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
-  var totalItems = 0, checkedItems = 0;
+  let saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
+  let totalItems = 0, checkedItems = 0;
   container.innerHTML = SIMULACRO_CRITERIOS.map((cat, ci) => {
     totalItems += cat.items.length;
-    var catChecked = cat.items.filter((item, ii) => saved[ci+'-'+ii]).length;
+    const catChecked = cat.items.filter((item, ii) => saved[ci+'-'+ii]).length;
     checkedItems += catChecked;
     return `<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
       <div style="background:#f8fafc;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSimCat(${ci})">
@@ -72,21 +72,21 @@ function renderSimulacro() {
       </div>
     </div>`;
   }).join('');
-  var pct = totalItems ? Math.round(checkedItems/totalItems*100) : 0;
+  const pct = totalItems ? Math.round(checkedItems/totalItems*100) : 0;
   document.getElementById('sim-score').textContent = pct + '%';
   document.getElementById('sim-counts').textContent = checkedItems + ' / ' + totalItems + ' criterios';
-  var status = pct === 100 ? '✅ Listo para visita' : pct >= 80 ? '🟡 Casi listo' : pct >= 50 ? '🟠 En proceso' : '🔴 Requiere atención';
+  const status = pct === 100 ? '✅ Listo para visita' : pct >= 80 ? '🟡 Casi listo' : pct >= 50 ? '🟠 En proceso' : '🔴 Requiere atención';
   document.getElementById('sim-status').textContent = status;
 }
 function toggleSimCat(ci) {
-  var el = document.getElementById('sim-cat-'+ci);
-  var arrow = document.getElementById('sim-arrow-'+ci);
+  const el = document.getElementById('sim-cat-'+ci);
+  const arrow = document.getElementById('sim-arrow-'+ci);
   el.style.display = el.style.display === 'none' ? 'flex' : 'none';
   el.style.flexDirection = 'column';
   arrow.textContent = el.style.display === 'none' ? '▶' : '▼';
 }
 function toggleSimItem(ci, ii, checked) {
-  var saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
+  let saved = JSON.parse(localStorage.getItem('normalis_simulacro') || '{}');
   saved[ci+'-'+ii] = checked;
   localStorage.setItem('normalis_simulacro', JSON.stringify(saved));
   renderSimulacro();
@@ -100,7 +100,7 @@ function resetSimulacro() {
 }
 
 // Init new modules on nav
-var _navWrap2026 = window.nav;
+const _navWrap2026 = window.nav;
 window.nav = function(sec) {
   if (typeof _navWrap2026 === 'function') _navWrap2026(sec);
   if (sec === 'pqrs') { setTimeout(renderPQRS, 100); }

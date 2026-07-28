@@ -47,25 +47,25 @@ function newUser(){
 }
 
 function openProfModal(id){
-  var arr=loadPersonal();
-  var p=arr.find(function(x){ return x.id===id; });
+  const arr=loadPersonal();
+  const p=arr.find(function(x){ return x.id===id; });
   if(!p) return;
-  var pmName=document.getElementById('pm-name'); if(pmName) pmName.textContent=p.nombre;
-  var pmRole=document.getElementById('pm-role'); if(pmRole) pmRole.textContent=p.cargo+' · '+p.tipo;
-  var ini=(p.nombre||'?').split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
-  var pmAvatar=document.getElementById('pm-avatar'); if(pmAvatar) pmAvatar.textContent=ini;
-  var docNames={titulo:'Título profesional',rethus:'Tarjeta RETHUS',contrato:'Contrato vigente',vacunas:'Esquema vacunas',bioseg:'Capacitación bioseguridad'};
-  var docsEl=document.getElementById('pm-docs');
+  const pmName=document.getElementById('pm-name'); if(pmName) pmName.textContent=p.nombre;
+  const pmRole=document.getElementById('pm-role'); if(pmRole) pmRole.textContent=p.cargo+' · '+p.tipo;
+  let ini=(p.nombre||'?').split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+  const pmAvatar=document.getElementById('pm-avatar'); if(pmAvatar) pmAvatar.textContent=ini;
+  const docNames={titulo:'Título profesional',rethus:'Tarjeta RETHUS',contrato:'Contrato vigente',vacunas:'Esquema vacunas',bioseg:'Capacitación bioseguridad'};
+  const docsEl=document.getElementById('pm-docs');
   if(docsEl) docsEl.innerHTML=Object.keys(docNames).map(function(k){
-    var ok=p.docs&&p.docs[k];
+    const ok=p.docs&&p.docs[k];
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'+
       '<span>'+(ok?'✅':'❌')+'</span>'+
       '<span style="font-size:13px;color:'+(ok?'var(--text)':'var(--danger)')+'">'+docNames[k]+'</span>'+
       '</div>';
   }).join('');
-  var actions=document.querySelector('#prof-modal .pm-actions');
+  let actions=document.querySelector('#prof-modal .pm-actions');
   if(actions&&!actions.querySelector('[data-del]')){
-    var delBtn=document.createElement('button');
+    const delBtn=document.createElement('button');
     delBtn.className='btn btn-sm';
     delBtn.style.cssText='background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3)';
     delBtn.textContent='🗑 Eliminar';
@@ -73,15 +73,15 @@ function openProfModal(id){
     delBtn.onclick=function(){ nlConfirm('¿Eliminar a <strong>'+p.nombre+'</strong>?', 'Eliminar', '#ef4444').then(function(ok){ if(!ok) return; var a=loadPersonal(); savePersonal(a.filter(function(x){ return x.id!==id; })); closeProfModal(); renderProfGrid(); toast('Profesional eliminado','info'); }); };
     actions.insertBefore(delBtn,actions.firstChild);
   } else if(actions) {
-    var existing=actions.querySelector('[data-del]');
+    const existing=actions.querySelector('[data-del]');
     if(existing) existing.setAttribute('data-del',id);
   }
-  var modal=document.getElementById('prof-modal'); if(modal) modal.style.display='flex';
+  let modal=document.getElementById('prof-modal'); if(modal) modal.style.display='flex';
 }
 
 function closeProfModal(){
-  var modal=document.getElementById('prof-modal'); if(modal) modal.style.display='none';
-  var actions=document.querySelector('#prof-modal .pm-actions');
+  let modal=document.getElementById('prof-modal'); if(modal) modal.style.display='none';
+  let actions=document.querySelector('#prof-modal .pm-actions');
   if(actions){ var del=actions.querySelector('[data-del]'); if(del) del.remove(); }
 }
 

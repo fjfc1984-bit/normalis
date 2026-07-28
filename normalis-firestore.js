@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════
 
 // Claves de localStorage que se sincronizan con Firestore
-var FS_KEYS = [
+const FS_KEYS = [
   'normalis_pqrs',
   'normalis_incidentes',
   'normalis_vencimientos',
@@ -28,7 +28,7 @@ var FS_KEYS = [
   'normalis_ips_ciudad'
 ];
 
-var fsSync = {
+const fsSync = {
   _db: null,
   _userId: null,
   _nit: null,       // NIT de la IPS — todos los miembros del equipo comparten esta ruta
@@ -64,7 +64,7 @@ var fsSync = {
     // Extraer NIT de la IPS para ruta compartida — todos los miembros usan ips/{nit}/data/
     // Si no hay NIT (admin, primer login), fallback a uid para backward compat
     try {
-      var cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
+      const cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
       this._nit = cfg.nit && cfg.nit.trim() ? cfg.nit.trim() : uid;
     } catch(_) { this._nit = uid; }
 
@@ -85,15 +85,15 @@ var fsSync = {
     // ── MULTI-USUARIO: usar NIT como documento raíz ──────────────────────────
     // Todos los miembros del equipo de la IPS comparten ips/{nit}/data/{key}
     // Fallback a _userId para backward compat (admin, primeros logins sin cfg)
-    var docId = this._nit || this._userId;
+    const docId = this._nit || this._userId;
     return this._db.collection('ips').doc(docId).collection('data').doc(key);
   },
 
   push: function(key) {
     if (!this._online || !this._userId) return;
-    var ref = this.getRef(key);
+    let ref = this.getRef(key);
     if (!ref) return;
-    var raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     if (!raw) return;
     this.setSyncStatus('syncing');
     ref.set({ data: raw, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
@@ -102,7 +102,7 @@ var fsSync = {
   },
 
   pull: function(key) {
-    var ref = this.getRef(key);
+    let ref = this.getRef(key);
     if (!ref) return Promise.resolve();
     return ref.get().then(function(doc) {
       if (doc.exists && doc.data().data) {
@@ -120,16 +120,16 @@ var fsSync = {
   },
 
   setSyncStatus: function(status) {
-    var dot = document.getElementById('sync-dot');
-    var text = document.getElementById('sync-text');
+    const dot = document.getElementById('sync-dot');
+    const text = document.getElementById('sync-text');
     if (!dot || !text) return;
-    var states = {
+    const states = {
       synced:  { color: '#10b981', label: '☁️ Sincronizado' },
       syncing: { color: '#f59e0b', label: '⏳ Sincronizando...' },
       offline: { color: '#94a3b8', label: '📴 Sin conexión' },
       error:   { color: '#ef4444', label: '&#9888; Error de sync' }
     };
-    var s = states[status] || states.synced;
+    const s = states[status] || states.synced;
     dot.style.background = s.color;
     text.textContent = s.label;
   }
@@ -138,7 +138,7 @@ var fsSync = {
 // ── Patch save functions to also push to Firestore ──
 (function patchSaves() {
   // Helper: after any localStorage.setItem, push to Firestore
-  var origSetItem = localStorage.setItem.bind(localStorage);
+  const origSetItem = localStorage.setItem.bind(localStorage);
   localStorage.setItem = function(key, value) {
     origSetItem(key, value);
     if (FS_KEYS.includes(key)) {
@@ -155,29 +155,29 @@ document.addEventListener('DOMContentLoaded', function() {
 // XAI CONSULTOR NORMATIVO EXPLICABLE
 
 function buildUserContext() {
-  var hoy = new Date();
+  let hoy = new Date();
   hoy.setHours(0,0,0,0);
-  var en30 = new Date(hoy); en30.setDate(en30.getDate()+30);
-  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs')||'[]');
-  var pqrsPend = pqrs.filter(function(p){return p.estado==='Pendiente';}).length;
-  var pqrsTotal = pqrs.length;
-  var incs = JSON.parse(localStorage.getItem('normalis_incidentes')||'[]');
-  var incCriticos = incs.filter(function(i){return i.severidad==='critico'&&i.estado!=='Cerrado';});
-  var incAbiertos = incs.filter(function(i){return i.estado==='Abierto';}).length;
-  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos')||'[]');
-  var vencidos = docs.filter(function(d){return new Date(d.fecha)<hoy;});
-  var proximos = docs.filter(function(d){var f=new Date(d.fecha);return f>=hoy&&f<=en30;});
-  var simSaved = JSON.parse(localStorage.getItem('normalis_simulacro')||'{}');
-  var simTotal = 27;
-  var simChecked = Object.values(simSaved).filter(Boolean).length;
-  var simPct = Math.round(simChecked/simTotal*100);
-  var pamecFase = parseInt(localStorage.getItem('normalis_pamec_fase')||'1');
-  var pamecProcs = JSON.parse(localStorage.getItem('normalis_pamec_procesos')||'[]');
-  var pamecAcciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones')||'[]');
-  var logs = JSON.parse(localStorage.getItem('normalis_bitacora')||'[]');
-  var ultimaActividad = logs.length > 0 ? new Date(logs[0].ts) : null;
-  var diasSinActividad = ultimaActividad ? Math.round((new Date()-ultimaActividad)/(1000*60*60*24)) : null;
-  var profesionales = JSON.parse(localStorage.getItem('th_profesionales')||'[]');
+  let en30 = new Date(hoy); en30.setDate(en30.getDate()+30);
+  let pqrs = JSON.parse(localStorage.getItem('normalis_pqrs')||'[]');
+  const pqrsPend = pqrs.filter(function(p){return p.estado==='Pendiente';}).length;
+  const pqrsTotal = pqrs.length;
+  let incs = JSON.parse(localStorage.getItem('normalis_incidentes')||'[]');
+  const incCriticos = incs.filter(function(i){return i.severidad==='critico'&&i.estado!=='Cerrado';});
+  const incAbiertos = incs.filter(function(i){return i.estado==='Abierto';}).length;
+  let docs = JSON.parse(localStorage.getItem('normalis_vencimientos')||'[]');
+  const vencidos = docs.filter(function(d){return new Date(d.fecha)<hoy;});
+  const proximos = docs.filter(function(d){var f=new Date(d.fecha);return f>=hoy&&f<=en30;});
+  const simSaved = JSON.parse(localStorage.getItem('normalis_simulacro')||'{}');
+  const simTotal = 27;
+  const simChecked = Object.values(simSaved).filter(Boolean).length;
+  const simPct = Math.round(simChecked/simTotal*100);
+  const pamecFase = parseInt(localStorage.getItem('normalis_pamec_fase')||'1');
+  const pamecProcs = JSON.parse(localStorage.getItem('normalis_pamec_procesos')||'[]');
+  const pamecAcciones = JSON.parse(localStorage.getItem('normalis_pamec_acciones')||'[]');
+  const logs = JSON.parse(localStorage.getItem('normalis_bitacora')||'[]');
+  const ultimaActividad = logs.length > 0 ? new Date(logs[0].ts) : null;
+  const diasSinActividad = ultimaActividad ? Math.round((new Date()-ultimaActividad)/(1000*60*60*24)) : null;
+  const profesionales = JSON.parse(localStorage.getItem('th_profesionales')||'[]');
   return {
     pqrs: { total: pqrsTotal, pendientes: pqrsPend },
     incidentes: { criticos_abiertos: incCriticos.length, abiertos: incAbiertos, detalle: incCriticos.slice(0,3) },
@@ -191,7 +191,7 @@ function buildUserContext() {
 }
 
 function calcularRiesgoGlobal(d) {
-  var score = 100;
+  let score = 100;
   if (d.incCriticos > 0) score -= d.incCriticos * 15;
   if (d.vencidos > 0) score -= d.vencidos * 10;
   if (d.pqrsPend > 3) score -= 10;
@@ -199,24 +199,24 @@ function calcularRiesgoGlobal(d) {
   else if (d.simPct < 80) score -= 10;
   if (d.pamecFase < 2) score -= 10;
   score = Math.max(0, Math.min(100, score));
-  var nivel = score >= 80 ? 'BAJO' : score >= 60 ? 'MEDIO' : score >= 40 ? 'ALTO' : 'CRITICO';
+  const nivel = score >= 80 ? 'BAJO' : score >= 60 ? 'MEDIO' : score >= 40 ? 'ALTO' : 'CRITICO';
   return { score: score, nivel: nivel };
 }
 
 function xaiResponder(pregunta) {
-  var ctx = buildUserContext();
-  var q = pregunta.toLowerCase().trim();
-  var resp = '';
+  const ctx = buildUserContext();
+  const q = pregunta.toLowerCase().trim();
+  let resp = '';
   if (q.indexOf('visit')>=0 || q.indexOf('secret')>=0 || q.indexOf('habilitac')>=0 || q.indexOf('prepar')>=0 || q.indexOf('listo')>=0 || q.indexOf('lista')>=0) {
-    var riesgo = ctx.resumen_riesgo;
-    var problemas = [];
-    var acciones = [];
+    const riesgo = ctx.resumen_riesgo;
+    const problemas = [];
+    const acciones = [];
     if (ctx.incidentes.criticos_abiertos > 0) {
       problemas.push('<li><b>' + ctx.incidentes.criticos_abiertos + ' evento(s) critico(s) abiertos</b></li>');
       acciones.push('<a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-weight:600">Ir a Incidentes</a>');
     }
     if (ctx.vencimientos.vencidos > 0) {
-      var nombres = ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional+' ('+d.tipo+')';}).join(', ');
+      const nombres = ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional+' ('+d.tipo+')';}).join(', ');
       problemas.push('<li><b>' + ctx.vencimientos.vencidos + ' doc(s) VENCIDOS</b>: ' + nombres + '</li>');
       acciones.push('<a href="#" onclick="nav(\x27vencimientos-personal\x27);return false" style="color:#8b5cf6;font-weight:600">Actualizar docs</a>');
     }
@@ -235,7 +235,7 @@ function xaiResponder(pregunta) {
       problemas.push('<li><b>PAMEC en fase inicial</b></li>');
       acciones.push('<a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-weight:600">Avanzar PAMEC</a>');
     }
-    var scoreColor = riesgo.score>=80?'#10b981':riesgo.score>=60?'#f59e0b':riesgo.score>=40?'#ef4444':'#7f1d1d';
+    const scoreColor = riesgo.score>=80?'#10b981':riesgo.score>=60?'#f59e0b':riesgo.score>=40?'#ef4444':'#7f1d1d';
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0">';
     resp += '<div style="font-size:15px;font-weight:700;margin-bottom:12px">Preparacion: <span style="color:' + scoreColor + '">' + riesgo.score + '% - Riesgo ' + riesgo.nivel + '</span></div>';
     if (problemas.length === 0) {
@@ -254,20 +254,20 @@ function xaiResponder(pregunta) {
   } else if (q.indexOf('incident')>=0 || q.indexOf('evento')>=0 || q.indexOf('adverso')>=0) {
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Incidentes y Eventos Adversos</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Abiertos: <b style="color:' + (ctx.incidentes.abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.abiertos + '</b></li><li>Criticos: <b style="color:' + (ctx.incidentes.criticos_abiertos>0?'#ef4444':'#10b981') + '">' + ctx.incidentes.criticos_abiertos + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 256/2016 y 4816/2008: reporte en max 72h.</div>' + (ctx.incidentes.criticos_abiertos>0?'<div style="margin-top:8px"><a href="#" onclick="nav(\x27incidentes\x27);return false" style="color:#ef4444;font-size:13px;font-weight:600">Atender eventos criticos</a></div>':'') + '</div>';
   } else if (q.indexOf('vencim')>=0 || q.indexOf('tarjeta')>=0 || q.indexOf('certificad')>=0 || q.indexOf('licencia')>=0) {
-    var nomV = ctx.vencimientos.detalle_vencidos.length>0?' ('+ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional;}).join(', ')+')':'';
+    const nomV = ctx.vencimientos.detalle_vencidos.length>0?' ('+ctx.vencimientos.detalle_vencidos.map(function(d){return d.profesional;}).join(', ')+')':'';
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Documentos del Personal</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Vencidos: <b style="color:' + (ctx.vencimientos.vencidos>0?'#ef4444':'#10b981') + '">' + ctx.vencimientos.vencidos + '</b>' + nomV + '</li><li>Por vencer 30d: <b style="color:' + (ctx.vencimientos.proximos30>0?'#f59e0b':'#10b981') + '">' + ctx.vencimientos.proximos30 + '</b></li><li>Profesionales: <b>' + ctx.talento.profesionales + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 3100/2019: tarjetas vigentes obligatorias.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27vencimientos-personal\x27);return false" style="color:#8b5cf6;font-size:13px;font-weight:600">Ver vencimientos</a></div></div>';
   } else if (q.indexOf('pamec')>=0 || q.indexOf('mejora')>=0 || q.indexOf('calidad')>=0) {
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><b>Estado del PAMEC</b><ul style="margin:8px 0;padding-left:18px;font-size:13px"><li>Fase: <b>' + ctx.pamec.fase + ' de 4</b></li><li>Procesos: <b>' + ctx.pamec.procesos + '</b></li><li>Acciones: <b>' + ctx.pamec.acciones + '</b></li></ul><div style="font-size:12px;color:#64748b">Res. 256/2016 y Decreto 1011/2006: PAMEC obligatorio en SOGC.</div><div style="margin-top:8px"><a href="#" onclick="nav(\x27pamec\x27);return false" style="color:#10b981;font-size:13px;font-weight:600">Ir al PAMEC</a></div></div>';
   } else {
-    var r2 = ctx.resumen_riesgo;
-    var cR2 = r2.score>=80?'#10b981':r2.score>=60?'#f59e0b':r2.score>=40?'#ef4444':'#7f1d1d';
+    const r2 = ctx.resumen_riesgo;
+    const cR2 = r2.score>=80?'#10b981':r2.score>=60?'#f59e0b':r2.score>=40?'#ef4444':'#7f1d1d';
     resp = '<div style="background:#f8fafc;border-radius:12px;padding:16px;margin:8px 0"><div style="font-size:14px;font-weight:700;color:'+cR2+';margin-bottom:8px">Riesgo ' + r2.nivel + ' (' + r2.score + '/100)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px"><div>PQRS pend: <b>' + ctx.pqrs.pendientes + '</b></div><div>Inc. criticos: <b>' + ctx.incidentes.criticos_abiertos + '</b></div><div>Docs vencidos: <b>' + ctx.vencimientos.vencidos + '</b></div><div>Vencen 30d: <b>' + ctx.vencimientos.proximos30 + '</b></div><div>Simulacro: <b>' + ctx.simulacro.pct + '%</b></div><div>PAMEC: <b>fase ' + ctx.pamec.fase + '</b></div></div><p style="font-size:12px;color:#64748b;margin:10px 0 0">Preguntame sobre: visita/habilitacion, PQRS, incidentes, vencimientos o PAMEC.</p></div>';
   }
   return resp;
 }
 
 // BUG #1 FIX: preservar sendMainChat de normalis-chat.js (Cloudflare Worker) si ya existe
-var _prevSendMainChat = window.sendMainChat;
+const _prevSendMainChat = window.sendMainChat;
 
 window.sendMainChat = function() {
   // Si normalis-chat.js ya definió sendMainChat (Worker Gemini), usarla
@@ -275,23 +275,23 @@ window.sendMainChat = function() {
     return _prevSendMainChat();
   }
   // Fallback: xaiResponder local (sin conexión o sin Worker)
-  var input = document.getElementById('main-chat-input');
+  const input = document.getElementById('main-chat-input');
   if (!input) return;
-  var pregunta = input.value.trim();
+  const pregunta = input.value.trim();
   if (!pregunta) return;
   input.value = '';
-  var msgs = document.getElementById('main-chat-msgs');
+  const msgs = document.getElementById('main-chat-msgs');
   if (!msgs) return;
   msgs.innerHTML += '<div style="display:flex;justify-content:flex-end;margin:8px 0"><div style="background:#6366f1;color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px;max-width:80%;font-size:13px">'+pregunta+'</div></div>';
-  var tid = 'typing-' + Date.now();
+  const tid = 'typing-' + Date.now();
   msgs.innerHTML += '<div id="'+tid+'" style="display:flex;align-items:center;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="background:#f1f5f9;padding:10px 14px;border-radius:12px;font-size:13px;color:#64748b">Analizando tus datos...</div></div>';
   msgs.scrollTop = msgs.scrollHeight;
   setTimeout(function() {
-    var t = document.getElementById(tid);
+    let t = document.getElementById(tid);
     if (t) t.remove();
-    var respuesta = xaiResponder(pregunta);
-    var ts = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-    var disclaimerIA = '<div style="margin-top:8px;padding:6px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">&#9888; <strong>Contenido generado por IA.</strong> No reemplaza asesor&iacute;a jur&iacute;dica. &middot; <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Pol&iacute;tica de privacidad</a></div>';
+    const respuesta = xaiResponder(pregunta);
+    const ts = new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const disclaimerIA = '<div style="margin-top:8px;padding:6px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">&#9888; <strong>Contenido generado por IA.</strong> No reemplaza asesor&iacute;a jur&iacute;dica. &middot; <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Pol&iacute;tica de privacidad</a></div>';
     msgs.innerHTML += '<div style="display:flex;align-items:flex-start;gap:8px;margin:8px 0"><div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">&#129302;</div><div style="flex:1">'+respuesta+disclaimerIA+'<div style="font-size:10px;color:#94a3b8;margin-top:4px">NormaLis IA &middot; '+ts+' &middot; Circular SIC 002/2024</div></div></div>';
     msgs.scrollTop = msgs.scrollHeight;
     if (typeof logAction === 'function') logAction('Sistema','Consulta XAI',pregunta.substring(0,60));
@@ -299,7 +299,7 @@ window.sendMainChat = function() {
 };
 
 window.sendChatQ = function(q) {
-  var inp = document.getElementById('main-chat-input');
+  let inp = document.getElementById('main-chat-input');
   if (inp) inp.value = q;
   window.sendMainChat();
 };
@@ -307,17 +307,17 @@ window.sendChatQ = function(q) {
 // SUPERVISION — Error Tracking + Analytics + Dashboard
 
 (function() {
-  var MAX_ERRORS = 200;
+  const MAX_ERRORS = 200;
   function saveError(err) {
     try {
-      var errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
+      let errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
       errors.unshift(err);
       if (errors.length > MAX_ERRORS) errors = errors.slice(0, MAX_ERRORS);
       localStorage.setItem('normalis_errores', JSON.stringify(errors));
     } catch(e) {}
   }
   window.onerror = function(msg, src, line, col, error) {
-    var entry = {
+    let entry = {
       ts: new Date().toISOString(),
       tipo: 'JS_ERROR',
       mensaje: String(msg).substring(0, 200),
@@ -330,7 +330,7 @@ window.sendChatQ = function(q) {
     return false;
   };
   window.addEventListener('unhandledrejection', function(e) {
-    var entry = {
+    let entry = {
       ts: new Date().toISOString(),
       tipo: 'PROMISE_ERROR',
       mensaje: String(e.reason && e.reason.message ? e.reason.message : e.reason).substring(0, 200),
@@ -345,7 +345,7 @@ window.sendChatQ = function(q) {
 
 function trackEvent(categoria, accion, valor) {
   try {
-    var analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
+    let analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
     analytics.unshift({ ts: new Date().toISOString(), categoria: categoria, accion: accion, valor: valor || '' });
     if (analytics.length > 500) analytics = analytics.slice(0, 500);
     localStorage.setItem('normalis_analytics', JSON.stringify(analytics));
@@ -353,7 +353,7 @@ function trackEvent(categoria, accion, valor) {
 }
 
 (function() {
-  var _navSuperv = window.nav;
+  const _navSuperv = window.nav;
   window.nav = function(sec) {
     trackEvent('navegacion', 'modulo_visitado', sec);
     if (sec === 'supervision') { setTimeout(renderSupervision, 100); }
@@ -362,9 +362,9 @@ function trackEvent(categoria, accion, valor) {
 })();
 
 (function() {
-  var _origChatSuperv = window.sendMainChat;
+  const _origChatSuperv = window.sendMainChat;
   window.sendMainChat = function() {
-    var inp = document.getElementById('main-chat-input');
+    let inp = document.getElementById('main-chat-input');
     if (inp && inp.value.trim()) trackEvent('xai', 'consulta', inp.value.trim().substring(0, 60));
     if (typeof _origChatSuperv === 'function') _origChatSuperv();
   };
@@ -372,26 +372,26 @@ function trackEvent(categoria, accion, valor) {
 
 window.addEventListener('load', function() {
   try {
-    var nav = window.performance && window.performance.timing;
+    let nav = window.performance && window.performance.timing;
     if (nav) { var lt = nav.loadEventEnd - nav.navigationStart; if (lt > 0) trackEvent('performance', 'page_load_ms', lt); }
   } catch(e) {}
 });
 
 function renderSupervision() {
-  var errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
-  var analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
-  var navEvents = analytics.filter(function(e) { return e.categoria === 'navegacion'; });
-  var xaiEvents = analytics.filter(function(e) { return e.categoria === 'xai'; });
-  var perfEvents = analytics.filter(function(e) { return e.categoria === 'performance' && e.accion === 'page_load_ms'; });
-  var moduleCounts = {};
+  let errors = JSON.parse(localStorage.getItem('normalis_errores') || '[]');
+  let analytics = JSON.parse(localStorage.getItem('normalis_analytics') || '[]');
+  const navEvents = analytics.filter(function(e) { return e.categoria === 'navegacion'; });
+  const xaiEvents = analytics.filter(function(e) { return e.categoria === 'xai'; });
+  const perfEvents = analytics.filter(function(e) { return e.categoria === 'performance' && e.accion === 'page_load_ms'; });
+  const moduleCounts = {};
   navEvents.forEach(function(e) { moduleCounts[e.valor] = (moduleCounts[e.valor] || 0) + 1; });
-  var topModules = Object.entries(moduleCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
-  var avgLoad = perfEvents.length > 0 ? Math.round(perfEvents.reduce(function(s,e){return s+parseInt(e.valor||0);},0)/perfEvents.length) : null;
-  var fsStatus = 'Listo';
+  const topModules = Object.entries(moduleCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
+  const avgLoad = perfEvents.length > 0 ? Math.round(perfEvents.reduce(function(s,e){return s+parseInt(e.valor||0);},0)/perfEvents.length) : null;
+  let fsStatus = 'Listo';
   try { var st = document.getElementById('sync-text'); if (st) fsStatus = st.textContent || 'Listo'; } catch(ex) {}
-  var errorsHoy = errors.filter(function(e){return new Date(e.ts)>new Date(Date.now()-86400000);});
-  var errColor = errorsHoy.length===0?'#10b981':errorsHoy.length<5?'#f59e0b':'#ef4444';
-  var html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
+  const errorsHoy = errors.filter(function(e){return new Date(e.ts)>new Date(Date.now()-86400000);});
+  const errColor = errorsHoy.length===0?'#10b981':errorsHoy.length<5?'#f59e0b':'#ef4444';
+  let html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px"><div><h2 style="margin:0;font-size:22px;font-weight:800">Supervision del Sistema</h2><p style="margin:4px 0 0;color:#64748b;font-size:13px">Monitoreo en tiempo real de NormaLis</p></div><button onclick="renderSupervision()" style="background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Actualizar</button></div>';
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px">';
   html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px"><div style="font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase">Errores hoy</div><div style="font-size:28px;font-weight:800;color:'+errColor+'">'+errorsHoy.length+'</div><div style="font-size:11px;color:#94a3b8">Total: '+errors.length+'</div></div>';
@@ -405,9 +405,9 @@ function renderSupervision() {
   if (topModules.length===0) {
     html += '<p style="color:#94a3b8;font-size:13px">Sin datos. Navega por los modulos para generar estadisticas.</p>';
   } else {
-    var maxC = topModules[0][1];
+    const maxC = topModules[0][1];
     topModules.forEach(function(m){
-      var pct = Math.round(m[1]/maxC*100);
+      const pct = Math.round(m[1]/maxC*100);
       html += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="font-weight:600">'+m[0]+'</span><span style="color:#64748b">'+m[1]+'x</span></div><div style="background:#f1f5f9;border-radius:99px;height:6px"><div style="background:#6366f1;border-radius:99px;height:6px;width:'+pct+'%"></div></div></div>';
     });
   }
@@ -417,7 +417,7 @@ function renderSupervision() {
     html += '<p style="color:#94a3b8;font-size:13px">Sin consultas aun.</p>';
   } else {
     xaiEvents.slice(0,6).forEach(function(e){
-      var t = new Date(e.ts).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+      let t = new Date(e.ts).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
       html += '<div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:#94a3b8;font-size:11px">'+t+'</span> '+e.valor+'</div>';
     });
   }
@@ -431,45 +431,45 @@ function renderSupervision() {
   } else {
     html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;color:#64748b">Hora</th><th style="padding:8px;text-align:left;color:#64748b">Tipo</th><th style="padding:8px;text-align:left;color:#64748b">Mensaje</th><th style="padding:8px;text-align:left;color:#64748b">Archivo</th><th style="padding:8px;text-align:left;color:#64748b">Linea</th></tr></thead><tbody>';
     errors.slice(0,20).forEach(function(e){
-      var t = new Date(e.ts).toLocaleString('es-CO',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      var tc = e.tipo==='JS_ERROR'?'#ef4444':'#f59e0b';
+      let t = new Date(e.ts).toLocaleString('es-CO',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const tc = e.tipo==='JS_ERROR'?'#ef4444':'#f59e0b';
       html += '<tr style="border-top:1px solid #f1f5f9"><td style="padding:8px;color:#64748b;white-space:nowrap">'+t+'</td><td style="padding:8px"><span style="background:'+tc+'22;color:'+tc+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">'+e.tipo+'</span></td><td style="padding:8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.mensaje+'</td><td style="padding:8px;color:#64748b">'+e.archivo+'</td><td style="padding:8px;color:#64748b">'+e.linea+'</td></tr>';
     });
     html += '</tbody></table></div>';
   }
   html += '</div></div>';
-  var view = document.getElementById('view-supervision');
+  let view = document.getElementById('view-supervision');
   if (view) view.innerHTML = html;
 }
 
 // ADOPCION — Onboarding Wizard + Demo Data + Aha Moment
 
 function cargarDatosDemo() {
-  var hoy = new Date();
+  let hoy = new Date();
   function addDias(d) { var f = new Date(hoy); f.setDate(f.getDate()+d); return f.toISOString().split('T')[0]; }
-  var venc = [
+  let venc = [
     { id: 'v1', profesional: 'Dr. Carlos Mendoza', tipo: 'Tarjeta Profesional', fecha: addDias(-15), estado: 'Vencido' },
     { id: 'v2', profesional: 'Enf. Sandra Rios', tipo: 'Certificado ACLS', fecha: addDias(-5), estado: 'Vencido' },
     { id: 'v3', profesional: 'Dr. Luis Herrera', tipo: 'Tarjeta Profesional', fecha: addDias(12), estado: 'Vigente' },
     { id: 'v4', profesional: 'Aux. Martha Cano', tipo: 'Certificado Vacunas', fecha: addDias(25), estado: 'Vigente' }
   ];
   localStorage.setItem('normalis_vencimientos', JSON.stringify(venc));
-  var incs = [
+  let incs = [
     { id: 'i1', fecha: addDias(-3), tipo: 'Caida de paciente', severidad: 'critico', estado: 'Abierto', descripcion: 'Paciente cayo de la camilla durante traslado', area: 'Urgencias' },
     { id: 'i2', fecha: addDias(-10), tipo: 'Error de medicacion', severidad: 'moderado', estado: 'En seguimiento', descripcion: 'Dosis incorrecta administrada, sin consecuencias graves', area: 'Hospitalizacion' }
   ];
   localStorage.setItem('normalis_incidentes', JSON.stringify(incs));
-  var pqrs = [
+  let pqrs = [
     { id: 'p1', fecha: addDias(-8), tipo: 'Queja', descripcion: 'Tiempo de espera excesivo en consulta externa', estado: 'Pendiente', usuario: 'Anonimo' },
     { id: 'p2', fecha: addDias(-12), tipo: 'Peticion', descripcion: 'Solicitud de historia clinica', estado: 'Pendiente', usuario: 'Juan Garcia' },
     { id: 'p3', fecha: addDias(-20), tipo: 'Felicitacion', descripcion: 'Excelente atencion del personal de enfermeria', estado: 'Respondido', usuario: 'Maria Lopez' }
   ];
   localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
-  var simData = {};
+  const simData = {};
   for (var i = 1; i <= 14; i++) simData['item_' + i] = true;
   localStorage.setItem('normalis_simulacro', JSON.stringify(simData));
   localStorage.setItem('normalis_pamec_fase', '1');
-  var profs = [
+  const profs = [
     { id: 'pr1', nombre: 'Dr. Carlos Mendoza', cargo: 'Medico General', especialidad: 'Medicina General' },
     { id: 'pr2', nombre: 'Enf. Sandra Rios', cargo: 'Enfermera Jefe', especialidad: 'Enfermeria' },
     { id: 'pr3', nombre: 'Dr. Luis Herrera', cargo: 'Medico Especialista', especialidad: 'Cirugia General' },
@@ -479,22 +479,22 @@ function cargarDatosDemo() {
 }
 
 function iniciarAhaMoment(nombreIPS) {
-  var modal = document.getElementById('onboarding-modal');
+  const modal = document.getElementById('onboarding-modal');
   if (modal) modal.style.display = 'none';
-  var toast = document.createElement('div');
+  const toast = document.createElement('div');
   toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 32px rgba(99,102,241,.4);transition:opacity .5s;white-space:nowrap';
   toast.textContent = 'Bienvenido a NormaLis, ' + nombreIPS + '! Generando tu diagnostico...';
   document.body.appendChild(toast);
   setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500); }, 3500);
   // R4: ir directo a auditoría (flujo principal de valor)
-  var tipoInput = document.getElementById('ob-tipo');
-  var tipoServicio = tipoInput ? tipoInput.value : '';
+  const tipoInput = document.getElementById('ob-tipo');
+  const tipoServicio = tipoInput ? tipoInput.value : '';
   if (tipoServicio) localStorage.setItem('normalis_ob_tipo', tipoServicio);
   setTimeout(function() {
     try { nav('auditoria'); } catch(e) { try { nav('chat'); } catch(e2) {} }
     setTimeout(function() {
       // Mostrar tooltip de bienvenida en la sección de auditoría
-      var cardTitle = document.querySelector('.card-title, [class*="card"] [style*="font-weight:800"]');
+      const cardTitle = document.querySelector('.card-title, [class*="card"] [style*="font-weight:800"]');
       if (!cardTitle) return;
     }, 500);
   }, 600);
@@ -505,7 +505,7 @@ function iniciarAhaMoment(nombreIPS) {
 
 function mostrarOnboarding() {
   if (localStorage.getItem('normalis_onboarding_done')) return;
-  var html = '<div id="onboarding-modal" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">';
+  let html = '<div id="onboarding-modal" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">';
   html += '<div style="background:#fff;border-radius:20px;width:100%;max-width:500px;margin:16px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.3)">';
   html += '<div style="height:4px;background:#f1f5f9"><div id="ob-progress" style="height:4px;background:linear-gradient(90deg,#6366f1,#8b5cf6);width:25%;transition:width .4s"></div></div>';
   html += '<div id="ob-steps">';
@@ -552,16 +552,16 @@ function mostrarOnboarding() {
 
 function obNext(step) {
   for (var i = 1; i <= 4; i++) {
-    var el = document.getElementById('ob-step-' + i);
+    let el = document.getElementById('ob-step-' + i);
     if (el) el.style.display = i === step ? 'block' : 'none';
   }
-  var pcts = {1:'25%',2:'50%',3:'75%',4:'100%'};
-  var prog = document.getElementById('ob-progress');
+  const pcts = {1:'25%',2:'50%',3:'75%',4:'100%'};
+  const prog = document.getElementById('ob-progress');
   if (prog) prog.style.width = pcts[step] || '25%';
 }
 
 function obValidarPaso2() {
-  var nombre = document.getElementById('ob-nombre');
+  let nombre = document.getElementById('ob-nombre');
   if (!nombre || !nombre.value.trim()) {
     if (nombre) { nombre.style.borderColor = '#ef4444'; nombre.focus(); }
     return;
@@ -571,8 +571,8 @@ function obValidarPaso2() {
 
 function obSeleccionarOpcion(opcion) {
   window._obOpcion = opcion;
-  var demo = document.getElementById('ob-opt-demo');
-  var vacio = document.getElementById('ob-opt-vacio');
+  const demo = document.getElementById('ob-opt-demo');
+  const vacio = document.getElementById('ob-opt-vacio');
   if (opcion === 'demo') {
     if (demo) { demo.style.borderColor = '#6366f1'; demo.style.background = '#eef2ff'; }
     if (vacio) { vacio.style.borderColor = '#e2e8f0'; vacio.style.background = '#fff'; }
@@ -583,12 +583,12 @@ function obSeleccionarOpcion(opcion) {
 }
 
 function obFinalizar() {
-  var nombreInput = document.getElementById('ob-nombre');
-  var ciudadInput = document.getElementById('ob-ciudad');
-  var nombre = (nombreInput && nombreInput.value.trim()) ? nombreInput.value.trim() : 'Mi IPS';
-  var ciudad = ciudadInput ? ciudadInput.value.trim() : '';
+  const nombreInput = document.getElementById('ob-nombre');
+  const ciudadInput = document.getElementById('ob-ciudad');
+  let nombre = (nombreInput && nombreInput.value.trim()) ? nombreInput.value.trim() : 'Mi IPS';
+  const ciudad = ciudadInput ? ciudadInput.value.trim() : '';
   obNext(4);
-  var bar = document.getElementById('ob-loader-bar');
+  const bar = document.getElementById('ob-loader-bar');
   if (bar) setTimeout(function() { bar.style.width = '100%'; }, 100);
   if (window._obOpcion === 'demo') cargarDatosDemo();
   if (ciudad) localStorage.setItem('normalis_ips_ciudad', ciudad);
@@ -601,8 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ROI REESTRUCTURADO v2
 function renderROI() {
-  var SMLMV = 1300000;
-  var html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
+  let SMLMV = 1300000;
+  let html = '<div style="padding:24px;max-width:960px;margin:0 auto">';
   html += '<div style="margin-bottom:24px"><h2 style="margin:0 0 4px;font-size:22px;font-weight:800">Calculadora de ROI</h2><p style="margin:0;color:#64748b;font-size:13px">Cuanto cuesta NO tener NormaLis — basado en sanciones reales Ley 1438/2011 y Res. 3100/2019</p></div>';
   html += '<div id="roi-result-card" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:16px;padding:28px;color:#fff;margin-bottom:24px"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px"><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Costo anual del riesgo</div><div id="roi-costo-riesgo" style="font-size:28px;font-weight:800">$0</div><div style="font-size:11px;opacity:.7">sin NormaLis</div></div><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Inversion NormaLis/ano</div><div id="roi-costo-normalis" style="font-size:28px;font-weight:800">$0</div><div style="font-size:11px;opacity:.7">suscripcion anual</div></div><div><div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">ROI estimado</div><div id="roi-multiplier" style="font-size:36px;font-weight:900">0x</div><div style="font-size:11px;opacity:.7">retorno sobre inversion</div></div></div></div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">';
@@ -621,7 +621,7 @@ function renderROI() {
   html += '<div id="roi-narrativa" style="background:#f8fafc;border-left:4px solid #6366f1;border-radius:0 12px 12px 0;padding:16px;margin-bottom:16px;font-size:13px;line-height:1.7;color:#374151"></div>';
   html += '<div style="text-align:right"><button onclick="exportarROIPDF()" style="background:#6366f1;color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Exportar reporte ROI</button></div>';
   html += '</div>';
-  var view = document.getElementById('view-roi');
+  let view = document.getElementById('view-roi');
   if (view) { view.innerHTML = html; calcROIv2(); }
 }
 
@@ -630,39 +630,39 @@ function fmtCOP(n) {
 }
 
 function calcROIv2() {
-  var SMLMV = 1300000;
-  var tipoEl = document.getElementById('roi-tipo-ips');
-  var tipo = tipoEl ? tipoEl.value : 'media';
-  var sedes = parseInt((document.getElementById('roi-sedes')||{value:1}).value);
-  var prof = parseInt((document.getElementById('roi-prof')||{value:8}).value);
-  var horas = parseInt((document.getElementById('roi-horas')||{value:20}).value);
-  var prob = parseInt((document.getElementById('roi-prob')||{value:40}).value) / 100;
-  var ncCrit = parseInt((document.getElementById('roi-nc-crit')||{value:3}).value);
-  var ncLeve = parseInt((document.getElementById('roi-nc-leve')||{value:5}).value);
-  var diasSusp = parseInt((document.getElementById('roi-susp')||{value:30}).value);
-  var multaCritPorNC = 200 * SMLMV;
-  var multaLevePorNC = 30 * SMLMV;
-  var ingresoDiario = (tipo==='basica'?2000000:tipo==='media'?5000000:12000000) * sedes;
-  var costoHoraAdmin = 35000;
-  var costoMultasCrit = ncCrit * multaCritPorNC * prob;
-  var costoMultasLeve = ncLeve * multaLevePorNC * prob;
-  var costoSuspension = diasSusp * ingresoDiario * prob;
-  var costoConsultorEmerg = prob > 0.3 ? 8000000 : 0;
-  var costoHorasAdmin = horas * 12 * costoHoraAdmin;
-  var costoReputacion = prob > 0.5 ? ingresoDiario * 15 : 0;
-  var totalRiesgo = costoMultasCrit + costoMultasLeve + costoSuspension + costoConsultorEmerg + costoHorasAdmin + costoReputacion;
-  var precioMensual = (tipo==='basica'?190000:tipo==='media'?290000:490000) * sedes;
-  var costoNormalis = precioMensual * 12;
-  var ahorroHoras = horas * 0.7 * 12 * costoHoraAdmin;
-  var beneficioNeto = totalRiesgo + ahorroHoras - costoNormalis;
-  var roi = costoNormalis > 0 ? beneficioNeto / costoNormalis : 0;
-  var el = function(id){return document.getElementById(id);};
+  let SMLMV = 1300000;
+  const tipoEl = document.getElementById('roi-tipo-ips');
+  const tipo = tipoEl ? tipoEl.value : 'media';
+  const sedes = parseInt((document.getElementById('roi-sedes')||{value:1}).value);
+  const prof = parseInt((document.getElementById('roi-prof')||{value:8}).value);
+  const horas = parseInt((document.getElementById('roi-horas')||{value:20}).value);
+  const prob = parseInt((document.getElementById('roi-prob')||{value:40}).value) / 100;
+  const ncCrit = parseInt((document.getElementById('roi-nc-crit')||{value:3}).value);
+  const ncLeve = parseInt((document.getElementById('roi-nc-leve')||{value:5}).value);
+  const diasSusp = parseInt((document.getElementById('roi-susp')||{value:30}).value);
+  const multaCritPorNC = 200 * SMLMV;
+  const multaLevePorNC = 30 * SMLMV;
+  const ingresoDiario = (tipo==='basica'?2000000:tipo==='media'?5000000:12000000) * sedes;
+  const costoHoraAdmin = 35000;
+  const costoMultasCrit = ncCrit * multaCritPorNC * prob;
+  const costoMultasLeve = ncLeve * multaLevePorNC * prob;
+  const costoSuspension = diasSusp * ingresoDiario * prob;
+  const costoConsultorEmerg = prob > 0.3 ? 8000000 : 0;
+  const costoHorasAdmin = horas * 12 * costoHoraAdmin;
+  const costoReputacion = prob > 0.5 ? ingresoDiario * 15 : 0;
+  const totalRiesgo = costoMultasCrit + costoMultasLeve + costoSuspension + costoConsultorEmerg + costoHorasAdmin + costoReputacion;
+  const precioMensual = (tipo==='basica'?190000:tipo==='media'?290000:490000) * sedes;
+  const costoNormalis = precioMensual * 12;
+  const ahorroHoras = horas * 0.7 * 12 * costoHoraAdmin;
+  const beneficioNeto = totalRiesgo + ahorroHoras - costoNormalis;
+  const roi = costoNormalis > 0 ? beneficioNeto / costoNormalis : 0;
+  let el = function(id){return document.getElementById(id);};
   if (el('roi-costo-riesgo')) el('roi-costo-riesgo').textContent = fmtCOP(totalRiesgo);
   if (el('roi-costo-normalis')) el('roi-costo-normalis').textContent = fmtCOP(costoNormalis);
   if (el('roi-multiplier')) el('roi-multiplier').textContent = roi>=1?Math.round(roi)+'x':(roi*100).toFixed(0)+'%';
-  var bd = el('roi-breakdown-v2');
+  const bd = el('roi-breakdown-v2');
   if (bd) {
-    var rows = [
+    const rows = [
       ['Multas NC criticas (ponderadas x prob.)', costoMultasCrit, '#ef4444'],
       ['Multas NC leves (ponderadas x prob.)', costoMultasLeve, '#f59e0b'],
       ['Lucro cesante por suspension', costoSuspension, '#ef4444'],
@@ -676,16 +676,16 @@ function calcROIv2() {
     ];
     bd.innerHTML = rows.map(function(r){
       if (!r[0]||r[0]==='---') return '<div style="grid-column:1/-1;border-top:1px solid #e2e8f0;margin:4px 0"></div>';
-      var isTotal = r[0].indexOf('BENEFICIO')>=0;
+      const isTotal = r[0].indexOf('BENEFICIO')>=0;
       return '<div style="color:#64748b'+(isTotal?';font-weight:700;color:#374151':'')+'">'+r[0]+'</div>'+
              '<div style="text-align:right;font-weight:700;color:'+r[2]+'">'+fmtCOP(Math.abs(r[1]))+'</div>';
     }).join('');
   }
-  var narr = el('roi-narrativa');
+  const narr = el('roi-narrativa');
   if (narr) {
-    var nivelColor = prob<0.3?'#10b981':prob<0.6?'#f59e0b':'#ef4444';
-    var nivelTxt = prob<0.3?'BAJO':prob<0.6?'MODERADO':'ALTO';
-    var t = '<b style="color:'+nivelColor+'">Riesgo '+nivelTxt+':</b> Con '+Math.round(prob*100)+'% de probabilidad de NC en la proxima visita, ';
+    const nivelColor = prob<0.3?'#10b981':prob<0.6?'#f59e0b':'#ef4444';
+    const nivelTxt = prob<0.3?'BAJO':prob<0.6?'MODERADO':'ALTO';
+    let t = '<b style="color:'+nivelColor+'">Riesgo '+nivelTxt+':</b> Con '+Math.round(prob*100)+'% de probabilidad de NC en la proxima visita, ';
     t += 'tu IPS enfrenta <b>'+fmtCOP(totalRiesgo)+' anuales</b> en riesgos combinados. ';
     if (ncCrit>0) t += 'Las '+ncCrit+' NC criticas pueden generar multas de hasta <b>'+fmtCOP(ncCrit*500*SMLMV)+'</b> (500 SMLMV c/u, Art.131 Ley 1438/2011). ';
     if (diasSusp>0) t += 'Una suspension de '+diasSusp+' dias representa <b>'+fmtCOP(diasSusp*ingresoDiario)+'</b> en lucro cesante. ';
@@ -697,15 +697,15 @@ function calcROIv2() {
 }
 
 function exportarROIPDF() {
-  var d = JSON.parse(localStorage.getItem('normalis_roi_data')||'{}');
-  var c = 'REPORTE ROI NORMALIS\n\nFecha: '+new Date().toLocaleDateString('es-CO')+'\nIPS: '+(localStorage.getItem('normalis_ips_nombre')||'Mi IPS')+'\n\nCosto riesgo anual: '+fmtCOP(d.costoRiesgo||0)+'\nInversion NormaLis: '+fmtCOP(d.costoNormalis||0)+'\nBeneficio neto: '+fmtCOP(d.beneficioNeto||0)+'\nROI: '+(d.roi||0)+'x\n\nNormativa:\n- Ley 1438/2011 Art.131: sanciones 10-2000 SMLMV\n- Res. 3100/2019: condiciones habilitacion\n- Decreto 1011/2006: SOGC y PAMEC';
-  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c],{type:'text/plain;charset=utf-8'}));
+  const d = JSON.parse(localStorage.getItem('normalis_roi_data')||'{}');
+  const c = 'REPORTE ROI NORMALIS\n\nFecha: '+new Date().toLocaleDateString('es-CO')+'\nIPS: '+(localStorage.getItem('normalis_ips_nombre')||'Mi IPS')+'\n\nCosto riesgo anual: '+fmtCOP(d.costoRiesgo||0)+'\nInversion NormaLis: '+fmtCOP(d.costoNormalis||0)+'\nBeneficio neto: '+fmtCOP(d.beneficioNeto||0)+'\nROI: '+(d.roi||0)+'x\n\nNormativa:\n- Ley 1438/2011 Art.131: sanciones 10-2000 SMLMV\n- Res. 3100/2019: condiciones habilitacion\n- Decreto 1011/2006: SOGC y PAMEC';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c],{type:'text/plain;charset=utf-8'}));
   a.download = 'ROI_NormaLis_'+new Date().toISOString().split('T')[0]+'.txt'; a.click();
 }
 
 // Hook renderROI into nav
 (function(){
-  var _navROI = window.nav;
+  const _navROI = window.nav;
   window.nav = function(sec){
     if (typeof _navROI === 'function') _navROI(sec);
     if (sec === 'roi') setTimeout(renderROI, 100);
@@ -718,23 +718,23 @@ function exportarROIPDF() {
 // R5c — RECORDATORIO VENCIMIENTOS AL LOGIN
 // ══════════════════════════════════════════
 function checkVencimientosReminder(userEmail) {
-  var lastKey = 'normalis_ultimo_recordatorio';
-  var lastTs  = parseInt(localStorage.getItem(lastKey) || '0');
-  var now     = Date.now();
+  const lastKey = 'normalis_ultimo_recordatorio';
+  const lastTs  = parseInt(localStorage.getItem(lastKey) || '0');
+  const now     = Date.now();
   if ((now - lastTs) < 86400000) return; // solo una vez por 24h
 
-  var hoy   = new Date(); hoy.setHours(0, 0, 0, 0);
-  var en30  = new Date(hoy); en30.setDate(en30.getDate() + 30);
-  var docs  = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
-  var venc  = docs.filter(function(d) { return new Date(d.fecha) < hoy; });
-  var prox  = docs.filter(function(d) { var f = new Date(d.fecha); return f >= hoy && f <= en30; });
+  let hoy   = new Date(); hoy.setHours(0, 0, 0, 0);
+  let en30  = new Date(hoy); en30.setDate(en30.getDate() + 30);
+  let docs  = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  let venc  = docs.filter(function(d) { return new Date(d.fecha) < hoy; });
+  const prox  = docs.filter(function(d) { var f = new Date(d.fecha); return f >= hoy && f <= en30; });
   if (venc.length === 0 && prox.length === 0) return;
 
-  var email  = userEmail || sessionStorage.getItem('normalis_email') || '';
-  var nombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
+  const email  = userEmail || sessionStorage.getItem('normalis_email') || '';
+  let nombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
   if (!email || typeof emailjs === 'undefined') return;
 
-  var resumen = [];
+  const resumen = [];
   if (venc.length > 0) resumen.push(venc.length + ' documento(s) VENCIDO(S)');
   if (prox.length > 0) resumen.push(prox.length + ' vence(n) en 30 días');
 

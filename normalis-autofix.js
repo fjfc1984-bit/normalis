@@ -12,14 +12,14 @@
 //   NormalisAutofix.report('mi-modulo', error, { contexto: 'guardar CAPA' });
 // ─────────────────────────────────────────────────────────────────────────────
 
-var NormalisAutofix = (function() {
+const NormalisAutofix = (function() {
 
   // ── Configuración ────────────────────────────────────────────────────────
-  var MAX_LOG_ENTRIES  = 60;    // entradas máximas en localStorage
-  var MAX_RETRIES      = 3;     // reintentos por patrón
-  var LOG_KEY          = 'normalis_error_log';
-  var _started         = false;
-  var _retryCounters   = {};    // { patternId: count }
+  const MAX_LOG_ENTRIES  = 60;    // entradas máximas en localStorage
+  const MAX_RETRIES      = 3;     // reintentos por patrón
+  const LOG_KEY          = 'normalis_error_log';
+  let _started         = false;
+  const _retryCounters   = {};    // { patternId: count }
 
   // ── Patrones de error conocidos + estrategia de recuperación ─────────────
   // Cada patrón tiene:
@@ -27,7 +27,7 @@ var NormalisAutofix = (function() {
   //   fix(msg, src, err)    → void  (aplica corrección)
   //   label                 → nombre legible para logs
   //   silent                → si true, no muestra toast al usuario
-  var PATTERNS = [
+  const PATTERNS = [
 
     // 1. Módulo lazy no cargado — función no definida al llamarla
     {
@@ -41,7 +41,7 @@ var NormalisAutofix = (function() {
       },
       fix: function(msg) {
         // Detectar qué módulo falta y cargarlo
-        var mod = null;
+        let mod = null;
         if (msg.indexOf('renderSST') > -1 || msg.indexOf('calcSSTScore') > -1) mod = 'sst';
         else if (msg.indexOf('renderPamec') > -1) mod = 'pamec';
         else if (msg.indexOf('openDoc') > -1 || msg.indexOf('openDocPreview') > -1) mod = 'docs';
@@ -68,7 +68,7 @@ var NormalisAutofix = (function() {
           nlToast('Sesión expirada. Redirigiendo…', 'warning', 3000);
         }
         setTimeout(function() {
-          var uid = sessionStorage.getItem('normalis_uid');
+          const uid = sessionStorage.getItem('normalis_uid');
           if (!uid) window.location.href = 'login.html';
         }, 2500);
       }
@@ -103,7 +103,7 @@ var NormalisAutofix = (function() {
       fix: function() {
         _log('autofix', 'auth_token_expired', 'Token expirado — intentando renovar sesión', 'fix');
         try {
-          var auth = firebase.auth ? firebase.auth() : null;
+          const auth = firebase.auth ? firebase.auth() : null;
           if (auth && auth.currentUser) {
             auth.currentUser.getIdToken(true).then(function() {
               if (typeof nlToast === 'function') nlToast('Sesión renovada automáticamente', 'success', 2000);
@@ -126,9 +126,9 @@ var NormalisAutofix = (function() {
       fix: function() {
         _log('autofix', 'localstorage_quota', 'Limpiando cache local antiguo', 'fix');
         // Eliminar solo las claves de cache, no datos de usuario
-        var keysToClean = [];
+        const keysToClean = [];
         for (var i = 0; i < localStorage.length; i++) {
-          var k = localStorage.key(i);
+          const k = localStorage.key(i);
           if (k && (k.indexOf('_cache_') > -1 || k.indexOf('_tmp_') > -1)) {
             keysToClean.push(k);
           }
@@ -167,11 +167,11 @@ var NormalisAutofix = (function() {
       },
       fix: function(msg, src) {
         // Reintentar la carga del script fallido
-        var scriptSrc = src || '';
+        const scriptSrc = src || '';
         if (!scriptSrc || _retryCounters['script:' + scriptSrc] >= MAX_RETRIES) return;
         _retryCounters['script:' + scriptSrc] = (_retryCounters['script:' + scriptSrc] || 0) + 1;
         setTimeout(function() {
-          var s = document.createElement('script');
+          const s = document.createElement('script');
           s.src = scriptSrc + (scriptSrc.indexOf('?') > -1 ? '&' : '?') + '_retry=' + Date.now();
           document.head.appendChild(s);
           _log('autofix', 'script_load_error', 'Reintentando carga de ' + scriptSrc, 'fix');
@@ -228,7 +228,7 @@ var NormalisAutofix = (function() {
 
   // ── Logger interno ────────────────────────────────────────────────────────
   function _log(category, patternId, detail, severity) {
-    var entry = {
+    const entry = {
       ts:        new Date().toISOString(),
       category:  category,
       patternId: patternId,
@@ -237,7 +237,7 @@ var NormalisAutofix = (function() {
       url:       window.location.pathname
     };
     try {
-      var log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+      let log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
       log.unshift(entry);
       if (log.length > MAX_LOG_ENTRIES) log = log.slice(0, MAX_LOG_ENTRIES);
       localStorage.setItem(LOG_KEY, JSON.stringify(log));
@@ -264,8 +264,8 @@ var NormalisAutofix = (function() {
 
   // ── Motor principal de clasificación y corrección ─────────────────────────
   function _handleError(msg, src, lineno, colno, err) {
-    var msgStr = String(msg || '');
-    var srcStr = String(src || '');
+    const msgStr = String(msg || '');
+    const srcStr = String(src || '');
 
     // 1. Registrar en log interno
     _log('capture', 'raw', msgStr + ' @ ' + srcStr + ':' + lineno, 'error');
@@ -274,13 +274,13 @@ var NormalisAutofix = (function() {
     _reportToSentry(err || msgStr, { src: srcStr, line: lineno, col: colno });
 
     // 3. Buscar patrón coincidente y aplicar fix
-    var matched = false;
+    let matched = false;
     for (var i = 0; i < PATTERNS.length; i++) {
-      var p = PATTERNS[i];
+      const p = PATTERNS[i];
       try {
         if (p.match(msgStr, srcStr, err)) {
           matched = true;
-          var retryKey = 'pat:' + p.id;
+          const retryKey = 'pat:' + p.id;
           if ((_retryCounters[retryKey] || 0) < MAX_RETRIES) {
             _retryCounters[retryKey] = (_retryCounters[retryKey] || 0) + 1;
             _log('autofix', p.id, 'Aplicando corrección automática (' + _retryCounters[retryKey] + '/' + MAX_RETRIES + ')', 'fix');
@@ -317,7 +317,7 @@ var NormalisAutofix = (function() {
       _started = true;
 
       // Captura errores síncronos
-      var _prevOnerror = window.onerror;
+      const _prevOnerror = window.onerror;
       window.onerror = function(msg, src, lineno, colno, err) {
         _handleError(msg, src, lineno, colno, err);
         if (typeof _prevOnerror === 'function') _prevOnerror(msg, src, lineno, colno, err);
@@ -326,7 +326,7 @@ var NormalisAutofix = (function() {
 
       // Captura promises rechazadas sin catch
       window.addEventListener('unhandledrejection', function(e) {
-        var msg = e.reason ? (e.reason.message || String(e.reason)) : 'Promise rechazada';
+        let msg = e.reason ? (e.reason.message || String(e.reason)) : 'Promise rechazada';
         _handleError('UnhandledPromiseRejection: ' + msg, window.location.pathname, 0, 0, e.reason);
       });
 
@@ -340,7 +340,7 @@ var NormalisAutofix = (function() {
      * @param {Object} [ctx] — contexto adicional
      */
     report: function(modulo, err, ctx) {
-      var msg = err && err.message ? err.message : String(err);
+      let msg = err && err.message ? err.message : String(err);
       _log('manual', modulo, msg, 'error');
       _reportToSentry(err, Object.assign({ modulo: modulo }, ctx || {}));
       _handleError(msg, modulo, 0, 0, err);
@@ -366,10 +366,10 @@ var NormalisAutofix = (function() {
      * Útil para diagnóstico: NormalisAutofix.printLog()
      */
     printLog: function() {
-      var log = this.getLog();
+      let log = this.getLog();
       console.group('[NormaLis AutoFix] Log de errores (' + log.length + ' entradas)');
       log.forEach(function(e) {
-        var icon = e.severity === 'fix' ? '🔧' : e.severity === 'warn' ? '&#9888;' : e.severity === 'info' ? 'ℹ️' : '❌';
+        const icon = e.severity === 'fix' ? '🔧' : e.severity === 'warn' ? '&#9888;' : e.severity === 'info' ? 'ℹ️' : '❌';
         console.log(icon, e.ts, e.patternId, '—', e.detail);
       });
       console.groupEnd();
@@ -406,7 +406,7 @@ NormalisAutofix.addPattern({
             msg.indexOf('retry-limit-exceeded') > -1 || msg.indexOf('invalid-argument') > -1);
   },
   fix: function(msg, ctx) {
-    var ansKey = ctx && ctx.ansKey ? ctx.ansKey : 'desconocido';
+    const ansKey = ctx && ctx.ansKey ? ctx.ansKey : 'desconocido';
     _log('autofix', 'storage_upload_error',
       'Error subiendo evidencia para ' + ansKey + '. Guardando localmente.', 'fix');
     if (typeof nlToast === 'function') {

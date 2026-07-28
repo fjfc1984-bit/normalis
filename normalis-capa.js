@@ -1,5 +1,5 @@
 // XSS-safe HTML escaper (local fallback)
-var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+const escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
 // normalis-capa.js
 // NormaLis — Módulo Plan de Mejoramiento / CAPA (Correctivas y Preventivas)

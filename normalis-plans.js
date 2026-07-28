@@ -7,7 +7,7 @@
 // DEFINICIÓN DE PLANES
 // ══════════════════════════════════════════════════════════════════
 
-var NORMALIS_PLANS = {
+const NORMALIS_PLANS = {
 
   // Plan Esencial — módulos core de habilitación
   basico: {
@@ -42,13 +42,13 @@ var NORMALIS_PLANS = {
   }
 };
 
-var NORMALIS_PLAN_UPGRADE = {
+const NORMALIS_PLAN_UPGRADE = {
   basico:      'profesional',
   profesional: 'empresarial'
 };
 
 // Módulos que necesitan upgrade y en qué plan los desbloquean
-var NORMALIS_MODULE_UNLOCK = {
+const NORMALIS_MODULE_UNLOCK = {
   generador:              'profesional',
   pamec:                  'profesional',
   sst:                    'profesional',
@@ -71,15 +71,15 @@ var NORMALIS_MODULE_UNLOCK = {
 // ══════════════════════════════════════════════════════════════════
 
 function _getPlan() {
-  var rol = sessionStorage.getItem('normalis_rol') || '';
+  const rol = sessionStorage.getItem('normalis_rol') || '';
   if (rol === 'piloto' || rol === 'admin') return '*';
   return sessionStorage.getItem('normalis_plan') || 'profesional';
 }
 
 function isModuleAllowed(modId) {
-  var plan = _getPlan();
+  let plan = _getPlan();
   if (plan === '*') return true;
-  var cfg = NORMALIS_PLANS[plan] || NORMALIS_PLANS['profesional'];
+  let cfg = NORMALIS_PLANS[plan] || NORMALIS_PLANS['profesional'];
   if (cfg.modules === '*') return true;
   return cfg.modules.indexOf(modId) !== -1;
 }
@@ -89,12 +89,12 @@ function isModuleAllowed(modId) {
 // ══════════════════════════════════════════════════════════════════
 
 function initPlanGating() {
-  var plan = _getPlan();
+  let plan = _getPlan();
   if (plan === '*') return;  // piloto/admin: acceso completo
 
   // Inyectar CSS de lock (una sola vez)
   if (!document.getElementById('normalis-plan-css')) {
-    var style = document.createElement('style');
+    let style = document.createElement('style');
     style.id = 'normalis-plan-css';
     style.textContent = [
       '.sb-item-locked{opacity:.42;pointer-events:none;position:relative;cursor:default!important}',
@@ -121,9 +121,9 @@ function initPlanGating() {
   }
 
   // Aplicar lock a items del sidebar según plan
-  var items = document.querySelectorAll('[data-mod]');
+  const items = document.querySelectorAll('[data-mod]');
   items.forEach(function(item) {
-    var mod = item.getAttribute('data-mod');
+    const mod = item.getAttribute('data-mod');
     if (!isModuleAllowed(mod)) {
       item.classList.add('sb-item-locked-click');
       // Sobreescribir onclick para mostrar prompt
@@ -138,16 +138,16 @@ function initPlanGating() {
 
 function showUpgradePrompt(modId) {
   // Quitar modal anterior si existe
-  var old = document.getElementById('normalis-upgrade-modal');
+  const old = document.getElementById('normalis-upgrade-modal');
   if (old) old.remove();
 
-  var plan       = sessionStorage.getItem('normalis_plan') || 'profesional';
-  var upgradeTo  = NORMALIS_PLAN_UPGRADE[plan] || 'empresarial';
-  var unlockPlan = NORMALIS_MODULE_UNLOCK[modId] || upgradeTo;
-  var upCfg      = NORMALIS_PLANS[unlockPlan] || NORMALIS_PLANS['empresarial'];
+  let plan       = sessionStorage.getItem('normalis_plan') || 'profesional';
+  const upgradeTo  = NORMALIS_PLAN_UPGRADE[plan] || 'empresarial';
+  const unlockPlan = NORMALIS_MODULE_UNLOCK[modId] || upgradeTo;
+  const upCfg      = NORMALIS_PLANS[unlockPlan] || NORMALIS_PLANS['empresarial'];
 
   // Nombres amigables de módulos
-  var modNames = {
+  const modNames = {
     generador:             'Generador con IA',
     pamec:                 'PAMEC',
     sst:                   'SG-SST',
@@ -164,9 +164,9 @@ function showUpgradePrompt(modId) {
     simulacro:             'Simulacro Secretaría',
     bitacora:              'Bitácora'
   };
-  var modLabel = modNames[modId] || modId;
+  const modLabel = modNames[modId] || modId;
 
-  var modal = document.createElement('div');
+  const modal = document.createElement('div');
   modal.id  = 'normalis-upgrade-modal';
   modal.innerHTML =
     '<div id="normalis-upgrade-box">' +
@@ -191,10 +191,10 @@ function showUpgradePrompt(modId) {
 }
 
 function _buildPlanCard(planId, currentPlan) {
-  var cfg  = NORMALIS_PLANS[planId];
-  var mods = cfg.modules === '*' ? 'Todos los módulos' : cfg.modules.length + ' módulos';
-  var prices = { profesional: 'COP $299.000/mes', empresarial: 'COP $499.000/mes' };
-  var reco = (planId === 'empresarial') ? ' recommended' : '';
+  let cfg  = NORMALIS_PLANS[planId];
+  const mods = cfg.modules === '*' ? 'Todos los módulos' : cfg.modules.length + ' módulos';
+  const prices = { profesional: 'COP $299.000/mes', empresarial: 'COP $499.000/mes' };
+  const reco = (planId === 'empresarial') ? ' recommended' : '';
   return '<div class="normalis-plan-card' + reco + '">' +
     '<div class="plan-name">' + (reco ? '⭐ ' : '') + cfg.label + '</div>' +
     '<div class="plan-desc">' + mods + ' incluidos</div>' +
@@ -207,15 +207,15 @@ function _buildPlanCard(planId, currentPlan) {
 // ══════════════════════════════════════════════════════════════════
 
 function renderPlanBadge() {
-  var plan = _getPlan();
-  var el   = document.getElementById('sb-plan-badge');
+  let plan = _getPlan();
+  const el   = document.getElementById('sb-plan-badge');
   if (!el) return;
   if (plan === '*') {
     el.textContent = '✦ Empresarial';
     el.style.background = 'rgba(245,158,11,.15)';
     el.style.color      = '#f59e0b';
   } else {
-    var cfg = NORMALIS_PLANS[plan] || NORMALIS_PLANS['profesional'];
+    let cfg = NORMALIS_PLANS[plan] || NORMALIS_PLANS['profesional'];
     el.textContent      = '✦ ' + cfg.label;
     el.style.background = 'rgba(99,102,241,.15)';
     el.style.color      = cfg.color || '#6366f1';

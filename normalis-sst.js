@@ -7,7 +7,7 @@
 // ESTÁNDARES MÍNIMOS — RES. 0312/2019 (COMPLETOS)
 // ═══════════════════════════════════════════
 
-var SST_ESTANDARES = {
+const SST_ESTANDARES = {
 
   // ─── FASE I — Menos de 10 trabajadores, Riesgo I y II ─────────────────────
   fase1: {
@@ -230,7 +230,7 @@ var SST_ESTANDARES = {
 // ═══════════════════════════════════════════
 // VENCIMIENTOS SST — TIPOS PREDEFINIDOS (expandidos)
 // ═══════════════════════════════════════════
-var SST_VENCIMIENTOS_TIPO = [
+const SST_VENCIMIENTOS_TIPO = [
   { id: 'exam_ingreso',   label: 'Examen médico de ingreso',              frecuencia: 'Antes de iniciar labores' },
   { id: 'exam_periodico', label: 'Examen médico periódico',               frecuencia: 'Anual o según concepto médico' },
   { id: 'exam_egreso',    label: 'Examen médico de egreso',               frecuencia: 'Al finalizar contrato' },
@@ -258,8 +258,8 @@ var SST_VENCIMIENTOS_TIPO = [
 // ═══════════════════════════════════════════
 // STORAGE — localStorage + Firestore sync
 // ═══════════════════════════════════════════
-var _sstFirestoreEnabled = false;
-var _sstSyncTimer = null;
+let _sstFirestoreEnabled = false;
+let _sstSyncTimer = null;
 
 function loadSSTData() {
   try { return JSON.parse(localStorage.getItem('normalis_sst') || '{}'); } catch(e) { return {}; }
@@ -276,29 +276,29 @@ function saveSSTData(data) {
 
 function sstSyncFirestore(data) {
   try {
-    var uid = sessionStorage.getItem('normalis_uid');
+    let uid = sessionStorage.getItem('normalis_uid');
     if (!uid || typeof db === 'undefined') return;
     db.collection('usuarios').doc(uid).collection('sst').doc('main').set(
       Object.assign({}, data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }),
       { merge: true }
     ).then(function(){
       _sstLastSync = new Date().toLocaleTimeString('es-CO');
-      var syncEl = document.getElementById('sst-sync-status');
+      const syncEl = document.getElementById('sst-sync-status');
       if (syncEl) syncEl.textContent = '☁️ Sincronizado ' + _sstLastSync;
     }).catch(function(e){ console.warn('[SST] Firestore sync:', e.message); });
   } catch(e) { console.warn('[SST] Sync error:', e.message); }
 }
 
-var _sstLastSync = null;
+let _sstLastSync = null;
 
 function sstLoadFirestore() {
   try {
-    var uid = sessionStorage.getItem('normalis_uid');
+    let uid = sessionStorage.getItem('normalis_uid');
     if (!uid || typeof db === 'undefined') { renderSST(); return; }
     _sstFirestoreEnabled = true;
     db.collection('usuarios').doc(uid).collection('sst').doc('main').get().then(function(doc) {
       if (doc.exists) {
-        var fsData = doc.data().catch(function(e){ console.error('[NormaLis SST]', e); });
+        const fsData = doc.data().catch(function(e){ console.error('[NormaLis SST]', e); });
         delete fsData.updatedAt;
         // Merge con localStorage (Firestore tiene prioridad)
         localStorage.setItem('normalis_sst', JSON.stringify(fsData));
@@ -312,11 +312,11 @@ function sstLoadFirestore() {
 // CALCULAR SCORE
 // ═══════════════════════════════════════════
 function calcSSTScore() {
-  var data = loadSSTData();
-  var fase = data.fase || 'fase1';
-  var estandar = SST_ESTANDARES[fase];
-  var saved = data.autoevaluacion || {};
-  var total = 0, obtenido = 0;
+  let data = loadSSTData();
+  let fase = data.fase || 'fase1';
+  let estandar = SST_ESTANDARES[fase];
+  let saved = data.autoevaluacion || {};
+  let total = 0, obtenido = 0;
   estandar.grupos.forEach(function(g) {
     g.items.forEach(function(item) {
       total += item.puntos;
@@ -324,9 +324,9 @@ function calcSSTScore() {
       else if (saved[item.id] === 'parcial') obtenido += item.puntos * 0.5;
     });
   });
-  var pct = total > 0 ? Math.round(obtenido / total * 100) : 0;
-  var semaforo = pct < 60 ? 'critico' : pct < 85 ? 'moderado' : 'aceptable';
-  var label = pct < 60 ? '🔴 Crítico — Riesgo alto de sanción (< 60%)' :
+  const pct = total > 0 ? Math.round(obtenido / total * 100) : 0;
+  const semaforo = pct < 60 ? 'critico' : pct < 85 ? 'moderado' : 'aceptable';
+  const label = pct < 60 ? '🔴 Crítico — Riesgo alto de sanción (< 60%)' :
               pct < 85 ? '🟡 Moderado — Requiere mejoras (60–84%)' :
                          '🟢 Aceptable — SG-SST en orden (≥ 85%)';
   return { pct: pct, obtenido: Math.round(obtenido*10)/10, total: total, semaforo: semaforo, label: label, fase: fase };
@@ -336,11 +336,11 @@ function calcSSTScore() {
 // RENDER PRINCIPAL
 // ═══════════════════════════════════════════
 function renderSST() {
-  var container = document.getElementById('sst-container');
+  let container = document.getElementById('sst-container');
   if (!container) return;
-  var data = loadSSTData();
-  var score = calcSSTScore();
-  var activeTab = data.activeTab || 'dashboard';
+  let data = loadSSTData();
+  let score = calcSSTScore();
+  let activeTab = data.activeTab || 'dashboard';
 
   container.innerHTML =
     '<div style="max-width:960px;margin:0 auto;padding:0 0 60px">' +
@@ -370,24 +370,24 @@ function renderSST() {
 }
 
 function _sstTab(id, active, label) {
-  var isActive = id === active;
+  const isActive = id === active;
   return '<button onclick="sstSetTab(\'' + id + '\')" style="padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:' + (isActive?'700':'500') + ';' +
     (isActive ? 'background:var(--teal);color:#fff' : 'background:var(--card);color:var(--text-muted);border:1px solid var(--border)') +
     '">' + label + '</button>';
 }
 
 function sstSetTab(tab) {
-  var data = loadSSTData();
+  let data = loadSSTData();
   data.activeTab = tab;
   saveSSTData(data);
-  var el = document.getElementById('sst-tab-content');
+  let el = document.getElementById('sst-tab-content');
   if (el) el.innerHTML = _sstTabContent(tab, data, calcSSTScore());
   // Update tab buttons
-  var container = document.getElementById('sst-container');
+  let container = document.getElementById('sst-container');
   if (container) {
-    var tabs = ['dashboard','autoevaluacion','plan','vencimientos','informe'];
-    var labels = { dashboard:'📊 Resumen', autoevaluacion:'📋 Autoevaluación', plan:'📝 Plan de Trabajo', vencimientos:'📅 Vencimientos', informe:'🖨️ Informe PDF' };
-    var navDiv = container.querySelector('div[style*="border-bottom"]');
+    const tabs = ['dashboard','autoevaluacion','plan','vencimientos','informe'];
+    const labels = { dashboard:'📊 Resumen', autoevaluacion:'📋 Autoevaluación', plan:'📝 Plan de Trabajo', vencimientos:'📅 Vencimientos', informe:'🖨️ Informe PDF' };
+    const navDiv = container.querySelector('div[style*="border-bottom"]');
     if (navDiv) navDiv.innerHTML = tabs.map(function(t){ return _sstTab(t, tab, labels[t]); }).join('');
   }
 }
@@ -396,9 +396,9 @@ function sstSetTab(tab) {
 // SCORE CARD
 // ═══════════════════════════════════════════
 function _sstScoreCard(score) {
-  var color = score.semaforo === 'critico' ? '#ef4444' : score.semaforo === 'moderado' ? '#f59e0b' : '#10b981';
-  var data = loadSSTData();
-  var nota = SST_ESTANDARES[score.fase] ? SST_ESTANDARES[score.fase].nota : '';
+  let color = score.semaforo === 'critico' ? '#ef4444' : score.semaforo === 'moderado' ? '#f59e0b' : '#10b981';
+  let data = loadSSTData();
+  const nota = SST_ESTANDARES[score.fase] ? SST_ESTANDARES[score.fase].nota : '';
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px">' +
     '<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">' +
       '<div style="text-align:center;min-width:90px">' +
@@ -428,13 +428,13 @@ function sstCambiarFase(fase) {
   if (typeof nlConfirm === 'function') {
     nlConfirm('Al cambiar de fase se reiniciará la autoevaluación. ¿Continuar?', 'Cambiar fase', '#f59e0b').then(function(ok) {
       if (!ok) return;
-      var data = loadSSTData();
+      let data = loadSSTData();
       data.fase = fase; data.autoevaluacion = {};
       saveSSTData(data); renderSST();
       if (typeof toast === 'function') toast('Fase cambiada — autoevaluación reiniciada', 'info');
     });
   } else {
-    var data = loadSSTData();
+    let data = loadSSTData();
     data.fase = fase; data.autoevaluacion = {};
     saveSSTData(data); renderSST();
   }
@@ -455,13 +455,13 @@ function _sstTabContent(tab, data, score) {
 // TAB: AUTOEVALUACIÓN
 // ═══════════════════════════════════════════
 function _sstAutoEval(data, score) {
-  var estandar = SST_ESTANDARES[score.fase];
-  var saved = data.autoevaluacion || {};
-  var totalEval = 0, totalItems = 0;
+  let estandar = SST_ESTANDARES[score.fase];
+  let saved = data.autoevaluacion || {};
+  let totalEval = 0, totalItems = 0;
   estandar.grupos.forEach(function(g){ g.items.forEach(function(){ totalItems++; }); });
   totalEval = Object.keys(saved).filter(function(k){ return saved[k]; }).length;
 
-  var html = '<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+  let html = '<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
     '<span style="font-size:13px;color:var(--text-muted)">' + totalEval + ' de ' + totalItems + ' estándares evaluados</span>' +
     '<div style="display:flex;gap:6px">' +
       '<button onclick="sstMarcarTodos(\'cumple\')" style="padding:5px 12px;border-radius:6px;border:1px solid #10b981;background:rgba(16,185,129,.1);color:#10b981;font-size:12px;cursor:pointer">✓ Marcar todo Cumple</button>' +
@@ -471,10 +471,10 @@ function _sstAutoEval(data, score) {
   '<div style="display:flex;flex-direction:column;gap:14px">';
 
   estandar.grupos.forEach(function(grupo) {
-    var grpCumple = grupo.items.filter(function(i){ return saved[i.id]==='cumple'; }).length;
-    var grpParcial = grupo.items.filter(function(i){ return saved[i.id]==='parcial'; }).length;
-    var grpTotal = grupo.items.length;
-    var allDone = grpCumple === grpTotal;
+    const grpCumple = grupo.items.filter(function(i){ return saved[i.id]==='cumple'; }).length;
+    const grpParcial = grupo.items.filter(function(i){ return saved[i.id]==='parcial'; }).length;
+    const grpTotal = grupo.items.length;
+    const allDone = grpCumple === grpTotal;
     html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden">';
     html += '<div style="padding:12px 18px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none" onclick="sstToggleGrupo(\'' + grupo.id + '\')">';
     html += '<div style="font-weight:700;font-size:13px;color:var(--text)">' + grupo.nombre + '</div>';
@@ -484,8 +484,8 @@ function _sstAutoEval(data, score) {
     html += '<div id="sst-grp-' + grupo.id + '" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">';
 
     grupo.items.forEach(function(item) {
-      var val = saved[item.id] || '';
-      var bgRow = val === 'cumple' ? 'rgba(16,185,129,.06)' : val === 'parcial' ? 'rgba(245,158,11,.06)' : val === 'no' ? 'rgba(239,68,68,.06)' : 'var(--bg)';
+      const val = saved[item.id] || '';
+      const bgRow = val === 'cumple' ? 'rgba(16,185,129,.06)' : val === 'parcial' ? 'rgba(245,158,11,.06)' : val === 'no' ? 'rgba(239,68,68,.06)' : 'var(--bg)';
       html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:' + bgRow + ';border-radius:8px;border:1px solid var(--border)">';
       html += '<div style="flex:1">';
       html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;font-family:monospace">' + item.num + '</div>';
@@ -507,24 +507,24 @@ function _sstAutoEval(data, score) {
 }
 
 function sstSetItem(id, val) {
-  var data = loadSSTData();
+  let data = loadSSTData();
   if (!data.autoevaluacion) data.autoevaluacion = {};
   data.autoevaluacion[id] = val;
   saveSSTData(data);
   sstSetTab('autoevaluacion');
   // Update score card
-  var newScore = calcSSTScore();
-  var scoreColor = newScore.semaforo==='critico'?'#ef4444':newScore.semaforo==='moderado'?'#f59e0b':'#10b981';
-  var pctEl = document.querySelector('#sst-container [style*="font-size:48px"]');
+  const newScore = calcSSTScore();
+  const scoreColor = newScore.semaforo==='critico'?'#ef4444':newScore.semaforo==='moderado'?'#f59e0b':'#10b981';
+  const pctEl = document.querySelector('#sst-container [style*="font-size:48px"]');
   if (pctEl) { pctEl.textContent = newScore.pct + '%'; pctEl.style.color = scoreColor; }
-  var barEl = document.querySelector('#sst-container [style*="transition:.4s"]');
+  const barEl = document.querySelector('#sst-container [style*="transition:.4s"]');
   if (barEl) { barEl.style.width = newScore.pct + '%'; barEl.style.background = scoreColor; }
   if (typeof logAction==='function') logAction('sst_item_set', 'sst', 'Estándar ' + id + ': ' + val);
 }
 
 function sstMarcarTodos(val) {
-  var data = loadSSTData();
-  var fase = data.fase || 'fase1';
+  let data = loadSSTData();
+  let fase = data.fase || 'fase1';
   if (!data.autoevaluacion) data.autoevaluacion = {};
   SST_ESTANDARES[fase].grupos.forEach(function(g){
     g.items.forEach(function(item){ data.autoevaluacion[item.id] = val; });
@@ -535,10 +535,10 @@ function sstMarcarTodos(val) {
 }
 
 function sstToggleGrupo(id) {
-  var el = document.getElementById('sst-grp-' + id);
-  var arrow = document.getElementById('sst-arrow-' + id);
+  let el = document.getElementById('sst-grp-' + id);
+  const arrow = document.getElementById('sst-arrow-' + id);
   if (!el) return;
-  var hidden = el.style.display === 'none';
+  const hidden = el.style.display === 'none';
   el.style.display = hidden ? 'flex' : 'none';
   if (!hidden) {} else el.style.flexDirection = 'column';
   if (arrow) arrow.textContent = hidden ? '▼' : '▶';
@@ -548,8 +548,8 @@ function sstToggleGrupo(id) {
 // TAB: PLAN DE TRABAJO ANUAL
 // ═══════════════════════════════════════════
 function _sstPlan(data) {
-  var actividades = data.plan || [];
-  var html = '<div style="display:flex;flex-direction:column;gap:16px">';
+  const actividades = data.plan || [];
+  let html = '<div style="display:flex;flex-direction:column;gap:16px">';
   html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">';
   html += '<h3 style="font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)">➕ Nueva Actividad del Plan</h3>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
@@ -574,10 +574,10 @@ function _sstPlan(data) {
   if (actividades.length === 0) {
     html += '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px">No hay actividades en el plan de trabajo.</div>';
   } else {
-    var CATCOLORS = { recursos:'#6366f1', gestion:'#0ea5e9', salud:'#10b981', peligros:'#f59e0b', emergencias:'#ef4444', verificar:'#8b5cf6', mejora:'#06b6d4' };
-    var pend = actividades.filter(function(a){ return a.estado==='pendiente'; }).length;
-    var proc = actividades.filter(function(a){ return a.estado==='en_proceso'; }).length;
-    var done = actividades.filter(function(a){ return a.estado==='completada'; }).length;
+    const CATCOLORS = { recursos:'#6366f1', gestion:'#0ea5e9', salud:'#10b981', peligros:'#f59e0b', emergencias:'#ef4444', verificar:'#8b5cf6', mejora:'#06b6d4' };
+    const pend = actividades.filter(function(a){ return a.estado==='pendiente'; }).length;
+    const proc = actividades.filter(function(a){ return a.estado==='en_proceso'; }).length;
+    const done = actividades.filter(function(a){ return a.estado==='completada'; }).length;
     html += '<div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">';
     html += '<span style="font-size:12px;padding:3px 10px;border-radius:10px;background:rgba(245,158,11,.12);color:#b45309">⏳ ' + pend + ' pendientes</span>';
     html += '<span style="font-size:12px;padding:3px 10px;border-radius:10px;background:rgba(14,165,233,.12);color:#0369a1">🔄 ' + proc + ' en proceso</span>';
@@ -585,8 +585,8 @@ function _sstPlan(data) {
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;gap:8px">';
     actividades.forEach(function(act, i) {
-      var color = CATCOLORS[act.categoria] || '#64748b';
-      var vencido = act.fecha && new Date(act.fecha) < new Date() && act.estado !== 'completada';
+      let color = CATCOLORS[act.categoria] || '#64748b';
+      const vencido = act.fecha && new Date(act.fecha) < new Date() && act.estado !== 'completada';
       html += '<div style="background:var(--card);border:1px solid var(--border);border-left:4px solid ' + color + ';border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px">';
       html += '<div style="flex:1">';
       html += '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">' + act.actividad + '</div>';
@@ -612,14 +612,14 @@ function _sstPlan(data) {
 }
 
 function sstGuardarActividad() {
-  var actividad  = (document.getElementById('sst-plan-actividad')||{}).value || '';
-  var categoria  = (document.getElementById('sst-plan-categoria')||{}).value || 'recursos';
-  var responsable= (document.getElementById('sst-plan-responsable')||{}).value || '';
-  var fecha      = (document.getElementById('sst-plan-fecha')||{}).value || '';
-  var recurso    = (document.getElementById('sst-plan-recurso')||{}).value || '';
-  var indicador  = (document.getElementById('sst-plan-indicador')||{}).value || '';
+  const actividad  = (document.getElementById('sst-plan-actividad')||{}).value || '';
+  const categoria  = (document.getElementById('sst-plan-categoria')||{}).value || 'recursos';
+  const responsable= (document.getElementById('sst-plan-responsable')||{}).value || '';
+  let fecha      = (document.getElementById('sst-plan-fecha')||{}).value || '';
+  const recurso    = (document.getElementById('sst-plan-recurso')||{}).value || '';
+  const indicador  = (document.getElementById('sst-plan-indicador')||{}).value || '';
   if (!actividad.trim()) { if (typeof toast==='function') toast('Ingrese la descripción de la actividad','warning'); return; }
-  var data = loadSSTData();
+  let data = loadSSTData();
   if (!data.plan) data.plan = [];
   data.plan.push({ actividad: actividad.trim(), categoria, responsable, fecha, recurso, indicador, estado: 'pendiente', createdAt: new Date().toISOString() });
   saveSSTData(data);
@@ -629,7 +629,7 @@ function sstGuardarActividad() {
 }
 
 function sstEstadoActividad(i, estado) {
-  var data = loadSSTData();
+  let data = loadSSTData();
   if (data.plan && data.plan[i]) { data.plan[i].estado = estado; saveSSTData(data); }
   sstSetTab('plan');
 }
@@ -637,7 +637,7 @@ function sstEstadoActividad(i, estado) {
 function sstEliminarActividad(i) {
   nlConfirm('¿Eliminar esta actividad del plan?','Eliminar','#ef4444').then(function(ok){
     if (!ok) return;
-    var data = loadSSTData();
+    let data = loadSSTData();
     if (data.plan) { data.plan.splice(i,1); saveSSTData(data); }
     if (typeof toast==='function') toast('Actividad eliminada','info');
     renderSST(); sstSetTab('plan');
@@ -648,9 +648,9 @@ function sstEliminarActividad(i) {
 // TAB: VENCIMIENTOS SST
 // ═══════════════════════════════════════════
 function _sstVencimientos(data) {
-  var venc = data.vencimientos_sst || [];
-  var hoy  = new Date(); hoy.setHours(0,0,0,0);
-  var html = '<div style="display:flex;flex-direction:column;gap:16px">';
+  let venc = data.vencimientos_sst || [];
+  let hoy  = new Date(); hoy.setHours(0,0,0,0);
+  let html = '<div style="display:flex;flex-direction:column;gap:16px">';
 
   html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">';
   html += '<h3 style="font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text)">➕ Nuevo Vencimiento SST</h3>';
@@ -668,15 +668,15 @@ function _sstVencimientos(data) {
   if (venc.length === 0) {
     html += '<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px">No hay vencimientos SST registrados.</div>';
   } else {
-    var sorted = venc.slice().sort(function(a,b){ return new Date(a.fecha)-new Date(b.fecha); });
+    const sorted = venc.slice().sort(function(a,b){ return new Date(a.fecha)-new Date(b.fecha); });
     html += '<div style="display:flex;flex-direction:column;gap:6px">';
     sorted.forEach(function(v, i) {
-      var fv = new Date(v.fecha); fv.setHours(0,0,0,0);
-      var dias = Math.round((fv - hoy) / 86400000);
-      var urgency = dias < 0 ? 'vencido' : dias <= 7 ? 'critico' : dias <= 30 ? 'proximo' : 'ok';
-      var colors  = { vencido:'#ef4444', critico:'#f97316', proximo:'#f59e0b', ok:'#10b981' };
-      var bgColors= { vencido:'rgba(239,68,68,.08)', critico:'rgba(249,115,22,.08)', proximo:'rgba(245,158,11,.06)', ok:'transparent' };
-      var diasLabel = urgency==='vencido' ? '&#9888; VENCIDO' : 'Vence en ' + dias + 'd';
+      let fv = new Date(v.fecha); fv.setHours(0,0,0,0);
+      let dias = Math.round((fv - hoy) / 86400000);
+      const urgency = dias < 0 ? 'vencido' : dias <= 7 ? 'critico' : dias <= 30 ? 'proximo' : 'ok';
+      const colors  = { vencido:'#ef4444', critico:'#f97316', proximo:'#f59e0b', ok:'#10b981' };
+      const bgColors= { vencido:'rgba(239,68,68,.08)', critico:'rgba(249,115,22,.08)', proximo:'rgba(245,158,11,.06)', ok:'transparent' };
+      const diasLabel = urgency==='vencido' ? '&#9888; VENCIDO' : 'Vence en ' + dias + 'd';
       html += '<div style="background:var(--card);border:1px solid var(--border);background:' + bgColors[urgency] + ';border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">';
       html += '<div style="width:8px;height:8px;border-radius:50%;background:' + colors[urgency] + ';flex-shrink:0"></div>';
       html += '<div style="flex:1">';
@@ -694,14 +694,14 @@ function _sstVencimientos(data) {
 }
 
 function sstGuardarVencimiento() {
-  var tipoEl  = document.getElementById('sst-venc-tipo');
-  var tipoId  = tipoEl ? tipoEl.value : '';
-  var tipoData= SST_VENCIMIENTOS_TIPO.find(function(t){ return t.id===tipoId; });
-  var desc    = (document.getElementById('sst-venc-desc')||{}).value || '';
-  var fecha   = (document.getElementById('sst-venc-fecha')||{}).value || '';
-  var resp    = (document.getElementById('sst-venc-responsable')||{}).value || '';
+  const tipoEl  = document.getElementById('sst-venc-tipo');
+  const tipoId  = tipoEl ? tipoEl.value : '';
+  const tipoData= SST_VENCIMIENTOS_TIPO.find(function(t){ return t.id===tipoId; });
+  const desc    = (document.getElementById('sst-venc-desc')||{}).value || '';
+  let fecha   = (document.getElementById('sst-venc-fecha')||{}).value || '';
+  const resp    = (document.getElementById('sst-venc-responsable')||{}).value || '';
   if (!fecha) { if (typeof toast==='function') toast('Seleccione la fecha de vencimiento','warning'); return; }
-  var data = loadSSTData();
+  let data = loadSSTData();
   if (!data.vencimientos_sst) data.vencimientos_sst = [];
   data.vencimientos_sst.push({ id: tipoId, label: tipoData ? tipoData.label : tipoId, desc, fecha, responsable: resp });
   saveSSTData(data);
@@ -712,7 +712,7 @@ function sstGuardarVencimiento() {
 function sstEliminarVencimiento(i) {
   nlConfirm('¿Eliminar este vencimiento SST?','Eliminar','#ef4444').then(function(ok){
     if (!ok) return;
-    var data = loadSSTData();
+    let data = loadSSTData();
     if (data.vencimientos_sst) { data.vencimientos_sst.splice(i,1); saveSSTData(data); }
     renderSST(); sstSetTab('vencimientos');
   });
@@ -722,28 +722,28 @@ function sstEliminarVencimiento(i) {
 // TAB: DASHBOARD / RESUMEN
 // ═══════════════════════════════════════════
 function _sstDashboard(data, score) {
-  var plan  = data.plan || [];
-  var venc  = data.vencimientos_sst || [];
-  var hoy   = new Date(); hoy.setHours(0,0,0,0);
-  var estandar = SST_ESTANDARES[score.fase];
-  var saved = data.autoevaluacion || {};
+  let plan  = data.plan || [];
+  let venc  = data.vencimientos_sst || [];
+  let hoy   = new Date(); hoy.setHours(0,0,0,0);
+  let estandar = SST_ESTANDARES[score.fase];
+  let saved = data.autoevaluacion || {};
 
-  var totalItems = 0, noCumple = 0, cumple = 0, parcial = 0;
+  let totalItems = 0, noCumple = 0, cumple = 0, parcial = 0;
   estandar.grupos.forEach(function(g){ g.items.forEach(function(item){
     totalItems++;
     if (saved[item.id]==='cumple') cumple++;
     else if (saved[item.id]==='parcial') parcial++;
     else noCumple++;
   }); });
-  var evaluados = Object.keys(saved).filter(function(k){ return saved[k]; }).length;
+  const evaluados = Object.keys(saved).filter(function(k){ return saved[k]; }).length;
 
-  var pendientes  = plan.filter(function(a){ return a.estado==='pendiente'; }).length;
-  var enProceso   = plan.filter(function(a){ return a.estado==='en_proceso'; }).length;
-  var completadas = plan.filter(function(a){ return a.estado==='completada'; }).length;
-  var vencProximos= venc.filter(function(v){ var fv=new Date(v.fecha); fv.setHours(0,0,0,0); return fv>=hoy && (fv-hoy)<=30*86400000; }).length;
-  var vencidos    = venc.filter(function(v){ var fv=new Date(v.fecha); fv.setHours(0,0,0,0); return fv<hoy; }).length;
+  const pendientes  = plan.filter(function(a){ return a.estado==='pendiente'; }).length;
+  const enProceso   = plan.filter(function(a){ return a.estado==='en_proceso'; }).length;
+  const completadas = plan.filter(function(a){ return a.estado==='completada'; }).length;
+  const vencProximos= venc.filter(function(v){ var fv=new Date(v.fecha); fv.setHours(0,0,0,0); return fv>=hoy && (fv-hoy)<=30*86400000; }).length;
+  const vencidos    = venc.filter(function(v){ var fv=new Date(v.fecha); fv.setHours(0,0,0,0); return fv<hoy; }).length;
 
-  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px">';
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px">';
   [
     { label:'Evaluados', val: evaluados+'/'+totalItems, color:'#6366f1', icon:'📋' },
     { label:'Cumplen',   val: cumple,   color:'#10b981', icon:'✅' },
@@ -765,14 +765,14 @@ function _sstDashboard(data, score) {
   html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">';
   html += '<h3 style="font-size:13px;font-weight:700;color:var(--text);margin:0 0 14px">Cumplimiento por grupo</h3>';
   estandar.grupos.forEach(function(g) {
-    var gTotal = 0, gObtenido = 0;
+    let gTotal = 0, gObtenido = 0;
     g.items.forEach(function(item){
       gTotal += item.puntos;
       if (saved[item.id]==='cumple') gObtenido += item.puntos;
       else if (saved[item.id]==='parcial') gObtenido += item.puntos*0.5;
     });
-    var gPct = gTotal > 0 ? Math.round(gObtenido/gTotal*100) : 0;
-    var gColor = gPct < 60 ? '#ef4444' : gPct < 85 ? '#f59e0b' : '#10b981';
+    const gPct = gTotal > 0 ? Math.round(gObtenido/gTotal*100) : 0;
+    const gColor = gPct < 60 ? '#ef4444' : gPct < 85 ? '#f59e0b' : '#10b981';
     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
     html += '<div style="font-size:12px;color:var(--text);min-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + g.nombre + '</div>';
     html += '<div style="flex:1;background:var(--bg);border-radius:4px;height:6px;overflow:hidden"><div style="height:100%;width:' + gPct + '%;background:' + gColor + ';border-radius:4px"></div></div>';
@@ -784,7 +784,7 @@ function _sstDashboard(data, score) {
   // Acciones recomendadas
   html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px">';
   html += '<h3 style="font-size:13px;font-weight:700;color:var(--text);margin:0 0 12px">🎯 Acciones recomendadas</h3>';
-  var acciones = [];
+  const acciones = [];
   if (evaluados < totalItems) acciones.push({ icon:'📋', txt:'Completar autoevaluación — ' + (totalItems-evaluados) + ' estándar(es) sin responder', tab:'autoevaluacion', color:'#6366f1' });
   if (vencidos > 0) acciones.push({ icon:'&#9888;', txt: vencidos + ' vencimiento(s) SST vencido(s) — atención urgente', tab:'vencimientos', color:'#ef4444' });
   if (vencProximos > 0) acciones.push({ icon:'⏰', txt: vencProximos + ' vencimiento(s) en los próximos 30 días', tab:'vencimientos', color:'#f97316' });
@@ -821,25 +821,25 @@ function _sstInforme(data, score) {
 }
 
 function sstExportarPDF() {
-  var score = calcSSTScore();
-  var data  = loadSSTData();
-  var estandar = SST_ESTANDARES[score.fase];
-  var saved = data.autoevaluacion || {};
-  var fecha = new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'});
-  var ipsNombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
-  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('normalis_cfg')||'{}'); } catch(e){}
-  var color = score.semaforo==='critico'?'#dc2626':score.semaforo==='moderado'?'#d97706':'#059669';
+  let score = calcSSTScore();
+  let data  = loadSSTData();
+  let estandar = SST_ESTANDARES[score.fase];
+  let saved = data.autoevaluacion || {};
+  let fecha = new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'});
+  let ipsNombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
+  const cfg = {}; try { cfg = JSON.parse(localStorage.getItem('normalis_cfg')||'{}'); } catch(e){}
+  let color = score.semaforo==='critico'?'#dc2626':score.semaforo==='moderado'?'#d97706':'#059669';
 
   // Plan de trabajo
-  var plan = data.plan || [];
-  var venc = data.vencimientos_sst || [];
+  let plan = data.plan || [];
+  let venc = data.vencimientos_sst || [];
 
   // Items por estado
-  var cumpleItems=[], parcialItems=[], noItems=[], sinEvalItems=[];
+  const cumpleItems=[], parcialItems=[], noItems=[], sinEvalItems=[];
   estandar.grupos.forEach(function(g){
     g.items.forEach(function(item){
-      var estado = saved[item.id];
-      var obj = {num: item.num, texto: item.texto, puntos: item.puntos, grupo: g.nombre};
+      let estado = saved[item.id];
+      const obj = {num: item.num, texto: item.texto, puntos: item.puntos, grupo: g.nombre};
       if (estado==='cumple') cumpleItems.push(obj);
       else if (estado==='parcial') parcialItems.push(obj);
       else if (estado==='no') noItems.push(obj);
@@ -847,43 +847,43 @@ function sstExportarPDF() {
     });
   });
 
-  var tblRow = function(num, texto, estado, pts, color2) {
+  const tblRow = function(num, texto, estado, pts, color2) {
     return '<tr><td style="padding:6px 10px;font-family:monospace;font-size:11px;color:#64748b;white-space:nowrap">' + num + '</td>' +
       '<td style="padding:6px 10px;font-size:12px">' + texto + '</td>' +
       '<td style="padding:6px 10px;text-align:center"><span style="background:' + color2 + ';color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap">' + estado + '</span></td>' +
       '<td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:600">' + pts + '</td></tr>';
   };
 
-  var allRows = '';
+  let allRows = '';
   estandar.grupos.forEach(function(g) {
     allRows += '<tr><td colspan="4" style="background:#f1f5f9;padding:8px 10px;font-weight:700;font-size:12px;color:#1e293b;border-top:2px solid #e2e8f0">' + g.nombre + '</td></tr>';
     g.items.forEach(function(item) {
-      var estado = saved[item.id];
-      var lbl = estado==='cumple'?'✓ CUMPLE':estado==='parcial'?'⚡ PARCIAL':estado==='no'?'✗ NO CUMPLE':'○ SIN EVALUAR';
-      var col = estado==='cumple'?'#059669':estado==='parcial'?'#d97706':estado==='no'?'#dc2626':'#94a3b8';
+      let estado = saved[item.id];
+      const lbl = estado==='cumple'?'✓ CUMPLE':estado==='parcial'?'⚡ PARCIAL':estado==='no'?'✗ NO CUMPLE':'○ SIN EVALUAR';
+      const col = estado==='cumple'?'#059669':estado==='parcial'?'#d97706':estado==='no'?'#dc2626':'#94a3b8';
       allRows += tblRow(item.num, item.texto, lbl, item.puntos+' pts', col);
     });
   });
 
-  var planRows = plan.map(function(a){
-    var st = a.estado==='completada'?'✅':a.estado==='en_proceso'?'🔄':'⏳';
+  const planRows = plan.map(function(a){
+    const st = a.estado==='completada'?'✅':a.estado==='en_proceso'?'🔄':'⏳';
     return '<tr><td style="padding:5px 8px;font-size:12px">' + a.actividad + '</td>' +
       '<td style="padding:5px 8px;font-size:11px;color:#64748b">' + (a.responsable||'—') + '</td>' +
       '<td style="padding:5px 8px;font-size:11px;color:#64748b">' + (a.fecha||'—') + '</td>' +
       '<td style="padding:5px 8px;text-align:center">' + st + ' ' + (a.estado||'pendiente') + '</td></tr>';
   }).join('');
 
-  var vencRows = venc.map(function(v){
-    var fv = new Date(v.fecha); var hoy = new Date();
-    var dias = Math.round((fv-hoy)/86400000);
-    var urgColor = dias<0?'#dc2626':dias<=30?'#d97706':'#059669';
+  const vencRows = venc.map(function(v){
+    let fv = new Date(v.fecha); var hoy = new Date();
+    let dias = Math.round((fv-hoy)/86400000);
+    const urgColor = dias<0?'#dc2626':dias<=30?'#d97706':'#059669';
     return '<tr><td style="padding:5px 8px;font-size:12px">' + v.label + (v.desc?' — '+v.desc:'') + '</td>' +
       '<td style="padding:5px 8px;font-size:11px">' + v.fecha + '</td>' +
       '<td style="padding:5px 8px;font-size:11px;color:#64748b">' + (v.responsable||'—') + '</td>' +
       '<td style="padding:5px 8px;text-align:center;font-weight:700;color:' + urgColor + '">' + (dias<0?'VENCIDO':dias+' días') + '</td></tr>';
   }).join('');
 
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe SG-SST — '+ipsNombre+'</title>' +
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe SG-SST — '+ipsNombre+'</title>' +
   '<style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1e293b;font-size:13px}' +
   '.page{max-width:800px;margin:0 auto;padding:30px}' +
   'table{width:100%;border-collapse:collapse;margin-bottom:20px}' +
@@ -970,7 +970,7 @@ function sstExportarPDF() {
 
   '</div></body></html>';
 
-  var win = window.open('','_blank','width=900,height=700,scrollbars=yes');
+  const win = window.open('','_blank','width=900,height=700,scrollbars=yes');
   if (win) {
     win.document.write(html);
     win.document.close();
@@ -981,13 +981,13 @@ function sstExportarPDF() {
 }
 
 function sstExportarTexto() {
-  var score = calcSSTScore();
-  var data  = loadSSTData();
-  var estandar = SST_ESTANDARES[score.fase];
-  var saved = data.autoevaluacion || {};
-  var fecha = new Date().toLocaleDateString('es-CO');
-  var ipsNombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
-  var lines = [
+  let score = calcSSTScore();
+  let data  = loadSSTData();
+  let estandar = SST_ESTANDARES[score.fase];
+  let saved = data.autoevaluacion || {};
+  let fecha = new Date().toLocaleDateString('es-CO');
+  let ipsNombre = localStorage.getItem('normalis_ips_nombre') || 'IPS';
+  const lines = [
     'INFORME SG-SST — ' + ipsNombre,
     'Fecha: ' + fecha + ' | ' + estandar.label,
     'Cumplimiento: ' + score.pct + '% (' + score.obtenido + '/' + score.total + ' pts)',
@@ -997,7 +997,7 @@ function sstExportarTexto() {
   estandar.grupos.forEach(function(g){
     lines.push('\n[' + g.nombre + ']');
     g.items.forEach(function(item){
-      var est = saved[item.id]==='cumple'?'✓ CUMPLE':saved[item.id]==='parcial'?'⚡ PARCIAL':saved[item.id]==='no'?'✗ NO CUMPLE':'○ SIN EVALUAR';
+      const est = saved[item.id]==='cumple'?'✓ CUMPLE':saved[item.id]==='parcial'?'⚡ PARCIAL':saved[item.id]==='no'?'✗ NO CUMPLE':'○ SIN EVALUAR';
       lines.push('  ' + est + ' [' + item.num + '] ' + item.texto + ' (' + item.puntos + ' pts)');
     });
   });
@@ -1006,9 +1006,9 @@ function sstExportarTexto() {
   lines.push('\n═══ VENCIMIENTOS SST ═══');
   (data.vencimientos_sst||[]).forEach(function(v){ lines.push('  ' + v.label + (v.desc?' — '+v.desc:'') + ' | ' + v.fecha + ' | ' + (v.responsable||'—')); });
   lines.push('\nGenerado por NormaLis — normalis.co');
-  var blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href=url; a.download='reporte-sst-' + fecha.replace(/\//g,'-') + '.txt'; a.click();
+  const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='reporte-sst-' + fecha.replace(/\//g,'-') + '.txt'; a.click();
   URL.revokeObjectURL(url);
   if (typeof toast==='function') toast('Reporte SST exportado como .txt','success');
 }

@@ -4,8 +4,8 @@
 
 function authLogin(){
   if(!_fbAuth){ authShowMsg('auth-login-msg','Firebase no configurado — modo local activado','error'); setTimeout(function(){ document.getElementById('auth-screen').style.display='none'; },1500); return; }
-  var email = document.getElementById('auth-email').value.trim();
-  var pass = document.getElementById('auth-pass').value;
+  let email = document.getElementById('auth-email').value.trim();
+  let pass = document.getElementById('auth-pass').value;
   if(!email||!pass){ authShowMsg('auth-login-msg','Completa todos los campos','error'); return; }
   authSetLoading('auth-login-btn', true);
   authShowMsg('auth-login-msg','','');
@@ -21,9 +21,9 @@ function authLogout(){
 
 function authRegister(){
   if(!_fbAuth){ document.getElementById('auth-screen').style.display='none'; return; }
-  var nombre = document.getElementById('auth-nombre').value.trim();
-  var email = document.getElementById('auth-reg-email').value.trim();
-  var pass = document.getElementById('auth-reg-pass').value;
+  let nombre = document.getElementById('auth-nombre').value.trim();
+  let email = document.getElementById('auth-reg-email').value.trim();
+  let pass = document.getElementById('auth-reg-pass').value;
   if(!nombre||!email||!pass){ authShowMsg('auth-reg-msg','Completa todos los campos','error'); return; }
   if(pass.length < 6){ authShowMsg('auth-reg-msg','Mínimo 6 caracteres','error'); return; }
   authSetLoading('auth-reg-btn', true);
@@ -31,9 +31,9 @@ function authRegister(){
   _fbAuth.createUserWithEmailAndPassword(email, pass)
     .then(function(cred){
       // FIX BUG #3: crear documento Firestore con rol pendiente
-      var uid = cred.user.uid;
+      const uid = cred.user.uid;
       var db2; try { db2 = firebase.firestore(); } catch(fe) { db2 = null; }
-      var fsWrite = db2
+      const fsWrite = db2
         ? db2.collection('usuarios').doc(uid).set({
             nombre: nombre,
             nombreContacto: nombre,
@@ -45,7 +45,7 @@ function authRegister(){
           })
         : Promise.resolve();
       try{
-        var cfg2 = JSON.parse(localStorage.getItem('normalis_cfg')||'{}');
+        const cfg2 = JSON.parse(localStorage.getItem('normalis_cfg')||'{}');
         cfg2.nombre = nombre; cfg2.email = email;
         localStorage.setItem('normalis_cfg', JSON.stringify(cfg2));
       }catch(e){}
@@ -57,7 +57,7 @@ function authRegister(){
 
 function authResetPass(){
   if(!_fbAuth) return;
-  var email = document.getElementById('auth-email').value.trim();
+  let email = document.getElementById('auth-email').value.trim();
   if(!email){ authShowMsg('auth-login-msg','Ingresa tu correo primero','error'); return; }
   _fbAuth.sendPasswordResetEmail(email)
     .then(function(){ authShowMsg('auth-login-msg','✅ Email de recuperación enviado a '+email,'success'); })
@@ -66,11 +66,11 @@ function authResetPass(){
 
 function authGoogle(){
   if(!_fbAuth){ document.getElementById('auth-screen').style.display='none'; return; }
-  var provider = new firebase.auth.GoogleAuthProvider();
+  const provider = new firebase.auth.GoogleAuthProvider();
   _fbAuth.signInWithPopup(provider)
     .then(function(result){
       // FIX BUG #3: crear doc Firestore si es primer login con Google
-      var user = result.user;
+      const user = result.user;
       var db2; try { db2 = firebase.firestore(); } catch(fe) { db2 = null; }
       if(!db2) return;
       db2.collection('usuarios').doc(user.uid).get().then(function(doc){
@@ -95,7 +95,7 @@ function authGoogle(){
 }
 
 function authErrorMsg(code){
-  var msgs = {
+  const msgs = {
     'auth/user-not-found': 'Correo no registrado. Crea una cuenta primero.',
     'auth/wrong-password': 'Contraseña incorrecta.',
     'auth/invalid-email': 'Correo inválido.',
@@ -110,12 +110,12 @@ function authErrorMsg(code){
 }
 
 function authSetLoading(id, loading){
-  var btn = document.getElementById(id);
+  const btn = document.getElementById(id);
   if(btn){ btn.disabled = loading; btn.textContent = loading ? 'Cargando...' : (id==='auth-login-btn' ? 'Ingresar →' : 'Crear cuenta gratis →'); }
 }
 
 function authShowMsg(id, msg, type){
-  var el = document.getElementById(id);
+  const el = document.getElementById(id);
   if(el){ el.textContent = msg; el.className = 'auth-msg ' + (type||''); }
 }
 

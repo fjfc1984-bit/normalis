@@ -35,3 +35,4 @@ page*.jpg
 .vscode/
 *.swp
 .resend-key
+__pycache__/

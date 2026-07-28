@@ -109,7 +109,7 @@ function nlConfirm(msg, okLabel, okColor) {
   okLabel = okLabel || 'Confirmar';
   okColor = okColor || '#00796B';
   return new Promise(function(resolve) {
-    var overlay = document.createElement('div');
+    let overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999997;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
     overlay.innerHTML =
       '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">' +
@@ -142,9 +142,9 @@ function nlToast(msg, type, duration) {
   duration = duration || 3400;
 
   // Ícono por tipo
-  var icons = { success: '✅', warning: '&#9888;', error: '❌', info: 'ℹ️' };
+  const icons = { success: '✅', warning: '&#9888;', error: '❌', info: 'ℹ️' };
 
-  var container = document.getElementById('toast-container');
+  let container = document.getElementById('toast-container');
   if (!container) {
     // Fallback al sistema antiguo
     if (typeof toast === 'function') { toast(msg, type); return; }
@@ -154,7 +154,7 @@ function nlToast(msg, type, duration) {
     document.body.appendChild(container);
   }
 
-  var el = document.createElement('div');
+  let el = document.createElement('div');
   el.className = 'nl-toast ' + type;
   el.innerHTML =
     '<span class="nl-toast-icon">' + (icons[type] || 'ℹ️') + '</span>' +
@@ -177,7 +177,7 @@ function nlToast(msg, type, duration) {
  */
 function nlPrompt(title, placeholder, defaultVal) {
   return new Promise(function(resolve) {
-    var overlay = document.createElement('div');
+    let overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
     overlay.innerHTML =
       '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">' +
@@ -189,7 +189,7 @@ function nlPrompt(title, placeholder, defaultVal) {
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
-    var input = overlay.querySelector('#_nlp_input');
+    const input = overlay.querySelector('#_nlp_input');
     function close(val) { if(overlay.parentNode) document.body.removeChild(overlay); resolve(val); }
     overlay.querySelector('#_nlp_ok').onclick   = function() { close(input.value || null); };
     overlay.querySelector('#_nlp_cancel').onclick = function() { close(null); };

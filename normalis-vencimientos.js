@@ -1,5 +1,5 @@
 // XSS-safe HTML escaper (local fallback)
-var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+const escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
 // normalis-vencimientos.js
 // NormaLis — Módulo de control de vencimientos del personal (RETHUS, tarjetas, certificados)
@@ -17,9 +17,9 @@ function closeVencModal() {
 }
 
 async function saveVenc() {
-  var profesional = document.getElementById('venc-profesional').value;
-  var tipo        = document.getElementById('venc-tipo').value;
-  var fecha       = document.getElementById('venc-fecha').value;
+  const profesional = document.getElementById('venc-profesional').value;
+  const tipo        = document.getElementById('venc-tipo').value;
+  const fecha       = document.getElementById('venc-fecha').value;
   if (!profesional || !fecha) {
     if (typeof toast === 'function') toast('Complete todos los campos', 'warning');
     return;
@@ -28,7 +28,7 @@ async function saveVenc() {
   const entry = { id: Date.now(), profesional, tipo, fecha };
 
   // ── localStorage (always) ───────────────
-  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  let docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
   docs.push(entry);
   localStorage.setItem('normalis_vencimientos', JSON.stringify(docs));
 
@@ -56,24 +56,24 @@ async function saveVenc() {
 }
 
 function renderVencimientos() {
-  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
-  var list = document.getElementById('venc-list');
+  let docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  const list = document.getElementById('venc-list');
   if (!list) return;
-  var hoy = new Date(); hoy.setHours(0,0,0,0);
-  var en30 = new Date(hoy); en30.setDate(en30.getDate() + 30);
-  var vencidos = docs.filter(d => new Date(d.fecha) < hoy).length;
-  var proximos = docs.filter(d => { var f = new Date(d.fecha); return f >= hoy && f <= en30; }).length;
-  var vigentes = docs.filter(d => new Date(d.fecha) > en30).length;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const en30 = new Date(hoy); en30.setDate(en30.getDate() + 30);
+  const vencidos = docs.filter(d => new Date(d.fecha) < hoy).length;
+  const proximos = docs.filter(d => { var f = new Date(d.fecha); return f >= hoy && f <= en30; }).length;
+  const vigentes = docs.filter(d => new Date(d.fecha) > en30).length;
   document.getElementById('venc-vencidos').textContent = vencidos;
   document.getElementById('venc-proximos').textContent = proximos;
   document.getElementById('venc-vigentes').textContent = vigentes;
   docs.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
   list.innerHTML = docs.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">No hay documentos registrados.</div>' :
     docs.map((d,i) => {
-      var f = new Date(d.fecha); f.setHours(0,0,0,0);
-      var dias = Math.round((f - hoy)/(1000*60*60*24));
-      var color = dias < 0 ? '#ef4444' : dias <= 30 ? '#f59e0b' : '#10b981';
-      var label = dias < 0 ? 'VENCIDO hace '+Math.abs(dias)+' días' : dias === 0 ? 'VENCE HOY' : 'Vence en '+dias+' días';
+      let f = new Date(d.fecha); f.setHours(0,0,0,0);
+      const dias = Math.round((f - hoy)/(1000*60*60*24));
+      const color = dias < 0 ? '#ef4444' : dias <= 30 ? '#f59e0b' : '#10b981';
+      const label = dias < 0 ? 'VENCIDO hace '+Math.abs(dias)+' días' : dias === 0 ? 'VENCE HOY' : 'Vence en '+dias+' días';
       return `<div style="border:1px solid ${color}40;border-left:4px solid ${color};border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
           <div style="font-weight:600;font-size:14px">${escH(d.profesional)}</div>
@@ -89,7 +89,7 @@ function renderVencimientos() {
 }
 
 function eliminarVenc(i) {
-  var docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
+  let docs = JSON.parse(localStorage.getItem('normalis_vencimientos') || '[]');
   docs.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
   // Marcar como inactivo en Firestore (sin borrarlo para que el cron lo ignore)
   const entry = docs[i];

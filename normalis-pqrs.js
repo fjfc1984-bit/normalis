@@ -12,12 +12,12 @@ function closePQRSModal() {
   document.getElementById('pqrs-modal').style.display = 'none';
 }
 function savePQRS() {
-  var tipo = document.getElementById('pqrs-tipo').value;
-  var nombre = document.getElementById('pqrs-nombre').value;
-  var desc = document.getElementById('pqrs-desc').value;
-  var area = document.getElementById('pqrs-area').value;
+  const tipo = document.getElementById('pqrs-tipo').value;
+  const nombre = document.getElementById('pqrs-nombre').value;
+  const desc = document.getElementById('pqrs-desc').value;
+  const area = document.getElementById('pqrs-area').value;
   if (!nombre || !desc) { if(typeof toast==='function') toast('Por favor complete nombre y descripción','warning'); return; }
-  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  let pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
   pqrs.push({ id: Date.now(), tipo, nombre, desc, area, estado: 'Pendiente', fecha: new Date().toLocaleDateString('es-CO') });
   localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
   closePQRSModal();
@@ -25,18 +25,18 @@ function savePQRS() {
   ['pqrs-nombre','pqrs-desc','pqrs-area'].forEach(id => document.getElementById(id).value = '');
 }
 function renderPQRS() {
-  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
-  var list = document.getElementById('pqrs-list');
+  let pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  const list = document.getElementById('pqrs-list');
   if (!list) return;
-  var pendientes = pqrs.filter(p => p.estado === 'Pendiente').length;
-  var proceso = pqrs.filter(p => p.estado === 'En Proceso').length;
-  var cerradas = pqrs.filter(p => p.estado === 'Cerrada').length;
+  const pendientes = pqrs.filter(p => p.estado === 'Pendiente').length;
+  const proceso = pqrs.filter(p => p.estado === 'En Proceso').length;
+  const cerradas = pqrs.filter(p => p.estado === 'Cerrada').length;
   document.getElementById('pqrs-total').textContent = pqrs.length;
   document.getElementById('pqrs-pendientes').textContent = pendientes;
   document.getElementById('pqrs-proceso').textContent = proceso;
   document.getElementById('pqrs-cerradas').textContent = cerradas;
-  var colors = { 'Petición':'#3b82f6','Queja':'#ef4444','Reclamo':'#f59e0b','Sugerencia':'#8b5cf6','Felicitación':'#10b981' };
-  var estadoColors = { 'Pendiente':'#f59e0b','En Proceso':'#3b82f6','Cerrada':'#10b981' };
+  const colors = { 'Petición':'#3b82f6','Queja':'#ef4444','Reclamo':'#f59e0b','Sugerencia':'#8b5cf6','Felicitación':'#10b981' };
+  const estadoColors = { 'Pendiente':'#f59e0b','En Proceso':'#3b82f6','Cerrada':'#10b981' };
   list.innerHTML = pqrs.length === 0 ? '<div style="text-align:center;padding:40px;color:#94a3b8">No hay PQRS registradas. Haga clic en "+ Nueva PQRS"</div>' :
     pqrs.map((p,i) => `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;display:flex;align-items:flex-start;gap:12px">
       <div style="background:${colors[p.tipo]||'#64748b'}20;color:${colors[p.tipo]||'#64748b'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">${p.tipo}</div>
@@ -54,14 +54,14 @@ function renderPQRS() {
     </div>`).join('');
 }
 function cambiarEstadoPQRS(i, estado) {
-  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  let pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
   pqrs[i].estado = estado;
   localStorage.setItem('normalis_pqrs', JSON.stringify(pqrs));
   renderPQRS();
 }
 function exportPQRSReport() {
-  var pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
-  var w = window.open('','_blank');
+  let pqrs = JSON.parse(localStorage.getItem('normalis_pqrs') || '[]');
+  const w = window.open('','_blank');
   w.document.write('<html><head><title>Informe PQRS</title></head><body style="font-family:Arial;padding:30px">');
   w.document.write('<h1>Informe de PQRS — ' + new Date().toLocaleDateString('es-CO') + '</h1>');
   w.document.write('<p>Total: '+pqrs.length+' | Pendientes: '+pqrs.filter(p=>p.estado==='Pendiente').length+' | Cerradas: '+pqrs.filter(p=>p.estado==='Cerrada').length+'</p>');
