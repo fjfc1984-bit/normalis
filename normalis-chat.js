@@ -133,7 +133,7 @@ function initMainChat() {
     'Hola. Soy **NormaLis IA**, tu consultor de normativa colombiana de habilitación en salud.\n\n' +
     'Respondo preguntas sobre la **Res. 3100/2019**, sus modificaciones (Res. 544/2023 y 465/2025), ' +
     'PAMEC, REPS y habilitación de servicios.\n\n' +
-    '⚠️ Si no encuentro información verificada, lo digo — nunca invento artículos ni plazos.\n\n' +
+    '&#9888; Si no encuentro informaci&oacute;n verificada, lo digo &mdash; nunca invento art&iacute;culos ni plazos.\n\n' +
     '¿Cuál es tu consulta?',
     'bot'
   );

@@ -122,6 +122,46 @@
       "comando": "test -f registro-riesgo-ia.html && wc -c < registro-riesgo-ia.html",
       "valor_esperado": ">=5000",
       "accion_si_falla": "repair_create_risk_register"
+    },
+    {
+      "id": "CA-007",
+      "descripcion": "Verificar que el CSP de normativa-app-v2.html incluye todos los dominios requeridos (jsdelivr, sentry, sentry-cdn)",
+      "comando": "grep -c 'cdn.jsdelivr.net.*sentry.io\\|sentry.io.*cdn.jsdelivr.net' normativa-app-v2.html",
+      "valor_esperado": ">=1",
+      "accion_si_falla": "repair_csp"
+    },
+    {
+      "id": "CA-008",
+      "descripcion": "Verificar que normalis-chat.js no tiene caracteres Unicode fuera de Latin-1 en strings JS",
+      "comando": "python3 -c \"import sys; data=open('normalis-chat.js','rb').read(); sys.exit(1 if any(b'\\xe2\\x9a\\xa0' in data or b'\\xef\\xb8\\x8f' in data for _ in [1]) else 0)\"",
+      "valor_esperado": "exit 0",
+      "accion_si_falla": "repair_unicode_in_js"
+    }
+  ],
+  "errores_detectados_adicionales": [
+    {
+      "id": "CE-007",
+      "fecha_deteccion": "2026-07-28",
+      "estado": "CORREGIDO",
+      "archivo": "normativa-app-v2.html, login.html, admin.html, index.html, registro.html",
+      "descripcion": "CSP (Content-Security-Policy) incompleta bloqueaba recursos legítimos: Tabler Icons (cdn.jsdelivr.net en style-src/font-src), Sentry ingest (*.sentry.io en connect-src), Sentry bundle JS (browser.sentry-cdn.com en script-src). La app no cargaba porque Firebase no podía conectarse.",
+      "causa_raiz": "Al agregar Tabler Icons y Sentry después del hardening de seguridad, no se actualizó el CSP con los nuevos dominios externos requeridos.",
+      "sintoma_visible": "Console DevTools: 'Loading the stylesheet violates CSP', 'Fetch API cannot load ingest.us.sentry.io', '[NormaLis] areasDB: usando fallback local (Worker no disponible)'",
+      "fix_aplicado": "Agregado cdn.jsdelivr.net a style-src y font-src. Agregado *.sentry.io a connect-src. Agregado browser.sentry-cdn.com a script-src. En los 5 archivos HTML.",
+      "patron_deteccion": "grep 'Content-Security-Policy' normativa-app-v2.html | grep -c 'cdn.jsdelivr.net'",
+      "patron_reparacion": "repair_csp() en normalis-repair.py — inserta dominios faltantes sin reescribir el CSP completo",
+      "leccion": "Regla: al agregar cualquier librería externa nueva, verificar que su CDN esté en el CSP antes de commitear."
+    },
+    {
+      "id": "CE-008",
+      "fecha_deteccion": "2026-07-28",
+      "estado": "CORREGIDO",
+      "archivo": "normalis-chat.js, normalis-firestore.js",
+      "descripcion": "Caracteres Unicode fuera de Latin-1 (⚠️ U+26A0+FE0F, · U+00B7) en strings JS dentro de funciones de disclaimer IA. Pueden causar 'Uncaught SyntaxError: Unexpected string' si el CDN sirve el archivo sin charset=utf-8 explícito.",
+      "fix_aplicado": "Reemplazados con HTML entities ASCII: ⚠️→&#9888;, ·→&middot;, acentos→&iacute; etc. Los entities funcionan igual en innerHTML.",
+      "patron_deteccion": "python3 -c \"data=open('normalis-chat.js','rb').read(); print('UNSAFE' if b'\\xe2\\x9a\\xa0' in data else 'OK')\"",
+      "patron_reparacion": "repair_unicode_in_js() en normalis-repair.py",
+      "leccion": "Regla: en archivos JS que generan HTML dinámico, usar HTML entities para todo carácter no-ASCII en lugar del carácter directo."
     }
   ],
   "proxima_revision": "2027-01-28",

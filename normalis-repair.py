@@ -554,6 +554,108 @@ def repair_escH_modules():
         applied(f'{filename} → escH fallback agregado')
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 9. CSP — dominios requeridos en los 5 HTML (CE-007)
+# ─────────────────────────────────────────────────────────────────────────────
+# Regla: cada vez que se agrega una librería externa (Sentry, Tabler, etc.)
+# hay que actualizar el CSP. Este repair lo verifica y repara automáticamente.
+
+CSP_REQUIRED = {
+    'style-src': [
+        'https://fonts.googleapis.com',
+        'https://cdn.jsdelivr.net',       # Tabler Icons CSS
+    ],
+    'font-src': [
+        'https://fonts.gstatic.com',
+        'https://cdn.jsdelivr.net',       # Tabler Icons webfont
+    ],
+    'connect-src': [
+        'https://*.firebaseapp.com',
+        'https://*.googleapis.com',
+        'https://*.firebaseio.com',
+        'https://normalis.fjfc1984.workers.dev',
+        'https://www.google-analytics.com',
+        'https://*.sentry.io',            # Sentry error ingest
+    ],
+    # script-src solo se verifica — Sentry CDN se agrega condicionalmente en repair_csp()
+    'script-src': [
+        'https://www.gstatic.com',
+        'https://cdn.jsdelivr.net',
+    ],
+}
+
+HTML_FILES_CSP = [
+    'normativa-app-v2.html',
+    'login.html',
+    'admin.html',
+    'index.html',
+    'registro.html',
+]
+
+def _ensure_csp_domain(csp_content, directive, domain):
+    """Inserta domain en la directiva CSP si no está presente."""
+    # Buscar la directiva en el CSP
+    pattern = re.compile(r'(' + re.escape(directive) + r'[^;]*)(;)', re.IGNORECASE)
+    m = pattern.search(csp_content)
+    if not m:
+        return csp_content  # directiva no encontrada, no tocar
+    directive_value = m.group(1)
+    if domain in directive_value:
+        return csp_content  # ya está
+    new_directive = directive_value + ' ' + domain
+    return csp_content[:m.start()] + new_directive + m.group(2) + csp_content[m.end():]
+
+def repair_csp():
+    for fname in HTML_FILES_CSP:
+        path = os.path.join(ROOT, fname)
+        if not os.path.exists(path):
+            continue
+        content = read(path)
+        if 'Content-Security-Policy' not in content:
+            skipped(f'{fname} (sin CSP)')
+            continue
+        original = content
+        for directive, domains in CSP_REQUIRED.items():
+            for domain in domains:
+                content = _ensure_csp_domain(content, directive, domain)
+        # Sentry CDN solo si el archivo realmente carga ese script
+        if 'browser.sentry-cdn.com' in content:
+            content = _ensure_csp_domain(content, 'script-src', 'https://browser.sentry-cdn.com')
+        if content != original:
+            write(path, content)
+            applied(f'{fname} — CSP actualizado con dominios faltantes')
+        else:
+            skipped(f'{fname} CSP OK')
+
+# 10. JS — caracteres Unicode no-ASCII en strings JS (CE-008)
+# ─────────────────────────────────────────────────────────────────────────────
+# Causa: emojis/caracteres fuera de Latin-1 en archivos JS pueden causar
+# "Uncaught SyntaxError" si el CDN sirve sin charset=utf-8 explícito.
+# Fix: reemplazar con HTML entities ASCII-puras (safe en innerHTML).
+
+UNICODE_JS_FIXES = {
+    '⚠️': '&#9888;',   # emoji U+26A0+FE0F → HTML entity (causa SyntaxError en CDN sin charset=utf-8)
+    # Los acentos del español (í, é, ó) son Latin-1 y no causan problemas — no se reemplazan
+}
+
+JS_FILES_UNICODE = ['normalis-chat.js', 'normalis-firestore.js']
+
+def repair_unicode_in_js():
+    for fname in JS_FILES_UNICODE:
+        path = os.path.join(ROOT, fname)
+        if not os.path.exists(path):
+            continue
+        content = read(path)
+        original = content
+        for bad, good in UNICODE_JS_FIXES.items():
+            # Solo reemplazar dentro de strings JS (líneas con html +=)
+            content = content.replace(bad, good)
+        if content != original:
+            write(path, content)
+            applied(f'{fname} — Unicode reemplazado con HTML entities')
+        else:
+            skipped(f'{fname} Unicode OK')
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
 def main():
@@ -584,6 +686,12 @@ def main():
 
     print('\n[8/8] escH en módulos con innerHTML de usuario')
     repair_escH_modules()
+
+    print('\n[9/10] CSP — dominios requeridos en 5 HTML')
+    repair_csp()
+
+    print('\n[10/10] JS — Unicode no-ASCII en strings (CE-008)')
+    repair_unicode_in_js()
 
     print('\n' + '─' * 60)
     if _fixes_applied:

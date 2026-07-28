@@ -127,7 +127,7 @@ var fsSync = {
       synced:  { color: '#10b981', label: '☁️ Sincronizado' },
       syncing: { color: '#f59e0b', label: '⏳ Sincronizando...' },
       offline: { color: '#94a3b8', label: '📴 Sin conexión' },
-      error:   { color: '#ef4444', label: '⚠️ Error de sync' }
+      error:   { color: '#ef4444', label: '&#9888; Error de sync' }
     };
     var s = states[status] || states.synced;
     dot.style.background = s.color;
