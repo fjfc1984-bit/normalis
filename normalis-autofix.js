@@ -394,4 +394,91 @@ var NormalisAutofix = (function() {
 // Arrancar automáticamente al cargar el módulo
 NormalisAutofix.start();
 
+// ── Patrones adicionales registrados por módulos externos ──────────
+
+// Patrón 11: Firebase Storage — errores de subida de evidencias
+NormalisAutofix.addPattern({
+  id: 'storage_upload_error',
+  label: 'Firebase Storage: error al subir evidencia',
+  match: function(msg) {
+    return (msg.indexOf('storage/') > -1 || msg.indexOf('Firebase Storage') > -1) &&
+           (msg.indexOf('unauthorized') > -1 || msg.indexOf('canceled') > -1 ||
+            msg.indexOf('retry-limit-exceeded') > -1 || msg.indexOf('invalid-argument') > -1);
+  },
+  fix: function(msg, ctx) {
+    var ansKey = ctx && ctx.ansKey ? ctx.ansKey : 'desconocido';
+    _log('autofix', 'storage_upload_error',
+      'Error subiendo evidencia para ' + ansKey + '. Guardando localmente.', 'fix');
+    if (typeof nlToast === 'function') {
+      nlToast('Evidencia guardada localmente (sin conexión a storage)', 'info', 3000);
+    }
+  }
+});
+
+// Patrón 12: prompt() nativo en iOS Safari (bloqueo silencioso)
+NormalisAutofix.addPattern({
+  id: 'native_prompt_blocked',
+  label: 'prompt() nativo bloqueado en móvil',
+  match: function(msg) {
+    return msg.indexOf('prompt') > -1 && msg.indexOf('blocked') > -1 ||
+           msg.indexOf('A JavaScript dialog was dismissed') > -1;
+  },
+  fix: function() {
+    _log('autofix', 'native_prompt_blocked',
+      'prompt() nativo bloqueado — usando nlPrompt como fallback', 'fix');
+  }
+});
+
+// Patrón 13: Módulo de evidencias — función no definida
+NormalisAutofix.addPattern({
+  id: 'evidencia_fn_undefined',
+  label: 'Función uploadEvidencia no disponible',
+  match: function(msg) {
+    return msg.indexOf('uploadEvidencia') > -1 && msg.indexOf('not a function') > -1;
+  },
+  fix: function() {
+    _log('autofix', 'evidencia_fn_undefined',
+      'uploadEvidencia no cargada — registrando stub', 'fix');
+    if (typeof uploadEvidencia === 'undefined') {
+      window.uploadEvidencia = function(key) {
+        if (typeof nlToast === 'function') nlToast('Módulo de evidencias no disponible', 'warn');
+        else console.warn('[NormaLis] uploadEvidencia no disponible para', key);
+      };
+    }
+  }
+});
+
+// Patrón 14: Plan sin permisos — módulo bloqueado
+NormalisAutofix.addPattern({
+  id: 'module_plan_blocked',
+  label: 'Módulo bloqueado por plan',
+  match: function(msg) {
+    return msg.indexOf('isModuleAllowed') > -1 || msg.indexOf('plan_required') > -1 ||
+           (msg.indexOf('not allowed') > -1 && msg.indexOf('plan') > -1);
+  },
+  fix: function() {
+    _log('autofix', 'module_plan_blocked',
+      'Módulo restringido por plan — mostrando mensaje al usuario', 'fix');
+    if (typeof nlToast === 'function') {
+      nlToast('Este módulo requiere un plan superior. Contacta soporte.', 'warn', 4000);
+    }
+  }
+});
+
+// Patrón 15: Ciclo de error de scroll — reportado desde CAPA o Indicadores
+NormalisAutofix.addPattern({
+  id: 'scroll_into_view_null',
+  label: 'scrollIntoView sobre elemento null',
+  match: function(msg) {
+    return msg.indexOf('scrollIntoView') > -1 && msg.indexOf('null') > -1 ||
+           msg.indexOf("Cannot read properties of null (reading 'scrollIntoView')") > -1;
+  },
+  fix: function() {
+    _log('autofix', 'scroll_into_view_null',
+      'scrollIntoView sobre null — ignorado silenciosamente', 'fix');
+    // No action needed — already caught in the call site
+  },
+  silent: true
+});
+
 // END:normalis-autofix.js — NormaLis integrity seal

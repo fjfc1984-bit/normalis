@@ -102,9 +102,9 @@ function renderAuditQ(idx){
       <div class="aopt ${cur==='parcial'?'p':''}" onclick="setAns(this,'parcial','${ansKey}')">⚠️ Cumple parcialmente</div>
       <div class="aopt ${cur==='no'?'n':''}" onclick="setAns(this,'no','${ansKey}')">❌ No cumple</div>
     </div>
-    <div class="photo-upload" onclick="toast('📸 Adjunta la foto como evidencia en el informe PDF','info')">
-      <div style="font-size:20px;margin-bottom:4px">📸</div>
-      <div class="text-xs text-muted">Toca para adjuntar foto como evidencia (opcional)</div>
+    <div class="photo-upload" id="ev-btn-${ansKey}" onclick="uploadEvidencia('${ansKey}')" role="button" aria-label="Subir evidencia fotográfica para este criterio" style="cursor:pointer">
+      <div style="font-size:20px;margin-bottom:4px" id="ev-icon-${ansKey}">📸</div>
+      <div class="text-xs text-muted" id="ev-label-${ansKey}">Toca para subir evidencia fotográfica (opcional)</div>
     </div>`;
   document.getElementById('aud-prev').disabled=idx===0;
   document.getElementById('aud-next').disabled=!cur;
@@ -166,6 +166,90 @@ async function loadAreasDB() {
   } catch (e) {
     console.error('[NormaLis] loadAreasDB error:', e);
   }
+}
+
+// ── Evidencias fotográficas por criterio ────────────────────────
+var EVID_KEY = 'normalis_evidencias';
+function loadEvidencias(){ try{ return JSON.parse(localStorage.getItem(EVID_KEY)||'{}'); }catch(e){ return {}; } }
+function saveEvidencias(obj){ localStorage.setItem(EVID_KEY, JSON.stringify(obj)); }
+
+function uploadEvidencia(ansKey){
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.setAttribute('aria-label','Seleccionar foto de evidencia');
+  input.onchange = function(){
+    var file = input.files[0];
+    if(!file) return;
+    if(file.size > 5 * 1024 * 1024){ toast('La imagen supera 5MB. Usa una foto más pequeña.','warn'); return; }
+    var btn = document.getElementById('ev-btn-'+ansKey);
+    var iconEl = document.getElementById('ev-icon-'+ansKey);
+    var labelEl = document.getElementById('ev-label-'+ansKey);
+    if(iconEl) iconEl.textContent = '⏳';
+    if(labelEl) labelEl.textContent = 'Subiendo evidencia...';
+
+    // Intentar Firebase Storage
+    var uid = sessionStorage.getItem('normalis_uid');
+    var storage = null;
+    try { storage = firebase.storage(); } catch(e) {}
+
+    if(storage && uid){
+      var path = 'evidencias/'+uid+'/'+ansKey+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      var ref = storage.ref(path);
+      ref.put(file)
+        .then(function(snap){ return snap.ref.getDownloadURL(); })
+        .then(function(url){
+          _guardarEvidenciaLocal(ansKey, url, file.name);
+          _actualizarEvidenciaUI(ansKey, url);
+          toast('📸 Evidencia guardada correctamente','success');
+        })
+        .catch(function(err){
+          console.error('[NormaLis] Storage error:', err);
+          if(typeof NormalisAutofix !== 'undefined') NormalisAutofix.report('evidencia-upload', err, { ansKey: ansKey });
+          // Fallback: guardar como ObjectURL local (solo sesión actual)
+          var localUrl = URL.createObjectURL(file);
+          _actualizarEvidenciaUI(ansKey, localUrl);
+          toast('📸 Evidencia guardada localmente (sin conexión)','info');
+        });
+    } else {
+      // Sin Firebase Storage — guardar ObjectURL local
+      var localUrl = URL.createObjectURL(file);
+      _guardarEvidenciaLocal(ansKey, localUrl, file.name);
+      _actualizarEvidenciaUI(ansKey, localUrl);
+      toast('📸 Evidencia adjunta (disponible en esta sesión)','success');
+    }
+  };
+  input.click();
+}
+
+function _guardarEvidenciaLocal(ansKey, url, nombre){
+  var evid = loadEvidencias();
+  if(!evid[ansKey]) evid[ansKey] = [];
+  evid[ansKey].push({ url: url, nombre: nombre, ts: new Date().toISOString() });
+  try { saveEvidencias(evid); } catch(e) {}
+}
+
+function _actualizarEvidenciaUI(ansKey, url){
+  var iconEl = document.getElementById('ev-icon-'+ansKey);
+  var labelEl = document.getElementById('ev-label-'+ansKey);
+  var btn = document.getElementById('ev-btn-'+ansKey);
+  if(iconEl) iconEl.innerHTML = '<img src="'+url+'" alt="Evidencia" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:2px solid #0d9488">';
+  if(labelEl){ labelEl.textContent = '✅ Evidencia adjunta'; labelEl.style.color='#0d9488'; }
+  if(btn){ btn.title = 'Toca para reemplazar la evidencia'; }
+}
+
+// Restablecer badge de evidencia al navegar a una pregunta
+var _origRenderAuditQ = window.renderAuditQ;
+if(typeof renderAuditQ === 'function'){
+  var _audQOrig = renderAuditQ;
+  renderAuditQ = function(idx){
+    _audQOrig(idx);
+    var evid = loadEvidencias();
+    var key = 'q'+idx;
+    if(evid[key] && evid[key].length > 0){
+      setTimeout(function(){ _actualizarEvidenciaUI(key, evid[key][evid[key].length-1].url); }, 50);
+    }
+  };
 }
 
 // END:normalis-data-audit.js — NormaLis integrity seal

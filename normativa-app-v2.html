@@ -30,6 +30,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NormaLis v2 — Copiloto de Habilitación</title>
 <meta name="application-name" content="NormaLis">
@@ -204,7 +205,7 @@ self.addEventListener('fetch',e=>{
 <div class="app" id="app" style="display:none">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Navegación principal">
     <div class="sb-logo">
       <div class="sb-logo-icon">N</div>
       <div><div class="sb-logo-text">NormaLis</div><div class="sb-logo-sub">Copiloto normativo</div></div>
@@ -216,9 +217,9 @@ self.addEventListener('fetch',e=>{
         <div class="sb-ses-name" id="ses-name">Usuario</div>
         <div class="sb-ses-role" id="ses-role">Rol</div>
       </div>
-      <button class="sb-ses-logout" onclick="logout()" title="Cerrar sesión">⎋</button>
+      <button class="sb-ses-logout" onclick="logout()" title="Cerrar sesión" aria-label="Cerrar sesión">⎋</button>
     </div>
-    <nav class="sb-nav">
+    <nav class="sb-nav" aria-label="Módulos de la aplicación">
 
       <!-- ── PRINCIPAL ─────────────────────────────── -->
       <div class="sb-section">Principal</div>
@@ -313,7 +314,7 @@ self.addEventListener('fetch',e=>{
         <span id="sync-text">Listo</span>
       </div>
     </div>
-    <div class="content" id="main-content" role="main">
+    <div class="content" id="main-content" role="main" aria-label="Contenido principal">
 
       <!-- ══ DASHBOARD ══ -->
       <div class="view active" id="view-dashboard">
@@ -704,8 +705,8 @@ self.addEventListener('fetch',e=>{
             </div>
             <div class="audit-q-wrap" id="audit-q-panel"></div>
             <div class="flex-between mt" style="margin-top:14px">
-              <button class="btn btn-outline" id="aud-prev" onclick="auditPrev()" disabled>← Anterior</button>
-              <button class="btn btn-primary" id="aud-next" onclick="auditNext()" disabled>Siguiente →</button>
+              <button class="btn btn-outline" id="aud-prev" aria-label="Pregunta anterior" onclick="auditPrev()" disabled>← Anterior</button>
+              <button class="btn btn-primary" id="aud-next" aria-label="Siguiente pregunta" onclick="auditNext()" disabled>Siguiente →</button>
             </div>
           </div>
         </div>
@@ -6532,34 +6533,57 @@ function editIndVal(id){
   const ind = indBase.find(function(b){ return b.id===id; });
   if(!ind) return;
   const saved = JSON.parse(localStorage.getItem(IND_KEY)||'{}');
-  const cur = saved[id]!==undefined ? saved[id] : '';
-  const val = prompt('📊 '+ind.nombre+'\nMeta: '+(ind.metaDir==='menor'?'≤':'≥')+ind.meta+' '+ind.unit+'\n\nIngresa tu valor actual:', cur);
-  if(val===null) return;
-  const num = parseFloat(val);
-  if(isNaN(num)||num<0){ toast('Valor inválido — ingresa un número positivo','warn'); return; }
-  saveIndVal(id, num);
-  renderIndicadores();
-  toast('✅ Indicador actualizado','success');
+  const cur = saved[id]!==undefined ? String(saved[id]) : '';
+  const label = '📊 '+ind.nombre+' (Meta: '+(ind.metaDir==='menor'?'≤':'≥')+ind.meta+' '+ind.unit+')';
+  nlPrompt(label, 'Ingresa tu valor actual:', cur).then(function(val){
+    if(val===null || val===undefined) return;
+    const num = parseFloat(val);
+    if(isNaN(num)||num<0){ toast('Valor inválido — ingresa un número positivo','warn'); return; }
+    saveIndVal(id, num);
+    renderIndicadores();
+    toast('✅ Indicador actualizado','success');
+  });
 }
 
 function openIndEditor(){
-  // Open a modal or navigate to form
-  const ids = indBase.map(function(b){ return b.id; });
-  let i = 0;
-  function nextInd(){
-    if(i >= ids.length){ renderIndicadores(); toast('✅ Indicadores guardados','success'); return; }
-    const ind = indBase[i++];
-    const saved = JSON.parse(localStorage.getItem(IND_KEY)||'{}');
-    const cur = saved[ind.id]!==undefined ? saved[ind.id] : '';
-    const val = prompt((i)+'/'+ids.length+' — '+ind.nombre+'\nMeta: '+(ind.metaDir==='menor'?'≤':'≥')+ind.meta+' '+ind.unit+'\n\nIngresa tu valor (Enter para saltar):', cur);
-    if(val===null){ renderIndicadores(); toast('Registro cancelado','info'); return; }
-    if(val.trim()!==''){
-      const num=parseFloat(val);
-      if(!isNaN(num)&&num>=0) saveIndVal(ind.id,num);
-    }
-    nextInd();
-  }
-  nextInd();
+  var saved = JSON.parse(localStorage.getItem(IND_KEY)||'{}');
+  var mid = 'ied-'+Date.now();
+  var rows = indBase.map(function(ind){
+    var cur = saved[ind.id]!==undefined ? saved[ind.id] : '';
+    return '<tr><td style="padding:6px 8px;font-size:12px;color:#374151">'+ind.nombre+'</td>'
+      +'<td style="padding:6px 8px;font-size:11px;color:#6b7280">'+(ind.metaDir==='menor'?'≤':'≥')+ind.meta+' '+ind.unit+'</td>'
+      +'<td style="padding:6px 8px"><input data-indid="'+ind.id+'" type="number" min="0" step="any" value="'+cur+'" style="width:80px;padding:4px 6px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px"></td></tr>';
+  }).join('');
+  var m = document.createElement('div');
+  m.id = mid;
+  m.setAttribute('role','dialog');
+  m.setAttribute('aria-modal','true');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
+  m.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:560px;width:100%">'
+    +'<h3 style="font-size:15px;font-weight:600;margin-bottom:16px">📊 Registro de Indicadores de Calidad</h3>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px">'
+      +'<thead><tr style="border-bottom:2px solid #e2e8f0"><th style="padding:6px 8px;font-size:11px;color:#6b7280;text-align:left">Indicador</th>'
+        +'<th style="padding:6px 8px;font-size:11px;color:#6b7280;text-align:left">Meta</th>'
+        +'<th style="padding:6px 8px;font-size:11px;color:#6b7280;text-align:left">Valor</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+      +'<button onclick="document.getElementById(''+mid+'').remove()" style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff;font-size:13px">Cancelar</button>'
+      +'<button id="'+mid+'-ok" style="padding:7px 14px;border:none;border-radius:8px;background:#0d9488;color:#fff;cursor:pointer;font-size:13px;font-weight:500">Guardar indicadores</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  document.getElementById(mid+'-ok').addEventListener('click',function(){
+    var inputs = m.querySelectorAll('[data-indid]');
+    inputs.forEach(function(inp){
+      var val = inp.value.trim();
+      if(val!==''){
+        var num=parseFloat(val);
+        if(!isNaN(num)&&num>=0) saveIndVal(inp.getAttribute('data-indid'),num);
+      }
+    });
+    document.getElementById(mid).remove();
+    renderIndicadores();
+    toast('✅ Indicadores guardados','success');
+  });
 }
 
 function _buildPrioridadText(){
@@ -6880,15 +6904,35 @@ function loadClientes(){ try{ return JSON.parse(localStorage.getItem(CLIENTES_KE
 function saveClientes(arr){ localStorage.setItem(CLIENTES_KEY, JSON.stringify(arr)); }
 
 function openAddClienteModal(){
-  // Simple prompt-based for now
-  const nombre = prompt('Nombre del establecimiento cliente:');
-  if(!nombre || !nombre.trim()) return;
-  const ciudad = prompt('Ciudad:', 'Bogotá') || 'Bogotá';
-  const arr = loadClientes();
-  arr.push({id:Date.now(), nombre:nombre.trim(), ciudad:ciudad, score:0, alertas:0, plan:'Pro', ini:nombre.trim().substring(0,2).toUpperCase()});
-  saveClientes(arr);
-  renderClientes();
-  toast('✅ Cliente '+nombre+' agregado','success');
+  var mid = 'acm-'+Date.now();
+  var m = document.createElement('div');
+  m.id = mid;
+  m.setAttribute('role','dialog');
+  m.setAttribute('aria-modal','true');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:400px;width:100%">'
+    +'<h3 style="font-size:15px;font-weight:600;margin-bottom:16px">➕ Agregar Cliente</h3>'
+    +'<label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px">Nombre del establecimiento</label>'
+    +'<input id="'+mid+'-nom" placeholder="Clínica / IPS / Hospital..." style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;font-size:13px">'
+    +'<label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px">Ciudad</label>'
+    +'<input id="'+mid+'-ciu" value="Bogotá" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:20px;font-size:13px">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+      +'<button onclick="document.getElementById(''+mid+'').remove()" style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff;font-size:13px">Cancelar</button>'
+      +'<button id="'+mid+'-ok" style="padding:7px 14px;border:none;border-radius:8px;background:#0d9488;color:#fff;cursor:pointer;font-size:13px;font-weight:500">Agregar</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  setTimeout(function(){ var el=document.getElementById(mid+'-nom'); if(el) el.focus(); },80);
+  document.getElementById(mid+'-ok').addEventListener('click',function(){
+    var nombre = (document.getElementById(mid+'-nom').value||'').trim();
+    var ciudad = (document.getElementById(mid+'-ciu').value||'Bogotá').trim();
+    if(!nombre){ toast('Ingresa el nombre del establecimiento','warn'); return; }
+    document.getElementById(mid).remove();
+    var arr = loadClientes();
+    arr.push({id:Date.now(), nombre:nombre, ciudad:ciudad, score:0, alertas:0, plan:'Pro', ini:nombre.substring(0,2).toUpperCase()});
+    saveClientes(arr);
+    renderClientes();
+    toast('✅ Cliente '+nombre+' agregado','success');
+  });
 }
 
 function renderClientes(){
@@ -7167,26 +7211,49 @@ function loadEventos(){ try{ return JSON.parse(localStorage.getItem(EA_KEY)||'[]
 function saveEventos(arr){ localStorage.setItem(EA_KEY, JSON.stringify(arr)); }
 
 function openRegistrarEventoModal(){
-  const tipo = prompt('Tipo de evento:\n1) Evento Adverso\n2) Incidente (casi-falla)\n3) Evento centinela\n\nEscribe el número:');
-  if(!tipo) return;
-  const tipos = {1:'Evento Adverso',2:'Incidente (Casi-falla)',3:'Evento Centinela'};
-  const tipoLabel = tipos[parseInt(tipo)] || 'Evento Adverso';
-  const desc = prompt('Describe brevemente el evento:');
-  if(!desc || !desc.trim()) return;
-  const servicio = prompt('Servicio / área donde ocurrió:') || 'General';
-  const arr = loadEventos();
-  arr.push({
-    id: Date.now(),
-    tipo: tipoLabel,
-    desc: desc.trim(),
-    servicio: servicio.trim(),
-    fecha: new Date().toISOString().slice(0,10),
-    estado: 'en_analisis',
-    reportadoPor: JSON.parse(localStorage.getItem('normalis_session')||'{}').nombre || 'Director'
+  var mid = 'eam-'+Date.now();
+  var m = document.createElement('div');
+  m.id = mid;
+  m.setAttribute('role','dialog');
+  m.setAttribute('aria-modal','true');
+  m.setAttribute('aria-labelledby',mid+'-t');
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:440px;width:100%">'
+    +'<h3 id="'+mid+'-t" style="font-size:15px;font-weight:500;margin-bottom:16px">📋 Registrar Evento</h3>'
+    +'<label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px">Tipo de evento</label>'
+    +'<select id="'+mid+'-tipo" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;font-size:13px">'
+      +'<option>Evento Adverso</option><option>Incidente (Casi-falla)</option><option>Evento Centinela</option>'
+    +'</select>'
+    +'<label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px">Descripción</label>'
+    +'<textarea id="'+mid+'-desc" rows="3" placeholder="Describe el evento..." style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;font-size:13px;resize:vertical"></textarea>'
+    +'<label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px">Servicio / área</label>'
+    +'<input id="'+mid+'-serv" value="General" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:20px;font-size:13px">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+      +'<button onclick="document.getElementById(''+mid+'').remove()" style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#fff;font-size:13px">Cancelar</button>'
+      +'<button id="'+mid+'-ok" style="padding:7px 14px;border:none;border-radius:8px;background:#0d9488;color:#fff;cursor:pointer;font-size:13px;font-weight:500">Registrar</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  setTimeout(function(){ var el=document.getElementById(mid+'-desc'); if(el) el.focus(); },80);
+  document.getElementById(mid+'-ok').addEventListener('click',function(){
+    var tipoLabel = document.getElementById(mid+'-tipo').value;
+    var desc = (document.getElementById(mid+'-desc').value||'').trim();
+    var servicio = (document.getElementById(mid+'-serv').value||'General').trim();
+    if(!desc){ toast('Escribe una descripción','warn'); return; }
+    document.getElementById(mid).remove();
+    var arr = loadEventos();
+    arr.push({
+      id: Date.now(),
+      tipo: tipoLabel,
+      desc: desc,
+      servicio: servicio,
+      fecha: new Date().toISOString().slice(0,10),
+      estado: 'en_analisis',
+      reportadoPor: JSON.parse(localStorage.getItem('normalis_session')||'{}').nombre || 'Director'
+    });
+    saveEventos(arr);
+    renderEventos();
+    toast('✅ Evento registrado correctamente','success');
   });
-  saveEventos(arr);
-  renderEventos();
-  toast('✅ Evento registrado correctamente','success');
 }
 
 function renderEventos(){
