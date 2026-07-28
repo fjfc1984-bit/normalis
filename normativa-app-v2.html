@@ -2,6 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="preload" href="normalis-styles.css?v=20260717" as="style">
+<link rel="preload" href="normalis-firestore.js?v=20260717" as="script">
+<link rel="preload" href="normalis-utils.js?v=20260717" as="script">
+<link rel="preload" href="normalis-data-audit.js?v=20260717" as="script">
+<link rel="preload" href="normalis-audit-score.js?v=20260717" as="script">
   <!-- Sentry Error Monitoring (async — no bloquea carga de página) -->
   <script>
   window.__sentryInit = function() {
@@ -154,6 +159,16 @@ self.addEventListener('fetch',e=>{
 
 
 <!-- ══════════ ONBOARDING CONVERSACIONAL ══════════ -->
+<!-- NormaLis loading progress bar -->
+<div id="nl-page-loader" style="position:fixed;inset:0;z-index:99999;background:#00251A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s">
+  <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px">NormaLis</div>
+  <div style="font-size:12px;color:#80CBC4;letter-spacing:.08em">Sistema de Habilitación en Salud</div>
+  <div style="width:200px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-top:8px">
+    <div id="nl-progress-fill" style="height:100%;background:linear-gradient(90deg,#00796B,#3b82f6);border-radius:2px;width:0%;transition:width .4s ease"></div>
+  </div>
+  <div id="nl-load-label" style="font-size:11px;color:#475569;margin-top:4px">Iniciando…</div>
+</div>
+
 <div id="onboarding">
   <!-- Header fijo -->
   <div class="ob-header">
@@ -2319,7 +2334,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-data-audit.js?v=20260717"></script>
 <script src="normalis-chat.js?v=20260717"></script>
 <script src="normalis-audit-score.js?v=20260717"></script>
-<script src="normalis-docs.js?v=20260717"></script>
+<!-- lazy:docs — cargado bajo demanda por nlLazyLoad("docs") -->
 <script src="normalis-pdf.js?v=20260717"></script>
 <script src="normalis-capa.js?v=20260726"></script>
 <script src="normalis-indicadores.js?v=20260726"></script>
@@ -2333,12 +2348,12 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 
 <script src="normalis-utils.js?v=20260717"></script>
 <script src="normalis-auth.js?v=20260717"></script>
-<script src="normalis-pamec.js?v=20260717"></script>
-<script src="normalis-export.js?v=20260717"></script>
+<!-- lazy:pamec — cargado bajo demanda por nlLazyLoad("pamec") -->
+<!-- lazy:export — cargado bajo demanda por nlLazyLoad("export") -->
 <script src="normalis-multiusuario.js" defer></script>
 <script src="normalis-users.js?v=20260717"></script>
 <script src="normalis-automations.js?v=20260717"></script>
-<script src="normalis-sst.js?v=20260717"></script>
+<!-- lazy:sst — cargado bajo demanda por nlLazyLoad("sst") -->
 <script src="normalis-plans.js?v=20260725"></script>
 <script>
 // ═══════════════════════════════════════════
@@ -6978,6 +6993,71 @@ function renderDashWidgets(){
   }
 }
 
+// ══ NormaLis Lazy Module Loader ══════════════════════════════════════════════
+var _nlLoadedModules = {};
+var _nlModuleMap = {
+  sst:    { src: 'normalis-sst.js?v=20260717',    init: function(){ if(typeof renderSST==='function') renderSST(); } },
+  pamec:  { src: 'normalis-pamec.js?v=20260717',  init: function(){ if(typeof renderPamecModule==='function') renderPamecModule(); } },
+  docs:   { src: 'normalis-docs.js?v=20260717',   init: null },
+  export: { src: 'normalis-export.js?v=20260717', init: null },
+};
+
+function nlLazyLoad(mod, cb) {
+  if (_nlLoadedModules[mod]) { if (cb) cb(); return; }
+  var m = _nlModuleMap[mod];
+  if (!m) { if (cb) cb(); return; }
+  var s = document.createElement('script');
+  s.src = m.src;
+  s.onload = function() {
+    _nlLoadedModules[mod] = true;
+    if (m.init) m.init();
+    if (cb) cb();
+  };
+  s.onerror = function() { console.warn('[NL] Error cargando:', m.src); if (cb) cb(); };
+  document.head.appendChild(s);
+}
+
+// Interceptar nav() para lazy-load antes de activar la vista
+(function patchNavForLazy(){
+  var _origNav = typeof nav === 'function' ? nav : null;
+  if (!_origNav) {
+    // nav aún no definida — reintentar al cargar DOM completo
+    window.addEventListener('load', patchNavForLazy);
+    return;
+  }
+  window._origNav = _origNav;
+  nav = function(id) {
+    if (id === 'sst' && !_nlLoadedModules.sst) { nlLazyLoad('sst', function(){ _origNav(id); }); return; }
+    if (id === 'pamec' && !_nlLoadedModules.pamec) { nlLazyLoad('pamec', function(){ _origNav(id); }); return; }
+    if ((id === 'generador' || id === 'consentimientos' || id === 'documentos') && !_nlLoadedModules.docs) {
+      nlLazyLoad('docs', function(){ _origNav(id); }); return;
+    }
+    _origNav(id);
+  };
+})();
+
+// ══ Barra de progreso de carga ════════════════════════════════════════════════
+(function initPageLoader(){
+  var fill   = document.getElementById('nl-progress-fill');
+  var label  = document.getElementById('nl-load-label');
+  var loader = document.getElementById('nl-page-loader');
+  if (!loader) return;
+  function setP(p, lbl) {
+    if (fill) fill.style.width = Math.max(parseInt(fill.style.width)||0, p) + '%';
+    if (label && lbl) label.textContent = lbl;
+  }
+  setP(40, 'Cargando módulos…');
+  function hideLater() {
+    setP(100, 'Listo');
+    setTimeout(function(){
+      if (loader) { loader.style.opacity='0'; setTimeout(function(){ loader.style.display='none'; }, 420); }
+    }, 200);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setP(80,'Preparando interfaz…'); setTimeout(hideLater, 280); });
+  } else { hideLater(); }
+})();
+
 function renderDashboardAlerts(){
   const el = document.getElementById('dash-dynamic-alerts');
   if(!el) return;
@@ -7386,9 +7466,25 @@ setTimeout(function(){
 function verEventoDetalle(id){
   const arr = loadEventos();
   const ev = arr.find(function(e){ return e.id===id; });
-  if(!ev){ toast('Evento no encontrado','warn'); return; }
-  const msg = '📋 Evento #'+id+'\n\nTipo: '+ev.tipo+'\nFecha: '+ev.fecha+'\nServicio: '+ev.servicio+'\nEstado: '+(ev.estado==='cerrado'?'Cerrado':'En análisis')+'\n\n'+ev.desc;
-  alert(msg);
+  if(!ev){ nlToast('Evento no encontrado','warning'); return; }
+  // Modal informativo (reemplaza alert nativo)
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">' +
+      '<h3 style="color:#e2e8f0;margin:0 0 16px;font-size:16px">📋 Evento #'+id+'</h3>' +
+      '<div style="color:#94a3b8;font-size:14px;line-height:1.8">' +
+        '<p><strong style="color:#e2e8f0">Tipo:</strong> '+ev.tipo+'</p>' +
+        '<p><strong style="color:#e2e8f0">Fecha:</strong> '+ev.fecha+'</p>' +
+        '<p><strong style="color:#e2e8f0">Servicio:</strong> '+ev.servicio+'</p>' +
+        '<p><strong style="color:#e2e8f0">Estado:</strong> '+(ev.estado==='cerrado'?'✅ Cerrado':'🔍 En análisis')+'</p>' +
+        '<p style="margin-top:10px"><strong style="color:#e2e8f0">Descripción:</strong><br>'+ev.desc+'</p>' +
+      '</div>' +
+      '<button onclick="this.closest('[data-ev-modal]').remove()" style="margin-top:18px;background:#00796B;border:none;color:#fff;padding:9px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Cerrar</button>' +
+    '</div>';
+  overlay.setAttribute('data-ev-modal','1');
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
 }
 
 // ── Dashboard: consultorio clientes urgentes (widget) → dinámico ──

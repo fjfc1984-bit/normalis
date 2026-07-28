@@ -31,6 +31,7 @@ var FS_KEYS = [
 var fsSync = {
   _db: null,
   _userId: null,
+  _nit: null,       // NIT de la IPS — todos los miembros del equipo comparten esta ruta
   _online: true,
 
   init: function() {
@@ -59,6 +60,14 @@ var fsSync = {
     // Llamado desde hideAuthScreen() tras verificación de rol exitosa
     if (!uid) return;
     this._userId = uid;
+
+    // Extraer NIT de la IPS para ruta compartida — todos los miembros usan ips/{nit}/data/
+    // Si no hay NIT (admin, primer login), fallback a uid para backward compat
+    try {
+      var cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
+      this._nit = cfg.nit && cfg.nit.trim() ? cfg.nit.trim() : uid;
+    } catch(_) { this._nit = uid; }
+
     if (this._db) {
       this.pullAll();
       logAction('Sistema', 'Datos sincronizados desde la nube', email || uid);
@@ -73,7 +82,11 @@ var fsSync = {
 
   getRef: function(key) {
     if (!this._db || !this._userId) return null;
-    return this._db.collection('ips').doc(this._userId).collection('data').doc(key);
+    // ── MULTI-USUARIO: usar NIT como documento raíz ──────────────────────────
+    // Todos los miembros del equipo de la IPS comparten ips/{nit}/data/{key}
+    // Fallback a _userId para backward compat (admin, primeros logins sin cfg)
+    var docId = this._nit || this._userId;
+    return this._db.collection('ips').doc(docId).collection('data').doc(key);
   },
 
   push: function(key) {

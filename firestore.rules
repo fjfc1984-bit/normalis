@@ -95,8 +95,14 @@ service cloud.firestore {
       allow write: if isAdmin();
 
       match /data/{key} {
+        // Acceso compartido por IPS: el usuario debe pertenecer al NIT
+        // o ser admin. Soporta tres casos:
+        //   1. Legacy: uid == nit (usuarios anteriores al multi-usuario)
+        //   2. Miembro principal: su campo 'nit' en usuarios == nit del documento
+        //   3. Miembro invitado: su campo 'nit_ips' en usuarios == nit del documento
         allow read, write: if isAuthenticated() &&
           (request.auth.uid == nit ||
+           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
            get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit_ips == nit ||
            isAdmin());
       }

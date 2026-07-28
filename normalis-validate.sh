@@ -199,9 +199,18 @@ if [[ -f "$APP" ]]; then
     "normalis-sst.js"
     "normalis-styles.css"
   )
+  # Módulos que se cargan de forma lazy (via nlLazyLoad) en vez de <script src>
+  LAZY_MODULES=("normalis-sst.js" "normalis-pamec.js" "normalis-docs.js" "normalis-export.js")
   for mod in "${MODULES[@]}"; do
+    # Verificar si es módulo lazy: acepta tanto <script src> como comentario lazy: o referencia en nlLazyLoad
+    is_lazy=false
+    for lm in "${LAZY_MODULES[@]}"; do
+      if [ "$mod" = "$lm" ]; then is_lazy=true; break; fi
+    done
     if grep -qE "src=\"$mod(\?v=[0-9]+)?\"|href=\"$mod(\?v=[0-9]+)?\"" "$APP"; then
       pass "normativa-app-v2.html referencia $mod"
+    elif $is_lazy && grep -q "$mod" "$APP"; then
+      pass "normativa-app-v2.html referencia $mod (lazy-loaded)"
     else
       fail "normativa-app-v2.html NO referencia $mod"
     fi
