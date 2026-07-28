@@ -354,11 +354,14 @@ async function saveIndicador() {
   const valor   = (document.getElementById('indic-valor')?.value   || '').trim();
   const obs     = (document.getElementById('indic-obs')?.value     || '').trim();
 
-  if (!periodo) { alert('El período es obligatorio.'); return; }
-  if (valor === '' || isNaN(parseFloat(valor))) { alert('Ingresa un valor numérico.'); return; }
+  if (!periodo) { nlToast('El período es obligatorio.', 'warning'); return; }
+  if (valor === '' || isNaN(parseFloat(valor))) { nlToast('Ingresa un valor numérico.', 'warning'); return; }
 
   const btn = document.querySelector('#indic-modal button[onclick="saveIndicador()"]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); btn.textContent = 'Guardando'; }
+
+  // NIT para dual-write (acceso multi-usuario por IPS)
+  const nit = (() => { try { return JSON.parse(localStorage.getItem('normalis_cfg')||'{}').nit || ''; } catch(_){ return ''; } })();
 
   try {
     // Verificar si ya existe registro para ese período+indicador
@@ -375,17 +378,20 @@ async function saveIndicador() {
         fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp(),
       });
     } else {
-      // Crear nuevo
+      // Crear nuevo con campo nit para acceso por equipo
       await db.collection('indicadores').add({
-        uid, indicId: _indicModalId, periodo, valor, observacion: obs,
+        uid, nit,                               // dual-write: individual + IPS
+        indicId: _indicModalId, periodo, valor, observacion: obs,
         fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
       });
     }
+    nlToast('Indicador guardado', 'success');
     cerrarIndicModal();
   } catch(e) {
-    alert('Error al guardar: ' + e.message);
+    nlToast('Error al guardar: ' + e.message, 'error');
+    console.error('[normalis-indicadores] saveIndicador:', e);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+    if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); btn.textContent = 'Guardar'; }
   }
 }
 

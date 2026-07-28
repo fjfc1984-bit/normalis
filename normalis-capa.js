@@ -181,10 +181,13 @@ async function saveCAPA() {
   const origen   = (document.getElementById('capa-origen')?.value   || 'manual');
   const evidencia= (document.getElementById('capa-evidencia')?.value|| '').trim();
 
-  if (!desc) { alert('La descripción de la no conformidad es obligatoria.'); return; }
+  if (!desc) { nlToast('La descripción de la no conformidad es obligatoria.', 'warning'); return; }
 
   const btn = document.querySelector('#capa-modal button[onclick="saveCAPA()"]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+  if (btn) { btn.disabled = true; btn.classList.add('btn-loading'); btn.textContent = 'Guardando'; }
+
+  // Obtener NIT para dual-write (compatibilidad multi-usuario)
+  const nit = (() => { try { return JSON.parse(localStorage.getItem('normalis_cfg')||'{}').nit || ''; } catch(_){ return ''; } })();
 
   try {
     if (_capaEditId) {
@@ -194,21 +197,27 @@ async function saveCAPA() {
         fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() };
       await db.collection('capas').doc(_capaEditId).update(upd);
     } else {
-      // Crear nueva — obtener siguiente número
-      const countSnap = await db.collection('capas').where('uid', '==', uid).get();
+      // Crear nueva — número secuencial por IPS (uid o nit)
+      const countQuery = nit
+        ? db.collection('capas').where('nit', '==', nit)
+        : db.collection('capas').where('uid', '==', uid);
+      const countSnap = await countQuery.get();
       const num = String(countSnap.size + 1).padStart(3, '0');
       await db.collection('capas').add({
-        uid, numero: `CAPA-${num}`, descripcion: desc, causaRaiz: causa,
+        uid, nit,                               // dual-write: acceso individual + IPS
+        numero: `CAPA-${num}`, descripcion: desc, causaRaiz: causa,
         accionCorrectiva: accion, responsable: resp, area, fechaLimite: fecha,
         origen, evidencia, estado: 'abierta',
         fechaCreacion: firebase.firestore.FieldValue.serverTimestamp(),
       });
     }
+    nlToast('CAPA guardada correctamente', 'success');
     cerrarCAPAModal();
   } catch (e) {
-    alert('Error al guardar: ' + e.message);
+    nlToast('Error al guardar: ' + e.message, 'error');
+    console.error('[normalis-capa] saveCAPA:', e);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+    if (btn) { btn.disabled = false; btn.classList.remove('btn-loading'); btn.textContent = 'Guardar'; }
   }
 }
 
@@ -218,19 +227,24 @@ async function iniciarCAPA(id) {
       estado: 'en_progreso',
       fechaInicio: firebase.firestore.FieldValue.serverTimestamp()
     });
-  } catch(e) { alert('Error: ' + e.message); }
+    nlToast('CAPA iniciada', 'info');
+  } catch(e) { nlToast('Error: ' + e.message, 'error'); console.error('[normalis-capa] iniciarCAPA:', e); }
 }
 
 async function cerrarCAPA(id) {
-  const evidencia = prompt('Describe la evidencia de cierre (obligatorio):');
-  if (!evidencia || !evidencia.trim()) return;
+  // Reemplazar prompt nativo con modal custom si existe, sino fallback
+  const evidenciaInput = await (typeof nlPrompt === 'function'
+    ? nlPrompt('Evidencia de cierre', 'Describe la evidencia (obligatorio):')
+    : Promise.resolve(prompt('Describe la evidencia de cierre (obligatorio):')));
+  if (!evidenciaInput || !evidenciaInput.trim()) return;
   try {
     await db.collection('capas').doc(id).update({
       estado: 'cerrada',
-      evidencia: evidencia.trim(),
+      evidencia: evidenciaInput.trim(),
       fechaCierre: firebase.firestore.FieldValue.serverTimestamp()
     });
-  } catch(e) { alert('Error: ' + e.message); }
+    nlToast('CAPA cerrada exitosamente', 'success');
+  } catch(e) { nlToast('Error: ' + e.message, 'error'); console.error('[normalis-capa] cerrarCAPA:', e); }
 }
 
 // ══════════════════════════════════════════════

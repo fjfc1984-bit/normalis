@@ -785,4 +785,150 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 
+/* ══════════════════════════════════════════════════════════════
+   SKELETON LOADING SCREENS
+   Shimmer animation para estados de carga — evita pantallas vacías
+   ══════════════════════════════════════════════════════════════ */
+@keyframes shimmer{
+  0%{background-position:-600px 0}
+  100%{background-position:600px 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,.08) 50%,var(--border) 75%);
+  background-size:600px 100%;
+  animation:shimmer 1.4s ease-in-out infinite;
+  border-radius:8px;
+}
+.sk-line{height:14px;margin-bottom:10px;border-radius:6px}
+.sk-line.w-80{width:80%}
+.sk-line.w-60{width:60%}
+.sk-line.w-40{width:40%}
+.sk-line.w-100{width:100%}
+.sk-card{background:var(--bg-card,#fff);border-radius:var(--radius);padding:20px;
+  border:1px solid var(--border)}
+.sk-title{height:20px;width:55%;margin-bottom:16px;border-radius:8px}
+.sk-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0}
+.sk-block{height:80px;border-radius:10px;margin-bottom:12px}
+.sk-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sk-chip{height:28px;width:80px;border-radius:20px;display:inline-block}
+
+/* ── Botón con estado loading ──────────────────────────────── */
+.btn-loading{position:relative;pointer-events:none;opacity:.8}
+.btn-loading::after{
+  content:'';display:inline-block;width:14px;height:14px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;
+  margin-left:8px;vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Indicador de conexión ────────────────────────────────── */
+#connection-badge{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  display:none;align-items:center;gap:6px;padding:8px 16px;
+  border-radius:20px;font-size:12px;font-weight:600;z-index:9999;
+  box-shadow:var(--shadow-md);animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+#connection-badge.offline{display:flex;background:#ef4444;color:#fff}
+#connection-badge.online{display:flex;background:#10b981;color:#fff}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.8}
+
+/* ── Toast mejorado — apilable ────────────────────────────── */
+#toast-container{
+  position:fixed;top:16px;right:16px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+.nl-toast{
+  background:var(--bg-card,#1e293b);color:var(--text,#f1f5f9);
+  border-radius:10px;padding:12px 16px;font-size:13px;font-weight:500;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:all;min-width:240px;max-width:340px;
+  border-left:4px solid var(--primary);
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.nl-toast.out{animation:toastOut .25s ease forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(24px)}}
+.nl-toast.success{border-left-color:#10b981}
+.nl-toast.warning{border-left-color:#f59e0b}
+.nl-toast.error{border-left-color:#ef4444}
+.nl-toast.info{border-left-color:#3b82f6}
+.nl-toast-icon{font-size:16px;flex-shrink:0}
+.nl-toast-msg{flex:1;line-height:1.4}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLET BREAKPOINT — 769px–1024px
+   Auditores trabajan en tablets Android en campo
+   ══════════════════════════════════════════════════════════════ */
+@media(max-width:1024px) and (min-width:769px){
+  .sidebar{width:200px}
+  .main-content{margin-left:200px}
+  .topbar{left:200px}
+  .sb-item{font-size:12px;padding:9px 12px}
+  .card-grid,.grid-3,.kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .form-row-2{grid-template-columns:1fr}
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE MEJORADO — ≤768px
+   Touch targets, forms legibles, audit cards en campo
+   ══════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Inputs y selects: font-size ≥ 16px evita zoom automático en iOS */
+  input,select,textarea{font-size:16px!important}
+
+  /* Touch targets mínimo 44px */
+  button,.btn,.sb-item,.nav-tab{min-height:44px}
+
+  /* Cards de auditoría: layout de columna en campo */
+  .audit-q{padding:14px 12px}
+  .audit-q-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .audit-q-btns{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .audit-q-btns button{width:100%;justify-content:center;min-height:44px;font-size:13px}
+
+  /* KPI grid en móvil: 2 columnas compactas */
+  .kpi-grid,.card-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .card{padding:12px}
+
+  /* Topbar: título compacto */
+  .topbar-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+
+  /* Modales: full screen en móvil */
+  .modal-content,.modal-box{
+    width:100vw!important;max-width:100vw!important;
+    height:100dvh!important;border-radius:0!important;
+    overflow-y:auto;
+  }
+
+  /* Tabla scroll horizontal */
+  .table-wrap,.responsive-table{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:500px}
+
+  /* Formularios de una columna */
+  .form-grid,.form-row-2,.grid-2{grid-template-columns:1fr!important}
+
+  /* Hero dashboard más compacto */
+  .dash-hero{padding:20px 16px}
+  .hero-score-ring{width:100px;height:100px}
+}
+
+/* ── FAB acción rápida — solo mobile ─────────────────────── */
+.fab-action{
+  display:none;
+  position:fixed;bottom:72px;right:16px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--primary);color:#fff;
+  border:none;font-size:22px;
+  align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(0,121,107,.5);
+  cursor:pointer;z-index:500;
+  transition:.2s;
+}
+@media(max-width:768px){.fab-action{display:flex}}
+.fab-action:hover{background:var(--primary-dark);transform:scale(1.08)}
+
+
 /* END:normalis-styles.css — NormaLis integrity seal */

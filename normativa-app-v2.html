@@ -44,7 +44,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
     // SW script inline via blob — caches app shell
     const swCode=`
-const CACHE='normalis-v4';
+const CACHE='normalis-v5';
 const ASSETS=[
   './normativa-app-v2.html',
   './normalis-styles.css',
@@ -69,7 +69,11 @@ const ASSETS=[
   './normalis-export.js',
   './normalis-users.js',
   './normalis-automations.js',
-  './normalis-checklist.js'
+  './normalis-checklist.js',
+  './normalis-sst.js',
+  './normalis-multiusuario.js',
+  './normalis-plans.js',
+  './normalis-analytics.js'
 ];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
@@ -360,6 +364,27 @@ self.addEventListener('fetch',e=>{
                 <div style="font-weight:700;margin-bottom:4px">Sin datos de auditoría</div>
                 <div style="font-size:12px">Completa la auditoría simulada para ver tus no conformidades reales</div>
                 <button class="btn btn-primary" style="margin-top:12px" onclick="nav('auditoria')">Iniciar auditoría ahora</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- VENCIMIENTOS + CAPAS WIDGETS -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:10px">
+                <i class="ti ti-calendar-exclamation" aria-hidden="true" style="margin-right:6px;color:#f59e0b"></i>Vencimientos Próximos
+              </div>
+              <div id="dash-widget-venc">
+                <div style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">Cargando…</div>
+              </div>
+              <button onclick="nav('vencimientos')" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-top:8px">Ver todos los vencimientos →</button>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:10px">
+                <i class="ti ti-clipboard-list" aria-hidden="true" style="margin-right:6px;color:#6366f1"></i>Plan de Mejoramiento
+              </div>
+              <div id="dash-widget-capa">
+                <div style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">Cargando…</div>
               </div>
             </div>
           </div>
@@ -1857,6 +1882,10 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
     <button class="btn btn-outline btn-sm" onclick="closeUpdPanel()">Cerrar</button>
     <button class="btn btn-primary btn-sm" onclick="applyUpdates()">✓ Marcar como revisado</button>
   </div>
+</div>
+<div id="connection-badge" role="status" aria-live="polite">
+  <span class="conn-dot"></span>
+  <span id="conn-label">Sin conexión</span>
 </div>
 <div id="toast-container"></div>
 
@@ -4702,6 +4731,9 @@ function renderDashboard(){
     }
   }
 
+  // ── Widgets adicionales: vencimientos + CAPAs ──────────────────
+  try { renderDashWidgets(); } catch(_) {}
+
   // Alerts — from real NCs
   const al=document.getElementById('dash-alerts-list');
   const ab=document.getElementById('dash-alerts-badge');
@@ -6869,6 +6901,83 @@ function updateTalentoBadge(){
 }
 
 // ── Dashboard dinámico: alertas desde datos reales ──
+// ── Online / Offline connection badge ──────────────────────────────────────
+(function(){
+  function updateConnBadge(online){
+    var b=document.getElementById('connection-badge');
+    var l=document.getElementById('conn-label');
+    if(!b||!l) return;
+    if(online){
+      b.className='online'; l.textContent='Conexión restaurada';
+      setTimeout(function(){ b.className=''; }, 2800);
+    } else {
+      b.className='offline'; l.textContent='Sin conexión — modo local activo';
+    }
+    // Also update existing online-pill
+    if(typeof setOnlineUI==='function') setOnlineUI(online?'online':'offline');
+  }
+  window.addEventListener('online',  function(){ updateConnBadge(true);  });
+  window.addEventListener('offline', function(){ updateConnBadge(false); });
+  // Initial state
+  if(!navigator.onLine) setTimeout(function(){ updateConnBadge(false); }, 1200);
+})();
+
+// ── Dashboard Widgets: vencimientos próximos + CAPAs abiertas ─────────────
+function renderDashWidgets(){
+  // Widget vencimientos
+  var vwEl = document.getElementById('dash-widget-venc');
+  if(vwEl){
+    try {
+      var docs = JSON.parse(localStorage.getItem('normalis_vencimientos')||'[]');
+      var hoy = new Date(); hoy.setHours(0,0,0,0);
+      var en30 = new Date(hoy); en30.setDate(en30.getDate()+30);
+      var urgentes = docs.filter(function(d){
+        var f=new Date(d.fecha); f.setHours(0,0,0,0);
+        return f <= en30;
+      }).sort(function(a,b){ return new Date(a.fecha)-new Date(b.fecha); }).slice(0,3);
+      if(urgentes.length===0){
+        vwEl.innerHTML='<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">Sin vencimientos próximos ✅</div>';
+      } else {
+        vwEl.innerHTML = urgentes.map(function(d){
+          var f=new Date(d.fecha); f.setHours(0,0,0,0);
+          var dias=Math.round((f-hoy)/(1000*60*60*24));
+          var col=dias<0?'#ef4444':dias<=7?'#f59e0b':'#3b82f6';
+          var lbl=dias<0?'Vencido hace '+Math.abs(dias)+'d':dias===0?'Vence hoy':'Vence en '+dias+'d';
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-light,rgba(255,255,255,.05))">'
+            +'<div><div style="font-size:12px;font-weight:600">'+d.profesional+'</div>'
+            +'<div style="font-size:11px;color:var(--text-muted)">'+d.tipo+'</div></div>'
+            +'<span style="font-size:11px;font-weight:700;color:'+col+'">'+lbl+'</span>'
+            +'</div>';
+        }).join('');
+      }
+    } catch(e){}
+  }
+
+  // Widget CAPAs
+  var cwEl = document.getElementById('dash-widget-capa');
+  if(cwEl){
+    try {
+      var abiertas = (typeof _capas!=='undefined') ? _capas.filter(function(c){ return c.estado==='abierta'||c.estado==='en_progreso'; }).length : 0;
+      var vencidas = (typeof _capas!=='undefined') ? _capas.filter(function(c){
+        return c.estado!=='cerrada' && c.fechaLimite && new Date(c.fechaLimite)<new Date();
+      }).length : 0;
+      if(abiertas===0 && vencidas===0){
+        cwEl.innerHTML='<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">Sin CAPAs abiertas ✅</div>';
+      } else {
+        cwEl.innerHTML='<div style="display:flex;gap:12px;padding:6px 0">'
+          +'<div style="flex:1;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px;text-align:center">'
+          +'<div style="font-size:22px;font-weight:800;color:#f59e0b">'+abiertas+'</div>'
+          +'<div style="font-size:11px;color:var(--text-muted)">Abiertas</div></div>'
+          +(vencidas>0?'<div style="flex:1;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px;text-align:center">'
+          +'<div style="font-size:22px;font-weight:800;color:#ef4444">'+vencidas+'</div>'
+          +'<div style="font-size:11px;color:var(--text-muted)">Vencidas</div></div>':'')
+          +'</div>'
+          +'<button onclick="nav('capa')" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-top:4px">Ver plan de mejoramiento →</button>';
+      }
+    } catch(e){}
+  }
+}
+
 function renderDashboardAlerts(){
   const el = document.getElementById('dash-dynamic-alerts');
   if(!el) return;

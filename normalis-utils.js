@@ -129,4 +129,77 @@ function nlConfirm(msg, okLabel, okColor) {
   });
 }
 
+/**
+ * nlToast — sistema de notificaciones apilables (nueva generación)
+ * Usa #toast-container con clase .nl-toast (definida en normalis-styles.css)
+ * Fallback automático a toast() si no existe el contenedor nuevo
+ * @param {string} msg
+ * @param {'success'|'warning'|'error'|'info'} type
+ * @param {number} duration — ms, default 3400
+ */
+function nlToast(msg, type, duration) {
+  type = type || 'info';
+  duration = duration || 3400;
+
+  // Ícono por tipo
+  var icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+
+  var container = document.getElementById('toast-container');
+  if (!container) {
+    // Fallback al sistema antiguo
+    if (typeof toast === 'function') { toast(msg, type); return; }
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none';
+    document.body.appendChild(container);
+  }
+
+  var el = document.createElement('div');
+  el.className = 'nl-toast ' + type;
+  el.innerHTML =
+    '<span class="nl-toast-icon">' + (icons[type] || 'ℹ️') + '</span>' +
+    '<span class="nl-toast-msg">' + msg + '</span>';
+  container.appendChild(el);
+
+  // Auto-dismiss
+  setTimeout(function() {
+    el.classList.add('out');
+    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 280);
+  }, duration);
+}
+
+/**
+ * nlPrompt — reemplaza prompt() nativo (bloqueante en móvil)
+ * @param {string} title
+ * @param {string} placeholder
+ * @param {string} [defaultVal]
+ * @returns {Promise<string|null>}
+ */
+function nlPrompt(title, placeholder, defaultVal) {
+  return new Promise(function(resolve) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999998;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML =
+      '<div style="background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:400px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6)">' +
+        '<p style="color:#e2e8f0;font-size:15px;font-weight:600;margin:0 0 14px">' + (title||'Ingresa un valor') + '</p>' +
+        '<input id="_nlp_input" type="text" placeholder="' + (placeholder||'') + '" value="' + (defaultVal||'') + '" style="width:100%;background:rgba(255,255,255,.08);border:1.5px solid #475569;border-radius:10px;padding:11px 14px;font-size:14px;color:#f1f5f9;outline:none;font-family:inherit;margin-bottom:16px">' +
+        '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+          '<button id="_nlp_cancel" style="background:transparent;border:1px solid #475569;color:#94a3b8;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px">Cancelar</button>' +
+          '<button id="_nlp_ok" style="background:#00796B;border:none;color:#fff;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Aceptar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    var input = overlay.querySelector('#_nlp_input');
+    function close(val) { if(overlay.parentNode) document.body.removeChild(overlay); resolve(val); }
+    overlay.querySelector('#_nlp_ok').onclick   = function() { close(input.value || null); };
+    overlay.querySelector('#_nlp_cancel').onclick = function() { close(null); };
+    overlay.addEventListener('click', function(e) { if(e.target===overlay) close(null); });
+    input.addEventListener('keydown', function(e) {
+      if(e.key==='Enter') close(input.value||null);
+      if(e.key==='Escape') close(null);
+    });
+    setTimeout(function(){ input.focus(); input.select(); }, 50);
+  });
+}
+
 // END:normalis-utils.js — NormaLis integrity seal
