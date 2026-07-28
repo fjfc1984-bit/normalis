@@ -83,6 +83,7 @@ self.addEventListener('fetch',e=>{
   });
 }
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="normalis-styles.css?v=20260717">
   <!-- Google Analytics 4 -->
   <script src="normalis-analytics.js" defer></script>
@@ -201,48 +202,49 @@ self.addEventListener('fetch',e=>{
 
       <!-- ── PRINCIPAL ─────────────────────────────── -->
       <div class="sb-section">Principal</div>
-      <div class="sb-item active" onclick="nav('dashboard')" data-mod="dashboard"><span class="icon">📊</span>Dashboard</div>
-      <div class="sb-item" onclick="nav('establecimiento')" data-mod="establecimiento"><span class="icon">🏥</span>Mi Establecimiento</div>
-      <div class="sb-item" onclick="nav('cronograma')" data-mod="cronograma"><span class="icon">🗓️</span>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
+      <div class="sb-item active" onclick="nav('dashboard')" data-mod="dashboard"><i class="ti ti-chart-bar" aria-hidden="true"></i>Dashboard</div>
+      <div class="sb-item" onclick="nav('establecimiento')" data-mod="establecimiento"><i class="ti ti-building-hospital" aria-hidden="true"></i>Mi Establecimiento</div>
+      <div class="sb-item" onclick="nav('cronograma')" data-mod="cronograma"><i class="ti ti-calendar-event" aria-hidden="true"></i>Cronograma de Visita<span class="sb-badge warn" data-countdown>42d</span></div>
 
       <!-- ── HABILITACIÓN ───────────────────────────── -->
       <div class="sb-section">Habilitación</div>
-      <div class="sb-item" onclick="nav('auditoria')" data-mod="auditoria"><span class="icon">🔍</span>Auditoría Simulada<span class="sb-badge">!</span></div>
-      <div class="sb-item" onclick="nav('resultados')" data-mod="resultados"><span class="icon">📈</span>Resultados</div>
-      <div class="sb-item" onclick="nav('generador')" data-mod="generador"><span class="icon">✨</span>Generar con IA</div>
-      <div class="sb-item" onclick="nav('documentos')" data-mod="documentos"><span class="icon">📁</span>Biblioteca Documental</div>
+      <div class="sb-item" onclick="nav('auditoria')" data-mod="auditoria"><i class="ti ti-clipboard-check" aria-hidden="true"></i>Auditoría Simulada<span class="sb-badge">!</span></div>
+      <div class="sb-item" onclick="nav('resultados')" data-mod="resultados"><i class="ti ti-trending-up" aria-hidden="true"></i>Resultados</div>
+      <div class="sb-item" onclick="nav('generador')" data-mod="generador"><i class="ti ti-sparkles" aria-hidden="true"></i>Generar con IA</div>
+      <div class="sb-item" onclick="nav('documentos')" data-mod="documentos"><i class="ti ti-folders" aria-hidden="true"></i>Biblioteca Documental</div>
 
       <!-- ── CUMPLIMIENTO ───────────────────────────── -->
       <div class="sb-section">Cumplimiento</div>
-      <div class="sb-item" onclick="nav('pamec')" data-mod="pamec"><span class="icon">🔄</span>PAMEC</div>
-      <div class="sb-item" onclick="nav('sst')" data-mod="sst"><span class="icon">🦺</span>SG-SST</div>
-      <div class="sb-item" onclick="nav('capa')" data-mod="capa"><span class="icon">📋</span>Plan de Mejoramiento</div>
-      <div class="sb-item" onclick="nav('indicadores')" data-mod="indicadores"><span class="icon">📊</span>Indicadores Res. 256</div>
-      <div class="sb-item" onclick="nav('pqrs')" data-mod="pqrs"><span class="icon">📮</span>Gestor PQRS</div>
-      <div class="sb-item" onclick="nav('incidentes')" data-mod="incidentes"><span class="icon">⚠️</span>Incidentes y Eventos</div>
+      <div class="sb-item" onclick="nav('pamec')" data-mod="pamec"><i class="ti ti-refresh" aria-hidden="true"></i>PAMEC</div>
+      <div class="sb-item" onclick="nav('sst')" data-mod="sst"><i class="ti ti-shield-check" aria-hidden="true"></i>SG-SST</div>
+      <div class="sb-item" onclick="nav('capa')" data-mod="capa"><i class="ti ti-checklist" aria-hidden="true"></i>Plan de Mejoramiento</div>
+      <div class="sb-item" onclick="nav('indicadores')" data-mod="indicadores"><i class="ti ti-chart-line" aria-hidden="true"></i>Indicadores Res. 256</div>
+      <div class="sb-item" onclick="nav('pqrs')" data-mod="pqrs"><i class="ti ti-mail" aria-hidden="true"></i>Gestor PQRS</div>
+      <div class="sb-item" onclick="nav('incidentes')" data-mod="incidentes"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Incidentes y Eventos</div>
 
       <!-- ── EQUIPO ─────────────────────────────────── -->
       <div class="sb-section">Equipo</div>
-      <div class="sb-item" onclick="nav('talento')" data-mod="talento"><span class="icon">👥</span>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
-      <div class="sb-item" onclick="nav('vencimientos-personal')" data-mod="vencimientos-personal"><span class="icon">🪪</span>Vencimientos Personal</div>
+      <div class="sb-item" onclick="nav('talento')" data-mod="talento"><i class="ti ti-users" aria-hidden="true"></i>Talento Humano<span class="sb-badge warn" id="talento-sb-badge" style="display:none">!</span></div>
+      <div class="sb-item" onclick="nav('equipo')" data-mod="equipo"><i class="ti ti-user-plus" aria-hidden="true"></i>Equipo IPS</div>
+      <div class="sb-item" onclick="nav('vencimientos-personal')" data-mod="vencimientos-personal"><i class="ti ti-id-badge" aria-hidden="true"></i>Vencimientos Personal</div>
 
       <!-- ── ASISTENTE IA ───────────────────────────── -->
       <div class="sb-section">Asistente IA</div>
-      <div class="sb-item" onclick="nav('chat')" data-mod="chat"><span class="icon">💬</span>Consultor Normativo IA</div>
+      <div class="sb-item" onclick="nav('chat')" data-mod="chat"><i class="ti ti-message-dots" aria-hidden="true"></i>Consultor Normativo IA</div>
 
       <!-- ── MÁS HERRAMIENTAS (colapsable) ─────────── -->
       <div class="sb-more-toggle" id="sb-more-toggle" onclick="toggleSbMore()">
         <span id="sb-more-arrow">▸</span> Más herramientas
       </div>
       <div class="sb-more-items" id="sb-more-items" style="display:none">
-        <div class="sb-item" onclick="nav('comparador')" data-mod="comparador"><span class="icon">⚖️</span>Comparador Normativo</div>
-        <div class="sb-item" onclick="nav('roi')" data-mod="roi"><span class="icon">💰</span>Calculadora ROI</div>
-        <div class="sb-item" onclick="nav('calidad')" data-mod="calidad"><span class="icon">🏅</span>Calidad en Salud</div>
-        <div class="sb-item" onclick="nav('calendario')" data-mod="calendario"><span class="icon">📅</span>Calendario</div>
-        <div class="sb-item" onclick="nav('firma')" data-mod="firma"><span class="icon">✍️</span>Firma y Versiones</div>
-        <div class="sb-item" onclick="nav('consentimientos')" data-mod="consentimientos"><span class="icon">📝</span>Consentimientos</div>
-        <div class="sb-item" onclick="nav('simulacro')" data-mod="simulacro"><span class="icon">🔎</span>Simulacro Secretaría</div>
-        <div class="sb-item" onclick="nav('bitacora')" data-mod="bitacora"><span class="icon">📋</span>Bitácora</div>
+        <div class="sb-item" onclick="nav('comparador')" data-mod="comparador"><i class="ti ti-scale" aria-hidden="true"></i>Comparador Normativo</div>
+        <div class="sb-item" onclick="nav('roi')" data-mod="roi"><i class="ti ti-calculator" aria-hidden="true"></i>Calculadora ROI</div>
+        <div class="sb-item" onclick="nav('calidad')" data-mod="calidad"><i class="ti ti-award" aria-hidden="true"></i>Calidad en Salud</div>
+        <div class="sb-item" onclick="nav('calendario')" data-mod="calendario"><i class="ti ti-calendar" aria-hidden="true"></i>Calendario</div>
+        <div class="sb-item" onclick="nav('firma')" data-mod="firma"><i class="ti ti-signature" aria-hidden="true"></i>Firma y Versiones</div>
+        <div class="sb-item" onclick="nav('consentimientos')" data-mod="consentimientos"><i class="ti ti-file-text" aria-hidden="true"></i>Consentimientos</div>
+        <div class="sb-item" onclick="nav('simulacro')" data-mod="simulacro"><i class="ti ti-search" aria-hidden="true"></i>Simulacro Secretaría</div>
+        <div class="sb-item" onclick="nav('bitacora')" data-mod="bitacora"><i class="ti ti-clock-record" aria-hidden="true"></i>Bitácora</div>
       </div>
 
       <!-- ── OCULTOS (Fase 2 — desbloquear por plan) ── -->
@@ -252,7 +254,7 @@ self.addEventListener('fetch',e=>{
 
       <!-- ── CUENTA ──────────────────────────────────── -->
       <div class="sb-section" style="margin-top:8px">Cuenta</div>
-      <div class="sb-item" onclick="openUserMgmt()"><span class="icon">👤</span>Gestión de Perfiles</div>
+      <div class="sb-item" onclick="openUserMgmt()"><i class="ti ti-user-cog" aria-hidden="true"></i>Gestión de Perfiles</div>
       <div class="sb-item-settings" onclick="abrirSetup()"><span>⚙️</span> Configuración</div>
     </nav>
     <div class="sb-footer">
@@ -1121,6 +1123,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       </div>
 
       <!-- ══ TALENTO HUMANO ══ -->
+      <div class="view" id="view-equipo" style="display:none"></div>
       <div class="view" id="view-talento">
 
         <!-- STATS HERO -->
@@ -2303,6 +2306,7 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 <script src="normalis-auth.js?v=20260717"></script>
 <script src="normalis-pamec.js?v=20260717"></script>
 <script src="normalis-export.js?v=20260717"></script>
+<script src="normalis-multiusuario.js" defer></script>
 <script src="normalis-users.js?v=20260717"></script>
 <script src="normalis-automations.js?v=20260717"></script>
 <script src="normalis-sst.js?v=20260717"></script>
@@ -2504,6 +2508,7 @@ const viewTitles={
   establecimiento:['Mi Establecimiento','Datos e información del prestador'],
   capa:['Plan de Mejoramiento','Acciones Correctivas y Preventivas · Dec. 1011/2006 · Res. 256/2016'],
   indicadores:['Indicadores de Calidad','SOGCS · Res. 256/2016 · 14 indicadores trazadores · Reporte SISPRO'],
+  equipo:['Equipo IPS','Gestión de accesos y roles · Sistema de invitaciones'],
 };
 
 function nav(id){
@@ -2526,6 +2531,7 @@ function nav(id){
   if(id==='pamec'){setTimeout(()=>{try{renderPamecModule();}catch(e){console.warn('pamec',e);}},80);}
   if(id==='capa'){setTimeout(()=>{try{renderCAPAs();}catch(e){console.warn('capa',e);}},80);}
   if(id==='indicadores'){setTimeout(()=>{try{renderIndicadores();}catch(e){console.warn('indicadores',e);}},80);}
+  if(id==='equipo'){setTimeout(()=>{try{renderEquipoIPS();}catch(e){console.warn('equipo',e);}},80);}
   // Log navigation (skip high-frequency nav items to keep log meaningful)
   if(typeof logActivity==='function' && !['dashboard','actividad'].includes(id)){
     logActivity('nav', id, viewTitles[id]?viewTitles[id][0]:'');
