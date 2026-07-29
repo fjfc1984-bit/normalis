@@ -131,6 +131,28 @@ const TOOLS = [
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'sugerirAccion',
+      description: 'Sugiere al usuario una acción interactiva (botón) que aparecerá en el chat. '
+        + 'Úsala cuando tu respuesta se beneficiaría de un acceso directo — por ejemplo: '
+        + 'si mencionas que el usuario tiene vencimientos urgentes, sugiere ir a Vencimientos; '
+        + 'si recomiendas crear una CAPA, sugiere el botón de creación; '
+        + 'si hablas de indicadores pendientes, sugiere ir al módulo. '
+        + 'Máximo 2 acciones por respuesta. No la uses si la respuesta es puramente informativa.',
+      parameters: {
+        type: 'object',
+        properties: {
+          texto:  { type: 'string', description: 'Texto del botón (máx 40 caracteres). Ej: "Ver mis vencimientos", "Crear CAPA"' },
+          accion: { type: 'string', enum: ['navegar', 'crearCAPA', 'crearVencimiento', 'crearIndicador'],
+                    description: 'Acción a ejecutar: navegar=ir a un módulo, crearCAPA/Vencimiento/Indicador=abrir formulario' },
+          modulo: { type: 'string', description: 'Módulo destino si accion=navegar. Ej: vencimientos, capa, indicadores, auditoria, sst, pamec' },
+        },
+        required: ['texto', 'accion'],
+      },
+    },
+  },
 ];
 
 /**
@@ -459,27 +481,41 @@ ${moduloHint ? `- Módulo activo: ${moduloActivo}` : ''}`;
       // Limitamos a 1 ronda de tool calls para evitar loops infinitos.
       let finalText = null;
       const toolsUsed = [];
+      let acciones   = [];  // se llena si el LLM llama sugerirAccion
 
       if (useTools && firstChoice?.finish_reason === 'tool_calls') {
-        const toolCalls = firstChoice.message?.tool_calls || [];
+          const toolCalls = firstChoice.message?.tool_calls || [];
         console.log(`[Tools] LLM solicitó ${toolCalls.length} herramienta(s): ${toolCalls.map(t => t.function?.name).join(', ')}`);
 
         // Agregar la respuesta del asistente (con las tool_calls) al historial
         messages.push(firstChoice.message);
 
-        // Ejecutar cada herramienta y agregar su resultado
+        // Ejecutar cada herramienta y capturar sugerirAccion
         for (const tc of toolCalls) {
-          const toolName   = tc.function?.name || '';
-          const toolResult = await ejecutarTool(toolName, clientUID, env);
-          toolsUsed.push(toolName);
+          const toolName = tc.function?.name || '';
+          let toolArgs   = {};
+          try { toolArgs = JSON.parse(tc.function?.arguments || '{}'); } catch {}
 
-          console.log(`[Tools] ${toolName} → ${toolResult.slice(0, 80)}...`);
-
-          messages.push({
-            role:         'tool',
-            tool_call_id: tc.id,
-            content:      toolResult,
-          });
+          if (toolName === 'sugerirAccion') {
+            // Capturar la acción sin efecto secundario — se enviará al frontend
+            if (toolArgs.texto && toolArgs.accion) {
+              const ACCIONES_VALIDAS = ['navegar', 'crearCAPA', 'crearVencimiento', 'crearIndicador'];
+              if (ACCIONES_VALIDAS.includes(toolArgs.accion)) {
+                acciones.push({
+                  texto:  String(toolArgs.texto).slice(0, 60),
+                  accion: toolArgs.accion,
+                  modulo: String(toolArgs.modulo || '').replace(/[^a-zA-Z0-9_-]/g, ''),
+                });
+              }
+            }
+            messages.push({ role: 'tool', tool_call_id: tc.id, content: 'Accion registrada. Se mostrara al usuario como boton.' });
+          } else {
+            // Herramienta de datos — ejecutar y agregar resultado
+            const toolResult = await ejecutarTool(toolName, clientUID, env);
+            toolsUsed.push(toolName);
+            console.log(`[Tools] ${toolName} -> ${toolResult.slice(0, 80)}...`);
+            messages.push({ role: 'tool', tool_call_id: tc.id, content: toolResult });
+          }
         }
 
         // ── LLAMADA 2: el LLM genera la respuesta final con los datos ──
@@ -516,9 +552,9 @@ ${moduloHint ? `- Módulo activo: ${moduloActivo}` : ''}`;
         });
       }
 
-      // Devolver respuesta + fuentes RAG + herramientas usadas
+      // Devolver respuesta + fuentes RAG + herramientas usadas + acciones sugeridas
       const sources = ragChunks.map(c => ({ source: c.source, score: c.score }));
-      return new Response(JSON.stringify({ answer: finalText, sources, toolsUsed }), {
+      return new Response(JSON.stringify({ answer: finalText, sources, toolsUsed, acciones }), {
         status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
       });
 

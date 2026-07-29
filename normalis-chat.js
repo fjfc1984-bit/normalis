@@ -101,13 +101,19 @@ async function callNormalisAI(userMessage, historial, attempt) {
     const data = await resp.json();
     if (!data.answer) throw new Error('El servicio no devolvió respuesta');
 
-    // fuentes: el Worker actualmente retorna [] pero puede crecer
+    // fuentes: el Worker retorna sources[] con URLs oficiales
     const sources = (data.sources || [])
       .map(s => (typeof s === 'string' ? s : s?.uri || ''))
       .filter(u => u && (u.includes('gov.co') || u.includes('minsalud')))
       .slice(0, 3);
 
-    return { text: data.answer, sources };
+    // acciones: botones sugeridos por el LLM (sugerirAccion tool)
+    const ACCIONES_VALIDAS = ['navegar', 'crearCAPA', 'crearVencimiento', 'crearIndicador'];
+    const acciones = (Array.isArray(data.acciones) ? data.acciones : [])
+      .filter(a => a && a.texto && ACCIONES_VALIDAS.includes(a.accion))
+      .slice(0, 3);
+
+    return { text: data.answer, sources, acciones };
 
   } catch (err) {
     clearTimeout(tid);
@@ -133,12 +139,55 @@ function fallbackResponse(errMsg) {
     text: isConfig
       ? '⚙️ El servicio de IA no está configurado aún. El administrador debe desplegar el Worker con la API key de Groq.\n\nMientras tanto, consulta directamente en:\n• **minsalud.gov.co** → Normatividad\n• **suin-juriscol.gov.co** → Normas\n• **habilitacion.sispro.gov.co** → REPS'
       : '🔌 No se pudo conectar al servicio de IA. Revisa tu conexión a internet.\n\nPara consultas urgentes visita:\n• **minsalud.gov.co** → Normatividad\n• **suin-juriscol.gov.co** → búsqueda de normas\n• **funcionpublica.gov.co** → Gestor Normativo\n\nO contacta la Secretaría de Salud de tu departamento.',
-    sources: []
+    sources: [],
+    acciones: [],
   };
 }
 
-// ── Renderizar respuesta con markdown básico + fuentes ────────────
-function renderBotResponse(el, { text, sources }) {
+// ── Ejecutar acción sugerida por el LLM ───────────────────────────
+// Llamada cuando el usuario hace clic en un botón de acción del chat.
+// Las acciones llaman funciones globales definidas en normalis-main.js.
+function nlEjecutarAccion(accion, modulo) {
+  try {
+    switch (accion) {
+      case 'navegar':
+        if (typeof nav === 'function' && modulo) {
+          nav(modulo);
+          // Cerrar el chat flotante si estaba abierto
+          const floatPanel = document.getElementById('float-chat-panel');
+          if (floatPanel && !floatPanel.classList.contains('hidden')) {
+            floatPanel.classList.add('hidden');
+          }
+        }
+        break;
+      case 'crearCAPA':
+        if (typeof nav === 'function') nav('capa');
+        break;
+      case 'crearVencimiento':
+        if (typeof nav === 'function') nav('vencimientos');
+        break;
+      case 'crearIndicador':
+        if (typeof nav === 'function') nav('indicadores');
+        break;
+    }
+  } catch (e) {
+    console.warn('[NormaLis Actions]', e);
+  }
+}
+// Exponer globalmente para los data-onclick de los botones de acción
+window.nlEjecutarAccion = nlEjecutarAccion;
+
+// Delegated listener: captura clics en botones .nl-action-btn generados dinámicamente
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.nl-action-btn');
+  if (!btn) return;
+  const accion = btn.dataset.accion || '';
+  const modulo = btn.dataset.modulo || '';
+  nlEjecutarAccion(accion, modulo);
+});
+
+// ── Renderizar respuesta con markdown básico + fuentes + acciones ─
+function renderBotResponse(el, { text, sources, acciones }) {
   let html = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -163,6 +212,29 @@ function renderBotResponse(el, { text, sources }) {
         '</small>';
     }
   }
+
+  // Botones de acción sugeridos por el LLM (Paso D)
+  if (acciones && acciones.length > 0) {
+    const ACCIONES_VALIDAS = ['navegar', 'crearCAPA', 'crearVencimiento', 'crearIndicador'];
+    const botonesHtml = acciones
+      .filter(function(a) { return a.texto && ACCIONES_VALIDAS.includes(a.accion); })
+      .slice(0, 3)
+      .map(function(a) {
+        // Sanitizar: solo caracteres alfanuméricos/guión para accion y modulo
+        const safeTexto  = String(a.texto).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').slice(0, 50);
+        const safeAccion = String(a.accion).replace(/[^a-zA-Z]/g, '');
+        const safeModulo = String(a.modulo || '').replace(/[^a-zA-Z0-9_-]/g, '');
+        return '<button class="nl-action-btn" data-accion="' + safeAccion + '" data-modulo="' + safeModulo + '" ' +
+          'style="background:#0d9488;color:#fff;border:none;padding:7px 14px;border-radius:6px;' +
+          'cursor:pointer;font-size:13px;font-weight:500;margin-top:2px;transition:opacity .15s" ' +
+          'onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'">' +
+          '&#9654; ' + safeTexto + '</button>';
+      }).join('');
+    if (botonesHtml) {
+      html += '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">' + botonesHtml + '</div>';
+    }
+  }
+
   // Aviso legal IA — Circular SIC 002/2024 · AI Act EU 2024/1689
   html += '<div style="margin-top:10px;padding:7px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#92400e">&#9888; <strong>Contenido generado por Inteligencia Artificial.</strong> No reemplaza asesor&iacute;a jur&iacute;dica profesional. Verifique con un experto antes de tomar decisiones oficiales. &middot; <a href="/politica-privacidad.html" style="color:#92400e" target="_blank">Pol&iacute;tica de privacidad</a></div>';
   el.innerHTML = html;
