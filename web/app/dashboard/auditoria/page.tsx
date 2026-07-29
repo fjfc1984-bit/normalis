@@ -1,57 +1,74 @@
 'use client';
 
 import Link from 'next/link';
-
-const SERVICIOS = [
-  'Consulta externa médica',
-  'Consulta externa odontológica',
-  'Urgencias',
-  'Hospitalización',
-  'Apoyo diagnóstico',
-  'Farmacia',
-  'Transporte asistencial',
-];
+import { SEGMENT_META, areasDB } from '@/data/auditData';
 
 export default function AuditoriaPage() {
+  const segments = Object.keys(areasDB);
+
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Auditoría de habilitación</h2>
-        <p className="text-sm text-gray-500">
-          Resolución 3100/2019 — verificación de estándares por servicio
-        </p>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-        <p className="text-sm text-amber-800">
-          <strong>Módulo en migración.</strong> El motor de auditoría completo sigue disponible en{' '}
-          <a
-            href="https://normalis.co/normativa-app-v2.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            normalis.co/normativa-app-v2.html
-          </a>
-          . Esta vista será migrada en la próxima iteración.
+        <p className="text-sm text-gray-500 mt-1">
+          Resolución 3100/2019 + Res. 465/2025 — verificación de condiciones por tipo de servicio
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {SERVICIOS.map(s => (
-          <div
-            key={s}
-            className="bg-white rounded-xl border border-gray-200 p-5 flex items-center
-                       justify-between cursor-not-allowed opacity-60"
-          >
-            <div>
-              <p className="font-medium text-gray-700 text-sm">{s}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Próximamente</p>
-            </div>
-            <span className="text-gray-300 text-xl">›</span>
-          </div>
-        ))}
+        {segments.map(seg => {
+          const meta = SEGMENT_META[seg];
+          const areas = areasDB[seg];
+          const totalQ = areas.reduce((acc, a) => acc + a.q.length, 0);
+
+          return (
+            <Link
+              key={seg}
+              href={`/dashboard/auditoria/${seg}`}
+              className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-teal-500
+                         hover:shadow-md transition-all duration-200 flex flex-col gap-3"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{meta?.icon ?? '📋'}</span>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm leading-tight">
+                      {meta?.label ?? seg}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {areas.length} área{areas.length !== 1 ? 's' : ''} · {totalQ} criterios
+                    </p>
+                  </div>
+                </div>
+                <span className="text-gray-300 group-hover:text-teal-500 text-lg transition-colors">›</span>
+              </div>
+
+              <p className="text-xs text-gray-400 line-clamp-1">{meta?.norm}</p>
+
+              <div className="flex flex-wrap gap-1">
+                {areas.slice(0, 3).map(area => (
+                  <span
+                    key={area.id}
+                    className="text-[10px] bg-gray-50 border border-gray-100 text-gray-500
+                               rounded px-2 py-0.5 truncate max-w-[120px]"
+                  >
+                    {area.icon} {area.name}
+                  </span>
+                ))}
+                {areas.length > 3 && (
+                  <span className="text-[10px] text-gray-400 px-1 py-0.5">
+                    +{areas.length - 3} más
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
+
+      <p className="mt-6 text-xs text-gray-400 text-center">
+        Criterios basados en Res. 3100/2019 y actualizaciones Res. 465/2025
+      </p>
     </div>
   );
 }
