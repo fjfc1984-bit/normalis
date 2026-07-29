@@ -1,5 +1,21 @@
 /**
- * NormaLis — Groq Proxy + RAG (Cloudflare Worker) v4
+ * NormaLis — Groq Proxy + RAG + Firestore Context (Cloudflare Worker) v5
+ *
+ * NUEVO en v5 — Paso B: Contexto real de Firestore
+ *   El Worker lee los datos reales de la IPS (vencimientos, CAPAs, indicadores)
+ *   usando la REST API de Firestore autenticada con Service Account.
+ *   Esto permite al LLM dar respuestas personalizadas con datos reales.
+ *
+ * Secrets adicionales requeridos (wrangler secret put):
+ *   FIREBASE_CLIENT_EMAIL  → client_email del serviceAccountKey.json
+ *   FIREBASE_PRIVATE_KEY   → private_key del serviceAccountKey.json
+ *
+ * Var adicional en wrangler.toml:
+ *   [vars]
+ *   FIREBASE_PROJECT_ID = "normalis-5587d"
+ *
+ * Si los secrets NO están configurados, el Worker funciona igual que v4
+ * (degradación elegante — Firestore context simplemente se omite).
  *
  * Flujo RAG:
  *   pregunta → embedding (Workers AI bge-m3) → Vectorize → chunks relevantes
@@ -18,6 +34,8 @@
  *   3. python scripts/upload_embeddings.py (indexar en Vectorize)
  *   4. wrangler deploy
  */
+
+import { fetchIPSContext, formatIPSContextForLLM } from './firestore-admin.js';
 
 const GROQ_MODEL    = 'llama-3.1-8b-instant';
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
@@ -297,6 +315,26 @@ ${moduloHint ? `- Módulo activo: ${moduloActivo}` : ''}`;
     const moduloInstruccion = moduloHint
       ? `\n\nINSTRUCCIÓN DE CONTEXTO: ${moduloHint}`
       : '';
+
+    // ── Paso B: Contexto real de Firestore ──────────────────────────────────
+    // Lee datos reales de la IPS (vencimientos, CAPAs, indicadores, etc.)
+    // Solo si los secrets FIREBASE_* están configurados; si no, degradación elegante.
+    let firestoreCtxBlock = '';
+    if (env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY) {
+      try {
+        const clientUID  = context?.uid || '';
+        const ipsData    = await fetchIPSContext(clientUID, ipsNit, moduloActivo, env);
+        firestoreCtxBlock = formatIPSContextForLLM(ipsData);
+        if (firestoreCtxBlock) {
+          console.log(`[Firestore] Contexto inyectado | módulo: ${moduloActivo} | uid: ${clientUID.slice(0,8)}...`);
+        }
+      } catch (fsErr) {
+        console.warn('[Firestore] Context fetch failed:', String(fsErr).slice(0, 120));
+      }
+    }
+
+    // Enriquecer systemContent con datos reales de Firestore (si los hay)
+    systemContent = systemContent + firestoreCtxBlock;
 
     // ── RAG: recuperar fragmentos normativos relevantes ─────────────────
     let ragChunks   = [];

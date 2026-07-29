@@ -23,9 +23,26 @@ binding = "AI"
 binding    = "VECTORIZE"
 index_name = "normalis-rag"
 
-# ─── Secrets (configurar en Dashboard o wrangler secret put) ────────────────
-# GROQ_API_KEY  → https://console.groq.com/keys
-# (NO poner secrets aquí — usar: wrangler secret put GROQ_API_KEY)
+# ─── Variables de entorno (NO son secrets — se pueden publicar) ─────────────
+[vars]
+FIREBASE_PROJECT_ID = "normalis-5587d"
+
+# ─── Secrets (configurar con wrangler secret put — NUNCA poner aquí) ────────
+# GROQ_API_KEY          → https://console.groq.com/keys
+# FIREBASE_CLIENT_EMAIL → "client_email" del serviceAccountKey.json
+# FIREBASE_PRIVATE_KEY  → "private_key" del serviceAccountKey.json
+#
+# Cómo configurar los secrets de Firebase:
+#   1. Firebase Console → Configuración → Cuentas de servicio → Generar clave privada
+#   2. Abre el JSON descargado y copia "client_email" y "private_key"
+#   3. En la terminal (carpeta normalis):
+#      wrangler secret put FIREBASE_CLIENT_EMAIL
+#      (pega el valor de "client_email" cuando te lo pida y presiona Enter)
+#      wrangler secret put FIREBASE_PRIVATE_KEY
+#      (pega el valor de "private_key" — incluye las líneas -----BEGIN/END-----)
+#   4. wrangler deploy
+#
+# NOTA: Sin estos secrets el Worker funciona igual que antes (sin contexto Firestore).
 
 # ─── Cron Triggers — recordatorios de vencimientos ──────────────────────────
 [triggers]
