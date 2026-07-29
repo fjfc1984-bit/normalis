@@ -7,13 +7,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/auth';  // re-export conveniente
-import Button from '@/components/ui/Button';
-
-// Re-exportar auth y db desde lib/firebase directamente
 import { auth as fbAuth, db as fbDb } from '@/lib/firebase';
+import Button from '@/components/ui/Button';
 
 type Step = 'idle' | 'loading' | 'error';
 
@@ -52,17 +49,17 @@ export default function LoginPage() {
         case 'pendiente':
           setError('Tu cuenta está en revisión. El equipo NormaLis te notificará por correo.');
           setStep('error');
-          await fbAuth.signOut();
+          await signOut(fbAuth);
           break;
         case 'rechazado':
           setError('El acceso fue denegado. Contáctanos en fjfc1984@gmail.com.');
           setStep('error');
-          await fbAuth.signOut();
+          await signOut(fbAuth);
           break;
         default:
           setError('Rol no reconocido. Contacta soporte.');
           setStep('error');
-          await fbAuth.signOut();
+          await signOut(fbAuth);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

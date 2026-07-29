@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * app/admin/page.tsx
  * Panel de administración — migrado de admin.html

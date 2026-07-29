@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * components/auth/AuthGuard.tsx
  * Wrapper que redirige a /login si el usuario no está autenticado
