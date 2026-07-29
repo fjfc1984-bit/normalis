@@ -14,22 +14,22 @@ const AI_TIMEOUT_MS      = 25000; // 25s — Groq es rápido, si pasa es fallo
 const AI_RETRY_DELAY_MS  = 1500;  // retry tras 1.5s en error de red
 
 // ── Detectar módulo activo en la app ─────────────────────────────
+// La app usa .sb-item.active[data-mod] (sidebar de normativa-app-v2.html).
+// nav() también escribe window._moduloActual para lectura directa.
 function detectarModuloActivo() {
   try {
-    // Buscar tab/sección activa por data-modulo o data-section
-    const activo =
-      document.querySelector('.tab-btn.active[data-modulo]') ||
-      document.querySelector('.nav-item.active[data-modulo]') ||
-      document.querySelector('[data-modulo].active') ||
-      document.querySelector('.sidebar-item.active[data-modulo]');
-    if (activo && activo.dataset.modulo) return activo.dataset.modulo;
-
-    // Fallback: leer el título de la sección visible
-    const seccion = document.querySelector('.section.active h2, .modulo-activo h2');
-    if (seccion) return seccion.textContent.trim().toLowerCase().replace(/\s+/g, '_');
-
-    // Fallback: variable global si la app la expone
+    // 1. Variable global — escrita por nav() en normalis-main.js
     if (window._moduloActual) return window._moduloActual;
+
+    // 2. Sidebar: .sb-item.active con data-mod
+    const sbActivo = document.querySelector('.sb-item.active[data-mod]');
+    if (sbActivo && sbActivo.dataset.mod) return sbActivo.dataset.mod;
+
+    // 3. Fallback genérico (otros posibles selectores)
+    const genActivo =
+      document.querySelector('.tab-btn.active[data-modulo]') ||
+      document.querySelector('[data-modulo].active');
+    if (genActivo && genActivo.dataset.modulo) return genActivo.dataset.modulo;
 
     return 'general';
   } catch { return 'general'; }

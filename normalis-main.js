@@ -198,6 +198,7 @@ const viewTitles={
 };
 
 function nav(id){
+  window._moduloActual = id; // expone módulo activo para normalis-chat.js
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
