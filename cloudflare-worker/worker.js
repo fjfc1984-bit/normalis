@@ -1433,6 +1433,9 @@ export default {
     }
     messages.push({ role: 'user', content: question.trim() });
 
+    // TEST SENTRY — BORRAR ANTES DE PRODUCCIÓN
+    throw new Error('ERROR_DE_PRUEBA_SENTRY_CHAT_NORMALIS');
+
     try {
       const groqRes = await fetch(GROQ_ENDPOINT, {
         method: 'POST',
