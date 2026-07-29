@@ -3383,8 +3383,11 @@ function initFirebase(){
     _fbSyncing = true;
     console.log('[Firebase] Inicializado. Org:', _fbOrgId);
     _updateFbStatusUI('🟢 Conectado', 'success');
-    // Auto-load cloud data on init
-    loadFromFirestore();
+    // Auto-load cloud data — esperar a que Firebase Auth resuelva antes de leer Firestore
+    // (evita race condition: Firestore rechaza si el token no está listo aún)
+    firebase.auth(_fb).onAuthStateChanged(function(fbUser){
+      if(fbUser){ loadFromFirestore(); }
+    });
   } catch(e){
     console.warn('[Firebase] Init error:', e);
     _updateFbStatusUI('🔴 Error al conectar: '+e.message, 'error');
