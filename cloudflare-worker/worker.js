@@ -20,6 +20,50 @@ const ALLOWED_ORIGINS = [
   'https://fjfc1984-bit.github.io',
 ];
 
+// ── Sentry error reporting (lightweight, no npm needed) ─────────────────────
+// Usa la Sentry Store API directamente via fetch. Sin dependencias.
+// Configurar: npx wrangler secret put SENTRY_DSN
+// Formato DSN: https://<key>@<host>/api/<project>/
+async function sentryCapture(error, ctx, env) {
+  const dsn = env && env.SENTRY_DSN;
+  if (!dsn) return; // Silencioso si no configurado
+  try {
+    const u = new URL(dsn);
+    const key = u.username;
+    const project = u.pathname.replace(/^\/|\/$/, '').split('/').pop();
+    const storeUrl = `${u.protocol}//${u.host}/api/${project}/store/`;
+    const payload = {
+      event_id: crypto.randomUUID().replace(/-/g, ''),
+      timestamp: new Date().toISOString(),
+      platform: 'javascript',
+      logger: 'cloudflare-worker',
+      level: 'error',
+      exception: {
+        values: [{
+          type: error && error.name ? error.name : 'Error',
+          value: error && error.message ? error.message : String(error),
+        }],
+      },
+      tags: { endpoint: (ctx && ctx.endpoint) || 'unknown' },
+      extra: (ctx && ctx.extra) || {},
+      environment: 'production',
+      release: 'normalis-worker@1.0',
+    };
+    await fetch(storeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Sentry-Auth': `Sentry sentry_version=7, sentry_key=${key}, sentry_client=normalis-worker/1.0`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Nunca dejar que el reporting rompa el worker
+  }
+}
+
+
+
 // ═══════════════════════════════════════════════════════════════
 // DATOS PROTEGIDOS — NormaLis Secreto Empresarial
 // Base de datos de preguntas de auditoría (Res. 3100/2019 · 465/2025)
@@ -1310,6 +1354,7 @@ async function handleEmail(request, env, cors) {
     });
 
   } catch (err) {
+    await sentryCapture(err, { endpoint: 'POST /email', extra: { type: body && body.type } }, env);
     return new Response(JSON.stringify({ error: 'Error interno email', detail: String(err) }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     });
@@ -1426,6 +1471,7 @@ export default {
       });
 
     } catch (err) {
+      await sentryCapture(err, { endpoint: 'POST / (chat/groq)' }, env);
       return new Response(JSON.stringify({ error: 'Error interno del proxy', detail: String(err) }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' },
@@ -1569,6 +1615,7 @@ export async function scheduled(event, env, ctx) {
     }
   } catch (e) {
     console.error('[NormaLis Cron] Pilots check error:', e.message);
+    await sentryCapture(e, { endpoint: 'cron/pilots' }, env);
     errors++;
   }
 
@@ -1649,6 +1696,7 @@ export async function scheduled(event, env, ctx) {
     }
   } catch (e) {
     console.error('[NormaLis Cron] Vencimientos check error:', e.message);
+    await sentryCapture(e, { endpoint: 'cron/vencimientos' }, env);
     errors++;
   }
 

@@ -21,6 +21,11 @@ compatibility_date = "2024-09-23"
 #
 #   npx wrangler secret put CRON_PASSWORD
 #   → La contraseña del usuario cron@normalis.co creado en Firebase
+#
+#   npx wrangler secret put SENTRY_DSN
+#   Obtener en: Sentry Dashboard -> Projects -> normalis -> Client Keys (DSN)
+#   Formato: https://<key>@o<org>.ingest.sentry.io/<project_id>
+#   Si no se configura, los errores quedan solo en Cloudflare Logs (no bloquea)
 # ─────────────────────────────────────────────────────────────
 
 [triggers]
