@@ -13,6 +13,28 @@ const GEMINI_PROXY_URL   = NORMALIS_AI_URL; // alias legacy — no borrar
 const AI_TIMEOUT_MS      = 25000; // 25s — Groq es rápido, si pasa es fallo
 const AI_RETRY_DELAY_MS  = 1500;  // retry tras 1.5s en error de red
 
+// ── Detectar módulo activo en la app ─────────────────────────────
+function detectarModuloActivo() {
+  try {
+    // Buscar tab/sección activa por data-modulo o data-section
+    const activo =
+      document.querySelector('.tab-btn.active[data-modulo]') ||
+      document.querySelector('.nav-item.active[data-modulo]') ||
+      document.querySelector('[data-modulo].active') ||
+      document.querySelector('.sidebar-item.active[data-modulo]');
+    if (activo && activo.dataset.modulo) return activo.dataset.modulo;
+
+    // Fallback: leer el título de la sección visible
+    const seccion = document.querySelector('.section.active h2, .modulo-activo h2');
+    if (seccion) return seccion.textContent.trim().toLowerCase().replace(/\s+/g, '_');
+
+    // Fallback: variable global si la app la expone
+    if (window._moduloActual) return window._moduloActual;
+
+    return 'general';
+  } catch { return 'general'; }
+}
+
 // ── Contexto de la IPS (adjuntado a cada pregunta) ───────────────
 function buildIPSContext() {
   try {
@@ -23,6 +45,21 @@ function buildIPSContext() {
     if (!nombre && !tipo && !ciudad) return '';
     return `\n[IPS: "${nombre}" | tipo: ${tipo || 'no especificado'} | ciudad: ${ciudad || 'no especificada'}]`;
   } catch { return ''; }
+}
+
+// ── Objeto de contexto completo para el Worker ────────────────────
+function buildContextPayload() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('normalis_cfg') || '{}');
+    return {
+      modulo:     detectarModuloActivo(),
+      uid:        sessionStorage.getItem('normalis_uid')    || '',
+      nit:        cfg.nit                                   || '',
+      ips_nombre: localStorage.getItem('normalis_ips_nombre') || '',
+      ips_ciudad: localStorage.getItem('normalis_ips_ciudad') || '',
+      ips_tipo:   cfg.tipo                                  || '',
+    };
+  } catch { return { modulo: 'general' }; }
 }
 
 // ── Llamada al Worker con timeout + 1 retry ───────────────────────
@@ -42,7 +79,8 @@ async function callNormalisAI(userMessage, historial, attempt) {
         sessionHistory: (historial || []).slice(-10).map(m => ({
           role: m.role,
           text: m.text
-        }))
+        })),
+        context: buildContextPayload()   // módulo activo + datos IPS
       })
     });
 

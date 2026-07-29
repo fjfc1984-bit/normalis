@@ -234,7 +234,7 @@ export default {
       });
     }
 
-    const { question, sessionHistory } = body || {};
+    const { question, sessionHistory, context } = body || {};
     if (!question || typeof question !== 'string' || !question.trim()) {
       return new Response(JSON.stringify({ error: 'Campo "question" requerido' }), {
         status: 400,
@@ -256,9 +256,51 @@ export default {
       });
     }
 
+    // ── Contexto del módulo activo — personaliza el system prompt ──────
+    const moduloActivo = context?.modulo    || 'general';
+    const ipsNombre    = context?.ips_nombre || '';
+    const ipsTipo      = context?.ips_tipo   || '';
+    const ipsNit       = context?.nit        || '';
+
+    // Instrucciones específicas por módulo — el LLM sabe exactamente dónde está el usuario
+    const MODULO_HINTS = {
+      auditoria:     'El usuario está gestionando una AUDITORÍA DE HABILITACIÓN. Orienta tus respuestas a los 7 estándares (talento humano, infraestructura, dotación, medicamentos, procesos, historia clínica, interdependencia) y a los criterios de cumplimiento de la Res. 3100/2019.',
+      vencimientos:  'El usuario está en el módulo de VENCIMIENTOS. Prioriza respuestas sobre plazos normativos, fechas límite de renovación (Art. 10 Res. 3100), autoevaluación (Art. 5) y consecuencias por incumplimiento (Art. 11).',
+      capa:          'El usuario está trabajando en CORRECCIONES Y ACCIONES PREVENTIVAS (CAPA). Enfócate en PAMEC, planes de mejoramiento, análisis de causa raíz y seguimiento de indicadores de calidad.',
+      pamec:         'El usuario está en el módulo PAMEC. Responde sobre el Programa de Auditoría para el Mejoramiento de la Calidad, sus componentes y obligatoriedad.',
+      sst:           'El usuario está en SG-SST. Orienta hacia la Resolución 0312/2019, los estándares mínimos y las 3 fases de implementación.',
+      indicadores:   'El usuario está revisando INDICADORES DE CALIDAD. Prioriza la Resolución 256/2016, las fichas técnicas de indicadores y su periodicidad de reporte.',
+      pqrs:          'El usuario está en el módulo de PQRS. Responde sobre gestión de peticiones, quejas, reclamos y sugerencias en el contexto de la habilitación.',
+      incidentes:    'El usuario está registrando INCIDENTES O EVENTOS ADVERSOS. Enfócate en seguridad del paciente, protocolo de Londres y reporte al SIVIGILA.',
+      simulacro:     'El usuario está en el módulo de SIMULACROS. Responde sobre planes de emergencia, evacuación y los requisitos de infraestructura de la Res. 3100.',
+      bitacora:      'El usuario está en la BITÁCORA DE AUDITORÍA. Enfócate en trazabilidad, registros obligatorios e historia clínica.',
+      documentos:    'El usuario está gestionando DOCUMENTOS INSTITUCIONALES. Prioriza requisitos documentales de los 7 estándares y el Manual de Habilitación.',
+      multiusuario:  'El usuario está en la gestión del EQUIPO o configuración multi-usuario.',
+      dashboard:     'El usuario está en el DASHBOARD general. Puede tener preguntas de cualquier módulo; responde de forma integral.',
+      general:       '',
+    };
+
+    const moduloHint = MODULO_HINTS[moduloActivo] || '';
+
+    // Construir encabezado de contexto de IPS
+    let ipsCtxBlock = '';
+    if (ipsNombre || ipsTipo || ipsNit) {
+      ipsCtxBlock = `\n\nCONTEXTO DE LA IPS CONSULTANTE:
+- Nombre: ${ipsNombre || 'no especificado'}
+- Tipo: ${ipsTipo || 'no especificado'}
+- NIT: ${ipsNit || 'no especificado'}
+${moduloHint ? `- Módulo activo: ${moduloActivo}` : ''}`;
+    } else if (moduloHint) {
+      ipsCtxBlock = `\n\nCONTEXTO ACTUAL: Módulo "${moduloActivo}".`;
+    }
+
+    const moduloInstruccion = moduloHint
+      ? `\n\nINSTRUCCIÓN DE CONTEXTO: ${moduloHint}`
+      : '';
+
     // ── RAG: recuperar fragmentos normativos relevantes ─────────────────
     let ragChunks   = [];
-    let systemContent = SYSTEM_PROMPT;
+    let systemContent = SYSTEM_PROMPT + ipsCtxBlock + moduloInstruccion;
 
     if (env.VECTORIZE && env.AI) {
       try {
@@ -266,10 +308,10 @@ export default {
         ragChunks       = await searchRelevantChunks(embedding, env);
         const ragCtx    = buildRagContext(ragChunks);
         if (ragCtx) {
-          systemContent = SYSTEM_PROMPT + ragCtx;
-          console.log(`[RAG] ${ragChunks.length} fragmentos recuperados (scores: ${ragChunks.map(c => c.score).join(', ')})`);
+          systemContent = systemContent + ragCtx;  // base + contexto IPS + RAG
+          console.log(`[RAG] ${ragChunks.length} fragmentos recuperados (scores: ${ragChunks.map(c => c.score).join(', ')}) | módulo: ${moduloActivo}`);
         } else {
-          console.log('[RAG] Sin fragmentos relevantes — usando solo system prompt base');
+          console.log(`[RAG] Sin fragmentos relevantes — módulo: ${moduloActivo}`);
         }
       } catch (ragErr) {
         // Degradación elegante: si RAG falla, continuar sin contexto adicional
