@@ -135,7 +135,7 @@ export default function LoginForm() {
 
         <p className="text-center text-xs text-gray-400 mt-6">
           ¿No tienes cuenta?{' '}
-          <a href="https://normalis.co/registro.html"
+          <a href="/registro"
              className="text-primary-600 hover:underline">
             Regístrate aquí
           </a>
