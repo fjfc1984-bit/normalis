@@ -5,13 +5,12 @@
  * Panel de administración — migrado de admin.html
  * 5 tabs: Solicitudes, Pilotos, CRM, Leads, Analytics
  */
-'use client';
 
 import { useEffect, useState } from 'react';
 import {
-  collection, query, orderBy, onSnapshot,
+  collection, query, onSnapshot,
   doc, updateDoc, addDoc, serverTimestamp,
-  Timestamp, where,
+  Timestamp, where, orderBy,
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db } from '@/lib/firebase';
@@ -102,11 +101,12 @@ function SolicitudesTab({ show }: { show: (m: string, t: 'success'|'error') => v
     const q = query(
       collection(db, 'usuarios'),
       where('rol', '==', 'pendiente'),
-      orderBy('fechaSolicitud', 'desc'),
     );
-    return onSnapshot(q, snap =>
-      setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Solicitud[]),
-    );
+    return onSnapshot(q, snap => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Solicitud[];
+      docs.sort((a, b) => (b.fechaSolicitud?.seconds ?? 0) - (a.fechaSolicitud?.seconds ?? 0));
+      setItems(docs);
+    });
   }, []);
 
   async function aprobar(id: string, rol: 'cliente' | 'piloto') {
@@ -274,7 +274,7 @@ function CRMTab({ show }: { show: (m: string, t: 'success'|'error') => void }) {
   const [form, setForm]         = useState({ nombre:'', contacto:'', email:'', telefono:'', ciudad:'', notas:'' });
 
   useEffect(() => {
-    const q = query(collection(db, 'prospectos'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'prospectos'));
     return onSnapshot(q, snap =>
       setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Prospecto[]),
     );
@@ -356,7 +356,7 @@ function LeadsTab() {
   const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
-    const q = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'leads'));
     return onSnapshot(q, snap =>
       setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Lead[]),
     );
