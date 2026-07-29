@@ -33,6 +33,8 @@
     gtag('config', GA_ID, {
       send_page_view: true,
       cookie_flags: 'SameSite=None;Secure',
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
     });
   }
 
