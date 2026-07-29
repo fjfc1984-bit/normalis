@@ -201,6 +201,15 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // normalis_orgs/{orgId} — sincronización secundaria (normalis-main.js)
+    // orgId = 'nit_' + nit.replace(/[^a-zA-Z0-9]/g,'_')
+    // ════════════════════════════════════════════════════════════════════════
+    match /normalis_orgs/{orgId} {
+      // Solo usuarios activos con rol válido pueden leer/escribir su org
+      allow read, write: if isAuthenticated() && (isActiveClient() || isAdmin());
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
