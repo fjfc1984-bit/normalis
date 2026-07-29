@@ -24,17 +24,19 @@
  *   [vars]
  *   FIREBASE_PROJECT_ID = "normalis-5587d"
  *
- * COLECCIONES FIRESTORE LEÍDAS:
- *   usuarios/{uid}           → perfil del usuario (para resolver el NIT)
- *   ips/{nit}                → perfil de la IPS
- *   vencimientos             → filtrado por uid (flat collection)
- *   capas                    → filtrado por uid (flat collection)
- *   indicadores              → filtrado por uid (flat collection)
+ * COLECCIONES FIRESTORE:
+ *   LECTURA:
+ *     usuarios/{uid}           → perfil del usuario (para resolver el NIT)
+ *     ips/{nit}                → perfil de la IPS
+ *     vencimientos             → filtrado por uid (flat collection)
+ *     capas                    → filtrado por uid (flat collection)
+ *     indicadores              → filtrado por uid (flat collection)
+ *   ESCRITURA (v7 — Paso E: Agente Escritor):
+ *     capas                    → crearCAPA() crea documentos nuevos
+ *     indicadores              → registrarIndicador() upsert por indicId+periodo
  *
  * USO DESDE cloudflare-worker.js:
- *   import { fetchIPSContext, formatIPSContextForLLM } from './firestore-admin.js';
- *   const data = await fetchIPSContext(uid, nit, modulo, env);
- *   const ctx  = formatIPSContextForLLM(data);
+ *   import { fetchIPSContext, formatIPSContextForLLM, firestoreCreate } from './firestore-admin.js';
  */
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -289,6 +291,115 @@ function parseFirestoreValue(val) {
   if (val.mapValue)   return parseFirestoreDoc(val.mapValue);
   if (val.arrayValue) return (val.arrayValue.values || []).map(parseFirestoreValue);
   return null;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN 3b: Conversor JS → Firestore (para escritura)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Convierte un valor JavaScript nativo al formato tipado de la REST API de Firestore.
+ * Ej: "hola" → { stringValue: "hola" }
+ *     42     → { integerValue: "42" }
+ *     true   → { booleanValue: true }
+ */
+function jsToFirestoreValue(val) {
+  if (val === null || val === undefined) return { nullValue: null };
+  if (typeof val === 'boolean')          return { booleanValue: val };
+  if (typeof val === 'number') {
+    return Number.isInteger(val)
+      ? { integerValue: String(val) }
+      : { doubleValue: val };
+  }
+  if (typeof val === 'string')  return { stringValue: val };
+  if (Array.isArray(val))       return { arrayValue: { values: val.map(jsToFirestoreValue) } };
+  if (typeof val === 'object')  return {
+    mapValue: {
+      fields: Object.fromEntries(
+        Object.entries(val).map(([k, v]) => [k, jsToFirestoreValue(v)])
+      ),
+    },
+  };
+  return { stringValue: String(val) };
+}
+
+/**
+ * Convierte un objeto JS plano al formato { fields: { ... } } que espera
+ * la REST API de Firestore en un POST/PATCH.
+ */
+function jsToFirestoreFields(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, jsToFirestoreValue(v)])
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SECCIÓN 3c: firestoreCreate — crear un documento nuevo (auto-ID)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Crea un documento nuevo en una colección de Firestore con ID auto-generado.
+ *
+ * Equivale a: db.collection(collectionId).add(data)  (Firebase JS SDK)
+ *
+ * @param {string}  collectionId — nombre de la colección (ej: 'capas')
+ * @param {object}  data         — objeto JS plano con los campos del documento
+ * @param {object}  env          — Worker env bindings
+ * @returns {Promise<{id: string, ...data}>} — documento creado con su ID
+ */
+export async function firestoreCreate(collectionId, data, env) {
+  const token = await getAccessToken(env);
+  const url = `${FIRESTORE_BASE}/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/${collectionId}`;
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization:  `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields: jsToFirestoreFields(data) }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`Firestore create "${collectionId}" falló (${resp.status}): ${err.slice(0, 300)}`);
+  }
+
+  const created = await resp.json();
+  // La REST API retorna la ruta completa del documento en created.name
+  // Ej: "projects/normalis-5587d/databases/(default)/documents/capas/ABC123"
+  const docId = created.name?.split('/').pop() || null;
+  return { id: docId };
+}
+
+/**
+ * Actualiza campos específicos de un documento existente (merge parcial).
+ * Equivale a: db.doc(docPath).update(updates)  (Firebase JS SDK)
+ *
+ * @param {string}  docPath — ruta del documento (ej: 'indicadores/abc123')
+ * @param {object}  updates — campos a actualizar
+ * @param {object}  env
+ * @returns {Promise<void>}
+ */
+export async function firestoreUpdate(docPath, updates, env) {
+  const token = await getAccessToken(env);
+  // PATCH con updateMask para solo actualizar los campos indicados
+  const fieldPaths = Object.keys(updates).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
+  const url = `${FIRESTORE_BASE}/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/${docPath}?${fieldPaths}`;
+
+  const resp = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization:  `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields: jsToFirestoreFields(updates) }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`Firestore update "${docPath}" falló (${resp.status}): ${err.slice(0, 300)}`);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

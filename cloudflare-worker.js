@@ -1,27 +1,34 @@
 /**
- * NormaLis — Groq Proxy + RAG + Firestore Context + Function Calling (v6)
+ * NormaLis — Groq Proxy + RAG + Firestore Context + Function Calling (v7)
  *
- * NUEVO en v6 — Paso C: Function Calling (Tools) con LLaMA 3.1
- *   El LLM decide de forma autónoma cuándo consultar datos reales de Firestore.
- *   Si la pregunta lo requiere, Groq devuelve una "tool_call" → el Worker
- *   ejecuta la función → envía el resultado de vuelta → el LLM genera la
- *   respuesta final con datos reales integrados.
+ * NUEVO en v7 — Paso E: Agente Escritor (Write Tools)
+ *   El LLM ahora puede ESCRIBIR datos en Firestore además de leerlos.
+ *   Nuevas herramientas:
+ *     crearCAPA          — crea una CAPA nueva (con confirmación del usuario)
+ *     registrarIndicador — registra un valor de indicador (con confirmación)
  *
- *   Herramientas disponibles:
- *     consultarVencimientos  — vencimientos próximos de la IPS
- *     consultarCAPAs         — CAPAs abiertas de la IPS
- *     consultarIndicadores   — indicadores de calidad registrados
+ *   Flujo de seguridad:
+ *     1. Usuario pide crear/registrar algo.
+ *     2. LLM extrae los datos, los presenta y PIDE CONFIRMACIÓN.
+ *     3. Usuario confirma ("sí", "confirma", "adelante", etc.).
+ *     4. LLM llama la herramienta de escritura.
+ *     5. Worker ejecuta el POST en Firestore y confirma al usuario.
  *
- * FIX v5 → v6: bug de Temporal Dead Zone (TDZ) en systemContent
- *   v5 usaba systemContent antes de declararlo con `let` → ReferenceError
- *   cuando los secrets de Firebase estaban configurados.
+ * v6: Function Calling (READ: consultarVencimientos, consultarCAPAs, consultarIndicadores)
+ * v5 → v6: fix TDZ bug en systemContent
  *
  * Degradación elegante:
  *   Sin FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY → sin tools → igual que v4.
  *   Sin VECTORIZE / AI bindings → sin RAG → igual que v3.
  */
 
-import { fetchIPSContext, formatIPSContextForLLM, firestoreQuery } from './firestore-admin.js';
+import {
+  fetchIPSContext,
+  formatIPSContextForLLM,
+  firestoreQuery,
+  firestoreCreate,
+  firestoreUpdate,
+} from './firestore-admin.js';
 
 const GROQ_MODEL    = 'llama-3.1-8b-instant';
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
@@ -89,7 +96,24 @@ REGLAS DE RESPUESTA:
 4. NUNCA inventes artículos, fechas, plazos o requisitos.
 5. Responde en español colombiano, tono profesional, máximo 5 párrafos.
 6. Advierte que la interpretación final la tiene la Secretaría de Salud departamental competente.
-7. Cuando uses datos reales de la IPS (vencimientos, CAPAs, indicadores), menciona que los obtuviste de su registro en NormaLis.`;
+7. Cuando uses datos reales de la IPS (vencimientos, CAPAs, indicadores), menciona que los obtuviste de su registro en NormaLis.
+
+REGLAS DE ESCRITURA (herramientas crearCAPA y registrarIndicador):
+8a. Cuando el usuario pida crear una CAPA o registrar un indicador:
+    - Extrae o solicita los datos necesarios de la conversación.
+    - PRESENTA un resumen claro de lo que vas a guardar (todos los campos).
+    - Termina con: "¿Confirmo que debo guardar esto en NormaLis? (sí / no)"
+8b. SOLO llama la herramienta de escritura DESPUÉS de recibir confirmación explícita del usuario.
+    Palabras que confirman: "sí", "confirma", "adelante", "procede", "hazlo", "guarda", "crea".
+    Si el usuario dice "no" o pide cambios, ajusta los datos y vuelve al paso 8a.
+8c. Tras guardar exitosamente, confirma: "✅ [Elemento] creado/registrado en NormaLis."
+8d. NUNCA llames una herramienta de escritura por iniciativa propia sin confirmación explícita.
+
+INDICADORES DEL CATÁLOGO (IDs válidos para registrarIndicador):
+prop_queja, tasa_infeccion, tasa_caida, prop_ulceras, tasa_reingreso,
+prop_cx_cancelada, oportunidad_cx, oportunidad_consulta, prop_transfusion,
+prop_complicacion_cx, mortalidad_intrahospitalaria, prop_consentimiento,
+satisfaccion_usuario, prop_registro_completo`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FUNCIÓN CALLING — Herramientas disponibles para el LLM
@@ -131,6 +155,94 @@ const TOOLS = [
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
+  // ── Herramientas de ESCRITURA (v7 — Paso E) ──────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'crearCAPA',
+      description: 'Crea una nueva CAPA (Corrección y Acción Preventiva / Plan de Mejoramiento PAMEC) '
+        + 'en NormaLis directamente en Firestore. '
+        + 'IMPORTANTE: Solo llama esta herramienta DESPUÉS de presentar al usuario un resumen de '
+        + 'los datos y recibir confirmación explícita ("sí", "confirma", "adelante", "procede", "hazlo"). '
+        + 'NUNCA la llames sin confirmación. Úsala cuando el usuario quiera crear, abrir o registrar '
+        + 'una CAPA, acción correctiva o plan de mejora.',
+      parameters: {
+        type: 'object',
+        properties: {
+          descripcion: {
+            type: 'string',
+            description: 'Descripción de la no conformidad o hallazgo (obligatorio, máx 1000 chars)',
+          },
+          causaRaiz: {
+            type: 'string',
+            description: 'Causa raíz identificada (opcional)',
+          },
+          accionCorrectiva: {
+            type: 'string',
+            description: 'Acción correctiva o preventiva a implementar (opcional)',
+          },
+          responsable: {
+            type: 'string',
+            description: 'Nombre del responsable de la acción (opcional)',
+          },
+          area: {
+            type: 'string',
+            description: 'Área o proceso afectado, ej: Urgencias, Facturación (opcional)',
+          },
+          fechaLimite: {
+            type: 'string',
+            description: 'Fecha límite para implementar la acción, formato YYYY-MM-DD (opcional, default 30 días)',
+          },
+          origen: {
+            type: 'string',
+            enum: ['auditoria', 'manual', 'queja', 'indicador', 'supervision'],
+            description: 'Fuente que originó la CAPA',
+          },
+        },
+        required: ['descripcion'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'registrarIndicador',
+      description: 'Registra o actualiza el valor de un indicador de calidad de la IPS en NormaLis '
+        + '(Resolución 256/2016). '
+        + 'IMPORTANTE: Solo llama esta herramienta DESPUÉS de presentar al usuario un resumen '
+        + 'y recibir confirmación explícita. NUNCA la llames sin confirmación. '
+        + 'Úsala cuando el usuario quiera registrar, ingresar o actualizar un valor de un indicador '
+        + 'para un período específico.',
+      parameters: {
+        type: 'object',
+        properties: {
+          indicId: {
+            type: 'string',
+            description: 'ID del indicador del catálogo. Valores válidos: prop_queja, tasa_infeccion, '
+              + 'tasa_caida, prop_ulceras, tasa_reingreso, prop_cx_cancelada, oportunidad_cx, '
+              + 'oportunidad_consulta, prop_transfusion, prop_complicacion_cx, '
+              + 'mortalidad_intrahospitalaria, prop_consentimiento, satisfaccion_usuario, '
+              + 'prop_registro_completo',
+          },
+          periodo: {
+            type: 'string',
+            description: 'Período de medición. Formato: YYYY-MM para mensual (ej: 2025-04), '
+              + 'YYYY-QN para trimestral (ej: 2025-Q2), YYYY para anual (ej: 2025)',
+          },
+          valor: {
+            type: 'string',
+            description: 'Valor numérico medido como string (ej: "4.2", "95", "0.8")',
+          },
+          observacion: {
+            type: 'string',
+            description: 'Observación, fuente del dato o contexto (opcional)',
+          },
+        },
+        required: ['indicId', 'periodo', 'valor'],
+      },
+    },
+  },
+  // ── Herramientas de UI (sugerencia de acciones) ───────────────────────────
   {
     type: 'function',
     function: {
@@ -161,11 +273,13 @@ const TOOLS = [
  * de vuelta al LLM en el mensaje role: 'tool'.
  *
  * @param {string} toolName   — nombre de la herramienta
+ * @param {object} toolArgs   — argumentos parseados del tool call
  * @param {string} uid        — Firebase UID del usuario
+ * @param {string} nit        — NIT de la IPS (puede ser vacío)
  * @param {object} env        — Worker env bindings
  * @returns {Promise<string>} — resultado legible por el LLM
  */
-async function ejecutarTool(toolName, uid, env) {
+async function ejecutarTool(toolName, toolArgs, uid, nit, env) {
   if (!uid) return 'No se pudo identificar al usuario. Pide al usuario que recargue la página.';
 
   try {
@@ -226,12 +340,135 @@ async function ejecutarTool(toolName, uid, env) {
         return `Indicadores de calidad (${docs.length}):\n${items}`;
       }
 
+      // ── HERRAMIENTAS DE ESCRITURA (v7 — Paso E) ────────────────────────
+
+      case 'crearCAPA': {
+        const {
+          descripcion, causaRaiz = '', accionCorrectiva = '',
+          responsable = '', area = '', fechaLimite = '', origen = 'manual',
+        } = toolArgs;
+
+        if (!descripcion?.trim()) {
+          return 'Error: el campo "descripcion" es obligatorio para crear una CAPA.';
+        }
+
+        // Calcular fecha límite default (hoy + 30 días) si no se proporcionó
+        let fechaLimiteReal = fechaLimite;
+        if (!fechaLimiteReal) {
+          const d = new Date();
+          d.setDate(d.getDate() + 30);
+          fechaLimiteReal = d.toISOString().split('T')[0];
+        }
+
+        // Calcular número secuencial consultando cuántas CAPAs existen
+        let numero = 'CAPA-001';
+        try {
+          const existentes = await firestoreQuery(
+            'capas',
+            nit ? 'nit' : 'uid',
+            nit || uid,
+            env,
+            500,
+          );
+          numero = `CAPA-${String((existentes?.length ?? 0) + 1).padStart(3, '0')}`;
+        } catch {
+          numero = `CAPA-${String(Date.now()).slice(-4)}`;
+        }
+
+        const ahora = new Date().toISOString();
+        const capaDoc = {
+          uid,
+          nit:              nit || '',
+          numero,
+          descripcion:      descripcion.trim(),
+          causaRaiz:        causaRaiz.trim(),
+          accionCorrectiva: accionCorrectiva.trim(),
+          responsable:      responsable.trim(),
+          area:             area.trim(),
+          fechaLimite:      fechaLimiteReal,
+          origen,
+          evidencia:        '',
+          estado:           'abierta',
+          fechaCreacion:    ahora,
+          fechaActualizacion: ahora,
+          fechaInicio:      null,
+          fechaCierre:      null,
+        };
+
+        const result = await firestoreCreate('capas', capaDoc, env);
+        console.log(`[Tool:crearCAPA] Creada ${numero} (id: ${result.id}) uid:${uid}`);
+        return `CAPA creada exitosamente:
+- Numero: ${numero}
+- ID Firestore: ${result.id}
+- Estado: abierta
+- Fecha limite: ${fechaLimiteReal}
+- Origen: ${origen}
+Confirma al usuario: "CAPA ${numero} creada en NormaLis. Puede verla en el módulo de Acciones Correctivas."`;
+      }
+
+      case 'registrarIndicador': {
+        const { indicId, periodo, valor, observacion = '' } = toolArgs;
+
+        if (!indicId?.trim()) return 'Error: "indicId" es obligatorio.';
+        if (!periodo?.trim()) return 'Error: "periodo" es obligatorio (formato YYYY-MM, YYYY-QN o YYYY).';
+        if (!valor?.trim())   return 'Error: "valor" es obligatorio.';
+
+        const numVal = parseFloat(valor);
+        if (isNaN(numVal)) return `Error: el valor "${valor}" no es un número válido.`;
+
+        const ahora = new Date().toISOString();
+
+        // Verificar si ya existe un registro para este indicId + periodo
+        // (para hacer upsert en lugar de duplicar)
+        const queryField = nit ? 'nit' : 'uid';
+        const queryValue = nit || uid;
+        const existentes = await firestoreQuery('indicadores', queryField, queryValue, env, 500);
+        const existente  = existentes?.find(
+          d => d.indicId === indicId.trim() && d.periodo === periodo.trim()
+        );
+
+        if (existente?.docId) {
+          // Actualizar registro existente
+          await firestoreUpdate(`indicadores/${existente.docId}`, {
+            valor:              valor.trim(),
+            observacion:        observacion.trim(),
+            fechaActualizacion: ahora,
+          }, env);
+          console.log(`[Tool:registrarIndicador] Actualizado ${indicId}/${periodo} uid:${uid}`);
+          return `Indicador actualizado:
+- Indicador: ${indicId}
+- Periodo: ${periodo}
+- Valor anterior: ${existente.valor ?? '?'} → Nuevo valor: ${valor}
+Confirma al usuario: "Indicador '${indicId}' para ${periodo} actualizado en NormaLis."`;
+        } else {
+          // Crear nuevo registro
+          const indDoc = {
+            uid,
+            nit:              nit || '',
+            indicId:          indicId.trim(),
+            periodo:          periodo.trim(),
+            valor:            valor.trim(),
+            observacion:      observacion.trim(),
+            fechaCreacion:    ahora,
+            fechaActualizacion: null,
+          };
+          const result = await firestoreCreate('indicadores', indDoc, env);
+          console.log(`[Tool:registrarIndicador] Creado ${indicId}/${periodo} id:${result.id} uid:${uid}`);
+          return `Indicador registrado:
+- Indicador: ${indicId}
+- Periodo: ${periodo}
+- Valor: ${valor}
+- ID Firestore: ${result.id}
+Confirma al usuario: "Valor del indicador '${indicId}' para ${periodo} registrado en NormaLis."`;
+        }
+      }
+
       default:
         return `Herramienta "${toolName}" no reconocida.`;
     }
   } catch (err) {
-    console.warn(`[Tool] Error en ${toolName}:`, String(err).slice(0, 150));
-    return `No fue posible consultar ${toolName} en este momento. Intenta de nuevo o revisa el módulo correspondiente en NormaLis.`;
+    console.warn(`[Tool] Error en ${toolName}:`, String(err).slice(0, 200));
+    return `No fue posible ejecutar "${toolName}" en este momento. Error: ${String(err).slice(0, 100)}. Intenta de nuevo.`;
   }
 }
 
@@ -510,8 +747,8 @@ ${moduloHint ? `- Módulo activo: ${moduloActivo}` : ''}`;
             }
             messages.push({ role: 'tool', tool_call_id: tc.id, content: 'Accion registrada. Se mostrara al usuario como boton.' });
           } else {
-            // Herramienta de datos — ejecutar y agregar resultado
-            const toolResult = await ejecutarTool(toolName, clientUID, env);
+            // Herramienta de datos o de escritura — ejecutar con uid + nit + args
+            const toolResult = await ejecutarTool(toolName, toolArgs, clientUID, ipsNit, env);
             toolsUsed.push(toolName);
             console.log(`[Tools] ${toolName} -> ${toolResult.slice(0, 80)}...`);
             messages.push({ role: 'tool', tool_call_id: tc.id, content: toolResult });
