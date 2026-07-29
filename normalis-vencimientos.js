@@ -1,5 +1,5 @@
 // XSS-safe HTML escaper (local fallback)
-const escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+if (typeof escH === 'undefined') var escH = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
 // normalis-vencimientos.js
 // NormaLis — Módulo de control de vencimientos del personal (RETHUS, tarjetas, certificados)
