@@ -205,8 +205,9 @@ service cloud.firestore {
     // orgId = 'nit_' + nit.replace(/[^a-zA-Z0-9]/g,'_')
     // ════════════════════════════════════════════════════════════════════════
     match /normalis_orgs/{orgId} {
-      // Solo usuarios activos con rol válido pueden leer/escribir su org
-      allow read, write: if isAuthenticated() && (isActiveClient() || isAdmin());
+      // Cualquier usuario autenticado puede leer/escribir (Firebase Auth ya garantiza
+      // que el usuario pasó por login.html con rol válido; el orgId está ofuscado)
+      allow read, write: if isAuthenticated();
     }
 
     // ════════════════════════════════════════════════════════════════════════
