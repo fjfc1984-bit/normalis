@@ -1,0 +1,32 @@
+# NormaLis — Cloudflare Worker Configuration
+# Deploy: wrangler deploy
+# Logs:   wrangler tail
+
+name       = "normalis"
+main       = "cloudflare-worker.js"
+compatibility_date = "2024-09-23"
+
+# ─── Workers AI — para generar embeddings de consultas ──────────────────────
+# Modelo usado: @cf/baai/bge-m3 (768 dims, multilingüe, soporta español)
+# Free tier: 30M neurons/día
+[ai]
+binding = "AI"
+
+# ─── Vectorize — base de datos vectorial para RAG ───────────────────────────
+# Crear el índice (una sola vez):
+#   wrangler vectorize create normalis-rag --dimensions=768 --metric=cosine
+# Indexar fragmentos normativos:
+#   python scripts/prepare_rag.py
+#   python scripts/upload_embeddings.py
+# Free tier: 5M vector dimensions consultadas/mes
+[[vectorize]]
+binding    = "VECTORIZE"
+index_name = "normalis-rag"
+
+# ─── Secrets (configurar en Dashboard o wrangler secret put) ────────────────
+# GROQ_API_KEY  → https://console.groq.com/keys
+# (NO poner secrets aquí — usar: wrangler secret put GROQ_API_KEY)
+
+# ─── Cron Triggers — recordatorios de vencimientos ──────────────────────────
+[triggers]
+crons = ["0 12 * * 1"]   # Lunes 12:00 UTC — recordatorios semanales

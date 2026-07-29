@@ -1,18 +1,22 @@
 /**
- * NormaLis — Groq Proxy (Cloudflare Worker) v3
+ * NormaLis — Groq Proxy + RAG (Cloudflare Worker) v4
  *
- * Usa Groq free tier: 14,400 req/día, sin tarjeta de crédito.
- * Modelo: llama-3.1-8b-instant (rápido y preciso para consultas normativas)
+ * Flujo RAG:
+ *   pregunta → embedding (Workers AI bge-m3) → Vectorize → chunks relevantes
+ *   → system prompt enriquecido → Groq LLaMA → respuesta con fuentes
  *
- * Secret requerido (Cloudflare Dashboard → Workers → normalis → Settings → Variables):
- *   GROQ_API_KEY  → crear en https://console.groq.com/keys
+ * Secrets requeridos (Workers → Settings → Variables):
+ *   GROQ_API_KEY  → https://console.groq.com/keys
  *
- * SETUP (una sola vez):
- *   1. Ir a Cloudflare Dashboard → Workers & Pages → normalis → Edit code
- *   2. Pegar este código completo en el editor
- *   3. Settings → Variables → Add variable (tipo Secret):
- *      Name: GROQ_API_KEY   Value: tu clave de https://console.groq.com/keys
- *   4. Deploy
+ * Bindings requeridos (wrangler.toml):
+ *   [ai]          binding = "AI"
+ *   [[vectorize]] binding = "VECTORIZE", index_name = "normalis-rag"
+ *
+ * Setup inicial (una sola vez):
+ *   1. wrangler vectorize create normalis-rag --dimensions=768 --metric=cosine
+ *   2. python scripts/prepare_rag.py     (procesar PDFs)
+ *   3. python scripts/upload_embeddings.py (indexar en Vectorize)
+ *   4. wrangler deploy
  */
 
 const GROQ_MODEL    = 'llama-3.1-8b-instant';
@@ -81,6 +85,71 @@ REGLAS DE RESPUESTA:
 4. NUNCA inventes artículos, fechas, plazos o requisitos.
 5. Responde en español colombiano, tono profesional, máximo 5 párrafos.
 6. Advierte que la interpretación final la tiene la Secretaría de Salud departamental competente.`;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RAG — Retrieval-Augmented Generation
+// Enriquece cada pregunta con los fragmentos normativos más relevantes
+// antes de llamar a Groq, mejorando precisión y citación de artículos.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const RAG_MIN_SCORE = 0.55;  // Similitud coseno mínima (0–1). Ajustar si hay falsos positivos.
+const RAG_TOP_K     = 5;     // Fragmentos máximos a recuperar por pregunta.
+
+/**
+ * Genera el embedding de la pregunta usando Cloudflare Workers AI.
+ * Modelo: @cf/baai/bge-m3 — multilingüe, 768 dims, soporta español.
+ */
+async function getQueryEmbedding(question, env) {
+  const result = await env.AI.run('@cf/baai/bge-m3', {
+    text: [question.slice(0, 2000)]  // bge-m3 acepta hasta ~8K tokens
+  });
+  // Workers AI devuelve { data: [[...768 floats...]] }
+  return result.data[0];
+}
+
+/**
+ * Busca en Vectorize los fragmentos normativos más similares a la pregunta.
+ * Devuelve array de { text, source, score }.
+ */
+async function searchRelevantChunks(embedding, env) {
+  const results = await env.VECTORIZE.query(embedding, {
+    topK: RAG_TOP_K,
+    returnMetadata: 'all'
+  });
+
+  return (results.matches || [])
+    .filter(m => m.score >= RAG_MIN_SCORE)
+    .map(m => ({
+      text:   m.metadata?.text   || '',
+      source: m.metadata?.source || 'Normativa',
+      score:  Math.round(m.score * 100) / 100
+    }));
+}
+
+/**
+ * Construye el bloque de contexto RAG para inyectar en el system prompt.
+ * Si no hay fragmentos relevantes, devuelve null y se usa solo el prompt base.
+ */
+function buildRagContext(chunks) {
+  if (!chunks || chunks.length === 0) return null;
+
+  const contextBlocks = chunks
+    .map((c, i) => `[Fuente ${i + 1}: ${c.source}]\n${c.text}`)
+    .join('\n\n---\n\n');
+
+  return `\n\n════════════════════════════════════════
+CONTEXTO NORMATIVO RECUPERADO (fragmentos relevantes para esta consulta):
+
+${contextBlocks}
+
+════════════════════════════════════════
+INSTRUCCIÓN: Usa los fragmentos anteriores como fuente principal.
+Cita siempre el artículo exacto y la fuente indicada en corchetes.
+Si el contexto no cubre la pregunta completamente, indícalo y recomienda
+verificar en minsalud.gov.co o con la Secretaría de Salud departamental.`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin);
@@ -187,8 +256,31 @@ export default {
       });
     }
 
-    // Construir mensajes en formato OpenAI
-    const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+    // ── RAG: recuperar fragmentos normativos relevantes ─────────────────
+    let ragChunks   = [];
+    let systemContent = SYSTEM_PROMPT;
+
+    if (env.VECTORIZE && env.AI) {
+      try {
+        const embedding = await getQueryEmbedding(question.trim(), env);
+        ragChunks       = await searchRelevantChunks(embedding, env);
+        const ragCtx    = buildRagContext(ragChunks);
+        if (ragCtx) {
+          systemContent = SYSTEM_PROMPT + ragCtx;
+          console.log(`[RAG] ${ragChunks.length} fragmentos recuperados (scores: ${ragChunks.map(c => c.score).join(', ')})`);
+        } else {
+          console.log('[RAG] Sin fragmentos relevantes — usando solo system prompt base');
+        }
+      } catch (ragErr) {
+        // Degradación elegante: si RAG falla, continuar sin contexto adicional
+        console.warn('[RAG] Fallo en recuperación, continuando sin RAG:', String(ragErr));
+      }
+    } else {
+      console.log('[RAG] Bindings no disponibles (VECTORIZE/AI) — modo sin RAG');
+    }
+
+    // ── Construir mensajes en formato OpenAI ────────────────────────────
+    const messages = [{ role: 'system', content: systemContent }];
 
     if (Array.isArray(sessionHistory)) {
       for (const turn of sessionHistory.slice(-6)) {
@@ -231,7 +323,10 @@ export default {
         });
       }
 
-      return new Response(JSON.stringify({ answer: text, sources: [] }), {
+      // Devolver fuentes RAG junto con la respuesta (el frontend puede mostrarlas)
+      const sources = ragChunks.map(c => ({ source: c.source, score: c.score }));
+
+      return new Response(JSON.stringify({ answer: text, sources }), {
         status: 200,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });
