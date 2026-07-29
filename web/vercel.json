@@ -1,0 +1,11 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "rewrites": [
+    {
+      "source": "/api/worker/:path*",
+      "destination": "https://normalis.fjfc1984.workers.dev/:path*"
+    }
+  ]
+}
