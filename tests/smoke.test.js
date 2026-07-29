@@ -93,9 +93,14 @@ console.log('\n🏗️  normativa-app-v2.html');
 
 const app = readFile('normativa-app-v2.html');
 const appLines = app.split('\n').length;
+// normalis-main.js contiene el script principal extraído desde normativa-app-v2.html (Task #263)
+const mainJs = readFile('normalis-main.js');
+const mainLines = mainJs.split('\n').length;
 
 test('líneas > 8500', () => {
-  assert(appLines > 8500, `Solo ${appLines} líneas — posible truncamiento`);
+  // normativa-app-v2.html fue reducido (script extraído a normalis-main.js)
+  // normalis-main.js debe tener >5000 líneas
+  assert(mainLines > 5000, `normalis-main.js solo tiene ${mainLines} líneas — posible truncamiento`);
 });
 
 test('cierra con </html>', () => {
@@ -120,15 +125,18 @@ test('referencia normalis-data-audit.js', () => {
 });
 
 test('tiene función nav()', () => {
-  assert(app.includes('function nav('), 'Falta función nav()');
+  // nav() fue movido a normalis-main.js (Task #263)
+  assert(mainJs.includes('function nav('), 'Falta función nav() en normalis-main.js');
 });
 
 test('tiene función renderDashboard', () => {
-  assert(app.includes('function renderDashboard'), 'Falta función renderDashboard');
+  // renderDashboard fue movido a normalis-main.js (Task #263)
+  assert(mainJs.includes('function renderDashboard'), 'Falta función renderDashboard en normalis-main.js');
 });
 
 test('tiene nlLazyLoad (lazy loader)', () => {
-  assert(app.includes('function nlLazyLoad'), 'Falta sistema de lazy loading');
+  // nlLazyLoad fue movido a normalis-main.js (Task #263)
+  assert(mainJs.includes('function nlLazyLoad'), 'Falta sistema de lazy loading en normalis-main.js');
 });
 
 test('SST/PAMEC/DOCS son lazy (no <script src> directo)', () => {
@@ -251,7 +259,8 @@ test('crea documento en colección usuarios', () => {
 console.log('\n🔥 Firebase config');
 
 const FIREBASE_APP_ID = '1:328915530941:web:8e77246bd2e326e115b3d4';
-const htmlFiles = ['index.html', 'login.html', 'registro.html', 'admin.html', 'normativa-app-v2.html'];
+// normativa-app-v2.html ya no tiene Firebase config inline — está en normalis-main.js (Task #263)
+const htmlFiles = ['index.html', 'login.html', 'registro.html', 'admin.html'];
 
 for (const f of htmlFiles) {
   test(`${f} tiene App ID correcto`, () => {
