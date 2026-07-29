@@ -36,3 +36,5 @@ page*.jpg
 *.swp
 .resend-key
 __pycache__/
+upload-rag.bat
+scripts/upload_progress.json

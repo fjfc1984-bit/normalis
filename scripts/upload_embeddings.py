@@ -29,8 +29,8 @@ import argparse
 import requests
 
 # ─── CONFIGURACIÓN — EDITAR AQUÍ ─────────────────────────────────────────────
-CF_ACCOUNT_ID = "TU_ACCOUNT_ID"   # ej: "a1b2c3d4e5f6..."
-CF_API_TOKEN  = "TU_API_TOKEN"    # ej: "eyJhbGciOi..."
+CF_ACCOUNT_ID = "e4ba3dc6b998c992411a8bc56bc02d2b"
+CF_API_TOKEN  = os.environ.get("CF_API_TOKEN", "TU_API_TOKEN")
 INDEX_NAME    = "normalis-rag"
 # ─────────────────────────────────────────────────────────────────────────────
 
