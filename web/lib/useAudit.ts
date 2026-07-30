@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import type { AuditAnswers } from './auditTypes';
 
@@ -48,11 +49,14 @@ export function useAudit(segmento: string): UseAuditReturn {
     if (!user) { setLoading(false); return; }
 
     const docId = `${user.uid}_${segmento}`;
-    db.collection('auditorias').doc(docId).get()
+    const ref = doc(db, 'auditorias', docId);
+
+    getDoc(ref)
       .then(snap => {
-        if (snap.exists) {
+        if (snap.exists()) {
           const data = snap.data() as AuditSession;
           setAnswers(data.answers || {});
+          pendingAnswersRef.current = data.answers || {};
           setCompleted(!!data.completedAt);
           setSavedAt(data.updatedAt || null);
         }
@@ -68,8 +72,9 @@ export function useAudit(segmento: string): UseAuditReturn {
     setSaving(true);
     try {
       const docId = `${user.uid}_${segmento}`;
+      const ref = doc(db, 'auditorias', docId);
       const now = new Date().toISOString();
-      await db.collection('auditorias').doc(docId).set({
+      await setDoc(ref, {
         uid: user.uid,
         segmento,
         answers: latestAnswers,
@@ -105,9 +110,10 @@ export function useAudit(segmento: string): UseAuditReturn {
     setSaving(true);
     try {
       const docId = `${user.uid}_${segmento}`;
+      const ref = doc(db, 'auditorias', docId);
       const now = new Date().toISOString();
       const answered = Object.keys(pendingAnswersRef.current).length;
-      await db.collection('auditorias').doc(docId).set({
+      await setDoc(ref, {
         uid: user.uid,
         segmento,
         answers: pendingAnswersRef.current,
@@ -130,7 +136,8 @@ export function useAudit(segmento: string): UseAuditReturn {
     const user = auth.currentUser;
     if (!user) return;
     const docId = `${user.uid}_${segmento}`;
-    await db.collection('auditorias').doc(docId).delete();
+    const ref = doc(db, 'auditorias', docId);
+    await deleteDoc(ref);
     setAnswers({});
     setCompleted(false);
     setSavedAt(null);
