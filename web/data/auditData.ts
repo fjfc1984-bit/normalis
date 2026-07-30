@@ -59,6 +59,61 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
     "label": "Odontología",
     "icon": "🦷",
     "norm": "Res. 3100/2019 · Ley 35/1989"
+  },
+  "consulta_externa": {
+    "label": "Consulta Externa",
+    "icon": "🩺",
+    "norm": "Res. 3100/2019 · Consulta Externa · Res. 3280/2018"
+  },
+  "cuidado_intensivo": {
+    "label": "Cuidado Intensivo (UCI)",
+    "icon": "🏥",
+    "norm": "Res. 3100/2019 · UCI · Res. 544/2023 · Neonatología"
+  },
+  "obstetricia": {
+    "label": "Obstetricia y Parto",
+    "icon": "👶",
+    "norm": "Res. 3100/2019 · Atención del parto · OMS"
+  },
+  "banco_sangre": {
+    "label": "Banco de Sangre",
+    "icon": "🩸",
+    "norm": "Res. 1285/2010 · Decreto 1571/1993 · Res. 3100/2019"
+  },
+  "oncologia": {
+    "label": "Oncología",
+    "icon": "🎗️",
+    "norm": "Res. 3100/2019 · Res. 1383/2013 · Guías IETS oncología"
+  },
+  "hemodialisis": {
+    "label": "Hemodiálisis",
+    "icon": "💉",
+    "norm": "Res. 3100/2019 · KDIGO 2012 · Manual habilitación"
+  },
+  "farmacia": {
+    "label": "Servicio Farmacéutico",
+    "icon": "💊",
+    "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 3100/2019"
+  },
+  "vacunacion": {
+    "label": "Vacunación (PAI)",
+    "icon": "🔬",
+    "norm": "Res. 3100/2019 · PAI MSPS · Res. 2184/2019"
+  },
+  "telemedicina": {
+    "label": "Telemedicina",
+    "icon": "💻",
+    "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 465/2025"
+  },
+  "esterilizacion": {
+    "label": "Central de Esterilización",
+    "icon": "🧪",
+    "norm": "Res. 3100/2019 · Decreto 4725/2005 · ANSI/AAMI ST79"
+  },
+  "trasplante": {
+    "label": "Trasplante de Órganos",
+    "icon": "🫀",
+    "norm": "Decreto 2493/2004 · Res. 3100/2019 · Red de Donación"
   }
 };
 
@@ -1222,6 +1277,596 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Existe revisión periódica del protocolo de esterilización con acciones de mejoramiento ante controles biológicos positivos?",
         "¿Se realizan auditorías de historias clínicas para verificar completitud del odontograma, consentimientos y notas de evolución?",
         "¿El consultorio tiene plan de mejoramiento activo vinculado al PAMEC de la institución o a la autoevaluación del sistema de gestión?"
+      ]
+    }
+  ],
+  "consulta_externa": [
+    {
+      "id": "ce-talento",
+      "icon": "👨‍⚕️",
+      "name": "Talento Humano — Consulta Externa",
+      "norm": "Res. 3100/2019 Est. 1 · Perfiles TH consulta externa",
+      "q": [
+        "¿Todo el personal profesional que realiza consulta tiene tarjeta profesional vigente y sin sanción disciplinaria activa?",
+        "¿Los médicos especialistas tienen certificado de especialización registrado ante el Ministerio de Salud?",
+        "¿Se lleva registro actualizado de TH habilitado con nombre, profesión, tarjeta y horario de prestación?",
+        "¿El personal que atiende poblaciones especiales (niños, adulto mayor, discapacitados) tiene entrenamiento documentado?",
+        "¿Hay médico de cabecera o coordinador disponible en el horario de prestación del servicio de consulta externa?",
+        "¿Se verifica anualmente la vigencia de tarjetas profesionales y se documentan los resultados?""
+      ]
+    },
+    {
+      "id": "ce-infraestructura",
+      "icon": "🏢",
+      "name": "Infraestructura y Consultorios",
+      "norm": "Res. 3100/2019 Est. 2 · Criterios físicos consulta externa",
+      "q": [
+        "¿Cada consultorio tiene área mínima de 9 m², con puerta con seguro y privacidad visual y auditiva adecuada?",
+        "¿Los consultorios cuentan con lavamanos de pedal o codo, jabón antiséptico y toallas desechables dentro del espacio?",
+        "¿La iluminación y ventilación del consultorio cumple los estándares de habitabilidad definidos en el manual de habilitación?",
+        "¿Las rutas de acceso al servicio son accesibles para personas en silla de ruedas, con bastón o movilidad reducida?",
+        "¿Existe sala de espera diferenciada con capacidad adecuada a la demanda, con sillas suficientes y señalización clara?",
+        "¿Los baños para usuarios son accesibles, con adecuada señalización de género y acceso para discapacidad?""
+      ]
+    },
+    {
+      "id": "ce-dotacion",
+      "icon": "🩺",
+      "name": "Dotación y Equipos",
+      "norm": "Res. 3100/2019 Est. 3 · Dotación consultorios · Decreto 4725/2005",
+      "q": [
+        "¿Cada consultorio dispone de camilla de examen, tensiómetro calibrado, estetoscopio, termómetro y linterna clínica?",
+        "¿Los equipos médicos tienen hoja de vida, mantenimiento preventivo vigente y calibración al día?",
+        "¿Los consultorios especializados tienen el equipamiento específico exigido para la especialidad (ej: oftalmoscopio, otoscopio, espirómetro)?",
+        "¿Se dispone de glucómetro calibrado y oxímetro de pulso disponibles en el área de consulta externa?",
+        "¿El instrumental médico-quirúrgico menor tiene proceso documentado de esterilización y empaque sellado?""
+      ]
+    },
+    {
+      "id": "ce-procesos",
+      "icon": "📋",
+      "name": "Procesos Asistenciales",
+      "norm": "Res. 3100/2019 Est. 6 · Guías de práctica clínica MINSALUD",
+      "q": [
+        "¿Existen guías de práctica clínica adoptadas para las 10 condiciones de mayor demanda del servicio de consulta externa?",
+        "¿Los protocolos de referencia y contrarreferencia están documentados y son conocidos por todo el personal?",
+        "¿El proceso de asignación de citas garantiza oportunidad según los tiempos máximos de espera definidos por el MSPS?",
+        "¿Se realiza verificación de derechos del paciente (afiliación SGSSS) antes o en el momento de la consulta?",
+        "¿Existe proceso para gestión de paciente crónico con citas programadas, seguimiento y control de tratamiento?",
+        "¿Se aplican listas de chequeo o protocolos de seguridad del paciente específicos para consulta externa?""
+      ]
+    },
+    {
+      "id": "ce-hc",
+      "icon": "📁",
+      "name": "Historia Clínica y Registros",
+      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 7 · Ley 23/1981",
+      "q": [
+        "¿Cada consulta genera historia clínica con anamnesis, examen físico, diagnóstico (CIE-10), plan y firma del profesional?",
+        "¿El sistema de historia clínica (física o electrónica) garantiza confidencialidad, acceso restringido y respaldo?",
+        "¿Los tiempos de conservación de historias clínicas cumplen los 20 años establecidos en la Res. 1995/1999?",
+        "¿Los registros de consulta incluyen consentimiento informado cuando aplica y están correctamente archivados?",
+        "¿La historia clínica electrónica, si existe, está certificada y cumple los estándares de interoperabilidad del MSPS?""
+      ]
+    }
+  ],
+  "cuidado_intensivo": [
+    {
+      "id": "uci-talento",
+      "icon": "👨‍⚕️",
+      "name": "Talento Humano UCI",
+      "norm": "Res. 3100/2019 · Medicina crítica · Res. 544/2023 · Telexperticia UCI",
+      "q": [
+        "¿El servicio cuenta con médico intensivista (especialista en medicina crítica) disponible 24/7 con certificación vigente?",
+        "¿La razón enfermera-paciente en UCI cumple mínimo 1:2 en UCI adultos y 1:1 en UCI neonatal?",
+        "¿El personal de enfermería de la UCI tiene entrenamiento documentado en cuidado intensivo y manejo de ventilador?",
+        "¿Hay terapeuta respiratorio disponible en el horario de mayor demanda, con certificación técnica o profesional?",
+        "¿Existe protocolo para uso de telexperticia sincrónica con intensivista cuando aplique (Res. 544/2023)?",
+        "¿Se realiza inducción formal a todo el personal nuevo que ingresa a UCI con evaluación de competencias documentada?""
+      ]
+    },
+    {
+      "id": "uci-infraestructura",
+      "icon": "🏥",
+      "name": "Infraestructura UCI",
+      "norm": "Res. 3100/2019 Est. 2 · Requisitos físicos UCI · NSR-10",
+      "q": [
+        "¿Cada cama de UCI tiene área mínima de 12 m² con espacio para acceso lateral del equipo asistencial?",
+        "¿Las instalaciones de gases medicinales (oxígeno, aire medicinal, vacío) son independientes y cuentan con alarmas?",
+        "¿Existe aislamiento especial (presión negativa o positiva) disponible para pacientes en riesgo infeccioso o inmunodeprimidos?",
+        "¿Las puertas de la UCI son de doble hoja, con acceso controlado y facilidad para ingreso de equipos de gran tamaño?",
+        "¿La central de enfermería de la UCI permite visibilidad directa o por monitor de todas las camas?",
+        "¿El área cuenta con generador eléctrico de respaldo con tiempo de autonomía certificado y prueba periódica documentada?""
+      ]
+    },
+    {
+      "id": "uci-dotacion",
+      "icon": "🫀",
+      "name": "Dotación y Tecnología",
+      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · UCI",
+      "q": [
+        "¿Cada cama de UCI tiene monitor multiparamétrico (ECG, SpO2, NIBP, temperatura, capnografía) calibrado?",
+        "¿Hay ventilador mecánico por cama de UCI con número de ventiladores igual al de camas habilitadas?",
+        "¿La UCI dispone de equipos de infusión (bombas de jeringa e infusión), desfibrilador con cardioversión sincronizada?",
+        "¿Los equipos de la UCI tienen mantenimiento preventivo documentado y calibración vigente según Decreto 4725/2005?",
+        "¿Hay carro de paro equipado dentro de la UCI con medicamentos verificados mensualmente con firma responsable?",
+        "¿Se dispone de ecógrafo portátil o acceso garantizado para ecocardiografía a pie de cama dentro de la UCI?""
+      ]
+    },
+    {
+      "id": "uci-procesos",
+      "icon": "📋",
+      "name": "Procesos Clínicos y Seguridad",
+      "norm": "Res. 3100/2019 Est. 6 · Res. 2003/2014 · Bundles UCI",
+      "q": [
+        "¿Existe protocolo de prevención de infecciones asociadas al cuidado (IAAS): NAVM, ITS, bacteriuria, bacteriemia?",
+        "¿Se implementan bundles de prevención (higiene de manos, baño diario con clorhexidina, elevación cabecera 30°)?",
+        "¿Hay protocolo de destete de ventilación mecánica con criterios clínicos documentados y evaluación diaria?",
+        "¿Se realiza visita médica multidisciplinaria diaria con registro en historia clínica de objetivos del día?",
+        "¿Existe sistema de alerta temprana o score de deterioro para detectar precozmente el empeoramiento del paciente?",
+        "¿Los indicadores de la UCI (mortalidad, estancia, infecciones, días ventilación) se miden mensualmente y se revisan en comité?""
+      ]
+    },
+    {
+      "id": "uci-neo",
+      "icon": "👶",
+      "name": "UCI Neonatal (UCIN) — Requisitos Específicos",
+      "norm": "Res. 3100/2019 · UCIN · Neonatología · Res. 465/2025",
+      "q": [
+        "¿La UCIN tiene neonatólogo disponible 24/7 o con tiempo de respuesta documentado inferior a 15 minutos?",
+        "¿Cada incubadora o cuna de calor radiante tiene monitor neonatal con alarmas de SpO2, FC y temperatura?",
+        "¿Existe protocolo canguro (método madre canguro) documentado con criterios de inicio, seguimiento y egreso?",
+        "¿Se garantiza banco de leche materna o alternativa nutricional con trazabilidad de donantes y receptores?",
+        "¿El personal de UCIN tiene entrenamiento en reanimación neonatal avanzada (programa NRP o equivalente)?",
+        "¿Existe protocolo de prevención de retinopatía del prematuro con control oftalmológico programado para RN <32 semanas?""
+      ]
+    }
+  ],
+  "obstetricia": [
+    {
+      "id": "obs-talento",
+      "icon": "👩‍⚕️",
+      "name": "Talento Humano — Obstetricia y Parto",
+      "norm": "Res. 3100/2019 · Atención del parto · Res. 3280/2018",
+      "q": [
+        "¿El equipo de atención del parto incluye médico obstetra o médico con entrenamiento documentado en atención del parto?",
+        "¿Hay enfermera o auxiliar de enfermería con capacitación en asistencia al parto disponible en el horario de atención?",
+        "¿El servicio cuenta con neonatólogo o médico con competencia en reanimación neonatal disponible 24/7?",
+        "¿El personal tiene actualización documentada en prevención de hemorragia posparto y eclampsia cada 2 años?",
+        "¿Existe anestesiólogo disponible o en tiempo de respuesta definido y documentado para cesárea de emergencia?""
+      ]
+    },
+    {
+      "id": "obs-infraestructura",
+      "icon": "🏥",
+      "name": "Infraestructura Sala de Partos",
+      "norm": "Res. 3100/2019 Est. 2 · Sala de partos · NSR-10",
+      "q": [
+        "¿La sala de partos tiene área mínima de 20 m² por sala, con lavamanos de pedal y sistema de gases medicinales?",
+        "¿Existe sala de preparto o admisión obstétrica diferenciada de la sala de alumbramiento?",
+        "¿Se dispone de quirófano para cesárea de emergencia en tiempo de acceso máximo de 30 minutos?",
+        "¿Las instalaciones de la sala de partos permiten atención a la madre y reanimación del recién nacido en el mismo espacio?",
+        "¿El área de puerperio tiene camas diferenciadas para madre e hijo, con baño accesible y privacidad garantizada?""
+      ]
+    },
+    {
+      "id": "obs-dotacion",
+      "icon": "🩺",
+      "name": "Dotación Sala de Partos",
+      "norm": "Res. 3100/2019 Est. 3 · Equipos obstetricia",
+      "q": [
+        "¿La sala de partos tiene mesa obstétrica, cuna de calor radiante, oxímetro neonatal y balanza neonatal calibrada?",
+        "¿Se dispone de kit de reanimación neonatal completo: ambú neonatal, laringoscopio neonatal, tubos endotraqueales, aspirador?",
+        "¿Hay acceso a oxitocina, sulfato de magnesio y otros medicamentos de emergencia obstétrica con verificación periódica?",
+        "¿El cardiotocógrafo (monitor fetal) está disponible, calibrado y con mantenimiento vigente?",
+        "¿Se dispone de ecógrafo obstétrico para evaluación del bienestar fetal intraparto?""
+      ]
+    },
+    {
+      "id": "obs-procesos",
+      "icon": "📋",
+      "name": "Procesos — Atención del Parto Seguro",
+      "norm": "Res. 3100/2019 Est. 6 · OMS atención parto · Res. 3280/2018",
+      "q": [
+        "¿Se implementa la lista de verificación de seguridad del parto de la OMS adaptada o equivalente en cada parto?",
+        "¿Existe protocolo para prevención y manejo de hemorragia posparto (AMTSL: manejo activo del tercer período)?",
+        "¿Se aplica protocolo de eclampsia/preeclampsia con criterios de hospitalización, manejo con sulfato de magnesio y traslado?",
+        "¿El partograma es diligenciado en todos los trabajos de parto con registro de progresión y toma de decisiones?",
+        "¿Existe protocolo de apego precoz, lactancia materna exclusiva y contacto piel a piel documentado y aplicado?",
+        "¿Los indicadores de atención del parto (cesáreas, hemorragia posparto, mortalidad perinatal) se miden y revisan periódicamente?""
+      ]
+    }
+  ],
+  "banco_sangre": [
+    {
+      "id": "bs-talento",
+      "icon": "🔬",
+      "name": "Talento Humano — Banco de Sangre",
+      "norm": "Res. 3100/2019 · Res. 1285/2010 · Decreto 1571/1993",
+      "q": [
+        "¿El banco de sangre cuenta con bacteriólogo o médico especialista en medicina transfusional como responsable técnico?",
+        "¿El personal del banco de sangre tiene capacitación documentada en biosseguridad y manejo de material biológico?",
+        "¿Existe manual de funciones actualizado para cada cargo en el banco de sangre con capacitaciones periódicas?",
+        "¿El personal tiene vacunación completa contra hepatitis B y se conservan los registros de inmunización?""
+      ]
+    },
+    {
+      "id": "bs-infraestructura",
+      "icon": "🏢",
+      "name": "Infraestructura y Condiciones Físicas",
+      "norm": "Res. 3100/2019 · Res. 1285/2010 · Banco de sangre",
+      "q": [
+        "¿El banco de sangre tiene áreas diferenciadas para recepción de donantes, extracción, procesamiento y almacenamiento?",
+        "¿Las unidades de sangre se almacenan en refrigeradores específicos para sangre con alarma de temperatura y registro continuo?",
+        "¿El área de trabajo tiene sistema de presión negativa o ventilación controlada para prevención de contaminación cruzada?",
+        "¿Las instalaciones eléctricas incluyen UPS o generador para garantizar cadena de frío en fallo del suministro eléctrico?""
+      ]
+    },
+    {
+      "id": "bs-dotacion",
+      "icon": "🩸",
+      "name": "Dotación y Equipos",
+      "norm": "Res. 3100/2019 · Decreto 4725/2005 · Banco de sangre",
+      "q": [
+        "¿Los equipos de centrifugación, procesamiento y fraccionamiento de sangre tienen mantenimiento preventivo al día?",
+        "¿Se dispone de analizadores para tipificación ABO/Rh, pruebas de compatibilidad y tamización infecciosa (VIH, HBsAg, HCV, sífilis)?",
+        "¿Los equipos de la cadena de frío (refrigeradores, congeladores, cavas de transporte) tienen calibración y registro de temperatura continuo?",
+        "¿El banco cuenta con irradiadores para hemocomponentes cuando atiende pacientes inmunodeprimidos, o tiene acceso garantizado?""
+      ]
+    },
+    {
+      "id": "bs-procesos",
+      "icon": "📋",
+      "name": "Procesos — Selección y Trazabilidad",
+      "norm": "Res. 3100/2019 · Res. 1285/2010 · Manual Técnico AABB",
+      "q": [
+        "¿Existe protocolo documentado para selección del donante con criterios de inclusión/exclusión actualizados?",
+        "¿Cada unidad de sangre tiene trazabilidad completa: donante → extracción → procesamiento → tamización → distribución → receptor?",
+        "¿Se realizan pruebas serológicas para VIH 1/2, HBsAg, anti-HCV, VDRL y Chagas en el 100% de las unidades?",
+        "¿Existe protocolo de reacciones transfusionales con sistema de reporte, investigación y seguimiento del receptor?",
+        "¿Los hemocomponentes vencidos o rechazados tienen procedimiento documentado de destrucción y registro?",
+        "¿Se participa en programa de control externo de calidad para pruebas de tamización y serología?""
+      ]
+    }
+  ],
+  "oncologia": [
+    {
+      "id": "onco-talento",
+      "icon": "👨‍⚕️",
+      "name": "Talento Humano — Oncología",
+      "norm": "Res. 3100/2019 · Guías IETS oncología · Res. 1383/2013",
+      "q": [
+        "¿El servicio oncológico cuenta con oncólogo clínico o hematólogo con registro de especialista ante el MSPS?",
+        "¿El personal de enfermería oncológica tiene entrenamiento certificado en preparación y administración de citotóxicos?",
+        "¿Hay farmacéutico con competencia en oncología responsable de la preparación de quimioterapia en campana de flujo laminar?",
+        "¿Se realiza comité oncológico multidisciplinario periódico con participación de cirugía, radioterapia, patología y nutrición?",
+        "¿El personal tiene capacitación en manejo de derrames de citotóxicos y uso de equipo de protección personal específico?""
+      ]
+    },
+    {
+      "id": "onco-infraestructura",
+      "icon": "🏥",
+      "name": "Infraestructura — Servicio de Oncología",
+      "norm": "Res. 3100/2019 Est. 2 · ISOPP estándares oncología",
+      "q": [
+        "¿La sala de quimioterapia tiene sillas reclinables o camas individuales con privacidad visual entre pacientes?",
+        "¿La farmacia oncológica dispone de campana de flujo laminar clase II tipo B2 o cabina de seguridad biológica certificada?",
+        "¿Existe área de aislamiento disponible para pacientes neutropénicos o en riesgo de infección grave?",
+        "¿El servicio cuenta con sistema de ventilación que evita recirculación de aire en el área de preparación de citotóxicos?""
+      ]
+    },
+    {
+      "id": "onco-dotacion",
+      "icon": "💊",
+      "name": "Dotación y Medicamentos",
+      "norm": "Res. 3100/2019 Est. 3 · INVIMA · Farmacias oncológicas",
+      "q": [
+        "¿Los citotóxicos se preparan en campana de flujo laminar con EPP completo (mascarilla N95, guantes dobles, gafas, bata)?",
+        "¿Existe kit de derrame de citotóxicos disponible en el área de preparación y administración?",
+        "¿Los medicamentos oncológicos tienen sistema de doble verificación antes de la administración al paciente?",
+        "¿Se dispone de antídotos o medicamentos para manejo de extravasación de citotóxicos disponibles en el servicio?",
+        "¿Los residuos de citotóxicos tienen disposición diferenciada como residuo peligroso según Decreto 351/2014?""
+      ]
+    },
+    {
+      "id": "onco-procesos",
+      "icon": "📋",
+      "name": "Procesos Clínicos y Seguridad",
+      "norm": "Res. 3100/2019 Est. 6 · Guías IETS · OMS lista verificación oncológica",
+      "q": [
+        "¿Cada paciente oncológico tiene plan terapéutico documentado y aprobado por comité tumores o médico tratante?",
+        "¿Se aplica protocolo de verificación de identidad del paciente y correcta prescripción antes de cada ciclo de quimioterapia?",
+        "¿Existen protocolos de manejo de toxicidades por quimioterapia: neutropenia febril, náuseas, mucositis, extravasación?",
+        "¿Se miden indicadores de calidad en oncología: oportunidad de inicio de tratamiento, toxicidades grado 3-4, hospitalizaciones no programadas?",
+        "¿El consentimiento informado para quimioterapia es específico, incluye riesgos y alternativas, y está firmado por el paciente?""
+      ]
+    }
+  ],
+  "hemodialisis": [
+    {
+      "id": "hemo-talento",
+      "icon": "👨‍⚕️",
+      "name": "Talento Humano — Hemodiálisis",
+      "norm": "Res. 3100/2019 · Nefrología · Manual Habilitación Hemodiálisis",
+      "q": [
+        "¿El servicio de hemodiálisis tiene nefrólogo responsable con especialización registrada ante el MSPS?",
+        "¿La razón personal de enfermería-paciente cumple el estándar definido (mínimo 1 enfermera por cada 4 pacientes en diálisis)?",
+        "¿El personal de enfermería y auxiliares tiene capacitación documentada en manejo de accesos vasculares y máquinas de diálisis?",
+        "¿Existe protocolo de atención de emergencias durante la sesión de hemodiálisis con personal entrenado disponible?""
+      ]
+    },
+    {
+      "id": "hemo-infraestructura",
+      "icon": "🏥",
+      "name": "Infraestructura — Unidad de Hemodiálisis",
+      "norm": "Res. 3100/2019 Est. 2 · KDIGO · Manual habilitación",
+      "q": [
+        "¿Cada estación de hemodiálisis tiene el espacio mínimo requerido para la máquina, la camilla y el acceso lateral del personal?",
+        "¿El sistema de tratamiento de agua (ósmosis inversa) tiene monitoreo continuo de calidad y pureza del agua de diálisis?",
+        "¿Existe área de aislamiento para pacientes con VIH, HCV activo u otras infecciones transmisibles, con máquinas dedicadas?",
+        "¿El sistema de drenaje de la unidad de hemodiálisis cumple la normativa sanitaria para efluentes de establecimientos de salud?""
+      ]
+    },
+    {
+      "id": "hemo-dotacion",
+      "icon": "🔧",
+      "name": "Dotación y Equipos",
+      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · Hemodiálisis",
+      "q": [
+        "¿Cada máquina de hemodiálisis tiene hoja de vida, mantenimiento preventivo vigente y calificación de instalación y funcionamiento?",
+        "¿Los monitores de agua (conductividad, temperatura, alarmas) del sistema de tratamiento están calibrados y en buen estado?",
+        "¿Se dispone de carro de paro equipado para emergencias durante la sesión con desfibrilador de fácil acceso?",
+        "¿Las máquinas de diálisis tienen desinfección y purga documentada entre cada sesión y después de paciente con infección?""
+      ]
+    },
+    {
+      "id": "hemo-procesos",
+      "icon": "📋",
+      "name": "Procesos Clínicos y Control",
+      "norm": "Res. 3100/2019 Est. 6 · KDIGO 2012 · Manual diálisis MSPS",
+      "q": [
+        "¿Cada paciente tiene prescripción de diálisis individualizada con parámetros (Kt/V, flujo, dializador, anticoagulación)?",
+        "¿Se realiza evaluación mensual de adecuación de diálisis (Kt/V) con registro en historia clínica?",
+        "¿Existe protocolo de vigilancia de acceso vascular (fístula, catéter) con evaluación periódica y registro de complicaciones?",
+        "¿El agua de diálisis tiene control microbiológico y de endotoxinas mensual con valores dentro de los límites AAMI/ISO?",
+        "¿Se monitorean indicadores de calidad: hospitalización, mortalidad, adecuación de diálisis, complicaciones de acceso?""
+      ]
+    }
+  ],
+  "farmacia": [
+    {
+      "id": "far-talento",
+      "icon": "💊",
+      "name": "Talento Humano — Servicio Farmacéutico",
+      "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 3100/2019",
+      "q": [
+        "¿El servicio farmacéutico cuenta con regente de farmacia o químico farmacéutico como director técnico?",
+        "¿La razón de regentes o químicos farmacéuticos por auxiliares cumple la normativa según complejidad del servicio?",
+        "¿Todo el personal del servicio farmacéutico tiene capacitación documentada en buenas prácticas de almacenamiento y dispensación?",
+        "¿El químico farmacéutico o regente asume formalmente la dirección técnica con acta de posesión o contrato vigente?""
+      ]
+    },
+    {
+      "id": "far-infraestructura",
+      "icon": "🏢",
+      "name": "Infraestructura — Área Farmacéutica",
+      "norm": "Res. 1403/2007 · Res. 3100/2019 Est. 2 · Farmacias",
+      "q": [
+        "¿El servicio farmacéutico tiene áreas diferenciadas para recepción, almacenamiento, dispensación y distribución de medicamentos?",
+        "¿Las condiciones de temperatura y humedad del área de almacenamiento son monitoreadas y registradas diariamente?",
+        "¿Existe área de refrigeración con termómetro calibrado para medicamentos que requieren cadena de frío?",
+        "¿El acceso al área de dispensación está restringido al personal autorizado y los medicamentos están bajo llave?""
+      ]
+    },
+    {
+      "id": "far-dotacion",
+      "icon": "🔬",
+      "name": "Dotación y Tecnología",
+      "norm": "Res. 1403/2007 · Decreto 780/2016 · Buenas prácticas farmacéuticas",
+      "q": [
+        "¿Se dispone de sistema de información para la gestión de inventarios con control de fechas de vencimiento?",
+        "¿El área de preparación de mezclas (si aplica) tiene campana de flujo laminar, equipos de medición y condiciones de asepsia?",
+        "¿Se cuenta con refrigerador exclusivo para medicamentos con registro gráfico de temperatura y alarma?",
+        "¿El servicio tiene acceso a información farmacológica actualizada: vademécum, interacciones, ajuste por función renal?""
+      ]
+    },
+    {
+      "id": "far-procesos",
+      "icon": "📋",
+      "name": "Procesos — Dispensación y Farmacovigilancia",
+      "norm": "Res. 1403/2007 · INVIMA · Farmacovigilancia · Res. 2003/2014",
+      "q": [
+        "¿Existe sistema de doble verificación antes de dispensar medicamentos de alto riesgo (anticoagulantes, insulinas, citotóxicos)?",
+        "¿Se realiza conciliación de medicamentos en ingresos, egresos y traslados de pacientes con registro en historia clínica?",
+        "¿El servicio participa en el programa de farmacovigilancia con reporte de eventos adversos a medicamentos al INVIMA?",
+        "¿Hay proceso documentado para manejo de medicamentos vencidos, deteriorados o retirados del mercado?",
+        "¿Se realizan auditorías periódicas de uso de antibióticos como parte del programa de uso racional de antimicrobianos?",
+        "¿Los pacientes reciben educación sobre sus medicamentos: indicación, dosis, horario, efectos adversos a vigilar?""
+      ]
+    }
+  ],
+  "vacunacion": [
+    {
+      "id": "vac-talento",
+      "icon": "💉",
+      "name": "Talento Humano — Vacunación",
+      "norm": "Res. 3100/2019 · PAI MSPS · Decreto 1011/2006",
+      "q": [
+        "¿El personal que aplica vacunas tiene entrenamiento documentado en el Programa Ampliado de Inmunización (PAI)?",
+        "¿Se realiza capacitación periódica al personal en manejo de cadena de frío, reconstitución de vacunas y manejo de eventos adversos?",
+        "¿Existe personal entrenado en manejo de reacciones adversas inmediatas post-vacunación (anafilaxia)?",
+        "¿El responsable del programa de vacunación tiene designación formal y asiste a las reuniones convocadas por la Secretaría de Salud?""
+      ]
+    },
+    {
+      "id": "vac-cadena-frio",
+      "icon": "❄️",
+      "name": "Cadena de Frío — Conservación de Vacunas",
+      "norm": "Res. 3100/2019 · Manual PAI MSPS · Cadena de frío",
+      "q": [
+        "¿Las vacunas se almacenan en refrigerador exclusivo para vacunas con temperatura entre +2°C y +8°C?",
+        "¿La temperatura del refrigerador de vacunas se registra dos veces al día (mañana y tarde) con firma del responsable?",
+        "¿Existe plan de contingencia documentado para fallo de la cadena de frío con alternativas de conservación de emergencia?",
+        "¿Las vacunas se organizan según la norma del PAI: más antiguas adelante, separadas por tipo, con identificación clara?",
+        "¿Se registran las alertas o fallas de temperatura con su análisis de impacto y decisión documentada sobre el lote afectado?""
+      ]
+    },
+    {
+      "id": "vac-procesos",
+      "icon": "📋",
+      "name": "Procesos de Vacunación Segura",
+      "norm": "Res. 3100/2019 Est. 6 · PAI MSPS · Res. 2184/2019",
+      "q": [
+        "¿Existe protocolo de verificación de identidad y carnet de vacunación antes de aplicar cualquier biológico?",
+        "¿El proceso de reconstitución de vacunas se realiza según la guía del fabricante y se documenta hora y lote?",
+        "¿Se aplica lista de verificación de contraindicaciones antes de cada vacuna con registro en historia clínica?",
+        "¿El usuario espera mínimo 20 minutos post-vacunación en el servicio para observar reacciones adversas inmediatas?",
+        "¿Los eventos adversos post-vacunación se registran, analizan y reportan al SIVIGILA según la normativa?",
+        "¿Los indicadores de cobertura se reportan a la Secretaría de Salud en los formatos y tiempos establecidos?""
+      ]
+    }
+  ],
+  "telemedicina": [
+    {
+      "id": "tele-talento",
+      "icon": "💻",
+      "name": "Talento Humano — Telemedicina",
+      "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 3100/2019 · Res. 465/2025",
+      "q": [
+        "¿El médico que actúa como prestador de referencia en telemedicina tiene tarjeta profesional vigente y contrato activo?",
+        "¿El personal de salud que usa telemedicina tiene capacitación documentada en el uso de la plataforma tecnológica?",
+        "¿Existe responsable del programa de telemedicina con funciones definidas en manual de funciones o contrato?",
+        "¿Los profesionales de salud en telemedicina conocen y aplican los criterios de derivación a consulta presencial?""
+      ]
+    },
+    {
+      "id": "tele-tecnologia",
+      "icon": "🖥️",
+      "name": "Plataforma Tecnológica y Conectividad",
+      "norm": "Res. 2654/2019 Art. 4 · Res. 1317/2021 · Estándares telemedicina",
+      "q": [
+        "¿La plataforma de telemedicina permite consulta síncrona o asíncrona según el tipo habilitado (interactiva/no interactiva)?",
+        "¿La conexión a internet garantiza la calidad mínima para transmisión de imágenes diagnósticas y comunicación en tiempo real?",
+        "¿La plataforma tiene protocolos de seguridad de la información (cifrado, autenticación, control de acceso) documentados?",
+        "¿Existe plan de contingencia ante falla tecnológica con protocolo de derivación a consulta presencial urgente?",
+        "¿La plataforma permite registro de la consulta, generación de historia clínica y formulación electrónica cuando aplica?""
+      ]
+    },
+    {
+      "id": "tele-procesos",
+      "icon": "📋",
+      "name": "Procesos Clínicos — Telemedicina",
+      "norm": "Res. 2654/2019 · Res. 465/2025 · Manual telemedicina MSPS",
+      "q": [
+        "¿Existe protocolo que define qué patologías y condiciones son aptas para atención por telemedicina y cuáles requieren presencial?",
+        "¿El consentimiento informado del paciente para la consulta por telemedicina está documentado antes de cada sesión?",
+        "¿La historia clínica de telemedicina es equivalente en contenido a la presencial: anamnesis, diagnóstico, plan, firma?",
+        "¿Existe protocolo de referencia urgente para pacientes que durante la teleconsulta presenten criterios de atención inmediata presencial?",
+        "¿Se monitorean indicadores de telemedicina: número de consultas, patologías, satisfacción del usuario, referencias derivadas?",
+        "¿Los registros de las teleconsultas están disponibles para auditoría y tienen el mismo tiempo de conservación que la HC tradicional?""
+      ]
+    },
+    {
+      "id": "tele-privacidad",
+      "icon": "🔒",
+      "name": "Privacidad y Protección de Datos",
+      "norm": "Ley 1581/2012 · Res. 2654/2019 · HABEAS DATA salud",
+      "q": [
+        "¿La plataforma de telemedicina cumple la Ley 1581/2012 de protección de datos personales en salud?",
+        "¿Los datos de las teleconsultas se almacenan en servidores con ubicación conocida y con medidas de seguridad certificadas?",
+        "¿Existe política de privacidad específica para telemedicina que el paciente conoce y acepta antes de la consulta?",
+        "¿El acceso a grabaciones de teleconsultas (si aplica) está restringido y controlado con registro de auditoría de accesos?""
+      ]
+    }
+  ],
+  "esterilizacion": [
+    {
+      "id": "est-talento",
+      "icon": "🧪",
+      "name": "Talento Humano — Central de Esterilización",
+      "norm": "Res. 3100/2019 · Decreto 4725/2005 · ANSI/AAMI ST79",
+      "q": [
+        "¿El personal de la central de esterilización tiene capacitación documentada en procesamiento de dispositivos médicos (PDM)?",
+        "¿Existe responsable técnico de la central con funciones definidas y capacitación específica en esterilización?",
+        "¿El personal conoce y aplica correctamente los protocolos de limpieza, desinfección y esterilización para cada tipo de material?",
+        "¿Se realizan evaluaciones periódicas de competencia del personal en los procesos de esterilización con registro?""
+      ]
+    },
+    {
+      "id": "est-infraestructura",
+      "icon": "🏢",
+      "name": "Infraestructura — Central de Esterilización",
+      "norm": "Res. 3100/2019 Est. 2 · Zona limpia/sucia · Flujo unidireccional",
+      "q": [
+        "¿La central de esterilización tiene zonas diferenciadas: zona sucia (recepción y lavado), zona limpia (empaque) y zona estéril (almacenamiento)?",
+        "¿El flujo del material sigue sentido único (sucia → limpia → estéril) sin cruces entre material contaminado y estéril?",
+        "¿Las superficies de las áreas de esterilización son de fácil limpieza, sin grietas ni uniones que acumulen suciedad?",
+        "¿El almacenamiento del material estéril es en estantería cerrada, con temperatura controlada y lejos de pisos y paredes?""
+      ]
+    },
+    {
+      "id": "est-dotacion",
+      "icon": "🔧",
+      "name": "Equipos y Control del Proceso",
+      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · ANSI/AAMI",
+      "q": [
+        "¿Los autoclaves tienen calificación de instalación, operación y desempeño (IQ/OQ/PQ) documentada y vigente?",
+        "¿Se realizan pruebas de eficacia del proceso (Bowie-Dick, indicadores biológicos, químicos) en cada ciclo y se registran los resultados?",
+        "¿Los termómetros, manómetros y demás instrumentos de control de los autoclaves tienen calibración vigente?",
+        "¿Los empaques de material estéril tienen indicador químico externo e interno visible para validar la exposición al proceso?",
+        "¿Existe sistema de trazabilidad del material estéril: qué se esterilizó, cuándo, en qué ciclo y a qué paciente se usó?""
+      ]
+    },
+    {
+      "id": "est-procesos",
+      "icon": "📋",
+      "name": "Procesos de Esterilización y Trazabilidad",
+      "norm": "Res. 3100/2019 Est. 6 · ANSI/AAMI ST79 · Decreto 351/2014",
+      "q": [
+        "¿Existe protocolo documentado para cada tipo de material (metálico, plástico, textil) con el método y parámetros de esterilización?",
+        "¿Los artículos de uso único (single use) tienen proceso documentado para su resterilización si aplica, o se descartan correctamente?",
+        "¿El material esterilizado tiene etiqueta con fecha de esterilización, número de ciclo, fecha de vencimiento y responsable?",
+        "¿Se conservan los registros de ciclos de esterilización por el tiempo establecido para trazabilidad de incidentes?",
+        "¿Existe programa de mantenimiento preventivo documentado para autoclaves y demás equipos de la central?""
+      ]
+    }
+  ],
+  "trasplante": [
+    {
+      "id": "trsp-talento",
+      "icon": "🏥",
+      "name": "Talento Humano — Trasplante de Órganos y Tejidos",
+      "norm": "Res. 3100/2019 · Ley 9/1979 · Decreto 2493/2004 · Red de Donación",
+      "q": [
+        "¿El equipo de trasplante incluye médico especialista en trasplante con certificación reconocida y registrada?",
+        "¿Existe coordinador de trasplantes con funciones definidas y capacitación específica en gestión de donación?",
+        "¿El personal de UCI tiene entrenamiento en diagnóstico y mantenimiento del potencial donante en muerte encefálica?",
+        "¿El equipo de trasplante participa activamente en la Red de Donación y Trasplante del MSPS?""
+      ]
+    },
+    {
+      "id": "trsp-procesos",
+      "icon": "📋",
+      "name": "Procesos — Donación y Lista de Espera",
+      "norm": "Decreto 2493/2004 · Res. 3100/2019 · Red de donación MSPS",
+      "q": [
+        "¿Existe protocolo documentado para detección, notificación y mantenimiento del potencial donante en muerte encefálica?",
+        "¿Se notifica de manera oportuna a la Red de Donación y Trasplante cada potencial donante detectado en la institución?",
+        "¿La gestión de la lista de espera de receptores cumple los criterios de asignación de órganos establecidos por el MSPS?",
+        "¿Existen protocolos de inmunosupresión post-trasplante con seguimiento definido y control de adherencia al tratamiento?",
+        "¿Se registran y reportan los resultados de los trasplantes (supervivencia injerto, supervivencia paciente) a la Red Nacional?""
+      ]
+    },
+    {
+      "id": "trsp-tejidos",
+      "icon": "🔬",
+      "name": "Banco de Tejidos (si aplica)",
+      "norm": "Res. 3100/2019 · Decreto 2493/2004 · Red de donación tejidos",
+      "q": [
+        "¿El banco de tejidos tiene habilitación vigente ante la Red de Donación y Trasplante del MSPS?",
+        "¿Los tejidos almacenados (córneas, piel, hueso) tienen control de calidad, trazabilidad del donante y tiempo de vida útil?",
+        "¿Existe comunicación documentada y continua con las IPS trasplantadoras para gestión oportuna de tejidos (Res. 544/2023)?",
+        "¿El banco dispone de sistema de almacenamiento con temperatura controlada y alarmas para cada tipo de tejido?""
       ]
     }
   ]

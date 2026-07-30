@@ -13,31 +13,10 @@ import {
   scoreColor,
   scoreLabel,
 } from '@/lib/auditScore';
+import { useAudit } from '@/lib/useAudit';
+import { askWorker } from '@/lib/worker';
+import { auth } from '@/lib/firebase';
 import type { AuditAnswers, AuditAnswer } from '@/lib/auditTypes';
-
-// ─── Firebase Firestore save (optional, graceful degradation) ────────────────
-async function saveAuditToFirestore(
-  segmento: string,
-  answers: AuditAnswers,
-  score: number
-): Promise<void> {
-  try {
-    const { getFirestore, doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-    const { getAuth } = await import('firebase/auth');
-    const { db } = await import('@/lib/firebase');
-    const auth = getAuth();
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    const fsDb = getFirestore();
-    await setDoc(
-      doc(fsDb, 'auditorias', `${uid}_${segmento}`),
-      { uid, segmento, answers, score, updatedAt: serverTimestamp() },
-      { merge: true }
-    );
-  } catch {
-    // Firestore unavailable — silently skip
-  }
-}
 
 // ─── Reusable answer button ───────────────────────────────────────────────────
 type AnswerKey = AuditAnswer;
@@ -112,11 +91,14 @@ export default function AuditoriaSegmentoPage({
   const meta = SEGMENT_META[segmento];
   const flatQ = useMemo(() => buildFlatQuestions(areas), [areas]);
 
-  const [answers, setAnswers] = useState<AuditAnswers>({});
+  // Persistent state via Firestore (auto-save debounced)
+  const { answers, loading: auditLoading, saving, savedAt, setAnswer: persistAnswer,
+          markComplete, resetAudit: resetFirestore } = useAudit(segmento);
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [view, setView] = useState<View>('checklist');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   // ── Derived state ───────────────────────────────────────────────────────────
   const progress = calcProgress(flatQ, answers);
@@ -140,15 +122,17 @@ export default function AuditoriaSegmentoPage({
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const setAnswer = useCallback((v: AuditAnswer) => {
-    setAnswers(prev => ({ ...prev, [`q${currentIdx}`]: v }));
-  }, [currentIdx]);
+    persistAnswer(`q${currentIdx}`, v);
+  }, [currentIdx, persistAnswer]);
 
   const goNext = useCallback(() => {
     if (isLast) {
       setView('results');
+      handleAiAnalysis();
       return;
     }
     setCurrentIdx(i => i + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLast]);
 
   const goPrev = useCallback(() => {
@@ -156,18 +140,55 @@ export default function AuditoriaSegmentoPage({
   }, []);
 
   const handleSave = async () => {
-    setSaving(true);
-    await saveAuditToFirestore(segmento, answers, score.score);
-    setSaving(false);
-    setSaved(true);
+    await markComplete(score.score, flatQ.length);
+    setView('results');
+    // Trigger AI analysis when going to results
+    handleAiAnalysis();
   };
 
-  const resetAudit = () => {
-    setAnswers({});
+  const handleAiAnalysis = async () => {
+    if (aiLoading || aiAnalysis) return;
+    const ncs = getNonConformities(flatQ, answers);
+    if (ncs.length === 0) {
+      setAiAnalysis('**Excelente cumplimiento.** No se detectaron no conformidades en esta auditoría. El servicio está en condiciones óptimas para la habilitación.');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const uid = auth.currentUser?.uid ?? 'anon';
+      const ncSummary = ncs.slice(0, 10).map(nc =>
+        `- [${nc.answer === 'no' ? 'NO CUMPLE' : 'PARCIAL'}] ${nc.areaName}: ${nc.question}`
+      ).join('\n');
+      const question = `Soy una IPS con score de habilitación del ${score.score}% en ${meta?.label ?? segmento}. Tengo ${ncs.length} no conformidades:\n${ncSummary}\n\nDame un plan de acción priorizado con las 3 acciones más críticas para mejorar antes de la visita de habilitación.`;
+      const result = await askWorker(question, {
+        modulo: 'auditoria',
+        uid,
+        nit: '',
+        ips_nombre: '',
+        ips_tipo: segmento,
+      });
+      setAiAnalysis(result.answer);
+    } catch {
+      setAiAnalysis('No se pudo conectar con el Asistente IA. Verifica tu conexión.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const resetAudit = async () => {
+    await resetFirestore();
     setCurrentIdx(0);
     setView('checklist');
-    setSaved(false);
   };
+
+  // ── Loading state ─────────────────────────────────────────────────────────────
+  if (auditLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+      </div>
+    );
+  }
 
   // ── Results view ─────────────────────────────────────────────────────────────
   if (view === 'results') {
@@ -207,16 +228,13 @@ export default function AuditoriaSegmentoPage({
             </div>
           </div>
           <div className="sm:ml-auto flex gap-2 flex-wrap">
+            {savedAt && (
+              <span className="text-xs text-gray-400 self-center">
+                ✓ Guardado automáticamente
+              </span>
+            )}
             <button
-              onClick={handleSave}
-              disabled={saving || saved}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium
-                         hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {saved ? '✓ Guardado' : saving ? 'Guardando...' : '💾 Guardar auditoría'}
-            </button>
-            <button
-              onClick={resetAudit}
+              onClick={async () => { await resetAudit(); }}
               className="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm
                          hover:bg-gray-50 transition"
             >
@@ -257,7 +275,7 @@ export default function AuditoriaSegmentoPage({
 
         {/* Non-conformities */}
         {nonConformities.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
             <h3 className="font-semibold text-gray-700 mb-4 text-sm uppercase tracking-wide">
               No conformidades ({nonConformities.length})
             </h3>
@@ -280,6 +298,42 @@ export default function AuditoriaSegmentoPage({
             </div>
           </div>
         )}
+
+        {/* AI Recommendations */}
+        <div className="bg-gradient-to-br from-teal-50 to-white rounded-2xl border border-teal-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-teal-800 text-sm uppercase tracking-wide flex items-center gap-2">
+              🤖 Recomendaciones del Asistente IA
+            </h3>
+            {!aiAnalysis && !aiLoading && (
+              <button
+                onClick={handleAiAnalysis}
+                className="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+              >
+                Analizar resultados
+              </button>
+            )}
+          </div>
+
+          {aiLoading && (
+            <div className="flex items-center gap-3 text-sm text-teal-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-teal-600" />
+              Analizando no conformidades con IA…
+            </div>
+          )}
+
+          {aiAnalysis && !aiLoading && (
+            <div className="prose prose-sm max-w-none text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+              {aiAnalysis}
+            </div>
+          )}
+
+          {!aiAnalysis && !aiLoading && (
+            <p className="text-sm text-teal-700/70">
+              El Asistente IA analizará tus no conformidades y generará un plan de acción priorizado basado en la Res. 3100/2019.
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -299,7 +353,7 @@ export default function AuditoriaSegmentoPage({
       {/* Progress bar */}
       <div className="mb-6">
         <div className="flex justify-between text-xs text-gray-400 mb-1">
-          <span>Progreso</span>
+          <span>Progreso {saving && <span className="italic">(guardando…)</span>}</span>
           <span>{Object.keys(answers).length} / {flatQ.length} criterios</span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
