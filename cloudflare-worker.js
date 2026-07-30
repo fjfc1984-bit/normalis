@@ -300,7 +300,7 @@ async function ejecutarTool(toolName, toolArgs, uid, nit, env) {
                              diasRest <= 30    ? `vence en ${diasRest} días (URGENTE)` :
                              diasRest <= 90    ? `vence en ${diasRest} días (próximo)` :
                              `vence en ${diasRest} días`;
-            return `- ${d.nombre || d.documento || 'Sin nombre'}: ${estado}${d.estado ? \` [${d.estado}]\` : ''}`;
+            return `- ${d.nombre || d.documento || 'Sin nombre'}: ${estado}${d.estado ? ' [' + d.estado + ']' : ''}`;
           })
           .join('\n');
         return `Vencimientos registrados en NormaLis:\n${items}`;

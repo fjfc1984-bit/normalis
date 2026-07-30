@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - 'cloudflare-worker.js'
+      - 'firestore-admin.js'
+      - 'wrangler.toml'
       - 'cloudflare-worker/**'
 
 jobs:
@@ -17,4 +20,3 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: cloudflare-worker
