@@ -8,7 +8,8 @@ const nextConfig: NextConfig = {
     return [
       // ── Rutas .html que YA existen en Next.js → URL canónica ──────────────
       { source: '/login.html',    destination: '/login',    permanent: true },
-      { source: '/registro.html', destination: '/registro', permanent: true },
+      { source: '/registro.html', destination: `${LEGACY_BASE}/registro.html`, permanent: false },
+      { source: '/registro',      destination: `${LEGACY_BASE}/registro.html`, permanent: false },
       { source: '/admin.html',    destination: '/admin',    permanent: true },
       { source: '/index.html',    destination: '/',         permanent: true },
       { source: '/pricing.html',  destination: '/#precios', permanent: false },

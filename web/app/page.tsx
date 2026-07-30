@@ -450,15 +450,23 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={onDemo}
-                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                {/* Botón primario: Empezar ahora */}
+                <Link
+                  href="/registro"
+                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all text-center block mb-2 ${
                     p.popular
                       ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-200'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      : 'bg-teal-500 hover:bg-teal-400 text-white shadow-sm'
                   }`}
                 >
-                  {p.cta}
+                  {p.monthly === 'A la medida' ? '📩 Hablar con ventas' : 'Empezar ahora →'}
+                </Link>
+                {/* Botón secundario: Solicitar demo */}
+                <button
+                  onClick={onDemo}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-slate-200"
+                >
+                  {p.monthly === 'A la medida' ? '' : 'Ver demo primero'}
                 </button>
               </div>
             </div>
