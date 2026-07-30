@@ -1,39 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 
-type ToastType = 'success' | 'error' | 'info';
+export type ToastType = 'success' | 'error' | 'info';
 
-interface ToastProps {
-  message: string;
-  type?:   ToastType;
-  onClose: () => void;
-}
+interface ToastState { msg: string; type: ToastType }
 
-const COLORS: Record<ToastType, string> = {
-  success: 'bg-green-600',
-  error:   'bg-red-600',
-  info:    'bg-primary-600',
+const CFG: Record<ToastType, { bg: string; icon: string }> = {
+  success: { bg: 'bg-emerald-600', icon: '✅' },
+  error:   { bg: 'bg-red-600',     icon: '❌' },
+  info:    { bg: 'bg-gray-700',    icon: 'ℹ️'  },
 };
 
-export default function Toast({ message, type = 'info', onClose }: ToastProps) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
+/** Coloca <Toast toast={toast} /> en la raíz del componente de página. */
+export function Toast({ toast }: { toast: ToastState | null }) {
+  if (!toast) return null;
+  const { bg, icon } = CFG[toast.type];
   return (
-    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-lg text-white
-                     text-sm font-medium shadow-lg transition-all ${COLORS[type]}`}>
-      {message}
+    <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg
+                     text-sm font-semibold text-white flex items-center gap-2 ${bg}`}>
+      <span>{icon}</span>
+      <span>{toast.msg}</span>
     </div>
   );
 }
 
-// Hook para usar toasts fácilmente
-export function useToast() {
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-  const show = (message: string, type: ToastType = 'info') => setToast({ message, type });
-  const hide = () => setToast(null);
-  return { toast, show, hide };
+/** Hook que gestiona el ciclo de vida del toast. */
+export function useToast(duration = 3500) {
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const show = useCallback((msg: string, type: ToastType = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), duration);
+  }, [duration]);
+  return { toast, show };
 }

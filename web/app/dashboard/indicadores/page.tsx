@@ -3,11 +3,6 @@
 /**
  * web/app/dashboard/indicadores/page.tsx
  * Módulo de Indicadores de Calidad — Res. 256/2016 (SOGCS / SISPRO)
- *
- * - Catálogo de 14 indicadores trazadores agrupados por categoría
- * - Semáforo cumple / no_cumple / sin_datos por indicador
- * - Modal inline para registrar mediciones por período
- * - Export PDF: Informe de Indicadores SOGCS
  */
 
 import { useState } from 'react';
@@ -15,37 +10,19 @@ import { useAuth } from '@/lib/auth';
 import { useIndicadores } from '@/lib/useIndicadores';
 import { INDICADOR_GRUPOS } from '@/lib/indicadorTypes';
 import type { IndicadorEstado, IndicadorDef } from '@/lib/indicadorTypes';
+import {
+  KpiCard, Toast, useToast, StatusBadge,
+  SectionHeader, LoadingSpinner,
+} from '@/components/ui';
 
-// ── Toast liviano ─────────────────────────────────────────
-interface ToastState { msg: string; type: 'success' | 'error' }
-
-function useToastLocal() {
-  const [toast, setToast] = useState<ToastState | null>(null);
-  function show(msg: string, type: ToastState['type'] = 'success') {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  }
-  return { toast, show };
-}
-
-// ── Semáforo badge ────────────────────────────────────────
+// ── Semáforo config ───────────────────────────────────────
 type Semaforo = 'cumple' | 'no_cumple' | 'sin_datos';
 
 const SEMAFORO_CFG: Record<Semaforo, { label: string; bg: string; color: string; dot: string }> = {
-  cumple:     { label: 'Cumple',    bg: 'bg-emerald-100', color: 'text-emerald-700', dot: 'bg-emerald-500' },
-  no_cumple:  { label: 'No cumple', bg: 'bg-red-100',     color: 'text-red-700',     dot: 'bg-red-500'     },
-  sin_datos:  { label: 'Sin datos', bg: 'bg-gray-100',    color: 'text-gray-500',    dot: 'bg-gray-400'    },
+  cumple:    { label: 'Cumple',    bg: 'bg-emerald-100', color: 'text-emerald-700', dot: 'bg-emerald-500' },
+  no_cumple: { label: 'No cumple', bg: 'bg-red-100',     color: 'text-red-700',     dot: 'bg-red-500'     },
+  sin_datos: { label: 'Sin datos', bg: 'bg-gray-100',    color: 'text-gray-500',    dot: 'bg-gray-400'    },
 };
-
-function SemaforoBadge({ s }: { s: Semaforo }) {
-  const { label, bg, color, dot } = SEMAFORO_CFG[s];
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${bg} ${color}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      {label}
-    </span>
-  );
-}
 
 // ── Modal para registrar medición ─────────────────────────
 interface RegistroModalProps {
@@ -58,17 +35,17 @@ function defaultPeriodo(periodicidad: IndicadorDef['periodicidad']): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
-  if (periodicidad === 'mensual')     return `${y}-${m}`;
-  if (periodicidad === 'trimestral')  return `${y}-Q${Math.ceil((now.getMonth() + 1) / 3)}`;
+  if (periodicidad === 'mensual')    return `${y}-${m}`;
+  if (periodicidad === 'trimestral') return `${y}-Q${Math.ceil((now.getMonth() + 1) / 3)}`;
   return `${y}`;
 }
 
 function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
-  const [periodo,    setPeriodo]    = useState(defaultPeriodo(def.periodicidad));
-  const [valor,      setValor]      = useState('');
-  const [obs,        setObs]        = useState('');
-  const [saving,     setSaving]     = useState(false);
-  const [err,        setErr]        = useState('');
+  const [periodo, setPeriodo] = useState(defaultPeriodo(def.periodicidad));
+  const [valor,   setValor]   = useState('');
+  const [obs,     setObs]     = useState('');
+  const [saving,  setSaving]  = useState(false);
+  const [err,     setErr]     = useState('');
 
   const periodoHint =
     def.periodicidad === 'mensual'    ? 'Ej: 2025-04' :
@@ -78,8 +55,7 @@ function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
     e.preventDefault();
     setErr('');
     if (!periodo.trim()) { setErr('El período es obligatorio.'); return; }
-    const num = parseFloat(valor);
-    if (isNaN(num)) { setErr('Ingresa un valor numérico válido.'); return; }
+    if (isNaN(parseFloat(valor))) { setErr('Ingresa un valor numérico válido.'); return; }
     setSaving(true);
     try {
       await onSave(def.id, periodo.trim(), valor, obs.trim());
@@ -108,10 +84,8 @@ function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
               {def.nombre}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0 mt-0.5"
-          >
+          <button onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0 mt-0.5">
             ×
           </button>
         </div>
@@ -134,27 +108,16 @@ function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
               <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
                 Período <span className="text-red-500">*</span>
               </label>
-              <input
-                value={periodo}
-                onChange={e => setPeriodo(e.target.value)}
-                placeholder={periodoHint}
-                className={INPUT}
-                maxLength={10}
-              />
+              <input value={periodo} onChange={e => setPeriodo(e.target.value)}
+                     placeholder={periodoHint} className={INPUT} maxLength={10} />
               <p className="text-xs text-gray-400 mt-1">{periodoHint}</p>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
                 Valor ({def.unidad}) <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                step="any"
-                value={valor}
-                onChange={e => setValor(e.target.value)}
-                placeholder="0"
-                className={INPUT}
-              />
+              <input type="number" step="any" value={valor}
+                     onChange={e => setValor(e.target.value)} placeholder="0" className={INPUT} />
             </div>
           </div>
 
@@ -162,33 +125,21 @@ function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
             <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
               Observación
             </label>
-            <textarea
-              rows={2}
-              value={obs}
-              onChange={e => setObs(e.target.value)}
-              placeholder="Fuente del dato, contexto, aclaraciones…"
-              maxLength={500}
-              className={`${INPUT} resize-none`}
-            />
+            <textarea rows={2} value={obs} onChange={e => setObs(e.target.value)}
+                      placeholder="Fuente del dato, contexto…" maxLength={500}
+                      className={`${INPUT} resize-none`} />
           </div>
 
           <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700
-                         rounded-xl text-sm font-semibold transition-colors"
-            >
+            <button type="button" onClick={onClose} disabled={saving}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700
+                               rounded-xl text-sm font-semibold transition-colors">
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={saving || !valor}
-              className="flex-1 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50
-                         text-white font-bold rounded-xl text-sm transition-colors
-                         flex items-center justify-center gap-2"
-            >
+            <button type="submit" disabled={saving || !valor}
+                    className="flex-1 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50
+                               text-white font-bold rounded-xl text-sm transition-colors
+                               flex items-center justify-center gap-2">
               {saving && (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               )}
@@ -211,25 +162,26 @@ function IndicadorCard({
 }) {
   const { def, registros, ultimo, valor, semaforo } = estado;
   const [expanded, setExpanded] = useState(false);
-
   const historial = registros.slice(0, 3);
+  const cfg = SEMAFORO_CFG[semaforo as Semaforo] ?? SEMAFORO_CFG.sin_datos;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors">
       <div className="flex">
-        <div className={`w-1 flex-shrink-0 ${
-          semaforo === 'cumple'    ? 'bg-emerald-500' :
-          semaforo === 'no_cumple' ? 'bg-red-400' :
-                                     'bg-gray-200'
-        }`} />
-
+        <div className={`w-1 flex-shrink-0 ${cfg.dot}`} />
         <div className="flex-1 p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-gray-400 mb-0.5">{def.grupo}</p>
               <p className="text-sm font-semibold text-gray-800 leading-snug">{def.nombre}</p>
             </div>
-            <SemaforoBadge s={semaforo} />
+            <StatusBadge
+              label={cfg.label}
+              bg={cfg.bg}
+              color={cfg.color}
+              dot
+              dotColor={cfg.dot}
+            />
           </div>
 
           <div className="flex items-center gap-3 mb-3">
@@ -244,9 +196,7 @@ function IndicadorCard({
                   <span className="font-bold text-base text-gray-800">{valor}</span>
                   {' '}
                   <span className="text-gray-400">{def.unidad}</span>
-                  {ultimo && (
-                    <span className="ml-1 text-gray-400">({ultimo.periodo})</span>
-                  )}
+                  {ultimo && <span className="ml-1 text-gray-400">({ultimo.periodo})</span>}
                 </div>
               </>
             )}
@@ -255,10 +205,8 @@ function IndicadorCard({
           {historial.length > 1 && (
             <div className="flex flex-wrap gap-1 mb-3">
               {historial.map((r, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500"
-                >
+                <span key={i}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500">
                   <span className="font-medium text-gray-600">{r.periodo}</span>
                   <span>{r.valor} {def.unidad}</span>
                 </span>
@@ -268,7 +216,7 @@ function IndicadorCard({
 
           <button
             onClick={() => setExpanded(v => !v)}
-            className="text-xs text-teal-600 hover:text-teal-700 font-medium mb-2 flex items-center gap-1 transition-colors"
+            className="text-xs text-teal-600 hover:text-teal-700 font-medium mb-2 flex items-center gap-1"
           >
             {expanded ? '▲ Ocultar fórmula' : '▼ Ver fórmula y descripción'}
           </button>
@@ -276,9 +224,7 @@ function IndicadorCard({
           {expanded && (
             <div className="mb-3 space-y-2">
               <div className="bg-teal-50 border border-teal-100 rounded-lg px-3 py-2">
-                <p className="text-xs font-bold text-teal-600 uppercase tracking-wide mb-0.5">
-                  Fórmula
-                </p>
+                <p className="text-xs font-bold text-teal-600 uppercase tracking-wide mb-0.5">Fórmula</p>
                 <p className="text-xs text-teal-800 font-mono leading-relaxed">{def.formula}</p>
               </div>
               <div className="bg-gray-50 rounded-lg px-3 py-2">
@@ -309,130 +255,72 @@ export default function IndicadoresPage() {
   const { user, nit } = useAuth();
   const { estados, stats, loading, error, saveIndicador } = useIndicadores(
     user?.uid ?? null,
-    nit   ?? null,
+    nit ?? null,
   );
-  const { toast, show } = useToastLocal();
+  const { toast, show } = useToast();
 
   const [modalDef,    setModalDef]    = useState<IndicadorDef | null>(null);
   const [grupoActivo, setGrupoActivo] = useState<string | null>(null);
 
-  // ── Guardar medición ────────────────────────────────
-  async function handleSave(
-    indicId: string,
-    periodo: string,
-    valor: string,
-    obs: string,
-  ) {
+  async function handleSave(indicId: string, periodo: string, valor: string, obs: string) {
     if (!user) throw new Error('No autenticado');
     await saveIndicador({ indicId, periodo, valor, observacion: obs }, user.uid, nit ?? '');
-    show('Medición registrada correctamente.', 'success');
+    show('Medición registrada correctamente.');
   }
 
-  // ── Export PDF SOGCS ────────────────────────────────
   function exportarPDF() {
-    const fecha = new Date().toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'long', year: 'numeric',
-    });
-
+    const fecha = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
     const filas = estados.map(({ def, ultimo, valor, semaforo }) => {
       const valorStr = valor !== null ? `${valor} ${def.unidad}` : '—';
-      const periodoStr = ultimo?.periodo ?? '—';
-      const color =
-        semaforo === 'cumple'    ? '#d1fae5' :
-        semaforo === 'no_cumple' ? '#fee2e2' : '#f3f4f6';
-      const estado =
-        semaforo === 'cumple'    ? '✅ Cumple' :
-        semaforo === 'no_cumple' ? '❌ No cumple' : '— Sin datos';
-
-      return `
-        <tr style="background:${color}">
-          <td style="padding:6px 8px;font-size:11px;border-bottom:1px solid #e5e7eb">
-            <strong>${def.grupo}</strong><br/>
-            <span style="font-weight:400">${def.nombre}</span>
-          </td>
-          <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb;white-space:nowrap">
-            ${def.meta} ${def.unidad}
-          </td>
-          <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb;white-space:nowrap">
-            ${valorStr}
-          </td>
-          <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb">
-            ${periodoStr}
-          </td>
-          <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb;font-weight:600">
-            ${estado}
-          </td>
-        </tr>`;
+      const color = semaforo === 'cumple' ? '#d1fae5' : semaforo === 'no_cumple' ? '#fee2e2' : '#f3f4f6';
+      const estadoLabel = semaforo === 'cumple' ? '✅ Cumple' : semaforo === 'no_cumple' ? '❌ No cumple' : '— Sin datos';
+      return `<tr style="background:${color}">
+        <td style="padding:6px 8px;font-size:11px;border-bottom:1px solid #e5e7eb">
+          <strong>${def.grupo}</strong><br/><span style="font-weight:400">${def.nombre}</span>
+        </td>
+        <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb">${def.meta} ${def.unidad}</td>
+        <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb">${valorStr}</td>
+        <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb">${ultimo?.periodo ?? '—'}</td>
+        <td style="padding:6px 8px;font-size:11px;text-align:center;border-bottom:1px solid #e5e7eb;font-weight:600">${estadoLabel}</td>
+      </tr>`;
     }).join('');
 
-    const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Informe Indicadores SOGCS</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
-    h1 { font-size: 16px; margin-bottom: 4px; }
-    .sub { font-size: 12px; color: #555; margin-bottom: 16px; }
-    .kpis { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-    .kpi { border:1px solid #e5e7eb; border-radius:8px; padding:8px 14px; text-align:center; min-width:80px; }
-    .kpi .n { font-size:20px; font-weight:700; }
-    .kpi .l { font-size:10px; color:#666; }
-    table { width:100%; border-collapse:collapse; font-size:11px; }
-    th { background:#0d9488; color:#fff; padding:7px 8px; text-align:left; font-size:11px; }
-    @media print { body { margin: 0; } }
-  </style>
-</head>
-<body>
-  <h1>Informe de Indicadores de Calidad — SOGCS</h1>
-  <p class="sub">Resolución 256/2016 · Generado el ${fecha}</p>
-  <div class="kpis">
-    <div class="kpi"><div class="n">${stats.total}</div><div class="l">Total</div></div>
-    <div class="kpi" style="border-color:#a7f3d0"><div class="n" style="color:#065f46">${stats.cumplen}</div><div class="l">Cumplen</div></div>
-    <div class="kpi" style="border-color:#fecaca"><div class="n" style="color:#991b1b">${stats.noCumplen}</div><div class="l">No cumplen</div></div>
-    <div class="kpi"><div class="n" style="color:#6b7280">${stats.sinDatos}</div><div class="l">Sin datos</div></div>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Indicador</th>
-        <th style="text-align:center;white-space:nowrap">Meta</th>
-        <th style="text-align:center;white-space:nowrap">Valor</th>
-        <th style="text-align:center">Período</th>
-        <th style="text-align:center">Estado</th>
-      </tr>
-    </thead>
-    <tbody>${filas}</tbody>
-  </table>
-  <p style="font-size:10px;color:#888;margin-top:16px">Reporte generado por NormaLis · normalis.co</p>
-</body>
-</html>`;
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<title>Informe Indicadores SOGCS</title>
+<style>body{font-family:Arial,sans-serif;margin:24px;color:#111}
+h1{font-size:16px;margin-bottom:4px}.sub{font-size:12px;color:#555;margin-bottom:16px}
+.kpis{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.kpi{border:1px solid #e5e7eb;border-radius:8px;padding:8px 14px;text-align:center;min-width:80px}
+.kpi .n{font-size:20px;font-weight:700}.kpi .l{font-size:10px;color:#666}
+table{width:100%;border-collapse:collapse}th{background:#0d9488;color:#fff;padding:7px 8px;text-align:left;font-size:11px}
+@media print{body{margin:0}}</style></head><body>
+<h1>Informe de Indicadores de Calidad — SOGCS</h1>
+<p class="sub">Resolución 256/2016 · Generado el ${fecha}</p>
+<div class="kpis">
+  <div class="kpi"><div class="n">${stats.total}</div><div class="l">Total</div></div>
+  <div class="kpi" style="border-color:#a7f3d0"><div class="n" style="color:#065f46">${stats.cumplen}</div><div class="l">Cumplen</div></div>
+  <div class="kpi" style="border-color:#fecaca"><div class="n" style="color:#991b1b">${stats.noCumplen}</div><div class="l">No cumplen</div></div>
+  <div class="kpi"><div class="n" style="color:#6b7280">${stats.sinDatos}</div><div class="l">Sin datos</div></div>
+</div>
+<table><thead><tr>
+  <th>Indicador</th><th style="text-align:center">Meta</th><th style="text-align:center">Valor</th>
+  <th style="text-align:center">Período</th><th style="text-align:center">Estado</th>
+</tr></thead><tbody>${filas}</tbody></table>
+<p style="font-size:10px;color:#888;margin-top:16px">Reporte generado por NormaLis · normalis.co</p>
+</body></html>`;
 
     const w = window.open('', '_blank', 'width=900,height=700');
     if (!w) { show('Permite ventanas emergentes para exportar.', 'error'); return; }
-    w.document.write(html);
-    w.document.close();
+    w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
   }
 
-  // ── Estados filtrados por grupo ─────────────────────
-  const estadosFiltrados = grupoActivo
-    ? estados.filter(e => e.def.grupo === grupoActivo)
-    : estados;
-
+  const estadosFiltrados = grupoActivo ? estados.filter(e => e.def.grupo === grupoActivo) : estados;
   function countNoC(grupo: string) {
     return estados.filter(e => e.def.grupo === grupo && e.semaforo === 'no_cumple').length;
   }
 
-  // ── Loading / error ─────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  if (loading) return <LoadingSpinner fullHeight />;
   if (error) {
     return (
       <div className="p-6 text-center">
@@ -443,61 +331,29 @@ export default function IndicadoresPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <Toast toast={toast} />
+      {modalDef && <RegistroModal def={modalDef} onClose={() => setModalDef(null)} onSave={handleSave} />}
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
-                         flex items-center gap-2
-                         ${toast.type === 'success'
-                           ? 'bg-emerald-600 text-white'
-                           : 'bg-red-600 text-white'}`}>
-          {toast.type === 'success' ? '✅' : '⚠️'} {toast.msg}
-        </div>
-      )}
-
-      {/* Modal */}
-      {modalDef && (
-        <RegistroModal
-          def={modalDef}
-          onClose={() => setModalDef(null)}
-          onSave={handleSave}
-        />
-      )}
-
-      {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Indicadores de Calidad</h2>
-          <p className="text-sm text-gray-500">Resolución 256/2016 — 14 trazadores SOGCS / SISPRO</p>
-        </div>
-        <button
-          onClick={exportarPDF}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700
-                     text-white text-sm font-semibold rounded-xl transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Informe SOGCS
-        </button>
-      </div>
+      <SectionHeader
+        title="Indicadores de Calidad"
+        subtitle="Resolución 256/2016 — 14 trazadores SOGCS / SISPRO"
+        actions={
+          <button
+            onClick={exportarPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700
+                       text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            📄 Informe SOGCS
+          </button>
+        }
+      />
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Total',      value: stats.total,      color: 'text-gray-800',    border: 'border-gray-200',    icon: '📊' },
-          { label: 'Cumplen',    value: stats.cumplen,    color: 'text-emerald-700', border: 'border-emerald-200', icon: '✅' },
-          { label: 'No cumplen', value: stats.noCumplen,  color: 'text-red-700',     border: 'border-red-200',     icon: '❌' },
-          { label: 'Sin datos',  value: stats.sinDatos,   color: 'text-gray-400',    border: 'border-gray-200',    icon: '—'  },
-        ].map(({ label, value, color, border, icon }) => (
-          <div key={label}
-               className={`bg-white rounded-xl border ${border} p-4 flex flex-col items-center text-center`}>
-            <span className="text-lg mb-1">{icon}</span>
-            <span className={`text-2xl font-bold ${color}`}>{value}</span>
-            <span className="text-xs text-gray-500 mt-0.5">{label}</span>
-          </div>
-        ))}
+        <KpiCard label="Total"      value={stats.total}     colorClass="text-gray-800"    icon="📊" />
+        <KpiCard label="Cumplen"    value={stats.cumplen}   colorClass="text-emerald-700" icon="✅" borderColorClass="border-emerald-200" />
+        <KpiCard label="No cumplen" value={stats.noCumplen} colorClass="text-red-700"     icon="❌" borderColorClass="border-red-200" />
+        <KpiCard label="Sin datos"  value={stats.sinDatos}  colorClass="text-gray-400"    icon="—" />
       </div>
 
       {/* Filtros de grupo */}
@@ -505,9 +361,7 @@ export default function IndicadoresPage() {
         <button
           onClick={() => setGrupoActivo(null)}
           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors
-                      ${!grupoActivo
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      ${!grupoActivo ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
         >
           Todos ({estados.length})
         </button>
@@ -519,16 +373,12 @@ export default function IndicadoresPage() {
               onClick={() => setGrupoActivo(g => g === grupo ? null : grupo)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
                           text-xs font-semibold transition-colors
-                          ${grupoActivo === grupo
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                          ${grupoActivo === grupo ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
               {grupo}
               {noC > 0 && (
-                <span className={`px-1.5 py-0 rounded-full text-xs font-bold
-                                  ${grupoActivo === grupo
-                                    ? 'bg-white text-red-600'
-                                    : 'bg-red-500 text-white'}`}>
+                <span className={`px-1.5 rounded-full text-xs font-bold
+                                  ${grupoActivo === grupo ? 'bg-white text-red-600' : 'bg-red-500 text-white'}`}>
                   {noC}
                 </span>
               )}
@@ -537,7 +387,7 @@ export default function IndicadoresPage() {
         })}
       </div>
 
-      {/* Grilla de indicadores */}
+      {/* Grilla */}
       {grupoActivo ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {estadosFiltrados.map(est => (
@@ -558,12 +408,8 @@ export default function IndicadoresPage() {
                     <span className="text-xs text-gray-400">({grupoEstados.length})</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {cumplenG > 0 && (
-                      <span className="text-xs text-emerald-700 font-semibold">✅ {cumplenG} cumplen</span>
-                    )}
-                    {noCG > 0 && (
-                      <span className="text-xs text-red-600 font-semibold">❌ {noCG} no cumplen</span>
-                    )}
+                    {cumplenG > 0 && <span className="text-xs text-emerald-700 font-semibold">✅ {cumplenG} cumplen</span>}
+                    {noCG > 0     && <span className="text-xs text-red-600 font-semibold">❌ {noCG} no cumplen</span>}
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

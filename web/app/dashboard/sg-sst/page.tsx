@@ -6,12 +6,17 @@
  * Base legal: Res. 0312/2019 · Decreto 1072/2015 — Ministerio de Trabajo Colombia
  */
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useSST, calcSSTScore } from '@/lib/useSST';
 import type { SSTFase, SSTItemEstado, SSTPlanItem, SSTVencimiento } from '@/lib/sstTypes';
 import { SST_SEMAFORO_CFG, SST_FASE_LABELS } from '@/lib/sstTypes';
 import { SST_ESTANDARES, SST_VENCIMIENTOS_TIPO } from '@/lib/sstCatalog';
+import {
+  KpiCard, Toast, useToast, EmptyState,
+  SectionHeader, LoadingSpinner, TabBar,
+} from '@/components/ui';
+import type { TabItem } from '@/components/ui';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtDate(iso: string | undefined): string {
@@ -28,7 +33,7 @@ function diasParaVencer(iso: string): number {
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 type Tab = 'dashboard' | 'autoevaluacion' | 'plan' | 'vencimientos';
 
-const TABS: { value: Tab; label: string; emoji: string }[] = [
+const TABS: TabItem<Tab>[] = [
   { value: 'dashboard',      label: 'Dashboard',      emoji: '📊' },
   { value: 'autoevaluacion', label: 'Autoevaluación', emoji: '✅' },
   { value: 'plan',           label: 'Plan de Trabajo', emoji: '📋' },
@@ -159,17 +164,10 @@ function TabDashboard({
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Total ítems',   value: totalItems, color: 'text-gray-800'    },
-          { label: 'Evaluados',     value: evaluados,  color: 'text-blue-700'    },
-          { label: 'Cumplen',       value: cumple,     color: 'text-emerald-700' },
-          { label: 'No cumplen',    value: noC,        color: 'text-red-700'     },
-        ].map(k => (
-          <div key={k.label} className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{k.label}</p>
-            <p className={`text-3xl font-black mt-1 ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
+        <KpiCard label="Total ítems" value={totalItems} colorClass="text-gray-800" />
+        <KpiCard label="Evaluados"   value={evaluados}  colorClass="text-blue-700" />
+        <KpiCard label="Cumplen"     value={cumple}     colorClass="text-emerald-700" borderColorClass="border-emerald-200" />
+        <KpiCard label="No cumplen"  value={noC}        colorClass="text-red-700"     borderColorClass="border-red-200" />
       </div>
 
       {/* Por grupo */}
@@ -441,10 +439,7 @@ function TabPlan({
 
       {/* Lista de actividades */}
       {plan.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-3xl mb-2">📋</p>
-          <p className="text-sm">Sin actividades planificadas. Agrega la primera arriba.</p>
-        </div>
+        <EmptyState icon="📋" title="Sin actividades planificadas" description="Agrega la primera actividad usando el formulario de arriba." />
       ) : (
         <div className="space-y-3">
           {plan.map(item => {
@@ -685,10 +680,7 @@ function TabVencimientos({
 
       {/* Lista */}
       {vencimientos.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-3xl mb-2">📅</p>
-          <p className="text-sm">Sin vencimientos registrados. Agrega el primero arriba.</p>
-        </div>
+        <EmptyState icon="📅" title="Sin vencimientos registrados" description="Agrega el primer vencimiento usando el formulario de arriba." />
       ) : (
         <div className="space-y-3">
           {[...vencimientos].sort((a, b) => a.fecha.localeCompare(b.fecha)).map(v => (
@@ -789,55 +781,35 @@ export default function SgSstPage() {
   } = useSST(user?.uid ?? null);
 
   const [tab, setTab] = useState<Tab>('dashboard');
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-
-  const showToast = useCallback((msg: string, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
+  const { toast, show: showToast } = useToast();
 
   async function handleSetFase(f: SSTFase) {
     if (f === data.fase) return;
     if (!confirm(`¿Cambiar a ${SST_FASE_LABELS[f]}? Esto borrará la autoevaluación actual.`)) return;
     try { await setFase(f); showToast('Fase actualizada.'); }
-    catch { showToast('Error al cambiar la fase.', false); }
+    catch { showToast('Error al cambiar la fase.', 'error'); }
   }
 
-  if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (authLoading || loading) return <LoadingSpinner fullHeight />;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold
-          ${toast.ok ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-          {toast.ok ? '✅' : '❌'} {toast.msg}
-        </div>
-      )}
+      <Toast toast={toast} />
 
-      {/* Encabezado */}
-      <div className="flex items-start justify-between mb-6 gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">SG-SST</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Sistema de Gestión de Seguridad y Salud en el Trabajo · Res. 0312/2019
-          </p>
-        </div>
-        <button
-          onClick={() => exportarPDF(score, data.fase, data.autoevaluacion)}
-          className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
-                     text-gray-600 rounded-xl text-sm font-medium transition-colors flex-shrink-0"
-        >
-          📄 PDF
-        </button>
-      </div>
+      <SectionHeader
+        title="SG-SST"
+        subtitle="Sistema de Gestión de Seguridad y Salud en el Trabajo · Res. 0312/2019"
+        actions={
+          <button
+            onClick={() => exportarPDF(score, data.fase, data.autoevaluacion)}
+            className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
+                       text-gray-600 rounded-xl text-sm font-medium transition-colors"
+          >
+            📄 PDF
+          </button>
+        }
+      />
 
       {/* Error */}
       {error && (
@@ -870,21 +842,7 @@ export default function SgSstPage() {
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 overflow-x-auto">
-        {TABS.map(t => (
-          <button
-            key={t.value}
-            onClick={() => setTab(t.value)}
-            className={`flex-1 min-w-max px-3 py-2 rounded-lg text-xs font-semibold transition-all
-              ${tab === t.value
-                ? 'bg-white text-teal-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            {t.emoji} {t.label}
-          </button>
-        ))}
-      </div>
+      <TabBar tabs={TABS} active={tab} onChange={setTab} />
 
       {/* Contenido de la tab activa */}
       {tab === 'dashboard' && (
@@ -902,11 +860,11 @@ export default function SgSstPage() {
           saving={saving}
           onItemChange={async (id, estado) => {
             try { await setItemEstado(id, estado); }
-            catch { showToast('Error al guardar.', false); }
+            catch { showToast('Error al guardar.', 'error'); }
           }}
           onMarcarTodos={async (estado) => {
             try { await marcarTodos(estado); showToast(estado ? 'Todos marcados.' : 'Evaluación limpiada.'); }
-            catch { showToast('Error.', false); }
+            catch { showToast('Error.', 'error'); }
           }}
         />
       )}
@@ -916,15 +874,15 @@ export default function SgSstPage() {
           saving={saving}
           onAdd={async (item) => {
             try { await addPlanItem(item); showToast('Actividad agregada.'); }
-            catch { showToast('Error al agregar.', false); }
+            catch { showToast('Error al agregar.', 'error'); }
           }}
           onUpdate={async (id, changes) => {
             try { await updatePlanItem(id, changes); showToast('Actividad actualizada.'); }
-            catch { showToast('Error al actualizar.', false); }
+            catch { showToast('Error al actualizar.', 'error'); }
           }}
           onDelete={async (id) => {
             try { await deletePlanItem(id); showToast('Actividad eliminada.'); }
-            catch { showToast('Error al eliminar.', false); }
+            catch { showToast('Error al eliminar.', 'error'); }
           }}
         />
       )}
@@ -934,11 +892,11 @@ export default function SgSstPage() {
           saving={saving}
           onAdd={async (v) => {
             try { await addVencimiento(v); showToast('Vencimiento agregado.'); }
-            catch { showToast('Error al agregar.', false); }
+            catch { showToast('Error al agregar.', 'error'); }
           }}
           onDelete={async (id) => {
             try { await deleteVencimiento(id); showToast('Vencimiento eliminado.'); }
-            catch { showToast('Error al eliminar.', false); }
+            catch { showToast('Error al eliminar.', 'error'); }
           }}
         />
       )}

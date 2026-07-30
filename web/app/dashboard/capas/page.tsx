@@ -12,6 +12,10 @@ import { useAuth } from '@/lib/auth';
 import { useCapas } from '@/lib/useCapas';
 import type { Capa, CapaEstado } from '@/lib/capaTypes';
 import { CAPA_ESTADO_CFG, CAPA_ORIGEN_LABELS } from '@/lib/capaTypes';
+import {
+  KpiCard, Toast, useToast, ConfirmModal, EmptyState,
+  SectionHeader, LoadingSpinner,
+} from '@/components/ui';
 
 // ── Helpers de fecha ─────────────────────────────────────
 function fmtDate(iso: string | undefined): string {
@@ -60,73 +64,6 @@ function DiasChip({ capa }: { capa: Capa }) {
   );
 }
 
-// ── KPI Card ─────────────────────────────────────────────
-function KpiCard({ label, value, sub, colorClass }: {
-  label: string; value: number; sub?: string; colorClass: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-1">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-400">{sub}</p>}
-    </div>
-  );
-}
-
-// ── Modal de cierre ──────────────────────────────────────
-function CierreModal({
-  onConfirm,
-  onCancel,
-  loading,
-}: {
-  onConfirm: (evidencia: string) => void;
-  onCancel: () => void;
-  loading: boolean;
-}) {
-  const [evidencia, setEvidencia] = useState('');
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Cerrar CAPA</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          Describe la evidencia que demuestra que la acción correctiva fue implementada.
-        </p>
-        <textarea
-          rows={4}
-          value={evidencia}
-          onChange={e => setEvidencia(e.target.value)}
-          placeholder="Ej. Se capacitó al personal el 15/07/2026, se adjunta acta de asistencia…"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none
-                     focus:outline-none focus:ring-2 focus:ring-teal-400 mb-4"
-          autoFocus
-        />
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onCancel}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700
-                       rounded-lg text-sm font-semibold transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => { if (evidencia.trim()) onConfirm(evidencia); }}
-            disabled={loading || !evidencia.trim()}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50
-                       text-white rounded-lg text-sm font-semibold transition-colors
-                       flex items-center gap-2"
-          >
-            {loading && (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            )}
-            ✅ Confirmar cierre
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Fila de CAPA ─────────────────────────────────────────
 function CapaRow({
   capa,
@@ -143,7 +80,6 @@ function CapaRow({
     <div className={`bg-white rounded-xl border p-4 transition-shadow hover:shadow-md
                     ${capa._vencida ? 'border-red-200' : 'border-gray-200'}`}>
       <div className="flex items-start justify-between gap-4">
-        {/* Contenido */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">
@@ -175,7 +111,6 @@ function CapaRow({
           </div>
         </div>
 
-        {/* Acciones */}
         <div className="flex flex-col gap-1.5 flex-shrink-0">
           {capa.estado !== 'cerrada' && (
             <Link
@@ -218,7 +153,6 @@ function CapaRow({
         </div>
       </div>
 
-      {/* Evidencia de cierre */}
       {capa.estado === 'cerrada' && capa.evidencia && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <p className="text-xs text-gray-500">
@@ -251,22 +185,17 @@ export default function CapasPage() {
     nit || null,
   );
 
-  const [filtro,    setFiltro]    = useState<FiltroEstado>('todas');
-  const [busqueda,  setBusqueda]  = useState('');
-  const [cierreId,  setCierreId]  = useState<string | null>(null);
+  const [filtro,        setFiltro]        = useState<FiltroEstado>('todas');
+  const [busqueda,      setBusqueda]      = useState('');
+  const [cierreId,      setCierreId]      = useState<string | null>(null);
   const [cierreLoading, setCierreLoading] = useState(false);
-  const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null);
-
-  const showToast = useCallback((msg: string, ok = true) => {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
+  const { toast, show: showToast } = useToast();
 
   // Filtrar lista
   const capasVistas = useMemo(() => {
     let lista = [...capas];
-    if      (filtro === 'vencidas')    lista = lista.filter(c => c._vencida);
-    else if (filtro !== 'todas')       lista = lista.filter(c => c.estado === filtro);
+    if      (filtro === 'vencidas') lista = lista.filter(c => c._vencida);
+    else if (filtro !== 'todas')    lista = lista.filter(c => c.estado === filtro);
     if (busqueda) {
       const q = busqueda.toLowerCase();
       lista = lista.filter(c =>
@@ -279,31 +208,29 @@ export default function CapasPage() {
     return lista;
   }, [capas, filtro, busqueda]);
 
-  // Acciones
   async function handleIniciar(id: string) {
     try {
       await iniciarCapa(id);
       showToast('CAPA iniciada correctamente.');
     } catch {
-      showToast('Error al iniciar la CAPA.', false);
+      showToast('Error al iniciar la CAPA.', 'error');
     }
   }
 
-  async function handleCerrar(evidencia: string) {
-    if (!cierreId) return;
+  const handleCerrar = useCallback(async (evidencia?: string) => {
+    if (!cierreId || !evidencia) return;
     setCierreLoading(true);
     try {
       await cerrarCapa(cierreId, evidencia);
       showToast('CAPA cerrada exitosamente.');
       setCierreId(null);
     } catch {
-      showToast('Error al cerrar la CAPA.', false);
+      showToast('Error al cerrar la CAPA.', 'error');
     } finally {
       setCierreLoading(false);
     }
-  }
+  }, [cierreId, cerrarCapa, showToast]);
 
-  // PDF Plan de Mejoramiento
   function exportarPDF() {
     const fecha = new Date().toLocaleDateString('es-CO', {
       day: '2-digit', month: 'long', year: 'numeric',
@@ -331,7 +258,7 @@ export default function CapasPage() {
   td{padding:8px;border:1px solid #e2e8f0}tr:nth-child(even){background:#f8fafc}
   .footer{margin-top:30px;font-size:11px;color:#94a3b8}
 </style></head><body>
-<h1>&#x1F4CB; Plan de Mejoramiento — PAMEC</h1>
+<h1>Plan de Mejoramiento — PAMEC</h1>
 <h2>Generado el ${fecha}</h2>
 <table><thead><tr>
   <th>N°</th><th>No Conformidad</th><th>Acción Correctiva</th>
@@ -344,57 +271,38 @@ export default function CapasPage() {
     if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
   }
 
-  // Loading
-  if (authLoading || loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (authLoading || loading) return <LoadingSpinner fullHeight />;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold
-          ${toast.ok
-            ? 'bg-emerald-600 text-white'
-            : 'bg-red-600 text-white'}`}>
-          {toast.ok ? '✅' : '❌'} {toast.msg}
-        </div>
-      )}
+      <Toast toast={toast} />
 
-      {/* Encabezado */}
-      <div className="flex items-start justify-between mb-6 gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Plan de Mejoramiento — CAPAs</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Acciones Correctivas y Preventivas · Dec. 1011/2006 Art. 34 · Res. 256/2016
-          </p>
-        </div>
-        <div className="flex gap-2 flex-shrink-0">
-          {capas.length > 0 && (
-            <button
-              onClick={exportarPDF}
-              className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
-                         text-gray-600 rounded-xl text-sm font-medium transition-colors"
+      <SectionHeader
+        title="Plan de Mejoramiento — CAPAs"
+        subtitle="Acciones Correctivas y Preventivas · Dec. 1011/2006 Art. 34 · Res. 256/2016"
+        actions={
+          <>
+            {capas.length > 0 && (
+              <button
+                onClick={exportarPDF}
+                className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
+                           text-gray-600 rounded-xl text-sm font-medium transition-colors"
+              >
+                📄 PDF
+              </button>
+            )}
+            <Link
+              href="/dashboard/capas/nueva"
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold
+                         rounded-xl text-sm transition-colors"
             >
-              📄 PDF
-            </button>
-          )}
-          <Link
-            href="/dashboard/capas/nueva"
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold
-                       rounded-xl text-sm transition-colors"
-          >
-            + Nueva CAPA
-          </Link>
-        </div>
-      </div>
+              + Nueva CAPA
+            </Link>
+          </>
+        }
+      />
 
-      {/* Error */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           ⚠️ Error al cargar: {error}
@@ -403,12 +311,16 @@ export default function CapasPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <KpiCard label="Total"       value={stats.total}       colorClass="text-gray-800" />
-        <KpiCard label="Abiertas"    value={stats.abiertas}    colorClass="text-amber-600" />
-        <KpiCard label="En Progreso" value={stats.enProgreso}  colorClass="text-blue-600" />
-        <KpiCard label="Cerradas"    value={stats.cerradas}    colorClass="text-emerald-600" />
-        <KpiCard label="Vencidas"    value={stats.vencidas}    colorClass="text-red-600"
-                 sub={stats.vencidas > 0 ? 'Atención requerida' : undefined} />
+        <KpiCard label="Total"       value={stats.total}      colorClass="text-gray-800" />
+        <KpiCard label="Abiertas"    value={stats.abiertas}   colorClass="text-amber-600" />
+        <KpiCard label="En Progreso" value={stats.enProgreso} colorClass="text-blue-600" />
+        <KpiCard label="Cerradas"    value={stats.cerradas}   colorClass="text-emerald-600" />
+        <KpiCard
+          label="Vencidas"
+          value={stats.vencidas}
+          colorClass="text-red-600"
+          sub={stats.vencidas > 0 ? 'Atención requerida' : undefined}
+        />
       </div>
 
       {/* Filtros + Búsqueda */}
@@ -444,14 +356,16 @@ export default function CapasPage() {
 
       {/* Lista */}
       {capasVistas.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          {capas.length === 0 ? (
-            <>
-              <p className="text-4xl mb-3">📋</p>
-              <p className="font-semibold text-gray-600 mb-1">Sin CAPAs registradas</p>
-              <p className="text-sm mb-4">
-                Crea una acción correctiva desde una auditoría o directamente aquí.
-              </p>
+        <EmptyState
+          icon="📋"
+          title={capas.length === 0 ? 'Sin CAPAs registradas' : 'Sin resultados'}
+          description={
+            capas.length === 0
+              ? 'Crea una acción correctiva desde una auditoría o directamente aquí.'
+              : 'No hay CAPAs que coincidan con el filtro.'
+          }
+          action={
+            capas.length === 0 ? (
               <Link
                 href="/dashboard/capas/nueva"
                 className="inline-flex px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white
@@ -459,11 +373,9 @@ export default function CapasPage() {
               >
                 + Crear primera CAPA
               </Link>
-            </>
-          ) : (
-            <p className="text-sm">No hay CAPAs que coincidan con el filtro.</p>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-3">
           {capasVistas.map(capa => (
@@ -483,9 +395,15 @@ export default function CapasPage() {
         </p>
       )}
 
-      {/* Modal de cierre */}
       {cierreId && (
-        <CierreModal
+        <ConfirmModal
+          title="Cerrar CAPA"
+          description="Describe la evidencia que demuestra que la acción correctiva fue implementada."
+          textareaLabel="Evidencia de cierre"
+          textareaPlaceholder="Ej. Se capacitó al personal el 15/07/2026, se adjunta acta de asistencia…"
+          textareaRequired
+          confirmLabel="✅ Confirmar cierre"
+          confirmVariant="success"
           loading={cierreLoading}
           onConfirm={handleCerrar}
           onCancel={() => setCierreId(null)}
