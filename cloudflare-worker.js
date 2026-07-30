@@ -113,7 +113,49 @@ INDICADORES DEL CATÁLOGO (IDs válidos para registrarIndicador):
 prop_queja, tasa_infeccion, tasa_caida, prop_ulceras, tasa_reingreso,
 prop_cx_cancelada, oportunidad_cx, oportunidad_consulta, prop_transfusion,
 prop_complicacion_cx, mortalidad_intrahospitalaria, prop_consentimiento,
-satisfaccion_usuario, prop_registro_completo`;
+satisfaccion_usuario, prop_registro_completo
+
+=== 22 MODALIDADES HABILITABLES — RES. 3100/2019 Y MODIFICACIONES ===
+
+MODALIDADES TRANSVERSALES (aplican a todos los servicios):
+1. GENERAL / ESTABLECIMIENTO: Infraestructura física (NSR-10, Res. 4445/1996), talento humano con tarjeta profesional vigente, dotación y equipos con hoja de vida y mantenimiento (Decreto 4725/2005), procesos prioritarios (protocolos clínicos, seguridad del paciente), historia clínica (Res. 1995/1999 — conservar 20 años), residuos (Decreto 351/2014), medicamentos e insumos.
+
+MODALIDADES DE CONSULTA Y AMBULATORIO:
+2. CONSULTA EXTERNA: Consultorio mínimo 9 m² con lavamanos, privacidad visual y auditiva. Médico con tarjeta vigente. Guías de práctica clínica para 10 principales diagnósticos. Historia clínica con CIE-10 en cada consulta. Verificación de afiliación SGSSS.
+3. ODONTOLOGÍA: Unidad odontológica completa por consultorio. Esterilización de instrumental (autoclave o glutaraldehído). EPP específico (gafas, mascarilla, guantes). Amalgamador, equipo de rayos X intraoral (si aplica). Manejo de amalgama según normativa ambiental.
+4. REHABILITACIÓN: Fisioterapia, Terapia Ocupacional, Fonoaudiología, Optometría. Equipos terapéuticos calibrados. Evaluación funcional inicial y plan de tratamiento. Criterios de alta y referencia documentados.
+5. SALUD MENTAL AMBULATORIA: Equipo multidisciplinario (psiquiatría/psicología). Ley 1616/2013 — enfoque de derechos. Consentimiento informado específico. Protocolo de crisis y riesgo suicida.
+6. FARMACIA: Director técnico regente o químico farmacéutico. Almacenamiento con temperatura y humedad controladas. Doble verificación en medicamentos de alto riesgo. Farmacovigilancia y reporte a INVIMA. Res. 1403/2007.
+7. VACUNACIÓN: PAI MSPS. Cadena de frío 2–8°C con registro dos veces al día. Espera 20 min post-vacuna. Reporte EAPV al SIVIGILA. Res. 2184/2019.
+
+MODALIDADES DE URGENCIAS Y HOSPITALIZACIÓN:
+8. URGENCIAS: Triage 5 niveles (Res. 5596/2015). Disponibilidad 24/7. Plan de contingencia para desastres (CRUE). Protocolo de referencia y contrarreferencia. Camillas de observación separadas por edad y sexo.
+9. HOSPITALIZACIÓN: Camas con área mínima, servicios de enfermería por turno. Protocolo IAAS (infecciones asociadas). Comité de historias clínicas. Indicadores de calidad Res. 256/2016.
+10. OBSTETRICIA / PARTO: Sala de partos mínimo 20 m². Lista de verificación OMS parto seguro. Protocolo AMTSL (manejo activo del alumbramiento). Partograma obligatorio. Reanimación neonatal disponible. Res. 3280/2018 — modelo de atención integral.
+11. CUIDADO INTENSIVO ADULTO (UCI): Intensivista 24/7. Relación enfermera:paciente 1:2. Monitor multiparamétrico + ventilador por cama. Bundles de prevención IAAS. Res. 544/2023 — telexperticia sincrónica disponible en municipios de dispersión geográfica.
+12. UCI PEDIÁTRICA (UCIP): Pediatra intensivista. Equipos neonatales/pediátricos por talla. Protocolos de sedoanalgesia pediátrica.
+13. UCI NEONATAL (UCIN): Neonatólogo 24/7. Incubadora o cuna de calor radiante. Protocolo Método Canguro. Control oftalmológico para <32 semanas. Banco de leche materna.
+
+MODALIDADES DIAGNÓSTICAS:
+14. LABORATORIO CLÍNICO: Bacteriólogo responsable. Control interno y externo de calidad (PEEC MinSalud). Manejo de muestras biológicas con bioseguridad. Decreto 4725/2005 equipos. Res. 3100/2019 + PEEC.
+15. IMAGENOLOGÍA: Radiólogo responsable. Dosimetría del personal expuesto (INVIMA). Radiación ionizante — Res. 4445/1996 + Decreto 4725/2005. Licencia INVIMA para equipos de rayos X. Protocolos de protección radiológica.
+16. BANCO DE SANGRE / TRANSFUSIÓN: Bacteriólogo o médico transfusional. Tamización 100% unidades: VIH, HBsAg, HCV, VDRL, Chagas. Trazabilidad donante→receptor. Cadena de frío dedicada con alarma. Res. 1285/2010. Protocolo de reacciones transfusionales.
+17. ESTERILIZACIÓN: Flujo unidireccional sucio→limpio→estéril. Autoclaves con IQ/OQ/PQ. Indicadores biológicos por ciclo. Trazabilidad del material estéril. ANSI/AAMI ST79. Sin cruce entre material contaminado y estéril.
+
+MODALIDADES ESPECIALIZADAS:
+18. ONCOLOGÍA / QUIMIOTERAPIA: Oncólogo clínico. Campana de flujo laminar clase II tipo B2. Farmacéutico oncológico. Doble verificación antes de cada ciclo. Kit de derrame de citotóxicos. Comité de tumores. Residuos citotóxicos como peligrosos (Decreto 351/2014). Res. 1383/2013.
+19. HEMODIÁLISIS: Nefrólogo responsable. Sistema de tratamiento de agua (ósmosis inversa) con control mensual AAMI/ISO. Área de aislamiento para pacientes infecciosos. Máquinas con IQ/OQ/PQ. Evaluación Kt/V mensual. KDIGO 2012.
+20. TRASPLANTE DE ÓRGANOS Y TEJIDOS: Coordinador de trasplantes. Protocolo de donante en muerte encefálica. Inscripción y reporte activo a Red Nacional de Donación y Trasplante. Lista de espera según criterios MSPS. Res. 544/2023 — comunicación continua con bancos de tejidos para gestión oportuna (córneas: vida útil 7 días). Decreto 2493/2004.
+21. TELEMEDICINA (Res. 2654/2019, actualizada Res. 465/2025): Modalidades: Interactiva (sincrónica), No Interactiva (asincrónica), Telexperticia, Telemonitoreo. Plataforma con cifrado y autenticación. Consentimiento informado específico. Historia clínica equivalente a presencial. Protocolo de referencia urgente. Ley 1581/2012 protección de datos. Res. 544/2023 — telexperticia sincrónica para UCI en zonas de dispersión geográfica (Res. 2809/2022 Anexo 1).
+
+MODALIDADES DE SOPORTE:
+22. TRANSPORTE ASISTENCIAL: TAB (baja complejidad), TAM (medicalizado, mediana), TAE (aéreo). Habilitación en departamento sede con efecto nacional (aéreo, fluvial, marítimo). Ambulancias con hoja de vida y revisión técnico-mecánica. TAE no requiere silla de ruedas (Res. 544/2023). Res. 3100/2019 Art. 20.
+
+SERVICIOS DOMICILIARIOS: Coordinador clínico. Maletín equipado (tensiómetro, pulsioxímetro, glucómetro). Guardián de cortopunzantes. Protocolos específicos por tipo de atención. Referencia a IPS de mayor complejidad documentada.
+
+VISITA PREVIA OBLIGATORIA antes de habilitar (Art. 14 Res. 3100/2019): Todos los servicios de alta complejidad, oncológicos, urgencias, atención del parto, transporte asistencial.
+
+GRATUIDAD (Art. 22): La inscripción y habilitación en REPS son completamente gratuitas. Ninguna autoridad puede cobrar por este trámite.`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FUNCIÓN CALLING — Herramientas disponibles para el LLM
