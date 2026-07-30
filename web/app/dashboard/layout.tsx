@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/sg-sst',        label: 'SG-SST',       icon: '🦺' },
   { href: '/dashboard/auditoria',     label: 'Auditoría',    icon: '🔍' },
   { href: '/dashboard/documentos',    label: 'Documentos',   icon: '📄' },
+  { href: '/dashboard/pqrs',          label: 'PQRS',         icon: '📬' },
 ];
 
 function Sidebar() {
