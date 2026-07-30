@@ -2,9 +2,19 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title:       'NormaLis — Habilitación IPS',
-  description: 'Software colombiano de habilitación y calidad para IPS',
-  icons:       { icon: '/favicon.ico' },
+  title:       'NormaLis — Software de Habilitación para IPS en Colombia',
+  description: 'Software con IA para gestión de calidad en IPS colombianas. Resolución 3100/2019, auditorías internas, documentos normativos y alertas de vencimientos.',
+  keywords:    'habilitación IPS, Resolución 3100, PAMEC, software calidad IPS Colombia, auditoría interna IPS',
+  openGraph: {
+    title:       'NormaLis — Software de Habilitación para IPS en Colombia',
+    description: 'Software con IA para gestión de calidad en IPS colombianas. Resolución 3100/2019, auditorías, documentos normativos y alertas.',
+    url:         'https://app.normalis.co',
+    siteName:    'NormaLis',
+    locale:      'es_CO',
+    type:        'website',
+  },
+  icons: { icon: '/favicon.ico' },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
