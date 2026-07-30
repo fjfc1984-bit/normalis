@@ -9,7 +9,7 @@
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
  */
 
-const CF_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+const CF_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
 const FIREBASE_PROJECT_ID = 'normalis-5587d';
 const FIREBASE_API_KEY    = 'AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4';
 
