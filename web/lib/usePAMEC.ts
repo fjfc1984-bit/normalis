@@ -10,7 +10,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { useAuth } from './auth';
 import type { PamecDoc, PamecItem, PamecAccion, PamecFase } from './pamecTypes';
-import { nanoid } from 'nanoid';
+const nanoid = () => crypto.randomUUID();
 
 function emptyDoc(nit: string): PamecDoc {
   return { nit, fase: 'autoeval', items: [], acciones: [], updatedAt: new Date().toISOString() };
