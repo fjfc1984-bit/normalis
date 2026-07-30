@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/documentos',    label: 'Documentos',   icon: '📄' },
   { href: '/dashboard/pqrs',          label: 'PQRS',         icon: '📬' },
   { href: '/dashboard/incidentes',    label: 'Incidentes',   icon: '🛡️' },
+  { href: '/dashboard/bitacora',      label: 'Bitácora',     icon: '📋' },
 ];
 
 function Sidebar() {
