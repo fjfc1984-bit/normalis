@@ -210,14 +210,55 @@ body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%
           <input type="text" id="r-nit" placeholder="900123456-7" maxlength="20">
         </div>
         <div class="field">
-          <label for="r-tipo">Tipo de IPS</label>
+          <label for="r-tipo">Tipo de prestador / Servicios principales</label>
           <select id="r-tipo">
             <option value="">— Selecciona —</option>
-            <option value="ips_primaria">IPS Primaria</option>
-            <option value="clinica">Clínica</option>
-            <option value="hospital">Hospital</option>
-            <option value="consultorio">Consultorio / Esp.</option>
-            <option value="otro">Otro</option>
+            <optgroup label="Prestadores Institucionales (IPS)">
+              <option value="hospital_1">Hospital Primer Nivel (Baja Complejidad)</option>
+              <option value="hospital_2">Hospital Segundo Nivel (Mediana Complejidad)</option>
+              <option value="hospital_3">Hospital / Clínica Tercer Nivel (Alta Complejidad)</option>
+              <option value="clinica_general">Clínica General</option>
+              <option value="ips_primaria">IPS Primer Nivel — Consulta y Urgencias</option>
+            </optgroup>
+            <optgroup label="Servicios Ambulatorios">
+              <option value="consulta_externa">Consulta Externa (Medicina General / Especializada)</option>
+              <option value="odontologia">Odontología (General y/o Especializada)</option>
+              <option value="optometria">Optometría</option>
+              <option value="vacunacion">Vacunación / Programa PAI</option>
+              <option value="rehabilitacion">Rehabilitación Física / Terapias</option>
+              <option value="salud_mental_amb">Salud Mental Ambulatoria</option>
+              <option value="farmacia">Servicio Farmacéutico Ambulatorio</option>
+            </optgroup>
+            <optgroup label="Servicios de Urgencias y Hospitalización">
+              <option value="urgencias">Urgencias</option>
+              <option value="internacion">Hospitalización General</option>
+              <option value="internacion_pediatrica">Hospitalización Pediátrica</option>
+              <option value="salud_mental">Hospitalización en Salud Mental</option>
+              <option value="obstetricia">Atención del Parto / Obstetricia</option>
+              <option value="cuidado_intensivo">Cuidado Intensivo Adulto (UCI)</option>
+              <option value="cuidado_intensivo_ped">Cuidado Intensivo Pediátrico (UCIP)</option>
+              <option value="cuidado_intensivo_neo">Cuidado Intensivo Neonatal (UCIN)</option>
+            </optgroup>
+            <optgroup label="Servicios Quirúrgicos">
+              <option value="cirugia_ambulatoria">Cirugía Ambulatoria</option>
+              <option value="quirurgicos">Cirugía General (Baja / Mediana Complejidad)</option>
+              <option value="cirugia_alta">Cirugía Alta Complejidad</option>
+            </optgroup>
+            <optgroup label="Diagnóstico y Apoyo Terapéutico">
+              <option value="laboratorio">Laboratorio Clínico</option>
+              <option value="imagenologia">Imágenes Diagnósticas / Radiología</option>
+              <option value="banco_sangre">Banco de Sangre / Transfusión</option>
+              <option value="esterilizacion">Central de Esterilización</option>
+            </optgroup>
+            <optgroup label="Servicios Especializados">
+              <option value="oncologia">Oncología / Quimioterapia</option>
+              <option value="hemodialisis">Hemodiálisis / Diálisis</option>
+              <option value="trasplante">Trasplante de Órganos y Tejidos</option>
+              <option value="domiciliaria">Atención Domiciliaria</option>
+              <option value="transporte">Transporte Asistencial (TAB/TAM)</option>
+              <option value="telemedicina">Telemedicina</option>
+            </optgroup>
+            <option value="otro">Otro tipo de prestador</option>
           </select>
         </div>
       </div>

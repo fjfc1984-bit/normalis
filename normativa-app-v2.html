@@ -648,6 +648,72 @@ if('serviceWorker' in navigator){
                 <div class="text-xs text-muted" style="margin-top:4px">General/Especializada · 5 áreas · Res. 3100/2019</div>
                 <div class="audit-seg-check" id="aschk-odontologia" style="display:none">✓</div>
               </div>
+              <div class="audit-seg-card" id="aseg-consulta_externa" onclick="selSeg('consulta_externa')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F4CB;</div>
+                <div style="font-size:14px;font-weight:800">Consulta Externa</div>
+                <div class="text-xs text-muted" style="margin-top:4px">M&#233;dica/Especializada &middot; 5 &#225;reas &middot; Res. 3100/2019</div>
+                <div class="audit-seg-check" id="aschk-consulta_externa" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-cuidado_intensivo" onclick="selSeg('cuidado_intensivo')">
+                <div style="font-size:32px;margin-bottom:8px">&#x2764;&#xFE0F;</div>
+                <div style="font-size:14px;font-weight:800">Cuidado Intensivo (UCI)</div>
+                <div class="text-xs text-muted" style="margin-top:4px">UCI Adulto/Ped/Neo &middot; 5 &#225;reas &middot; Res. 3100/2019</div>
+                <div class="audit-seg-check" id="aschk-cuidado_intensivo" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-obstetricia" onclick="selSeg('obstetricia')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F930;</div>
+                <div style="font-size:14px;font-weight:800">Obstetricia &amp; Parto</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Atenci&#243;n del parto &middot; 4 &#225;reas &middot; Res. 3100/2019</div>
+                <div class="audit-seg-check" id="aschk-obstetricia" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-banco_sangre" onclick="selSeg('banco_sangre')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1FA78;</div>
+                <div style="font-size:14px;font-weight:800">Banco de Sangre</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Transfusi&#243;n &middot; 4 &#225;reas &middot; Res. 1285/2010</div>
+                <div class="audit-seg-check" id="aschk-banco_sangre" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-oncologia" onclick="selSeg('oncologia')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F397;&#xFE0F;</div>
+                <div style="font-size:14px;font-weight:800">Oncolog&#237;a</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Quimioterapia &middot; 4 &#225;reas &middot; Res. 1383/2013</div>
+                <div class="audit-seg-check" id="aschk-oncologia" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-hemodialisis" onclick="selSeg('hemodialisis')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F4A7;</div>
+                <div style="font-size:14px;font-weight:800">Hemodiálisis</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Di&#225;lisis renal &middot; 4 &#225;reas &middot; KDIGO/Res. 3100</div>
+                <div class="audit-seg-check" id="aschk-hemodialisis" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-farmacia" onclick="selSeg('farmacia')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F48A;</div>
+                <div style="font-size:14px;font-weight:800">Servicio Farmac&#233;utico</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Dispensaci&#243;n/Mezclas &middot; 4 &#225;reas &middot; Res. 1403/2007</div>
+                <div class="audit-seg-check" id="aschk-farmacia" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-vacunacion" onclick="selSeg('vacunacion')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F489;</div>
+                <div style="font-size:14px;font-weight:800">Vacunaci&#243;n (PAI)</div>
+                <div class="text-xs text-muted" style="margin-top:4px">PAI MSPS &middot; 3 &#225;reas &middot; Res. 2184/2019</div>
+                <div class="audit-seg-check" id="aschk-vacunacion" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-telemedicina" onclick="selSeg('telemedicina')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F4BB;</div>
+                <div style="font-size:14px;font-weight:800">Telemedicina</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Res. 2654/2019 &middot; 4 &#225;reas &middot; Res. 465/2025</div>
+                <div class="audit-seg-check" id="aschk-telemedicina" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-esterilizacion" onclick="selSeg('esterilizacion')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1F9EA;</div>
+                <div style="font-size:14px;font-weight:800">Esterilizaci&#243;n</div>
+                <div class="text-xs text-muted" style="margin-top:4px">Central PDM &middot; 4 &#225;reas &middot; ANSI/AAMI ST79</div>
+                <div class="audit-seg-check" id="aschk-esterilizacion" style="display:none">&#10003;</div>
+              </div>
+              <div class="audit-seg-card" id="aseg-trasplante" onclick="selSeg('trasplante')">
+                <div style="font-size:32px;margin-bottom:8px">&#x1FAC0;</div>
+                <div style="font-size:14px;font-weight:800">Trasplante</div>
+                <div class="text-xs text-muted" style="margin-top:4px">&#211;rganos/Tejidos &middot; 3 &#225;reas &middot; Dec. 2493/2004</div>
+                <div class="audit-seg-check" id="aschk-trasplante" style="display:none">&#10003;</div>
+              </div>
             </div>
             <div id="audit-seg-info" style="background:var(--primary-light);border-radius:10px;padding:14px;margin-bottom:20px">
               <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px" id="audit-seg-norm">📋 Normativa: Resolución 3100 de 2019 · Estándares de habilitación para IPS</div>
