@@ -1,16 +1,15 @@
 /**
- * NormaLis — Groq Proxy + Areas API (Cloudflare Worker) v4.1
+ * NormaLis — AI Proxy + Areas API (Cloudflare Worker) v4.2
  *
  * Endpoints:
- *   POST /         → proxy al chat LLM (Groq)
+ *   POST /         → proxy al chat LLM (Cloudflare Workers AI)
  *   GET  /api/areas → devuelve areasDB + segInfo (requiere Firebase ID token)
  *
- * Secrets requeridos (Cloudflare Dashboard → Workers → Settings → Variables):
- *   GROQ_API_KEY  → https://console.groq.com/keys
+ * Bindings requeridos:
+ *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
  */
 
-const GROQ_MODEL    = 'llama-3.1-8b-instant';
-const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+const CF_AI_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 const FIREBASE_PROJECT_ID = 'normalis-5587d';
 const FIREBASE_API_KEY    = 'AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4';
 
@@ -1414,15 +1413,8 @@ export default {
       });
     }
 
-    const apiKey = env.GROQ_API_KEY;
-    if (!apiKey) {
-      // Diagnóstico temporal — remover después de confirmar que la clave funciona
-      const _envKeys = Object.keys(env || {});
-      const _keyLen = (env.GROQ_API_KEY ?? '').length;
-      return new Response(JSON.stringify({
-        error: 'Servicio no configurado',
-        _debug: { envKeys: _envKeys, keyLength: _keyLen }
-      }), {
+    if (!env.AI) {
+      return new Response(JSON.stringify({ error: 'Servicio no configurado (binding AI ausente)' }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });
@@ -1441,32 +1433,15 @@ export default {
     messages.push({ role: 'user', content: question.trim() });
 
     try {
-      const groqRes = await fetch(GROQ_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages,
-          temperature: 0.1,
-          max_tokens: 1024,
-        }),
+      const aiRes = await env.AI.run(CF_AI_MODEL, {
+        messages,
+        temperature: 0.1,
+        max_tokens: 1024,
       });
 
-      if (!groqRes.ok) {
-        const errText = await groqRes.text();
-        return new Response(
-          JSON.stringify({ error: 'Error al consultar Groq', status: groqRes.status, detail: errText }),
-          { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const data = await groqRes.json();
-      const text = data?.choices?.[0]?.message?.content ?? null;
+      const text = aiRes?.response ?? null;
       if (!text) {
-        return new Response(JSON.stringify({ error: 'Respuesta vacía de Groq' }), {
+        return new Response(JSON.stringify({ error: 'Respuesta vacía del modelo' }), {
           status: 502,
           headers: { ...cors, 'Content-Type': 'application/json' },
         });
@@ -1478,7 +1453,7 @@ export default {
       });
 
     } catch (err) {
-      await sentryCapture(err, { endpoint: 'POST / (chat/groq)' }, env);
+      await sentryCapture(err, { endpoint: 'POST / (chat/cf-ai)' }, env);
       return new Response(JSON.stringify({ error: 'Error interno del proxy', detail: String(err) }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' },
