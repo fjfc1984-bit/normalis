@@ -602,6 +602,15 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: cors });
     }
+
+    // ── Health check ─────────────────────────────────────────────
+    const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname === '/health') {
+      return new Response(JSON.stringify({ status: 'ok', service: 'normalis-worker' }), {
+        status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405, headers: { ...cors, 'Content-Type': 'application/json' },

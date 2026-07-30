@@ -13,15 +13,21 @@ export default function StatusPage() {
   useEffect(() => {
     setTimestamp(new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }));
 
-    // Check Firebase (just the app itself being up = Firebase is responding)
-    fetch('https://normalis-5587d.firebaseapp.com/__/firebase/init.json')
-      .then(r => r.ok ? 'ok' : 'error')
+    // Check Firebase — via API route server-side (evita restricciones CORS del cliente)
+    fetch('/api/health')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((d: { firebase: string }) => d.firebase === 'ok' ? 'ok' : 'error')
       .catch(() => 'error')
       .then(s => setChecks(c => ({ ...c, firebase: s as 'ok' | 'error' })));
 
-    // Check Cloudflare Worker
-    fetch('https://normalis.fjfc1984.workers.dev/health', { method: 'GET' })
-      .then(r => r.ok ? 'ok' : 'error')
+    // Check Cloudflare Worker — POST-probe: el worker acepta POST; si responde JSON está activo
+    // Un 400 (cuerpo inválido) sigue siendo señal de que el worker está UP
+    fetch('https://normalis.fjfc1984.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _healthcheck: true }),
+    })
+      .then(r => (r.status === 200 || r.status === 400 || r.status === 429) ? 'ok' : 'error')
       .catch(() => 'error')
       .then(s => setChecks(c => ({ ...c, worker: s as 'ok' | 'error' })));
 
