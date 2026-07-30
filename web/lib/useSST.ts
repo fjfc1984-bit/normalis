@@ -82,7 +82,7 @@ export function useSST(uid: string | null): UseSST {
       .then(snap => {
         if (snap.exists()) {
           const raw = snap.data() as SSTData;
-          delete (raw as Record<string, unknown>).updatedAt;
+          delete (raw as unknown as Record<string, unknown>).updatedAt;
           setData({ ...SST_DATA_EMPTY, ...raw });
         }
       })

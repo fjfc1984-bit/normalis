@@ -16,7 +16,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import Button from '@/components/ui/Button';
-import Toast, { useToast } from '@/components/ui/Toast';
+import { Toast, useToast } from '@/components/ui/Toast';
 
 interface Vencimiento {
   id:        string;
@@ -41,7 +41,7 @@ function getEstadoBadge(dias: number) {
 
 export default function VencimientosPage() {
   const { user }         = useAuth();
-  const { toast, show, hide } = useToast();
+  const { toast, show } = useToast();
 
   const [vencimientos, setVencimientos] = useState<Vencimiento[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -107,7 +107,7 @@ export default function VencimientosPage() {
 
   return (
     <div className="p-6">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={hide} />}
+      <Toast toast={toast} />
 
       <div className="flex items-center justify-between mb-6">
         <div>

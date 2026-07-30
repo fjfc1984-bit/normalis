@@ -17,7 +17,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import Toast, { useToast } from '@/components/ui/Toast';
+import { Toast, useToast } from '@/components/ui/Toast';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -431,7 +431,7 @@ type Tab = typeof TABS[number];
 export default function AdminPage() {
   const { user, rol, loading } = useAuth();
   const router                 = useRouter();
-  const { toast, show, hide }  = useToast();
+  const { toast, show }  = useToast();
   const [tab, setTab]          = useState<Tab>('Solicitudes');
 
   useEffect(() => {
@@ -442,7 +442,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={hide} />}
+      <Toast toast={toast} />
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
