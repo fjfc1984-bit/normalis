@@ -1,5 +1,5 @@
 /**
- * NormaLis — Groq Proxy + Areas API (Cloudflare Worker) v4
+ * NormaLis — Groq Proxy + Areas API (Cloudflare Worker) v4.1
  *
  * Endpoints:
  *   POST /         → proxy al chat LLM (Groq)
