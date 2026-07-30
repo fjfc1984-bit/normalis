@@ -1,6 +1,7 @@
 name            = "normalis"
 main            = "worker.js"
 compatibility_date = "2024-09-23"
+account_id      = "e4ba3dc6b998c992411a8bc56bc02d2b"
 
 # ─────────────────────────────────────────────────────────────
 # SECRETS (configurar con wrangler o Cloudflare Dashboard)

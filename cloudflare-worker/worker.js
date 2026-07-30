@@ -1416,7 +1416,13 @@ export default {
 
     const apiKey = env.GROQ_API_KEY;
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Servicio no configurado' }), {
+      // Diagnóstico temporal — remover después de confirmar que la clave funciona
+      const _envKeys = Object.keys(env || {});
+      const _keyLen = (env.GROQ_API_KEY ?? '').length;
+      return new Response(JSON.stringify({
+        error: 'Servicio no configurado',
+        _debug: { envKeys: _envKeys, keyLength: _keyLen }
+      }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });
