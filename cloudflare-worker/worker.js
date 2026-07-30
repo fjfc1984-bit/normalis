@@ -18,6 +18,7 @@ const ALLOWED_ORIGINS = [
   'https://normalis.co',
   'https://www.normalis.co',
   'https://fjfc1984-bit.github.io',
+  'https://app.normalis.co',
 ];
 
 // ── Sentry error reporting (lightweight, no npm needed) ─────────────────────

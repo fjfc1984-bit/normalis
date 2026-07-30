@@ -236,6 +236,21 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // auditorias/{docId} — sesiones de auditoría de habilitación (Next.js app)
+    // docId = {uid}_{segmento} — solo el propietario puede acceder
+    // ════════════════════════════════════════════════════════════════════════
+    match /auditorias/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
