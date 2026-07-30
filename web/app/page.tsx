@@ -381,7 +381,8 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       features: ['1 sede · 2 usuarios', 'Auditoría Res. 3100 básica', 'Generador de documentos (5 plantillas)', 'Calendario de vencimientos', 'Dashboard de cumplimiento'],
       popular: false, cta: 'Solicitar demo',
       iconBg: 'from-slate-400 to-slate-600',
-      boldUrl: 'https://checkout.bold.co/payment/LNK_QX9QJBBLWW',
+      boldUrlAnnual: 'https://checkout.bold.co/payment/LNK_QX9QJBBLWW',
+      boldUrlMonthly: 'https://checkout.bold.co/payment/LNK_QH7C9QNC61',
     },
     {
       name: 'Profesional',
@@ -390,7 +391,8 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       features: ['1 sede · 5 usuarios', 'Auditoría completa 559 criterios', 'Todos los documentos + firma digital', 'PAMEC e indicadores Res. 256', 'PQRS, incidentes y bitácora', 'SG-SST Res. 0312/2019', 'Chat IA normativo', 'Soporte prioritario'],
       popular: true, cta: 'Solicitar demo',
       iconBg: 'from-teal-400 to-teal-600',
-      boldUrl: 'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
+      boldUrlAnnual: 'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
+      boldUrlMonthly: 'https://checkout.bold.co/payment/LNK_JTRUHD363J',
     },
     {
       name: 'Enterprise',
@@ -399,7 +401,8 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       features: ['Sedes ilimitadas', 'Usuarios ilimitados', 'Todo el plan Profesional', 'Integraciones a la medida', 'SLA garantizado', 'Capacitación presencial', 'Soporte dedicado 24/7'],
       popular: false, cta: 'Hablar con ventas',
       iconBg: 'from-blue-400 to-indigo-600',
-      boldUrl: null,
+      boldUrlAnnual: null,
+      boldUrlMonthly: null,
     },
   ];
 
@@ -458,12 +461,12 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                   href={
                     p.monthly === 'A la medida'
                       ? 'mailto:hola@normalis.co?subject=NormaLis%20Enterprise'
-                      : annual && p.boldUrl
-                        ? p.boldUrl
-                        : 'https://fjfc1984-bit.github.io/normalis/registro.html'
+                      : annual
+                        ? (p.boldUrlAnnual ?? 'https://fjfc1984-bit.github.io/normalis/registro.html')
+                        : (p.boldUrlMonthly ?? 'https://fjfc1984-bit.github.io/normalis/registro.html')
                   }
-                  target={annual && p.boldUrl ? '_blank' : undefined}
-                  rel={annual && p.boldUrl ? 'noopener noreferrer' : undefined}
+                  target={p.monthly !== 'A la medida' ? '_blank' : undefined}
+                  rel={p.monthly !== 'A la medida' ? 'noopener noreferrer' : undefined}
                   className={`w-full py-3 rounded-xl text-sm font-bold transition-all text-center block mb-2 ${
                     p.popular
                       ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-200'
