@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/vencimientos',  label: 'Vencimientos', icon: '📅' },
   { href: '/dashboard/capas',         label: 'CAPAs',        icon: '✓' },
   { href: '/dashboard/indicadores',   label: 'Indicadores',  icon: '📊' },
+  { href: '/dashboard/sg-sst',        label: 'SG-SST',       icon: '🦺' },
   { href: '/dashboard/auditoria',     label: 'Auditoría',    icon: '🔍' },
 ];
 
