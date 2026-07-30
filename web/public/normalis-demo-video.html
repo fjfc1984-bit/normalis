@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>NormaLis — Demo Oficial</title>
+  <style>
+    :root {
+      --dark:    #0d2820;
+      --primary: #1a5e4a;
+      --mid:     #2d8a6e;
+      --light:   #4ab896;
+      --accent:  #6dd4ae;
+      --white:   #ffffff;
+      --gray50:  #f4f9f7;
+      --gray200: #d1e8e0;
+      --gray400: #7aaa97;
+      --text:    #0d2820;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:1280px; height:720px;
+      overflow:hidden;
+      font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+      background:var(--dark);
+    }
+
+    /* ── Scenes ─────────────────────────────────────────── */
+    .scene {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      opacity:0; pointer-events:none;
+      transition:opacity .9s ease;
+    }
+    .scene.active { opacity:1; pointer-events:auto; }
+
+    /* ── Progress bar ───────────────────────────────────── */
+    #progress-bar {
+      position:fixed; bottom:0; left:0; height:4px;
+      background:var(--accent); width:0%;
+      transition:width .4s linear; z-index:999;
+    }
+
+    /* ── Scene counter ──────────────────────────────────── */
+    #scene-counter {
+      position:fixed; bottom:12px; right:16px;
+      font-size:11px; color:rgba(255,255,255,.3);
+      letter-spacing:.05em; z-index:999;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 1 — INTRO
+    ═══════════════════════════════════════════════════ */
+    #s1 { background:var(--dark); }
+    #s1 .logo-wrap {
+      display:flex; align-items:center; gap:18px;
+      margin-bottom:24px;
+      animation: fadeUp .8s .3s both;
+    }
+    #s1 .logo-icon {
+      width:64px; height:64px; border-radius:16px;
+      background:var(--mid);
+      display:flex; align-items:center; justify-content:center;
+    }
+    #s1 .logo-icon svg { width:38px; height:38px; fill:white; }
+    #s1 .logo-text { font-size:52px; font-weight:800; color:var(--white); letter-spacing:-1px; }
+    #s1 .tagline {
+      font-size:20px; color:var(--accent); letter-spacing:.04em;
+      text-align:center; margin-bottom:40px;
+      animation:fadeUp .8s .6s both;
+    }
+    #s1 .url-badge {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+      padding:10px 28px; border-radius:999px;
+      color:var(--white); font-size:16px; letter-spacing:.05em;
+      animation:fadeUp .8s .9s both;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 2 — EL PROBLEMA
+    ═══════════════════════════════════════════════════ */
+    #s2 { background:#0a2019; }
+    #s2 .question {
+      font-size:30px; font-weight:700; color:var(--white);
+      text-align:center; max-width:780px; line-height:1.35;
+      margin-bottom:48px;
+      animation:fadeUp .8s .2s both;
+    }
+    #s2 .pains {
+      display:flex; gap:24px;
+      animation:fadeUp .8s .6s both;
+    }
+    #s2 .pain {
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+      border-radius:16px; padding:22px 28px; width:240px;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    #s2 .pain-icon { font-size:28px; }
+    #s2 .pain-text { color:var(--gray200); font-size:15px; line-height:1.45; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 3 — LA SOLUCIÓN
+    ═══════════════════════════════════════════════════ */
+    #s3 { background:linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%); }
+    #s3 .reveal-text {
+      font-size:20px; letter-spacing:.3em; color:var(--accent);
+      text-transform:uppercase; margin-bottom:16px;
+      animation:fadeIn .8s .2s both;
+    }
+    #s3 .big-name {
+      font-size:80px; font-weight:900; color:var(--white);
+      letter-spacing:-3px; line-height:1;
+      animation:scaleIn .8s .4s both;
+    }
+    #s3 .version-badge {
+      margin-top:16px;
+      background:var(--light); color:var(--dark);
+      padding:6px 20px; border-radius:999px; font-weight:700; font-size:14px;
+      display:inline-block;
+      animation:fadeUp .8s .8s both;
+    }
+    #s3 .solution-line {
+      margin-top:32px; font-size:20px; color:rgba(255,255,255,.75);
+      max-width:640px; text-align:center; line-height:1.5;
+      animation:fadeUp .8s 1s both;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 4 — DASHBOARD
+    ═══════════════════════════════════════════════════ */
+    #s4 { background:var(--gray50); flex-direction:row; align-items:stretch; }
+    #s4 .sidebar {
+      width:200px; background:var(--dark); padding:24px 16px;
+      display:flex; flex-direction:column; gap:6px; flex-shrink:0;
+      animation:slideRight .7s .2s both;
+    }
+    #s4 .sb-logo { color:var(--accent); font-weight:800; font-size:18px; padding:0 8px 16px; }
+    #s4 .sb-item {
+      padding:8px 12px; border-radius:8px; color:rgba(255,255,255,.6);
+      font-size:12px; display:flex; align-items:center; gap:8px;
+      cursor:default;
+    }
+    #s4 .sb-item.active { background:rgba(255,255,255,.1); color:white; }
+    #s4 .sb-dot { width:6px; height:6px; border-radius:50%; background:var(--gray400); flex-shrink:0; }
+    #s4 .sb-item.active .sb-dot { background:var(--accent); }
+    #s4 .main-content {
+      flex:1; padding:28px; overflow:hidden;
+      animation:fadeIn .7s .4s both;
+    }
+    #s4 .welcome-bar {
+      font-size:20px; font-weight:700; color:var(--text); margin-bottom:8px;
+    }
+    #s4 .welcome-sub { font-size:13px; color:var(--gray400); margin-bottom:24px; }
+    #s4 .modules-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    }
+    #s4 .module-card {
+      background:white; border-radius:14px;
+      padding:16px 14px; border:1px solid var(--gray200);
+      box-shadow:0 2px 8px rgba(0,0,0,.06);
+    }
+    #s4 .module-card .mc-icon { font-size:22px; margin-bottom:8px; }
+    #s4 .module-card .mc-name { font-size:12px; font-weight:700; color:var(--text); }
+    #s4 .module-card .mc-desc { font-size:10px; color:var(--gray400); margin-top:3px; line-height:1.3; }
+    #s4 .module-card.highlight { border-color:var(--mid); box-shadow:0 0 0 2px var(--mid); }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 5 — AUDITORÍA
+    ═══════════════════════════════════════════════════ */
+    #s5 { background:var(--gray50); flex-direction:column; align-items:stretch; padding:0; }
+    #s5 .audit-header {
+      background:var(--dark); color:white; padding:20px 32px;
+      display:flex; align-items:center; gap:16px;
+      animation:fadeIn .6s both;
+    }
+    #s5 .audit-header .ah-title { font-size:18px; font-weight:700; }
+    #s5 .audit-header .ah-sub { font-size:12px; color:var(--accent); margin-top:2px; }
+    #s5 .audit-body {
+      flex:1; padding:24px 32px; display:flex; gap:24px;
+      animation:fadeUp .7s .3s both;
+    }
+    #s5 .audit-list { flex:1; display:flex; flex-direction:column; gap:10px; }
+    #s5 .audit-item {
+      background:white; border-radius:12px; padding:14px 16px;
+      border:1px solid var(--gray200);
+      display:flex; align-items:center; gap:14px;
+      box-shadow:0 1px 4px rgba(0,0,0,.05);
+    }
+    #s5 .ai-check {
+      width:22px; height:22px; border-radius:6px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px;
+    }
+    #s5 .ai-check.ok { background:#dcfce7; color:#16a34a; }
+    #s5 .ai-check.warn { background:#fef9c3; color:#ca8a04; }
+    #s5 .ai-check.no { background:#fee2e2; color:#dc2626; }
+    #s5 .ai-text { font-size:12px; color:var(--text); font-weight:500; flex:1; }
+    #s5 .ai-std { font-size:10px; color:var(--gray400); margin-top:2px; }
+    #s5 .audit-panel {
+      width:220px; display:flex; flex-direction:column; gap:14px;
+    }
+    #s5 .progress-card {
+      background:white; border-radius:14px; padding:18px;
+      border:1px solid var(--gray200); text-align:center;
+    }
+    #s5 .pct { font-size:42px; font-weight:900; color:var(--mid); }
+    #s5 .pct-label { font-size:11px; color:var(--gray400); margin-top:4px; }
+    #s5 .pbar-wrap {
+      height:8px; background:var(--gray200); border-radius:4px; margin-top:12px; overflow:hidden;
+    }
+    #s5 .pbar-fill {
+      height:100%; background:var(--mid); border-radius:4px;
+      width:0%; transition:width 2s 1s ease;
+    }
+    #s5 .pbar-fill.animate { width:74%; }
+    #s5 .std-card {
+      background:white; border-radius:14px; padding:16px;
+      border:1px solid var(--gray200); font-size:11px;
+    }
+    #s5 .std-card .sc-title { font-weight:700; color:var(--text); margin-bottom:10px; font-size:12px; }
+    #s5 .std-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; }
+    #s5 .std-name { color:var(--gray400); }
+    #s5 .std-badge {
+      font-size:9px; font-weight:700; padding:2px 7px; border-radius:99px;
+    }
+    #s5 .std-badge.ok { background:#dcfce7; color:#16a34a; }
+    #s5 .std-badge.warn { background:#fef9c3; color:#ca8a04; }
+    #s5 .std-badge.no { background:#fee2e2; color:#dc2626; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 6 — PAMEC
+    ═══════════════════════════════════════════════════ */
+    #s6 { background:var(--gray50); }
+    #s6 .pamec-container {
+      display:flex; gap:32px; align-items:center; padding:32px;
+      animation:fadeUp .7s .3s both;
+    }
+    #s6 .pamec-info { flex:1; }
+    #s6 .pamec-title { font-size:28px; font-weight:800; color:var(--text); margin-bottom:8px; }
+    #s6 .pamec-sub { font-size:15px; color:var(--gray400); margin-bottom:24px; line-height:1.5; }
+    #s6 .pamec-features { display:flex; flex-direction:column; gap:10px; }
+    #s6 .pf-item { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text); }
+    #s6 .pf-dot {
+      width:8px; height:8px; border-radius:50%; background:var(--mid); flex-shrink:0;
+    }
+    #s6 .phva-wheel {
+      width:300px; height:300px; position:relative; flex-shrink:0;
+    }
+    #s6 .phva-wheel svg { width:100%; height:100%; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 7 — IA NORMATIVA
+    ═══════════════════════════════════════════════════ */
+    #s7 { background:var(--dark); }
+    #s7 .chat-container {
+      width:700px; background:#1a3a2e; border-radius:20px;
+      overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5);
+      animation:scaleIn .7s .2s both;
+    }
+    #s7 .chat-header {
+      background:var(--primary); padding:16px 20px;
+      display:flex; align-items:center; gap:12px;
+    }
+    #s7 .chat-avatar {
+      width:36px; height:36px; border-radius:10px; background:var(--light);
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+    }
+    #s7 .chat-title { color:white; font-weight:700; font-size:14px; }
+    #s7 .chat-sub { color:var(--accent); font-size:11px; }
+    #s7 .chat-body { padding:20px; display:flex; flex-direction:column; gap:14px; min-height:340px; }
+    #s7 .msg { display:flex; gap:10px; }
+    #s7 .msg.user { flex-direction:row-reverse; }
+    #s7 .msg-bubble {
+      max-width:480px; padding:12px 16px; border-radius:14px;
+      font-size:13px; line-height:1.55;
+    }
+    #s7 .msg.bot .msg-bubble { background:rgba(255,255,255,.08); color:white; border-radius:4px 14px 14px 14px; }
+    #s7 .msg.user .msg-bubble { background:var(--mid); color:white; border-radius:14px 4px 14px 14px; }
+    #s7 .typing { display:flex; gap:5px; align-items:center; padding:12px 16px; }
+    #s7 .typing span {
+      width:7px; height:7px; border-radius:50%; background:var(--accent);
+      animation:typingDot 1.2s infinite;
+    }
+    #s7 .typing span:nth-child(2) { animation-delay:.2s; }
+    #s7 .typing span:nth-child(3) { animation-delay:.4s; }
+    #s7 .chat-sources {
+      padding:12px 20px; border-top:1px solid rgba(255,255,255,.06);
+      display:flex; gap:8px;
+    }
+    #s7 .source-tag {
+      background:rgba(255,255,255,.07); border-radius:99px;
+      padding:3px 10px; font-size:10px; color:var(--accent);
+    }
+    #s7 .ia-label {
+      position:absolute; top:32px; right:240px;
+      font-size:16px; color:var(--accent); letter-spacing:.05em;
+      animation:fadeIn .8s .5s both;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 8 — MÓDULOS ADICIONALES
+    ═══════════════════════════════════════════════════ */
+    #s8 { background:var(--gray50); }
+    #s8 .modules-showcase {
+      display:grid; grid-template-columns:repeat(2,1fr); gap:20px;
+      width:860px;
+      animation:fadeUp .7s .3s both;
+    }
+    #s8 .ms-card {
+      background:white; border-radius:18px; padding:24px;
+      border:1px solid var(--gray200);
+      box-shadow:0 4px 16px rgba(0,0,0,.06);
+      display:flex; gap:16px;
+    }
+    #s8 .ms-icon {
+      width:48px; height:48px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px; flex-shrink:0;
+    }
+    #s8 .ms-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    #s8 .ms-desc { font-size:12px; color:var(--gray400); line-height:1.5; }
+    #s8 .ms-tag {
+      display:inline-block; margin-top:8px;
+      background:var(--gray50); border:1px solid var(--gray200);
+      padding:2px 8px; border-radius:99px; font-size:10px; color:var(--mid); font-weight:600;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 9 — STATUS PAGE
+    ═══════════════════════════════════════════════════ */
+    #s9 { background:var(--gray50); }
+    #s9 .status-mockup {
+      width:640px; background:white; border-radius:20px;
+      overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,.1);
+      animation:scaleIn .7s .2s both;
+    }
+    #s9 .status-header {
+      background:var(--dark); padding:24px 28px; color:white;
+    }
+    #s9 .sh-label { font-size:11px; color:var(--accent); margin-bottom:4px; }
+    #s9 .sh-title { font-size:22px; font-weight:700; }
+    #s9 .status-body { padding:20px 28px; }
+    #s9 .all-ok-banner {
+      background:#dcfce7; border-radius:12px; padding:14px 18px;
+      display:flex; align-items:center; gap:12px; margin-bottom:16px;
+    }
+    #s9 .ok-icon { font-size:20px; }
+    #s9 .ok-text { font-weight:700; color:#15803d; font-size:14px; }
+    #s9 .ok-time { font-size:11px; color:#4ade80; margin-top:2px; }
+    #s9 .svc-list { display:flex; flex-direction:column; }
+    #s9 .svc-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 0; border-bottom:1px solid #f0f9f5;
+    }
+    #s9 .svc-row:last-child { border-bottom:none; }
+    #s9 .svc-left { display:flex; align-items:center; gap:10px; }
+    #s9 .svc-dot { width:10px; height:10px; border-radius:50%; background:#22c55e; }
+    #s9 .svc-name { font-size:13px; font-weight:600; color:var(--text); }
+    #s9 .svc-sub { font-size:11px; color:var(--gray400); }
+    #s9 .svc-status { font-size:12px; font-weight:700; color:#16a34a; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 10 — PRECIOS
+    ═══════════════════════════════════════════════════ */
+    #s10 { background:var(--dark); }
+    #s10 .pricing-top {
+      text-align:center; margin-bottom:32px;
+      animation:fadeUp .7s .2s both;
+    }
+    #s10 .pricing-top h2 { font-size:32px; font-weight:800; color:white; }
+    #s10 .pricing-top p { color:var(--accent); font-size:14px; margin-top:6px; }
+    #s10 .plans {
+      display:flex; gap:20px;
+      animation:fadeUp .7s .5s both;
+    }
+    #s10 .plan-card {
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+      border-radius:18px; padding:28px 24px; width:240px;
+    }
+    #s10 .plan-card.featured {
+      background:var(--mid); border-color:var(--light);
+      transform:scale(1.04);
+    }
+    #s10 .plan-name { font-size:13px; font-weight:700; color:var(--accent); letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px; }
+    #s10 .plan-card.featured .plan-name { color:white; }
+    #s10 .plan-price { font-size:28px; font-weight:900; color:white; line-height:1; }
+    #s10 .plan-period { font-size:12px; color:rgba(255,255,255,.5); margin-bottom:16px; }
+    #s10 .plan-features { list-style:none; display:flex; flex-direction:column; gap:7px; }
+    #s10 .plan-features li { font-size:11px; color:rgba(255,255,255,.75); display:flex; gap:7px; align-items:flex-start; }
+    #s10 .plan-features li::before { content:'✓'; color:var(--accent); font-weight:700; flex-shrink:0; }
+    #s10 .plan-card.featured .plan-features li::before { color:white; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENE 11 — CTA FINAL
+    ═══════════════════════════════════════════════════ */
+    #s11 { background:var(--dark); }
+    #s11 .cta-inner { text-align:center; }
+    #s11 .cta-small {
+      font-size:13px; letter-spacing:.3em; text-transform:uppercase;
+      color:var(--accent); margin-bottom:16px;
+      animation:fadeIn .8s .2s both;
+    }
+    #s11 .cta-big {
+      font-size:54px; font-weight:900; color:white; line-height:1.1;
+      margin-bottom:24px;
+      animation:scaleIn .8s .5s both;
+    }
+    #s11 .cta-url {
+      font-size:26px; font-weight:700; color:var(--accent);
+      margin-bottom:32px;
+      animation:fadeUp .8s .8s both;
+    }
+    #s11 .cta-detail {
+      font-size:14px; color:rgba(255,255,255,.5);
+      animation:fadeUp .8s 1s both;
+    }
+    #s11 .cta-divider {
+      display:inline-block; width:4px; height:4px;
+      background:rgba(255,255,255,.3); border-radius:50%;
+      margin:0 10px; vertical-align:middle;
+    }
+
+    /* ── Animations ─────────────────────────────────── */
+    @keyframes fadeIn    { from{opacity:0}   to{opacity:1} }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+    @keyframes scaleIn   { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+    @keyframes slideRight{ from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:none} }
+    @keyframes typingDot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  </style>
+</head>
+<body>
+
+<!-- ── Progress bar ───────────────────────────── -->
+<div id="progress-bar"></div>
+<div id="scene-counter"></div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 1 — INTRO (6s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s1">
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div class="logo-text">NormaLis</div>
+  </div>
+  <div class="tagline">Software de Habilitación para IPS Colombianas</div>
+  <div class="url-badge">app.normalis.co &nbsp;·&nbsp; Versión 2 — Julio 2026</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 2 — EL PROBLEMA (10s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s2">
+  <div class="question">¿Su IPS está lista para la próxima visita de habilitación?</div>
+  <div class="pains">
+    <div class="pain">
+      <div class="pain-icon">📋</div>
+      <div class="pain-text">Autoevaluación incompleta o hecha en Excel</div>
+    </div>
+    <div class="pain">
+      <div class="pain-icon">⏰</div>
+      <div class="pain-text">Vencimientos de documentos perdidos sin alertas</div>
+    </div>
+    <div class="pain">
+      <div class="pain-icon">📑</div>
+      <div class="pain-text">PAMEC desactualizado frente a la Res. 465/2025</div>
+    </div>
+    <div class="pain">
+      <div class="pain-icon">🔍</div>
+      <div class="pain-text">Sin trazabilidad de acciones del equipo de calidad</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 3 — LA SOLUCIÓN (6s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s3">
+  <div class="reveal-text">Presentamos</div>
+  <div class="big-name">NormaLis</div>
+  <div class="version-badge">Versión 2 — Ahora en producción</div>
+  <div class="solution-line">Todo lo que su IPS necesita para cumplir con habilitación, PAMEC y calidad — en una sola plataforma.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 4 — DASHBOARD (18s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s4">
+  <div class="sidebar">
+    <div class="sb-logo">NormaLis</div>
+    <div class="sb-item active"><div class="sb-dot"></div> Dashboard</div>
+    <div class="sb-item"><div class="sb-dot"></div> Asistente IA</div>
+    <div class="sb-item"><div class="sb-dot"></div> Auditoría</div>
+    <div class="sb-item"><div class="sb-dot"></div> PAMEC</div>
+    <div class="sb-item"><div class="sb-dot"></div> CAPAs</div>
+    <div class="sb-item"><div class="sb-dot"></div> Indicadores</div>
+    <div class="sb-item"><div class="sb-dot"></div> Vencimientos</div>
+    <div class="sb-item"><div class="sb-dot"></div> SG-SST</div>
+    <div class="sb-item"><div class="sb-dot"></div> Simulacro</div>
+    <div class="sb-item"><div class="sb-dot"></div> Documentos</div>
+    <div class="sb-item"><div class="sb-dot"></div> PQRS</div>
+    <div class="sb-item"><div class="sb-dot"></div> Incidentes</div>
+  </div>
+  <div class="main-content">
+    <div class="welcome-bar">Panel de habilitación y calidad en salud</div>
+    <div class="welcome-sub">NormaLis · Resolución 3100/2019 · Resolución 465/2025</div>
+    <div class="modules-grid">
+      <div class="module-card highlight"><div class="mc-icon">🤖</div><div class="mc-name">Asistente IA</div><div class="mc-desc">Consultas sobre habilitación y normativa</div></div>
+      <div class="module-card"><div class="mc-icon">🔍</div><div class="mc-name">Auditoría</div><div class="mc-desc">Res. 3100/2019 — 22 modalidades</div></div>
+      <div class="module-card"><div class="mc-icon">📈</div><div class="mc-name">PAMEC</div><div class="mc-desc">Auditoría de calidad PHVA</div></div>
+      <div class="module-card"><div class="mc-icon">✓</div><div class="mc-name">CAPAs</div><div class="mc-desc">Acciones correctivas y preventivas</div></div>
+      <div class="module-card"><div class="mc-icon">📊</div><div class="mc-name">Indicadores</div><div class="mc-desc">Calidad Res. 256/2016</div></div>
+      <div class="module-card"><div class="mc-icon">📅</div><div class="mc-name">Vencimientos</div><div class="mc-desc">Documentos y fechas límite</div></div>
+      <div class="module-card"><div class="mc-icon">🦺</div><div class="mc-name">SG-SST</div><div class="mc-desc">Seguridad y salud en el trabajo</div></div>
+      <div class="module-card"><div class="mc-icon">🔔</div><div class="mc-name">Simulacro</div><div class="mc-desc">Pre-visita Secretaría</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 5 — AUDITORÍA (20s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s5">
+  <div class="audit-header">
+    <div>
+      <div class="ah-title">🔍 Auditoría de Habilitación</div>
+      <div class="ah-sub">Resolución 3100/2019 · Resolución 465/2025 · Consulta Médica General</div>
+    </div>
+  </div>
+  <div class="audit-body">
+    <div class="audit-list">
+      <div class="audit-item">
+        <div class="ai-check ok">✓</div>
+        <div><div class="ai-text">Talento Humano — Títulos y certificados vigentes</div><div class="ai-std">Estándar 1 — Resolución 3100/2019</div></div>
+      </div>
+      <div class="audit-item">
+        <div class="ai-check ok">✓</div>
+        <div><div class="ai-text">Infraestructura — Áreas mínimas y señalización</div><div class="ai-std">Estándar 2 — Resolución 3100/2019</div></div>
+      </div>
+      <div class="audit-item">
+        <div class="ai-check warn">!</div>
+        <div><div class="ai-text">Dotación — Equipos biomédicos con mantenimiento</div><div class="ai-std">Estándar 3 — Resolución 3100/2019</div></div>
+      </div>
+      <div class="audit-item">
+        <div class="ai-check ok">✓</div>
+        <div><div class="ai-text">Medicamentos e insumos — Almacenamiento y control</div><div class="ai-std">Estándar 4 — Resolución 3100/2019</div></div>
+      </div>
+      <div class="audit-item">
+        <div class="ai-check no">✗</div>
+        <div><div class="ai-text">Procesos Prioritarios — Consentimiento informado</div><div class="ai-std">Estándar 5 — Resolución 3100/2019</div></div>
+      </div>
+      <div class="audit-item">
+        <div class="ai-check ok">✓</div>
+        <div><div class="ai-text">Historia Clínica — Formato unificado y custodia</div><div class="ai-std">Estándar 6 — Resolución 3100/2019</div></div>
+      </div>
+    </div>
+    <div class="audit-panel">
+      <div class="progress-card">
+        <div class="pct">74%</div>
+        <div class="pct-label">Cumplimiento actual</div>
+        <div class="pbar-wrap"><div class="pbar-fill" id="pbar"></div></div>
+      </div>
+      <div class="std-card">
+        <div class="sc-title">Resumen por Estándar</div>
+        <div class="std-row"><div class="std-name">Talento Humano</div><div class="std-badge ok">Cumple</div></div>
+        <div class="std-row"><div class="std-name">Infraestructura</div><div class="std-badge ok">Cumple</div></div>
+        <div class="std-row"><div class="std-name">Dotación</div><div class="std-badge warn">Parcial</div></div>
+        <div class="std-row"><div class="std-name">Procesos</div><div class="std-badge no">No Cumple</div></div>
+        <div class="std-row"><div class="std-name">Historia Clínica</div><div class="std-badge ok">Cumple</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 6 — PAMEC (12s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s6">
+  <div class="pamec-container">
+    <div class="pamec-info">
+      <div class="pamec-title">PAMEC Digital</div>
+      <div class="pamec-sub">Programa de Auditoría para el Mejoramiento de la Calidad de la Atención en Salud — ahora completamente digital y trazable.</div>
+      <div class="pamec-features">
+        <div class="pf-item"><div class="pf-dot"></div> Ciclos PHVA con seguimiento por responsable</div>
+        <div class="pf-item"><div class="pf-dot"></div> Autoevaluación según Res. 465/2025</div>
+        <div class="pf-item"><div class="pf-dot"></div> Priorización automática de hallazgos</div>
+        <div class="pf-item"><div class="pf-dot"></div> Generación de informes en PDF institucional</div>
+        <div class="pf-item"><div class="pf-dot"></div> Trazabilidad completa de todos los ciclos</div>
+      </div>
+    </div>
+    <div class="phva-wheel">
+      <svg viewBox="0 0 300 300">
+        <circle cx="150" cy="150" r="120" fill="none" stroke="#e0eae7" stroke-width="2"/>
+        <!-- P -->
+        <path d="M150 150 L150 30 A120 120 0 0 1 254 90 Z" fill="#1a5e4a" opacity=".9"/>
+        <!-- H -->
+        <path d="M150 150 L254 90 A120 120 0 0 1 254 210 Z" fill="#2d8a6e" opacity=".9"/>
+        <!-- V -->
+        <path d="M150 150 L254 210 A120 120 0 0 1 46 210 Z" fill="#4ab896" opacity=".9"/>
+        <!-- A -->
+        <path d="M150 150 L46 210 A120 120 0 0 1 150 30 Z" fill="#6dd4ae" opacity=".9"/>
+        <circle cx="150" cy="150" r="45" fill="white"/>
+        <text x="150" y="140" text-anchor="middle" font-size="11" font-weight="700" fill="#0d2820">CICLO</text>
+        <text x="150" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#0d2820">PHVA</text>
+        <!-- Labels -->
+        <text x="190" y="95" text-anchor="middle" font-size="14" font-weight="900" fill="white">P</text>
+        <text x="238" y="160" text-anchor="middle" font-size="14" font-weight="900" fill="white">H</text>
+        <text x="150" y="252" text-anchor="middle" font-size="14" font-weight="900" fill="#0d2820">V</text>
+        <text x="62" y="160" text-anchor="middle" font-size="14" font-weight="900" fill="#0d2820">A</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 7 — IA NORMATIVA (18s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s7">
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div><div class="chat-title">Asistente IA Normativo</div><div class="chat-sub">NormaLis · Res. 3100 · 465/2025 · PAMEC · SG-SST</div></div>
+    </div>
+    <div class="chat-body">
+      <div class="msg bot">
+        <div class="msg-bubble">Hola, soy el asistente normativo de NormaLis. Pregúntame sobre habilitación, PAMEC, SG-SST o cualquier resolución del sector salud en Colombia.</div>
+      </div>
+      <div class="msg user" id="chat-q" style="opacity:0;transition:opacity .5s">
+        <div class="msg-bubble">¿Qué cambió en la Resolución 465/2025 respecto a la autoevaluación?</div>
+      </div>
+      <div class="msg bot" id="chat-a" style="opacity:0;transition:opacity .5s">
+        <div class="msg-bubble" id="chat-a-text"></div>
+      </div>
+    </div>
+    <div class="chat-sources" id="chat-sources" style="opacity:0;transition:opacity .5s">
+      <div class="source-tag">Res. 465/2025 Art. 5</div>
+      <div class="source-tag">Res. 3100/2019 Art. 5</div>
+      <div class="source-tag">Confianza: 94%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 8 — MÓDULOS ADICIONALES (13s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s8">
+  <div style="text-align:center;margin-bottom:28px;animation:fadeUp .7s .2s both">
+    <div style="font-size:13px;letter-spacing:.2em;color:var(--mid);text-transform:uppercase;margin-bottom:8px">Más herramientas incluidas</div>
+    <div style="font-size:26px;font-weight:800;color:var(--text)">Todo lo que su equipo de calidad necesita</div>
+  </div>
+  <div class="modules-showcase">
+    <div class="ms-card">
+      <div class="ms-icon" style="background:#fef9c3">📅</div>
+      <div>
+        <div class="ms-title">Control de Vencimientos</div>
+        <div class="ms-desc">Alertas automáticas antes de que vencen contratos, títulos y certificaciones del personal. Sin sorpresas en la visita.</div>
+        <div class="ms-tag">Alertas por email</div>
+      </div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-icon" style="background:#dcfce7">✓</div>
+      <div>
+        <div class="ms-title">CAPAs — Plan de Mejoramiento</div>
+        <div class="ms-desc">Registre hallazgos, asigne responsables, haga seguimiento y cierre acciones con evidencia documental trazable.</div>
+        <div class="ms-tag">Seguimiento en tiempo real</div>
+      </div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-icon" style="background:#e0f2fe">🦺</div>
+      <div>
+        <div class="ms-title">SG-SST — Res. 0312/2019</div>
+        <div class="ms-desc">Las tres fases del Sistema de Gestión de Seguridad y Salud en el Trabajo, con checklist y exportación de informes.</div>
+        <div class="ms-tag">3 fases completas</div>
+      </div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-icon" style="background:#fce7f3">📊</div>
+      <div>
+        <div class="ms-title">Indicadores de Calidad</div>
+        <div class="ms-desc">Res. 256/2016 — trazadores con semáforo de cumplimiento, registro histórico y comparativos por período.</div>
+        <div class="ms-tag">Res. 256/2016</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 9 — STATUS PAGE (9s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s9">
+  <div style="text-align:center;margin-bottom:28px;animation:fadeUp .7s .1s both">
+    <div style="font-size:13px;letter-spacing:.2em;color:var(--mid);text-transform:uppercase;margin-bottom:8px">Infraestructura de confianza</div>
+    <div style="font-size:26px;font-weight:800;color:var(--text)">Disponible cuando su IPS lo necesita</div>
+  </div>
+  <div class="status-mockup">
+    <div class="status-header">
+      <div class="sh-label">NormaLis</div>
+      <div class="sh-title">Estado del servicio</div>
+    </div>
+    <div class="status-body">
+      <div class="all-ok-banner">
+        <div class="ok-icon">✓</div>
+        <div>
+          <div class="ok-text">Todos los sistemas operativos</div>
+          <div class="ok-time">app.normalis.co/status — verificado en tiempo real</div>
+        </div>
+      </div>
+      <div class="svc-list">
+        <div class="svc-row">
+          <div class="svc-left"><div class="svc-dot"></div><div><div class="svc-name">Aplicación web</div><div class="svc-sub">Next.js en Vercel</div></div></div>
+          <div class="svc-status">Operativo</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-left"><div class="svc-dot"></div><div><div class="svc-name">Base de datos (Firebase)</div><div class="svc-sub">Firestore + Authentication</div></div></div>
+          <div class="svc-status">Operativo</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-left"><div class="svc-dot"></div><div><div class="svc-name">API IA (Cloudflare Worker)</div><div class="svc-sub">Asistente normativo + proxy</div></div></div>
+          <div class="svc-status">Operativo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 10 — PRECIOS (15s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s10">
+  <div class="pricing-top">
+    <h2>Planes y Precios</h2>
+    <p>Actualizaciones automáticas incluidas cuando cambia la normativa</p>
+  </div>
+  <div class="plans">
+    <div class="plan-card">
+      <div class="plan-name">Básico</div>
+      <div class="plan-price">$99.000</div>
+      <div class="plan-period">COP / mes</div>
+      <ul class="plan-features">
+        <li>Auditoría Res. 3100 y 465/2025</li>
+        <li>PAMEC con ciclos PHVA</li>
+        <li>1 usuario</li>
+        <li>Soporte incluido</li>
+      </ul>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-name">Profesional</div>
+      <div class="plan-price">$199.000</div>
+      <div class="plan-period">COP / mes</div>
+      <ul class="plan-features">
+        <li>Todo lo del Básico</li>
+        <li>SG-SST + CAPAs + Indicadores</li>
+        <li>Control de vencimientos</li>
+        <li>Hasta 3 usuarios</li>
+        <li>Exportación PDF institucional</li>
+      </ul>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Avanzado</div>
+      <div class="plan-price">$299.000</div>
+      <div class="plan-period">COP / mes</div>
+      <ul class="plan-features">
+        <li>Todo lo del Profesional</li>
+        <li>IA Normativa ilimitada</li>
+        <li>Multi-usuario ilimitado</li>
+        <li>PQRS + Incidentes</li>
+        <li>Simulacros y bitácora</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SCENE 11 — CTA FINAL (10s)
+═══════════════════════════════════════════════ -->
+<div class="scene" id="s11">
+  <div class="cta-inner">
+    <div class="cta-small">¿Su IPS lista para la habilitación?</div>
+    <div class="cta-big">Empiece hoy en<br><span style="color:var(--accent)">normalis.co</span></div>
+    <div class="cta-url">Demo gratuita · 20 minutos · Sin compromiso</div>
+    <div class="cta-detail">
+      info@normalis.co
+      <span class="cta-divider"></span>
+      Desde COP 99.000/mes
+      <span class="cta-divider"></span>
+      Resolución 3100/2019 · Resolución 465/2025
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Scene config ─────────────────────────────────────────
+  // [id, duration_ms]
+  const SCENES = [
+    ['s1',  6000],
+    ['s2', 10000],
+    ['s3',  6000],
+    ['s4', 18000],
+    ['s5', 20000],
+    ['s6', 12000],
+    ['s7', 18000],
+    ['s8', 13000],
+    ['s9',  9000],
+    ['s10',15000],
+    ['s11',10000],
+  ];
+
+  const TOTAL_MS = SCENES.reduce((a, s) => a + s[1], 0);
+  let currentIdx = 0;
+  let elapsedMs = 0;
+  let progressStart;
+
+  const progressBar  = document.getElementById('progress-bar');
+  const sceneCounter = document.getElementById('scene-counter');
+
+  // ── Activate scene ───────────────────────────────────────
+  function activateScene(idx) {
+    // Deactivate all
+    SCENES.forEach(([id]) => {
+      document.getElementById(id).classList.remove('active');
+    });
+
+    const [id, dur] = SCENES[idx];
+    const el = document.getElementById(id);
+    el.classList.add('active');
+
+    sceneCounter.textContent = `${idx + 1} / ${SCENES.length}`;
+
+    // Special animations per scene
+    if (id === 's5') {
+      setTimeout(() => {
+        const pbar = document.getElementById('pbar');
+        if (pbar) pbar.classList.add('animate');
+      }, 600);
+    }
+    if (id === 's7') {
+      animateChat();
+    }
+  }
+
+  // ── Chat animation for scene 7 ───────────────────────────
+  function animateChat() {
+    const q  = document.getElementById('chat-q');
+    const a  = document.getElementById('chat-a');
+    const at = document.getElementById('chat-a-text');
+    const sr = document.getElementById('chat-sources');
+
+    const answer = 'La Resolución 465/2025 modificó el Artículo 5 de la Res. 3100/2019 para hacer obligatoria la autoevaluación en cuatro momentos: (1) previa a la inscripción inicial, (2) durante el cuarto año de vigencia, (3) antes de cada renovación anual, y (4) en los casos adicionales del Manual de Acreditación. El incumplimiento genera inactivación automática de la inscripción en REPS.';
+
+    setTimeout(() => { q.style.opacity = '1'; }, 1500);
+    setTimeout(() => {
+      at.textContent = '';
+      a.style.opacity = '1';
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < answer.length) {
+          at.textContent += answer[i++];
+        } else {
+          clearInterval(interval);
+          setTimeout(() => { sr.style.opacity = '1'; }, 300);
+        }
+      }, 22);
+    }, 3500);
+  }
+
+  // ── Progress bar ─────────────────────────────────────────
+  function updateProgress(totalElapsed) {
+    const pct = Math.min((totalElapsed / TOTAL_MS) * 100, 100);
+    progressBar.style.width = pct + '%';
+  }
+
+  // ── Scene sequencer ──────────────────────────────────────
+  function runScene(idx) {
+    if (idx >= SCENES.length) {
+      progressBar.style.width = '100%';
+      return;
+    }
+    currentIdx = idx;
+    activateScene(idx);
+
+    const [, dur] = SCENES[idx];
+    const start = performance.now();
+
+    function tick(now) {
+      const dt = now - start;
+      updateProgress(elapsedMs + dt);
+      if (dt < dur) {
+        requestAnimationFrame(tick);
+      } else {
+        elapsedMs += dur;
+        runScene(idx + 1);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── Start ────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    // Small delay so CSS is fully applied
+    setTimeout(() => runScene(0), 300);
+  });
+
+  // ── Click to skip ────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && currentIdx < SCENES.length - 1) {
+      elapsedMs += SCENES[currentIdx][1];
+      runScene(currentIdx + 1);
+    }
+    if (e.key === 'ArrowLeft' && currentIdx > 0) {
+      elapsedMs = SCENES.slice(0, currentIdx - 1).reduce((a, s) => a + s[1], 0);
+      runScene(currentIdx - 1);
+    }
+  });
+</script>
+</body>
+</html>
