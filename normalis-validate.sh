@@ -474,8 +474,11 @@ fi
 section "10. registro.html — rol pendiente"
 # ─────────────────────────────────────────────
 REG="$REPO/registro.html"
+REGAPP="$REPO/registro-app.js"
 if [[ -f "$REG" ]]; then
-  if grep -q "rol.*pendiente\|pendiente.*rol" "$REG"; then    pass "registro.html: asigna rol 'pendiente' en registro"
+  # El rol puede estar en registro.html (inline) o en registro-app.js (modular)
+  if grep -q "rol.*pendiente\|pendiente.*rol" "$REG" || { [[ -f "$REGAPP" ]] && grep -q "rol.*pendiente\|pendiente.*rol" "$REGAPP"; }; then
+    pass "registro.html: asigna rol 'pendiente' en registro"
   else
     fail "registro.html: NO asigna rol 'pendiente' — flujo de aprobación roto"
   fi
