@@ -21,6 +21,7 @@ function Navbar({ onDemo }: { onDemo: () => void }) {
   const navLinks = [
     { href: '#funcionalidades', label: 'Funcionalidades' },
     { href: '#como-funciona', label: 'Cómo funciona' },
+    { href: '#preview', label: 'Vista previa' },
     { href: '#precios', label: 'Precios' },
     { href: '#faq', label: 'FAQ' },
   ];
@@ -363,6 +364,286 @@ function HowItWorks() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Product Preview ───────────────────────────────────────────────────────────
+const SCREENS = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: '📊',
+    desc: 'KPIs de cumplimiento en tiempo real, alertas activas y progreso de auditoría.',
+    content: (
+      <div className="flex h-full gap-3 p-3">
+        {/* Sidebar */}
+        <div className="w-36 bg-teal-900/80 rounded-xl p-3 flex flex-col gap-1.5 flex-shrink-0">
+          <div className="text-teal-300 font-black text-xs mb-2 pb-2 border-b border-teal-700/50">NormaLis</div>
+          {[
+            { icon: '📊', label: 'Dashboard', active: true },
+            { icon: '🔍', label: 'Auditoría', active: false },
+            { icon: '📄', label: 'Documentos', active: false },
+            { icon: '📅', label: 'Vencimientos', active: false },
+            { icon: '📊', label: 'Indicadores', active: false },
+            { icon: '🤖', label: 'Asistente IA', active: false },
+          ].map((item) => (
+            <div key={item.label} className={`flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-lg ${item.active ? 'bg-teal-500 text-white font-bold' : 'text-teal-300/70 hover:bg-teal-800/50'}`}>
+              <span className="text-xs">{item.icon}</span>
+              <span className="truncate">{item.label}</span>
+            </div>
+          ))}
+        </div>
+        {/* Content */}
+        <div className="flex-1 flex flex-col gap-3 min-w-0">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { num: '87%', label: 'Habilitación', color: 'text-teal-400', bg: 'bg-teal-500/10 border-teal-500/20' },
+              { num: '12d', label: 'Próx. venc.', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+              { num: '6/9', label: 'Docs listos', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+            ].map((s) => (
+              <div key={s.label} className={`rounded-xl p-3 border ${s.bg}`}>
+                <div className={`text-xl font-black ${s.color}`}>{s.num}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-slate-800/60 rounded-xl p-3 flex-1 border border-white/5">
+            <div className="text-xs font-bold text-slate-300 mb-2">Auditoría por segmento</div>
+            {[
+              { label: 'Talento Humano', pct: 92, color: 'bg-emerald-400' },
+              { label: 'Infraestructura', pct: 78, color: 'bg-teal-400' },
+              { label: 'Proc. asistenciales', pct: 65, color: 'bg-amber-400' },
+              { label: 'Medicamentos', pct: 54, color: 'bg-orange-400' },
+            ].map((b) => (
+              <div key={b.label} className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs text-slate-400 w-28 flex-shrink-0 truncate">{b.label}</span>
+                <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${b.color} transition-all`} style={{ width: `${b.pct}%` }} />
+                </div>
+                <span className="text-xs font-bold text-slate-300 w-7 text-right">{b.pct}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 flex items-center gap-2">
+            <span className="text-base">⚠️</span>
+            <span className="text-xs text-amber-300 font-medium">Tarjeta profesional Dr. Gómez vence en 12 días</span>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'auditoria',
+    label: 'Auditoría',
+    icon: '🔍',
+    desc: '559 criterios organizados por segmentos según la Res. 3100/2019. Score instantáneo.',
+    content: (
+      <div className="flex h-full flex-col gap-3 p-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-bold text-white">Auditoría Interna · Res. 3100/2019</div>
+            <div className="text-xs text-slate-400 mt-0.5">Segmento: Talento Humano · 45/52 criterios</div>
+          </div>
+          <div className="bg-teal-500/20 border border-teal-500/30 rounded-xl px-3 py-1.5 text-center">
+            <div className="text-lg font-black text-teal-400">87%</div>
+            <div className="text-xs text-slate-400">Score</div>
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {['Talento Hum.', 'Infraestructura', 'Medicamentos', 'Historia Clínica', 'Interdependencias'].map((seg, i) => (
+            <span key={seg} className={`text-xs px-2 py-1 rounded-full border ${i === 0 ? 'bg-teal-500 text-white border-teal-500' : 'text-slate-400 border-slate-600'}`}>{seg}</span>
+          ))}
+        </div>
+        <div className="flex-1 flex flex-col gap-2 overflow-hidden">
+          {[
+            { code: 'TH-001', text: 'Hoja de vida del personal con soportes', status: 'si' },
+            { code: 'TH-002', text: 'Tarjetas profesionales vigentes verificadas', status: 'si' },
+            { code: 'TH-003', text: 'Certificados de vacunación actualizados', status: 'no' },
+            { code: 'TH-004', text: 'Contratos de trabajo / prestación de servicios', status: 'si' },
+            { code: 'TH-005', text: 'Inducción y entrenamiento documentado', status: 'parcial' },
+          ].map((item) => (
+            <div key={item.code} className="bg-slate-800/60 border border-white/5 rounded-lg p-2.5 flex items-center gap-3">
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 font-bold
+                ${item.status === 'si' ? 'bg-emerald-500 text-white' : item.status === 'no' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>
+                {item.status === 'si' ? '✓' : item.status === 'no' ? '✗' : '~'}
+              </span>
+              <span className="text-xs text-slate-400 font-mono flex-shrink-0">{item.code}</span>
+              <span className="text-xs text-slate-200 truncate">{item.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'chat',
+    label: 'Asistente IA',
+    icon: '🤖',
+    desc: 'Chat con IA normativa entrenada en Res. 3100, 465/2025, PAMEC y SG-SST.',
+    content: (
+      <div className="flex h-full flex-col p-3 gap-3">
+        <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+          Asistente normativo NormaLis · Res. 3100/2019 · 465/2025
+        </div>
+        <div className="flex-1 flex flex-col gap-3 overflow-hidden justify-end">
+          <div className="flex justify-end">
+            <div className="bg-teal-500/20 border border-teal-500/30 text-teal-100 text-xs rounded-2xl rounded-tr-sm px-3 py-2 max-w-[75%]">
+              ¿Qué documentos necesito para habilitarme como consultorio médico?
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <div className="w-7 h-7 rounded-full bg-teal-500 flex items-center justify-center text-xs font-bold flex-shrink-0 shadow">IA</div>
+            <div className="bg-slate-800/80 border border-white/10 text-slate-200 text-xs rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%]">
+              Para un consultorio médico (Res. 3100/2019, Grupo 1), los documentos clave son:
+              <ul className="mt-1.5 flex flex-col gap-1 pl-2">
+                {['Manual de Bioseguridad', 'Plan de Gestión de Residuos', 'Protocolo de Atención al Paciente', 'Hoja de vida con tarjetas profesionales', 'Consentimientos informados'].map((d) => (
+                  <li key={d} className="flex gap-1.5 items-start"><span className="text-teal-400 font-bold flex-shrink-0">✓</span>{d}</li>
+                ))}
+              </ul>
+              <div className="mt-2 text-teal-400/70 text-xs">Fuente: Art. 12, Res. 3100/2019</div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <div className="bg-teal-500/20 border border-teal-500/30 text-teal-100 text-xs rounded-2xl rounded-tr-sm px-3 py-2 max-w-[75%]">
+              ¿Puedo generarlos desde NormaLis?
+            </div>
+          </div>
+        </div>
+        <div className="bg-slate-800/60 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-slate-400">
+          <span className="flex-1">Escribe tu pregunta normativa...</span>
+          <span className="bg-teal-500 text-white px-2 py-1 rounded-lg font-bold">→</span>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'documentos',
+    label: 'Documentos',
+    icon: '📄',
+    desc: 'Genera documentos normativos en segundos con los datos de tu IPS prellenados.',
+    content: (
+      <div className="flex h-full flex-col p-3 gap-3">
+        <div className="text-sm font-bold text-white">Generador de Documentos Normativos</div>
+        <div className="grid grid-cols-2 gap-2 flex-1 content-start">
+          {[
+            { name: 'Manual de Bioseguridad', icon: '🛡️', status: 'listo', color: 'border-emerald-500/30 bg-emerald-500/5' },
+            { name: 'Plan de Residuos', icon: '♻️', status: 'listo', color: 'border-emerald-500/30 bg-emerald-500/5' },
+            { name: 'Consentimiento Informado', icon: '✍️', status: 'listo', color: 'border-emerald-500/30 bg-emerald-500/5' },
+            { name: 'Protocolo de Atención', icon: '📋', status: 'listo', color: 'border-emerald-500/30 bg-emerald-500/5' },
+            { name: 'Plan de Emergencias', icon: '🚨', status: 'pendiente', color: 'border-slate-600 bg-slate-800/40' },
+            { name: 'Programa de Auditoría', icon: '🔍', status: 'pendiente', color: 'border-slate-600 bg-slate-800/40' },
+          ].map((doc) => (
+            <div key={doc.name} className={`border rounded-xl p-3 flex flex-col gap-2 ${doc.color}`}>
+              <div className="text-base">{doc.icon}</div>
+              <div className="text-xs font-medium text-slate-200 leading-tight">{doc.name}</div>
+              <div className={`text-xs font-bold ${doc.status === 'listo' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                {doc.status === 'listo' ? '✓ Listo · PDF' : '+ Generar'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+] as const;
+
+function ProductPreview() {
+  const [active, setActive] = useState(0);
+
+  return (
+    <section className="py-20 px-5 bg-white" id="preview">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-12">
+          <span className="inline-block bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
+            La app en acción
+          </span>
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
+            Mira NormaLis por dentro
+          </h2>
+          <p className="text-slate-500 text-lg max-w-xl">
+            Diseñada para coordinadores de calidad y directores de IPS — sin curva de aprendizaje.
+          </p>
+        </div>
+
+        {/* Video slot */}
+        <div className="mb-10 rounded-2xl overflow-hidden border-2 border-dashed border-teal-200 bg-teal-50/50 relative group">
+          <div className="aspect-video flex flex-col items-center justify-center gap-4 px-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-teal-500 flex items-center justify-center shadow-xl shadow-teal-200 group-hover:scale-110 transition-transform cursor-pointer">
+              <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <div>
+              <div className="text-lg font-black text-slate-800 mb-1">Demo en video — próximamente</div>
+              <p className="text-sm text-slate-500 max-w-sm">
+                Estamos grabando un recorrido completo de la plataforma. Solicita una demo en vivo mientras tanto.
+              </p>
+            </div>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); (document.querySelector('[data-demo-btn]') as HTMLButtonElement)?.click(); }}
+              className="bg-teal-500 hover:bg-teal-400 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-teal-200"
+            >
+              🚀 Solicitar demo en vivo
+            </a>
+          </div>
+        </div>
+
+        {/* Screen tabs */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {SCREENS.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => setActive(i)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                active === i
+                  ? 'bg-teal-500 text-white shadow-lg shadow-teal-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>{s.icon}</span>
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Screen preview */}
+        <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
+          {/* Browser chrome */}
+          <div className="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400" />
+              <div className="w-3 h-3 rounded-full bg-green-400" />
+            </div>
+            <div className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-1 text-xs text-slate-400 mx-3 max-w-xs">
+              app.normalis.co · {SCREENS[active].label}
+            </div>
+          </div>
+          {/* App content */}
+          <div
+            className="h-80 transition-all"
+            style={{ background: 'linear-gradient(135deg, #0f2027 0%, #0d3d3d 60%, #134e4a 100%)' }}
+          >
+            {SCREENS[active].content}
+          </div>
+          {/* Caption */}
+          <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex items-center justify-between">
+            <p className="text-sm text-slate-500">{SCREENS[active].desc}</p>
+            <a
+              href="https://normalis.co/login.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-bold text-teal-600 hover:text-teal-500 flex items-center gap-1 flex-shrink-0 ml-4"
+            >
+              Ver en vivo →
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -766,6 +1047,7 @@ export default function LandingPage() {
       <Problems />
       <Features />
       <HowItWorks />
+      <ProductPreview />
       <Pricing onDemo={() => setDemoOpen(true)} />
       <Testimonials />
       <CTABand onDemo={() => setDemoOpen(true)} />
