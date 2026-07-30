@@ -451,8 +451,8 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                   ))}
                 </ul>
                 {/* Botón primario: Empezar ahora */}
-                <Link
-                  href="/registro"
+                <a
+                  href="https://fjfc1984-bit.github.io/normalis/registro.html"
                   className={`w-full py-3 rounded-xl text-sm font-bold transition-all text-center block mb-2 ${
                     p.popular
                       ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-200'
@@ -460,7 +460,7 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                   }`}
                 >
                   {p.monthly === 'A la medida' ? '📩 Hablar con ventas' : 'Empezar ahora →'}
-                </Link>
+                </a>
                 {/* Botón secundario: Solicitar demo */}
                 <button
                   onClick={onDemo}
