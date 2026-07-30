@@ -551,6 +551,52 @@ const SCREENS = [
   },
 ] as const;
 
+// ─── Demo Video ────────────────────────────────────────────────────────────────
+function DemoVideo() {
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <div className="mb-10">
+      <div className="relative w-full rounded-2xl overflow-hidden border border-teal-200 shadow-xl shadow-teal-50 bg-slate-950">
+        {!playing ? (
+          <button
+            onClick={() => setPlaying(true)}
+            className="w-full aspect-video flex flex-col items-center justify-center gap-5 group"
+            style={{ background: 'linear-gradient(135deg, #0f2027 0%, #0d3d3d 50%, #134e4a 100%)' }}
+          >
+            {/* Animated glow */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+              <div className="w-96 h-96 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, #14b8a6, transparent)' }} />
+            </div>
+            {/* Play button */}
+            <div className="relative w-20 h-20 rounded-full bg-teal-500 flex items-center justify-center shadow-2xl shadow-teal-500/50 group-hover:scale-110 group-hover:bg-teal-400 transition-all duration-300">
+              <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+            <div className="relative text-center">
+              <p className="text-white font-black text-xl mb-1">Ver demo completo de NormaLis</p>
+              <p className="text-teal-300 text-sm">Recorrido de 11 módulos · ~2:30 min · Sin registro</p>
+            </div>
+          </button>
+        ) : (
+          <iframe
+            src="/normalis-demo-video.html"
+            className="w-full aspect-video"
+            title="Demo NormaLis"
+            allowFullScreen
+          />
+        )}
+      </div>
+      {!playing && (
+        <p className="text-center text-xs text-slate-400 mt-3">
+          Habilitación · PAMEC · IA Normativa · SG-SST · Documentos · y más
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ProductPreview() {
   const [active, setActive] = useState(0);
 
@@ -570,29 +616,8 @@ function ProductPreview() {
           </p>
         </div>
 
-        {/* Video slot */}
-        <div className="mb-10 rounded-2xl overflow-hidden border-2 border-dashed border-teal-200 bg-teal-50/50 relative group">
-          <div className="aspect-video flex flex-col items-center justify-center gap-4 px-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-teal-500 flex items-center justify-center shadow-xl shadow-teal-200 group-hover:scale-110 transition-transform cursor-pointer">
-              <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </div>
-            <div>
-              <div className="text-lg font-black text-slate-800 mb-1">Demo en video — próximamente</div>
-              <p className="text-sm text-slate-500 max-w-sm">
-                Estamos grabando un recorrido completo de la plataforma. Solicita una demo en vivo mientras tanto.
-              </p>
-            </div>
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); (document.querySelector('[data-demo-btn]') as HTMLButtonElement)?.click(); }}
-              className="bg-teal-500 hover:bg-teal-400 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-teal-200"
-            >
-              🚀 Solicitar demo en vivo
-            </a>
-          </div>
-        </div>
+        {/* Video demo */}
+        <DemoVideo />
 
         {/* Screen tabs */}
         <div className="flex gap-2 mb-4 flex-wrap">
