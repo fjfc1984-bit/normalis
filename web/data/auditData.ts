@@ -1292,7 +1292,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se lleva registro actualizado de TH habilitado con nombre, profesión, tarjeta y horario de prestación?",
         "¿El personal que atiende poblaciones especiales (niños, adulto mayor, discapacitados) tiene entrenamiento documentado?",
         "¿Hay médico de cabecera o coordinador disponible en el horario de prestación del servicio de consulta externa?",
-        "¿Se verifica anualmente la vigencia de tarjetas profesionales y se documentan los resultados?""
+        "¿Se verifica anualmente la vigencia de tarjetas profesionales y se documentan los resultados?"
       ]
     },
     {
@@ -1306,7 +1306,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La iluminación y ventilación del consultorio cumple los estándares de habitabilidad definidos en el manual de habilitación?",
         "¿Las rutas de acceso al servicio son accesibles para personas en silla de ruedas, con bastón o movilidad reducida?",
         "¿Existe sala de espera diferenciada con capacidad adecuada a la demanda, con sillas suficientes y señalización clara?",
-        "¿Los baños para usuarios son accesibles, con adecuada señalización de género y acceso para discapacidad?""
+        "¿Los baños para usuarios son accesibles, con adecuada señalización de género y acceso para discapacidad?"
       ]
     },
     {
@@ -1319,7 +1319,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Los equipos médicos tienen hoja de vida, mantenimiento preventivo vigente y calibración al día?",
         "¿Los consultorios especializados tienen el equipamiento específico exigido para la especialidad (ej: oftalmoscopio, otoscopio, espirómetro)?",
         "¿Se dispone de glucómetro calibrado y oxímetro de pulso disponibles en el área de consulta externa?",
-        "¿El instrumental médico-quirúrgico menor tiene proceso documentado de esterilización y empaque sellado?""
+        "¿El instrumental médico-quirúrgico menor tiene proceso documentado de esterilización y empaque sellado?"
       ]
     },
     {
@@ -1333,7 +1333,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El proceso de asignación de citas garantiza oportunidad según los tiempos máximos de espera definidos por el MSPS?",
         "¿Se realiza verificación de derechos del paciente (afiliación SGSSS) antes o en el momento de la consulta?",
         "¿Existe proceso para gestión de paciente crónico con citas programadas, seguimiento y control de tratamiento?",
-        "¿Se aplican listas de chequeo o protocolos de seguridad del paciente específicos para consulta externa?""
+        "¿Se aplican listas de chequeo o protocolos de seguridad del paciente específicos para consulta externa?"
       ]
     },
     {
@@ -1346,7 +1346,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El sistema de historia clínica (física o electrónica) garantiza confidencialidad, acceso restringido y respaldo?",
         "¿Los tiempos de conservación de historias clínicas cumplen los 20 años establecidos en la Res. 1995/1999?",
         "¿Los registros de consulta incluyen consentimiento informado cuando aplica y están correctamente archivados?",
-        "¿La historia clínica electrónica, si existe, está certificada y cumple los estándares de interoperabilidad del MSPS?""
+        "¿La historia clínica electrónica, si existe, está certificada y cumple los estándares de interoperabilidad del MSPS?"
       ]
     }
   ],
@@ -1362,7 +1362,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El personal de enfermería de la UCI tiene entrenamiento documentado en cuidado intensivo y manejo de ventilador?",
         "¿Hay terapeuta respiratorio disponible en el horario de mayor demanda, con certificación técnica o profesional?",
         "¿Existe protocolo para uso de telexperticia sincrónica con intensivista cuando aplique (Res. 544/2023)?",
-        "¿Se realiza inducción formal a todo el personal nuevo que ingresa a UCI con evaluación de competencias documentada?""
+        "¿Se realiza inducción formal a todo el personal nuevo que ingresa a UCI con evaluación de competencias documentada?"
       ]
     },
     {
@@ -1376,7 +1376,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Existe aislamiento especial (presión negativa o positiva) disponible para pacientes en riesgo infeccioso o inmunodeprimidos?",
         "¿Las puertas de la UCI son de doble hoja, con acceso controlado y facilidad para ingreso de equipos de gran tamaño?",
         "¿La central de enfermería de la UCI permite visibilidad directa o por monitor de todas las camas?",
-        "¿El área cuenta con generador eléctrico de respaldo con tiempo de autonomía certificado y prueba periódica documentada?""
+        "¿El área cuenta con generador eléctrico de respaldo con tiempo de autonomía certificado y prueba periódica documentada?"
       ]
     },
     {
@@ -1390,7 +1390,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La UCI dispone de equipos de infusión (bombas de jeringa e infusión), desfibrilador con cardioversión sincronizada?",
         "¿Los equipos de la UCI tienen mantenimiento preventivo documentado y calibración vigente según Decreto 4725/2005?",
         "¿Hay carro de paro equipado dentro de la UCI con medicamentos verificados mensualmente con firma responsable?",
-        "¿Se dispone de ecógrafo portátil o acceso garantizado para ecocardiografía a pie de cama dentro de la UCI?""
+        "¿Se dispone de ecógrafo portátil o acceso garantizado para ecocardiografía a pie de cama dentro de la UCI?"
       ]
     },
     {
@@ -1404,7 +1404,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Hay protocolo de destete de ventilación mecánica con criterios clínicos documentados y evaluación diaria?",
         "¿Se realiza visita médica multidisciplinaria diaria con registro en historia clínica de objetivos del día?",
         "¿Existe sistema de alerta temprana o score de deterioro para detectar precozmente el empeoramiento del paciente?",
-        "¿Los indicadores de la UCI (mortalidad, estancia, infecciones, días ventilación) se miden mensualmente y se revisan en comité?""
+        "¿Los indicadores de la UCI (mortalidad, estancia, infecciones, días ventilación) se miden mensualmente y se revisan en comité?"
       ]
     },
     {
@@ -1418,7 +1418,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Existe protocolo canguro (método madre canguro) documentado con criterios de inicio, seguimiento y egreso?",
         "¿Se garantiza banco de leche materna o alternativa nutricional con trazabilidad de donantes y receptores?",
         "¿El personal de UCIN tiene entrenamiento en reanimación neonatal avanzada (programa NRP o equivalente)?",
-        "¿Existe protocolo de prevención de retinopatía del prematuro con control oftalmológico programado para RN <32 semanas?""
+        "¿Existe protocolo de prevención de retinopatía del prematuro con control oftalmológico programado para RN <32 semanas?"
       ]
     }
   ],
@@ -1433,7 +1433,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Hay enfermera o auxiliar de enfermería con capacitación en asistencia al parto disponible en el horario de atención?",
         "¿El servicio cuenta con neonatólogo o médico con competencia en reanimación neonatal disponible 24/7?",
         "¿El personal tiene actualización documentada en prevención de hemorragia posparto y eclampsia cada 2 años?",
-        "¿Existe anestesiólogo disponible o en tiempo de respuesta definido y documentado para cesárea de emergencia?""
+        "¿Existe anestesiólogo disponible o en tiempo de respuesta definido y documentado para cesárea de emergencia?"
       ]
     },
     {
@@ -1446,7 +1446,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Existe sala de preparto o admisión obstétrica diferenciada de la sala de alumbramiento?",
         "¿Se dispone de quirófano para cesárea de emergencia en tiempo de acceso máximo de 30 minutos?",
         "¿Las instalaciones de la sala de partos permiten atención a la madre y reanimación del recién nacido en el mismo espacio?",
-        "¿El área de puerperio tiene camas diferenciadas para madre e hijo, con baño accesible y privacidad garantizada?""
+        "¿El área de puerperio tiene camas diferenciadas para madre e hijo, con baño accesible y privacidad garantizada?"
       ]
     },
     {
@@ -1459,7 +1459,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se dispone de kit de reanimación neonatal completo: ambú neonatal, laringoscopio neonatal, tubos endotraqueales, aspirador?",
         "¿Hay acceso a oxitocina, sulfato de magnesio y otros medicamentos de emergencia obstétrica con verificación periódica?",
         "¿El cardiotocógrafo (monitor fetal) está disponible, calibrado y con mantenimiento vigente?",
-        "¿Se dispone de ecógrafo obstétrico para evaluación del bienestar fetal intraparto?""
+        "¿Se dispone de ecógrafo obstétrico para evaluación del bienestar fetal intraparto?"
       ]
     },
     {
@@ -1473,7 +1473,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se aplica protocolo de eclampsia/preeclampsia con criterios de hospitalización, manejo con sulfato de magnesio y traslado?",
         "¿El partograma es diligenciado en todos los trabajos de parto con registro de progresión y toma de decisiones?",
         "¿Existe protocolo de apego precoz, lactancia materna exclusiva y contacto piel a piel documentado y aplicado?",
-        "¿Los indicadores de atención del parto (cesáreas, hemorragia posparto, mortalidad perinatal) se miden y revisan periódicamente?""
+        "¿Los indicadores de atención del parto (cesáreas, hemorragia posparto, mortalidad perinatal) se miden y revisan periódicamente?"
       ]
     }
   ],
@@ -1487,7 +1487,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El banco de sangre cuenta con bacteriólogo o médico especialista en medicina transfusional como responsable técnico?",
         "¿El personal del banco de sangre tiene capacitación documentada en biosseguridad y manejo de material biológico?",
         "¿Existe manual de funciones actualizado para cada cargo en el banco de sangre con capacitaciones periódicas?",
-        "¿El personal tiene vacunación completa contra hepatitis B y se conservan los registros de inmunización?""
+        "¿El personal tiene vacunación completa contra hepatitis B y se conservan los registros de inmunización?"
       ]
     },
     {
@@ -1499,7 +1499,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El banco de sangre tiene áreas diferenciadas para recepción de donantes, extracción, procesamiento y almacenamiento?",
         "¿Las unidades de sangre se almacenan en refrigeradores específicos para sangre con alarma de temperatura y registro continuo?",
         "¿El área de trabajo tiene sistema de presión negativa o ventilación controlada para prevención de contaminación cruzada?",
-        "¿Las instalaciones eléctricas incluyen UPS o generador para garantizar cadena de frío en fallo del suministro eléctrico?""
+        "¿Las instalaciones eléctricas incluyen UPS o generador para garantizar cadena de frío en fallo del suministro eléctrico?"
       ]
     },
     {
@@ -1511,7 +1511,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Los equipos de centrifugación, procesamiento y fraccionamiento de sangre tienen mantenimiento preventivo al día?",
         "¿Se dispone de analizadores para tipificación ABO/Rh, pruebas de compatibilidad y tamización infecciosa (VIH, HBsAg, HCV, sífilis)?",
         "¿Los equipos de la cadena de frío (refrigeradores, congeladores, cavas de transporte) tienen calibración y registro de temperatura continuo?",
-        "¿El banco cuenta con irradiadores para hemocomponentes cuando atiende pacientes inmunodeprimidos, o tiene acceso garantizado?""
+        "¿El banco cuenta con irradiadores para hemocomponentes cuando atiende pacientes inmunodeprimidos, o tiene acceso garantizado?"
       ]
     },
     {
@@ -1525,7 +1525,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se realizan pruebas serológicas para VIH 1/2, HBsAg, anti-HCV, VDRL y Chagas en el 100% de las unidades?",
         "¿Existe protocolo de reacciones transfusionales con sistema de reporte, investigación y seguimiento del receptor?",
         "¿Los hemocomponentes vencidos o rechazados tienen procedimiento documentado de destrucción y registro?",
-        "¿Se participa en programa de control externo de calidad para pruebas de tamización y serología?""
+        "¿Se participa en programa de control externo de calidad para pruebas de tamización y serología?"
       ]
     }
   ],
@@ -1540,7 +1540,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El personal de enfermería oncológica tiene entrenamiento certificado en preparación y administración de citotóxicos?",
         "¿Hay farmacéutico con competencia en oncología responsable de la preparación de quimioterapia en campana de flujo laminar?",
         "¿Se realiza comité oncológico multidisciplinario periódico con participación de cirugía, radioterapia, patología y nutrición?",
-        "¿El personal tiene capacitación en manejo de derrames de citotóxicos y uso de equipo de protección personal específico?""
+        "¿El personal tiene capacitación en manejo de derrames de citotóxicos y uso de equipo de protección personal específico?"
       ]
     },
     {
@@ -1552,7 +1552,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La sala de quimioterapia tiene sillas reclinables o camas individuales con privacidad visual entre pacientes?",
         "¿La farmacia oncológica dispone de campana de flujo laminar clase II tipo B2 o cabina de seguridad biológica certificada?",
         "¿Existe área de aislamiento disponible para pacientes neutropénicos o en riesgo de infección grave?",
-        "¿El servicio cuenta con sistema de ventilación que evita recirculación de aire en el área de preparación de citotóxicos?""
+        "¿El servicio cuenta con sistema de ventilación que evita recirculación de aire en el área de preparación de citotóxicos?"
       ]
     },
     {
@@ -1565,7 +1565,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Existe kit de derrame de citotóxicos disponible en el área de preparación y administración?",
         "¿Los medicamentos oncológicos tienen sistema de doble verificación antes de la administración al paciente?",
         "¿Se dispone de antídotos o medicamentos para manejo de extravasación de citotóxicos disponibles en el servicio?",
-        "¿Los residuos de citotóxicos tienen disposición diferenciada como residuo peligroso según Decreto 351/2014?""
+        "¿Los residuos de citotóxicos tienen disposición diferenciada como residuo peligroso según Decreto 351/2014?"
       ]
     },
     {
@@ -1578,7 +1578,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se aplica protocolo de verificación de identidad del paciente y correcta prescripción antes de cada ciclo de quimioterapia?",
         "¿Existen protocolos de manejo de toxicidades por quimioterapia: neutropenia febril, náuseas, mucositis, extravasación?",
         "¿Se miden indicadores de calidad en oncología: oportunidad de inicio de tratamiento, toxicidades grado 3-4, hospitalizaciones no programadas?",
-        "¿El consentimiento informado para quimioterapia es específico, incluye riesgos y alternativas, y está firmado por el paciente?""
+        "¿El consentimiento informado para quimioterapia es específico, incluye riesgos y alternativas, y está firmado por el paciente?"
       ]
     }
   ],
@@ -1592,7 +1592,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El servicio de hemodiálisis tiene nefrólogo responsable con especialización registrada ante el MSPS?",
         "¿La razón personal de enfermería-paciente cumple el estándar definido (mínimo 1 enfermera por cada 4 pacientes en diálisis)?",
         "¿El personal de enfermería y auxiliares tiene capacitación documentada en manejo de accesos vasculares y máquinas de diálisis?",
-        "¿Existe protocolo de atención de emergencias durante la sesión de hemodiálisis con personal entrenado disponible?""
+        "¿Existe protocolo de atención de emergencias durante la sesión de hemodiálisis con personal entrenado disponible?"
       ]
     },
     {
@@ -1604,7 +1604,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Cada estación de hemodiálisis tiene el espacio mínimo requerido para la máquina, la camilla y el acceso lateral del personal?",
         "¿El sistema de tratamiento de agua (ósmosis inversa) tiene monitoreo continuo de calidad y pureza del agua de diálisis?",
         "¿Existe área de aislamiento para pacientes con VIH, HCV activo u otras infecciones transmisibles, con máquinas dedicadas?",
-        "¿El sistema de drenaje de la unidad de hemodiálisis cumple la normativa sanitaria para efluentes de establecimientos de salud?""
+        "¿El sistema de drenaje de la unidad de hemodiálisis cumple la normativa sanitaria para efluentes de establecimientos de salud?"
       ]
     },
     {
@@ -1616,7 +1616,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Cada máquina de hemodiálisis tiene hoja de vida, mantenimiento preventivo vigente y calificación de instalación y funcionamiento?",
         "¿Los monitores de agua (conductividad, temperatura, alarmas) del sistema de tratamiento están calibrados y en buen estado?",
         "¿Se dispone de carro de paro equipado para emergencias durante la sesión con desfibrilador de fácil acceso?",
-        "¿Las máquinas de diálisis tienen desinfección y purga documentada entre cada sesión y después de paciente con infección?""
+        "¿Las máquinas de diálisis tienen desinfección y purga documentada entre cada sesión y después de paciente con infección?"
       ]
     },
     {
@@ -1629,7 +1629,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se realiza evaluación mensual de adecuación de diálisis (Kt/V) con registro en historia clínica?",
         "¿Existe protocolo de vigilancia de acceso vascular (fístula, catéter) con evaluación periódica y registro de complicaciones?",
         "¿El agua de diálisis tiene control microbiológico y de endotoxinas mensual con valores dentro de los límites AAMI/ISO?",
-        "¿Se monitorean indicadores de calidad: hospitalización, mortalidad, adecuación de diálisis, complicaciones de acceso?""
+        "¿Se monitorean indicadores de calidad: hospitalización, mortalidad, adecuación de diálisis, complicaciones de acceso?"
       ]
     }
   ],
@@ -1643,7 +1643,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El servicio farmacéutico cuenta con regente de farmacia o químico farmacéutico como director técnico?",
         "¿La razón de regentes o químicos farmacéuticos por auxiliares cumple la normativa según complejidad del servicio?",
         "¿Todo el personal del servicio farmacéutico tiene capacitación documentada en buenas prácticas de almacenamiento y dispensación?",
-        "¿El químico farmacéutico o regente asume formalmente la dirección técnica con acta de posesión o contrato vigente?""
+        "¿El químico farmacéutico o regente asume formalmente la dirección técnica con acta de posesión o contrato vigente?"
       ]
     },
     {
@@ -1655,7 +1655,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El servicio farmacéutico tiene áreas diferenciadas para recepción, almacenamiento, dispensación y distribución de medicamentos?",
         "¿Las condiciones de temperatura y humedad del área de almacenamiento son monitoreadas y registradas diariamente?",
         "¿Existe área de refrigeración con termómetro calibrado para medicamentos que requieren cadena de frío?",
-        "¿El acceso al área de dispensación está restringido al personal autorizado y los medicamentos están bajo llave?""
+        "¿El acceso al área de dispensación está restringido al personal autorizado y los medicamentos están bajo llave?"
       ]
     },
     {
@@ -1667,7 +1667,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se dispone de sistema de información para la gestión de inventarios con control de fechas de vencimiento?",
         "¿El área de preparación de mezclas (si aplica) tiene campana de flujo laminar, equipos de medición y condiciones de asepsia?",
         "¿Se cuenta con refrigerador exclusivo para medicamentos con registro gráfico de temperatura y alarma?",
-        "¿El servicio tiene acceso a información farmacológica actualizada: vademécum, interacciones, ajuste por función renal?""
+        "¿El servicio tiene acceso a información farmacológica actualizada: vademécum, interacciones, ajuste por función renal?"
       ]
     },
     {
@@ -1681,7 +1681,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El servicio participa en el programa de farmacovigilancia con reporte de eventos adversos a medicamentos al INVIMA?",
         "¿Hay proceso documentado para manejo de medicamentos vencidos, deteriorados o retirados del mercado?",
         "¿Se realizan auditorías periódicas de uso de antibióticos como parte del programa de uso racional de antimicrobianos?",
-        "¿Los pacientes reciben educación sobre sus medicamentos: indicación, dosis, horario, efectos adversos a vigilar?""
+        "¿Los pacientes reciben educación sobre sus medicamentos: indicación, dosis, horario, efectos adversos a vigilar?"
       ]
     }
   ],
@@ -1695,7 +1695,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El personal que aplica vacunas tiene entrenamiento documentado en el Programa Ampliado de Inmunización (PAI)?",
         "¿Se realiza capacitación periódica al personal en manejo de cadena de frío, reconstitución de vacunas y manejo de eventos adversos?",
         "¿Existe personal entrenado en manejo de reacciones adversas inmediatas post-vacunación (anafilaxia)?",
-        "¿El responsable del programa de vacunación tiene designación formal y asiste a las reuniones convocadas por la Secretaría de Salud?""
+        "¿El responsable del programa de vacunación tiene designación formal y asiste a las reuniones convocadas por la Secretaría de Salud?"
       ]
     },
     {
@@ -1708,7 +1708,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La temperatura del refrigerador de vacunas se registra dos veces al día (mañana y tarde) con firma del responsable?",
         "¿Existe plan de contingencia documentado para fallo de la cadena de frío con alternativas de conservación de emergencia?",
         "¿Las vacunas se organizan según la norma del PAI: más antiguas adelante, separadas por tipo, con identificación clara?",
-        "¿Se registran las alertas o fallas de temperatura con su análisis de impacto y decisión documentada sobre el lote afectado?""
+        "¿Se registran las alertas o fallas de temperatura con su análisis de impacto y decisión documentada sobre el lote afectado?"
       ]
     },
     {
@@ -1722,7 +1722,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se aplica lista de verificación de contraindicaciones antes de cada vacuna con registro en historia clínica?",
         "¿El usuario espera mínimo 20 minutos post-vacunación en el servicio para observar reacciones adversas inmediatas?",
         "¿Los eventos adversos post-vacunación se registran, analizan y reportan al SIVIGILA según la normativa?",
-        "¿Los indicadores de cobertura se reportan a la Secretaría de Salud en los formatos y tiempos establecidos?""
+        "¿Los indicadores de cobertura se reportan a la Secretaría de Salud en los formatos y tiempos establecidos?"
       ]
     }
   ],
@@ -1736,7 +1736,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El médico que actúa como prestador de referencia en telemedicina tiene tarjeta profesional vigente y contrato activo?",
         "¿El personal de salud que usa telemedicina tiene capacitación documentada en el uso de la plataforma tecnológica?",
         "¿Existe responsable del programa de telemedicina con funciones definidas en manual de funciones o contrato?",
-        "¿Los profesionales de salud en telemedicina conocen y aplican los criterios de derivación a consulta presencial?""
+        "¿Los profesionales de salud en telemedicina conocen y aplican los criterios de derivación a consulta presencial?"
       ]
     },
     {
@@ -1749,7 +1749,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La conexión a internet garantiza la calidad mínima para transmisión de imágenes diagnósticas y comunicación en tiempo real?",
         "¿La plataforma tiene protocolos de seguridad de la información (cifrado, autenticación, control de acceso) documentados?",
         "¿Existe plan de contingencia ante falla tecnológica con protocolo de derivación a consulta presencial urgente?",
-        "¿La plataforma permite registro de la consulta, generación de historia clínica y formulación electrónica cuando aplica?""
+        "¿La plataforma permite registro de la consulta, generación de historia clínica y formulación electrónica cuando aplica?"
       ]
     },
     {
@@ -1763,7 +1763,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La historia clínica de telemedicina es equivalente en contenido a la presencial: anamnesis, diagnóstico, plan, firma?",
         "¿Existe protocolo de referencia urgente para pacientes que durante la teleconsulta presenten criterios de atención inmediata presencial?",
         "¿Se monitorean indicadores de telemedicina: número de consultas, patologías, satisfacción del usuario, referencias derivadas?",
-        "¿Los registros de las teleconsultas están disponibles para auditoría y tienen el mismo tiempo de conservación que la HC tradicional?""
+        "¿Los registros de las teleconsultas están disponibles para auditoría y tienen el mismo tiempo de conservación que la HC tradicional?"
       ]
     },
     {
@@ -1775,7 +1775,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La plataforma de telemedicina cumple la Ley 1581/2012 de protección de datos personales en salud?",
         "¿Los datos de las teleconsultas se almacenan en servidores con ubicación conocida y con medidas de seguridad certificadas?",
         "¿Existe política de privacidad específica para telemedicina que el paciente conoce y acepta antes de la consulta?",
-        "¿El acceso a grabaciones de teleconsultas (si aplica) está restringido y controlado con registro de auditoría de accesos?""
+        "¿El acceso a grabaciones de teleconsultas (si aplica) está restringido y controlado con registro de auditoría de accesos?"
       ]
     }
   ],
@@ -1789,7 +1789,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El personal de la central de esterilización tiene capacitación documentada en procesamiento de dispositivos médicos (PDM)?",
         "¿Existe responsable técnico de la central con funciones definidas y capacitación específica en esterilización?",
         "¿El personal conoce y aplica correctamente los protocolos de limpieza, desinfección y esterilización para cada tipo de material?",
-        "¿Se realizan evaluaciones periódicas de competencia del personal en los procesos de esterilización con registro?""
+        "¿Se realizan evaluaciones periódicas de competencia del personal en los procesos de esterilización con registro?"
       ]
     },
     {
@@ -1801,7 +1801,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La central de esterilización tiene zonas diferenciadas: zona sucia (recepción y lavado), zona limpia (empaque) y zona estéril (almacenamiento)?",
         "¿El flujo del material sigue sentido único (sucia → limpia → estéril) sin cruces entre material contaminado y estéril?",
         "¿Las superficies de las áreas de esterilización son de fácil limpieza, sin grietas ni uniones que acumulen suciedad?",
-        "¿El almacenamiento del material estéril es en estantería cerrada, con temperatura controlada y lejos de pisos y paredes?""
+        "¿El almacenamiento del material estéril es en estantería cerrada, con temperatura controlada y lejos de pisos y paredes?"
       ]
     },
     {
@@ -1814,7 +1814,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se realizan pruebas de eficacia del proceso (Bowie-Dick, indicadores biológicos, químicos) en cada ciclo y se registran los resultados?",
         "¿Los termómetros, manómetros y demás instrumentos de control de los autoclaves tienen calibración vigente?",
         "¿Los empaques de material estéril tienen indicador químico externo e interno visible para validar la exposición al proceso?",
-        "¿Existe sistema de trazabilidad del material estéril: qué se esterilizó, cuándo, en qué ciclo y a qué paciente se usó?""
+        "¿Existe sistema de trazabilidad del material estéril: qué se esterilizó, cuándo, en qué ciclo y a qué paciente se usó?"
       ]
     },
     {
@@ -1827,7 +1827,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Los artículos de uso único (single use) tienen proceso documentado para su resterilización si aplica, o se descartan correctamente?",
         "¿El material esterilizado tiene etiqueta con fecha de esterilización, número de ciclo, fecha de vencimiento y responsable?",
         "¿Se conservan los registros de ciclos de esterilización por el tiempo establecido para trazabilidad de incidentes?",
-        "¿Existe programa de mantenimiento preventivo documentado para autoclaves y demás equipos de la central?""
+        "¿Existe programa de mantenimiento preventivo documentado para autoclaves y demás equipos de la central?"
       ]
     }
   ],
@@ -1841,7 +1841,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El equipo de trasplante incluye médico especialista en trasplante con certificación reconocida y registrada?",
         "¿Existe coordinador de trasplantes con funciones definidas y capacitación específica en gestión de donación?",
         "¿El personal de UCI tiene entrenamiento en diagnóstico y mantenimiento del potencial donante en muerte encefálica?",
-        "¿El equipo de trasplante participa activamente en la Red de Donación y Trasplante del MSPS?""
+        "¿El equipo de trasplante participa activamente en la Red de Donación y Trasplante del MSPS?"
       ]
     },
     {
@@ -1854,7 +1854,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Se notifica de manera oportuna a la Red de Donación y Trasplante cada potencial donante detectado en la institución?",
         "¿La gestión de la lista de espera de receptores cumple los criterios de asignación de órganos establecidos por el MSPS?",
         "¿Existen protocolos de inmunosupresión post-trasplante con seguimiento definido y control de adherencia al tratamiento?",
-        "¿Se registran y reportan los resultados de los trasplantes (supervivencia injerto, supervivencia paciente) a la Red Nacional?""
+        "¿Se registran y reportan los resultados de los trasplantes (supervivencia injerto, supervivencia paciente) a la Red Nacional?"
       ]
     },
     {
@@ -1866,7 +1866,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El banco de tejidos tiene habilitación vigente ante la Red de Donación y Trasplante del MSPS?",
         "¿Los tejidos almacenados (córneas, piel, hueso) tienen control de calidad, trazabilidad del donante y tiempo de vida útil?",
         "¿Existe comunicación documentada y continua con las IPS trasplantadoras para gestión oportuna de tejidos (Res. 544/2023)?",
-        "¿El banco dispone de sistema de almacenamiento con temperatura controlada y alarmas para cada tipo de tejido?""
+        "¿El banco dispone de sistema de almacenamiento con temperatura controlada y alarmas para cada tipo de tejido?"
       ]
     }
   ]
