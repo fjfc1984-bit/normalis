@@ -2,16 +2,23 @@
 // Proyecto: normalis-5587d
 // Aplicar via CLI: firebase deploy --only firestore:rules --project normalis-5587d
 //
-// Colecciones:
-//   usuarios/{uid}           — perfiles de usuario (rol, activo, expiresAt, rol_ips, nit_ips)
-//   ips/{nit}/data/{key}     — datos de auditoría por IPS (normalis-firestore.js)
-//   pilotos/{nit}            — seguimiento programa piloto
-//   prospectos/{id}          — CRM (solo admin)
-//   leads/{id}               — solicitudes demo desde index.html (escritura pública)
-//   capas/{id}               — módulo CAPA / Plan de Mejoramiento PAMEC
-//   vencimientos/{id}        — módulo de vencimientos personal
-//   indicadores/{id}         — módulo indicadores Res. 256/2016
-//   invitaciones/{code}      — sistema de invitaciones de equipo IPS
+// Colecciones raíz:
+//   usuarios/{uid}              — perfiles de usuario (rol, activo, expiresAt, nit, nit_ips)
+//   ips/{nit}/data/{key}        — datos de auditoría legacy por IPS
+//   pilotos/{nit}               — seguimiento programa piloto
+//   prospectos/{id}             — CRM (solo admin)
+//   leads/{id}                  — solicitudes demo desde index.html (escritura pública)
+//   capas/{id}                  — módulo CAPA / Plan de Mejoramiento PAMEC
+//   vencimientos/{id}           — módulo de vencimientos personal
+//   indicadores/{id}            — módulo indicadores Res. 256/2016
+//   invitaciones/{code}         — sistema de invitaciones de equipo IPS
+//   normalis_orgs/{orgId}       — sincronización secundaria por NIT
+//
+// Subcollections de usuarios/{uid} (módulos Next.js):
+//   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
+//   usuarios/{uid}/incidentes/{id}  — Incidentes y Eventos Adversos
+//   usuarios/{uid}/bitacora/{id}    — Bitácora de Gobernanza
+//   usuarios/{uid}/sst/{docId}      — SG-SST (único doc: 'main')
 
 rules_version = '2';
 service cloud.firestore {
@@ -30,25 +37,17 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
-    function isActiveClient() {
-      let userData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
-      return request.auth != null &&
-        (userData.rol == 'cliente' || userData.rol == 'piloto') &&
-        userData.activo == true;
-    }
-
-    // Usuario activo (cliente, piloto o admin)
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // El usuario pertenece al mismo NIT que el documento (para consultas de equipo)
+    // Usuarios del mismo NIT (para módulos con acceso compartido por IPS)
     function sameNIT(nitField) {
       let myData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
-      return request.auth != null && myData.nit == nitField;
+      return request.auth != null &&
+        (myData.nit == nitField || myData.nit_ips == nitField);
     }
 
-    // El usuario es director de la IPS (nit en su propio doc = nit del recurso)
     function isDirectorOf(nit) {
       let myData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
       return request.auth != null &&
@@ -57,7 +56,7 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // usuarios/{uid} — perfiles de usuario
+    // usuarios/{uid} — perfiles de usuario + subcollections de módulos Next.js
     // ════════════════════════════════════════════════════════════════════════
     match /usuarios/{uid} {
       // Leer propio perfil; admin puede leer todos;
@@ -71,7 +70,6 @@ service cloud.firestore {
          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit);
 
       // Crear: solo registro.html — usuario autenticado crea su propio doc
-      // Permite nit_ips y rol_ips para usuarios que se registran por invitación
       allow create: if isOwner(uid) &&
         request.resource.data.rol == 'pendiente' &&
         request.resource.data.activo == false;
@@ -85,21 +83,38 @@ service cloud.firestore {
 
       // Eliminar: solo admin
       allow delete: if isAdmin();
+
+      // ── PQRS ──────────────────────────────────────────────────────────────
+      // Solo el propietario de la cuenta o un admin puede leer/escribir sus PQRS
+      match /pqrs/{id} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      // ── Incidentes y Eventos Adversos ────────────────────────────────────
+      match /incidentes/{id} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      // ── Bitácora de Gobernanza ────────────────────────────────────────────
+      match /bitacora/{id} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
+      // ── SG-SST (documento único 'main') ──────────────────────────────────
+      match /sst/{docId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // ips/{nit}/data/{key} — datos de auditoría por IPS
+    // ips/{nit}/data/{key} — datos de auditoría legacy por IPS
     // ════════════════════════════════════════════════════════════════════════
     match /ips/{nit} {
       allow read: if isAdmin();
       allow write: if isAdmin();
 
       match /data/{key} {
-        // Acceso compartido por IPS: el usuario debe pertenecer al NIT
-        // o ser admin. Soporta tres casos:
-        //   1. Legacy: uid == nit (usuarios anteriores al multi-usuario)
-        //   2. Miembro principal: su campo 'nit' en usuarios == nit del documento
-        //   3. Miembro invitado: su campo 'nit_ips' en usuarios == nit del documento
+        // Acceso compartido por IPS: uid == nit (legacy), mismo NIT o admin
         allow read, write: if isAuthenticated() &&
           (request.auth.uid == nit ||
            get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
@@ -110,68 +125,81 @@ service cloud.firestore {
 
     // ════════════════════════════════════════════════════════════════════════
     // capas/{id} — módulo CAPA / Plan de Mejoramiento PAMEC
+    // Soporta acceso por uid (personal) y por nit (equipo IPS)
     // ════════════════════════════════════════════════════════════════════════
     match /capas/{id} {
-      // Leer/escribir si eres el dueño (uid) o admin
-      allow read: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
 
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
 
-      allow update, delete: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
     }
 
     // ════════════════════════════════════════════════════════════════════════
     // vencimientos/{id} — módulo de vencimientos personal
     // ════════════════════════════════════════════════════════════════════════
     match /vencimientos/{id} {
-      allow read: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
 
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
 
-      allow update, delete: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
     }
 
     // ════════════════════════════════════════════════════════════════════════
     // indicadores/{id} — módulo indicadores Res. 256/2016
+    // Soporta acceso por uid (personal) y por nit (equipo IPS)
     // ════════════════════════════════════════════════════════════════════════
     match /indicadores/{id} {
-      allow read: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
 
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
 
-      allow update, delete: if isAuthenticated() &&
-        (resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
     }
 
     // ════════════════════════════════════════════════════════════════════════
     // invitaciones/{code} — sistema de invitaciones de equipo IPS
     // ════════════════════════════════════════════════════════════════════════
     match /invitaciones/{code} {
-      // Cualquier usuario autenticado puede leer una invitación por su código
-      // (necesario durante el flujo de registro con ?invite=CODE)
       allow read: if isAuthenticated();
 
-      // Solo clientes/pilotos/admin (directores) pueden crear invitaciones
       allow create: if isAuthenticated() &&
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in
           ['cliente', 'piloto', 'admin'] &&
         request.resource.data.creadoPor == request.auth.uid;
 
-      // Actualizar para marcar como usado (registro) o revocar (director)
-      // Solo puede actualizar el creador, el invitado, o admin
       allow update: if isAuthenticated() &&
         (resource.data.creadoPor == request.auth.uid || isAdmin() ||
          resource.data.email == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email);
 
-      // Solo admin o creador puede eliminar
       allow delete: if isAuthenticated() &&
         (resource.data.creadoPor == request.auth.uid || isAdmin());
     }
@@ -202,11 +230,8 @@ service cloud.firestore {
 
     // ════════════════════════════════════════════════════════════════════════
     // normalis_orgs/{orgId} — sincronización secundaria (normalis-main.js)
-    // orgId = 'nit_' + nit.replace(/[^a-zA-Z0-9]/g,'_')
     // ════════════════════════════════════════════════════════════════════════
     match /normalis_orgs/{orgId} {
-      // Cualquier usuario autenticado puede leer/escribir (Firebase Auth ya garantiza
-      // que el usuario pasó por login.html con rol válido; el orgId está ofuscado)
       allow read, write: if isAuthenticated();
     }
 
