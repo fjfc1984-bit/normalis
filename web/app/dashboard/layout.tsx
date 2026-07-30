@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/auditoria',     label: 'Auditoría',    icon: '🔍' },
   { href: '/dashboard/documentos',    label: 'Documentos',   icon: '📄' },
   { href: '/dashboard/pqrs',          label: 'PQRS',         icon: '📬' },
+  { href: '/dashboard/incidentes',    label: 'Incidentes',   icon: '🛡️' },
 ];
 
 function Sidebar() {
