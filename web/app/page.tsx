@@ -137,10 +137,10 @@ function Hero({ onDemo }: { onDemo: () => void }) {
           >
             🚀 Solicitar demo gratis
           </button>
-          <a href="https://normalis.co/normativa-app-v2.html" target="_blank" rel="noopener noreferrer"
+          <Link href="/login"
             className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-4 rounded-xl text-base font-semibold transition-all hover:-translate-y-1 backdrop-blur-sm">
             ▶ Ver la app
-          </a>
+          </Link>
         </div>
 
         {/* Floating badges */}
