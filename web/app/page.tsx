@@ -453,11 +453,17 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                     </li>
                   ))}
                 </ul>
-                {/* Botón primario: Empezar ahora → Bold.co checkout */}
+                {/* Botón primario: anual → Bold.co checkout | mensual → registro */}
                 <a
-                  href={p.boldUrl ?? 'mailto:hola@normalis.co?subject=NormaLis%20Enterprise'}
-                  target={p.boldUrl ? '_blank' : undefined}
-                  rel={p.boldUrl ? 'noopener noreferrer' : undefined}
+                  href={
+                    p.monthly === 'A la medida'
+                      ? 'mailto:hola@normalis.co?subject=NormaLis%20Enterprise'
+                      : annual && p.boldUrl
+                        ? p.boldUrl
+                        : 'https://fjfc1984-bit.github.io/normalis/registro.html'
+                  }
+                  target={annual && p.boldUrl ? '_blank' : undefined}
+                  rel={annual && p.boldUrl ? 'noopener noreferrer' : undefined}
                   className={`w-full py-3 rounded-xl text-sm font-bold transition-all text-center block mb-2 ${
                     p.popular
                       ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white shadow-lg shadow-teal-200'
