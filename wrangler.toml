@@ -6,22 +6,16 @@ name       = "normalis"
 main       = "cloudflare-worker.js"
 compatibility_date = "2024-09-23"
 
-# ─── Workers AI — para generar embeddings de consultas ──────────────────────
-# Modelo usado: @cf/baai/bge-m3 (768 dims, multilingüe, soporta español)
-# Free tier: 30M neurons/día
-[ai]
-binding = "AI"
-
-# ─── Vectorize — base de datos vectorial para RAG ───────────────────────────
-# Crear el índice (una sola vez):
+# ─── Workers AI + Vectorize (RAG) — OPCIONAL ────────────────────────────────
+# Habilitar solo si el índice normalis-rag existe en Cloudflare:
 #   wrangler vectorize create normalis-rag --dimensions=768 --metric=cosine
-# Indexar fragmentos normativos:
-#   python scripts/prepare_rag.py
-#   python scripts/upload_embeddings.py
-# Free tier: 5M vector dimensions consultadas/mes
-[[vectorize]]
-binding    = "VECTORIZE"
-index_name = "normalis-rag"
+#   python scripts/prepare_rag.py && python scripts/upload_embeddings.py
+# Luego descomentar:
+# [ai]
+# binding = "AI"
+# [[vectorize]]
+# binding    = "VECTORIZE"
+# index_name = "normalis-rag"
 
 # ─── Variables de entorno (NO son secrets — se pueden publicar) ─────────────
 [vars]
