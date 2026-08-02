@@ -30,7 +30,8 @@ Colombian SaaS for health regulatory compliance (Resolución 3100/2019 and 465/2
 | `login.html` | Auth + role-based routing | 28KB |
 | `registro.html` | 2-step self-registration wizard | 25KB |
 | `admin.html` | Admin panel (CRM, pilotos, analytics, solicitudes, leads) | 77KB |
-| `normativa-app-v2.html` | Main app (13,120 lines — the entire product) | 858KB |
+| `normativa-app-v2.html` | Main app shell — carga 28 módulos JS externos | ~187KB |
+| `normalis-main.js` | Lógica principal de la app (ex-inline script) | ~337KB |
 | `normalis-pilot.js` | Pilot banner + expiry guard (injected into app) | ~6KB |
 
 ---
@@ -201,7 +202,7 @@ EOF
 
 ## Modular Architecture (normativa-app-v2.html)
 
-The main app was refactored from a single 858KB file into 12 external JS modules + 1 CSS file. The HTML file (`normativa-app-v2.html`, ~536KB) now loads them via `<script src>` / `<link>` tags.
+The main app was refactored from a single 858KB file into **28 external JS modules + 1 CSS file**. The HTML file (`normativa-app-v2.html`, ~187KB / ~2,800 líneas) ahora es un shell que carga los módulos vía `<script src>` / `<link>`. La lógica principal está en `normalis-main.js` (337KB).
 
 | Module | Content | Size |
 |--------|---------|------|
@@ -251,7 +252,7 @@ bash normalis-patch.sh "texto_viejo" "texto_nuevo"
 - File now properly closes with `</body>` and `</html>` (pin numpad modal is complete)
 - All module `<script src>` tags are near the top of the `<body>`, before the main inline `<script>` block
 - When searching for `</body>` to insert code: check only the LAST occurrence — earlier ones are inside JS template strings
-- **Después de cualquier edición:** `wc -l normativa-app-v2.html` debe dar >9000 líneas. Si da menos, el archivo fue truncado — restaurar con `git checkout HEAD -- normativa-app-v2.html` y rehacer con Python.
+- **Después de cualquier edición:** `wc -l normativa-app-v2.html` debe dar >2500 líneas (el archivo es un shell modular — ~2,800 líneas es correcto). Si da menos de 2000, el archivo fue truncado — restaurar con `git checkout HEAD -- normativa-app-v2.html` y rehacer con Python.
 
 ---
 
@@ -268,7 +269,7 @@ Cubre 10 categorías — 80+ checks:
 1. Existencia y no-vacío de los 18 archivos críticos
 2. Tamaño mínimo de cada módulo (detecta truncamiento severo)
 3. Sello de integridad al final de cada módulo JS/CSS
-4. `normativa-app-v2.html` — cierre HTML correcto + balance de `<script>` + referencias a los 12 módulos
+4. `normativa-app-v2.html` — cierre HTML correcto + balance de `<script>` + referencias a los módulos principales
 5. Funciones críticas presentes en cada módulo (~26 funciones verificadas)
 6. `admin.html` — 9 reglas de integridad (rol piloto, sin Custom Claims, 1 auth listener, etc.)
 7. Firebase config consistente en los 5 archivos HTML

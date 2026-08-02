@@ -24,7 +24,11 @@ export function usePAMEC() {
 
   // ── Cargar ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (authLoading || !nit) return;
+    if (authLoading) return;         // auth aún resolviendo — esperar
+    if (!nit) {                      // auth resuelta pero sin NIT (admin u otros)
+      setLoading(false);
+      return;
+    }
 
     async function load() {
       try {

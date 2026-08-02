@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuth } from '@/lib/auth';
 import { usePAMEC } from '@/lib/usePAMEC';
 import { PAMEC_FASES, PROCESOS_SUGERIDOS, type PamecFase } from '@/lib/pamecTypes';
 
@@ -50,6 +51,7 @@ function FaseStepper({ current, onChange }: { current: PamecFase; onChange: (f: 
 }
 
 function PAMECContent() {
+  const { nit } = useAuth();
   const { pamec, loading, saving, setFase, addItem, updateItem, deleteItem, addAccion, updateAccion } = usePAMEC();
 
   // Form estados
@@ -61,6 +63,14 @@ function PAMECContent() {
   const [newAccion, setNewAccion] = useState({ descripcion: '', responsable: '', fechaLimite: '', evidencia: '' });
 
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando PAMEC...</div>;
+
+  if (!nit) return (
+    <div className="p-8 text-center text-gray-400">
+      <p className="text-2xl mb-2">⚠️</p>
+      <p className="text-sm">Esta cuenta no tiene un NIT asociado.</p>
+      <p className="text-xs mt-1">El PAMEC requiere un perfil de IPS con NIT. Contacta al administrador.</p>
+    </div>
+  );
 
   const fase = pamec?.fase ?? 'autoeval';
   const items = pamec?.items ?? [];

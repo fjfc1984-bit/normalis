@@ -67,6 +67,116 @@ if('serviceWorker' in navigator){
 <!-- Skip link: accesibilidad teclado WCAG 2.4.1 -->
 <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
+
+<!-- ═══ NormaLis Splash Screen ═══ -->
+<div id="nls-splash" style="
+  position:fixed;inset:0;z-index:999998;
+  background:#071a12;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;font-family:system-ui,sans-serif;
+  transition:opacity .5s ease;
+">
+  <!-- Ambient glow -->
+  <div style="position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(74,184,150,.15) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none"></div>
+
+  <!-- Logo -->
+  <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;color:#4ab896;margin-bottom:6px;position:relative">
+    Norma<span style="color:#fff">Lis</span>
+  </div>
+  <div style="font-size:14px;color:rgba(74,184,150,.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:48px;position:relative">
+    Copiloto de Habilitación IPS
+  </div>
+
+  <!-- Progress bar -->
+  <div style="width:320px;height:4px;background:rgba(74,184,150,.15);border-radius:4px;overflow:hidden;position:relative;margin-bottom:20px">
+    <div id="nls-splash-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4ab896,#1ecf8e);border-radius:4px;transition:width .4s ease"></div>
+  </div>
+
+  <!-- Message -->
+  <div id="nls-splash-msg" style="font-size:14px;color:rgba(160,200,184,.7);height:20px;transition:opacity .3s ease">
+    Iniciando NormaLis...
+  </div>
+
+  <!-- Dots -->
+  <div style="display:flex;gap:8px;margin-top:32px">
+    <div class="nls-dot" style="width:7px;height:7px;border-radius:50%;background:#4ab896;animation:nlsDot 1.4s ease-in-out infinite"></div>
+    <div class="nls-dot" style="width:7px;height:7px;border-radius:50%;background:#4ab896;animation:nlsDot 1.4s ease-in-out .2s infinite"></div>
+    <div class="nls-dot" style="width:7px;height:7px;border-radius:50%;background:#4ab896;animation:nlsDot 1.4s ease-in-out .4s infinite"></div>
+  </div>
+</div>
+
+<style>
+@keyframes nlsDot {
+  0%,80%,100% { transform:scale(.6); opacity:.4; }
+  40%          { transform:scale(1);  opacity:1;  }
+}
+</style>
+
+<script>
+(function(){
+  var msgs = [
+    'Cargando 13.000+ criterios de habilitación...',
+    'Preparando módulo PAMEC...',
+    'Iniciando IA normativa colombiana...',
+    'Cargando estándares SG-SST...',
+    'Preparando generador de documentos...',
+    'Verificando tu sesión...',
+    'Casi listo...'
+  ];
+  var bar  = document.getElementById('nls-splash-bar');
+  var msg  = document.getElementById('nls-splash-msg');
+  var splash = document.getElementById('nls-splash');
+  var step = 0, done = false;
+
+  function tick() {
+    if (done) return;
+    step++;
+    var pct = Math.min(step * 14, 92);
+    bar.style.width = pct + '%';
+    if (msgs[step - 1]) {
+      msg.style.opacity = '0';
+      setTimeout(function(){ 
+        if (msgs[step-1]) msg.textContent = msgs[step-1]; 
+        msg.style.opacity = '1'; 
+      }, 150);
+    }
+    if (step < msgs.length) setTimeout(tick, 700 + Math.random() * 400);
+  }
+  setTimeout(tick, 300);
+
+  function hideSplash() {
+    if (done) return;
+    done = true;
+    bar.style.width = '100%';
+    msg.textContent = '¡Todo listo!';
+    setTimeout(function(){
+      splash.style.opacity = '0';
+      setTimeout(function(){ 
+        if (splash.parentNode) splash.parentNode.removeChild(splash); 
+      }, 500);
+    }, 350);
+  }
+
+  // Escuchar evento de app lista
+  window.addEventListener('normalisReady', hideSplash);
+
+  // Fallback: ocultar cuando Firebase Auth resuelve (máx 12s)
+  var checkReady = setInterval(function(){
+    if (window._normalisAppLoaded || window._initAppCalled) {
+      clearInterval(checkReady);
+      hideSplash();
+    }
+  }, 200);
+
+  // Fallback duro: 12 segundos
+  setTimeout(function(){ hideSplash(); clearInterval(checkReady); }, 12000);
+
+  window._nlsHideSplash = hideSplash;
+})();
+</script>
+<!-- ═══ /Splash Screen ═══ -->
+
 <!-- ═══ NormaLis Error Boundary ═══ -->
 <script>
 (function(){

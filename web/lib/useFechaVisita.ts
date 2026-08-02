@@ -38,7 +38,8 @@ export function useFechaVisita(): FechaVisitaState {
 
   // ── Cargar ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (authLoading || !nit) return;
+    if (authLoading) return;
+    if (!nit) { setLoading(false); return; }
 
     async function load() {
       try {
