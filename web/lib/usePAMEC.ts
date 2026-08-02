@@ -45,7 +45,7 @@ export function usePAMEC() {
 
   // ── Guardar ─────────────────────────────────────────────────────────────
   const save = useCallback(async (updates: Partial<PamecDoc>) => {
-    if (!nit) return;
+    if (!nit) throw new Error('SIN_NIT: Esta cuenta no tiene NIT — no se puede guardar.');
     setSaving(true);
     try {
       const updated = { ...(pamec ?? emptyDoc(nit)), ...updates, nit, updatedAt: new Date().toISOString() };

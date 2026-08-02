@@ -7,6 +7,20 @@ import { auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+function NitWarningBanner() {
+  const { nit, loading } = useAuth();
+  if (loading || nit) return null;
+  return (
+    <div className="bg-amber-500 text-amber-950 text-sm font-medium px-4 py-2 flex items-center gap-2">
+      <span>⚠️</span>
+      <span>
+        Esta cuenta no tiene NIT configurado — los módulos no pueden guardar datos.
+        Ve a <strong>Firebase Console → Firestore → usuarios → tu documento</strong> y agrega el campo <code className="bg-amber-400 px-1 rounded">nit</code> con el NIT de tu IPS.
+      </span>
+    </div>
+  );
+}
+
 const NAV_ITEMS = [
   { href: '/dashboard',               label: 'Dashboard',    icon: '⊞' },
   { href: '/dashboard/chat',          label: 'Asistente IA', icon: '🤖' },
@@ -70,9 +84,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-gray-50">
-          {children}
-        </main>
+        <div className="flex-1 flex flex-col overflow-auto bg-gray-50">
+          <NitWarningBanner />
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
       </div>
     </AuthGuard>
   );

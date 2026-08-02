@@ -57,7 +57,7 @@ export function useFechaVisita(): FechaVisitaState {
 
   // ── Guardar ───────────────────────────────────────────────────────────────
   const persist = useCallback(async (fecha: string | null) => {
-    if (!nit) return;
+    if (!nit) throw new Error('SIN_NIT: Esta cuenta no tiene NIT — no se puede guardar.');
     setSaving(true);
     try {
       // Merge en cfg para no pisar otros campos del legacy
