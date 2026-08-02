@@ -126,29 +126,42 @@ function TabDashboard({
     <div className="space-y-6">
       {/* Selector de fase */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          ¿Cuántos trabajadores tiene la IPS?
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">
+          Paso 1 — Selecciona la fase que aplica a tu IPS
         </h3>
+        <p className="text-xs text-gray-500 mb-4">
+          La Res. 0312/2019 define estándares distintos según el tamaño. Cada fase tiene sus propios criterios obligatorios.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {(['fase1', 'fase2', 'fase3'] as SSTFase[]).map(f => (
+          {([
+            { f: 'fase1' as SSTFase, tag: 'Fase I',   range: 'Menos de 10 trabajadores', riesgo: 'Riesgo I y II',      items: '7 criterios — 100 pts' },
+            { f: 'fase2' as SSTFase, tag: 'Fase II',  range: '11 a 50 trabajadores',      riesgo: 'o <10 con Riesgo III-V', items: '21 criterios — 100 pts' },
+            { f: 'fase3' as SSTFase, tag: 'Fase III', range: 'Más de 50 trabajadores',    riesgo: 'Riesgo I a V',      items: '60 criterios — 100 pts' },
+          ]).map(({ f, tag, range, riesgo, items }) => (
             <button
               key={f}
               onClick={() => onFaseChange(f)}
-              className={`p-3 rounded-xl border-2 text-left transition-all
+              className={`p-4 rounded-xl border-2 text-left transition-all
                 ${fase === f
                   ? 'border-teal-500 bg-teal-50'
                   : 'border-gray-200 hover:border-teal-300'}`}
             >
-              <p className={`text-xs font-bold mb-1 ${fase === f ? 'text-teal-700' : 'text-gray-500'}`}>
-                {f === 'fase1' ? 'Fase I' : f === 'fase2' ? 'Fase II' : 'Fase III'}
-              </p>
-              <p className="text-xs text-gray-600 leading-tight">
-                {SST_FASE_LABELS[f].split('—')[1]?.trim()}
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full
+                  ${fase === f ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                  {tag}
+                </span>
+                {fase === f && <span className="text-xs text-teal-600 font-semibold">✓ Activa</span>}
+              </div>
+              <p className="text-sm font-semibold text-gray-800 leading-tight">{range}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{riesgo}</p>
+              <p className="text-xs text-teal-600 font-medium mt-2">{items}</p>
             </button>
           ))}
         </div>
-        <p className="text-xs text-gray-400 mt-3">⚠️ Cambiar la fase reinicia la autoevaluación.</p>
+        <p className="text-xs text-amber-600 mt-3 font-medium">
+          ⚠️ Cambiar la fase reinicia la autoevaluación. Selecciona la correcta antes de comenzar.
+        </p>
       </div>
 
       {/* Score principal */}
@@ -768,6 +781,35 @@ function exportarPDF(
   if (w) { w.document.write(html); w.document.close(); setTimeout(() => w.print(), 500); }
 }
 
+// ── Acciones recomendadas por semáforo ───────────────────────────────────────
+const ACCIONES_POR_SEMAFORO: Record<string, { titulo: string; pasos: string[] }> = {
+  critico: {
+    titulo: 'Acción inmediata requerida — riesgo de sanción',
+    pasos: [
+      'Ve a "Autoevaluación" y responde todos los criterios de tu fase.',
+      'Los criterios marcados como "No cumple" son tu prioridad: actúa sobre ellos antes de 30 días.',
+      'Crea actividades en "Plan de Trabajo" para cada criterio incumplido.',
+      'Registra las fechas límite en "Vencimientos" para hacer seguimiento.',
+    ],
+  },
+  moderado: {
+    titulo: 'En progreso — completa la implementación',
+    pasos: [
+      'Revisa los criterios "Parcial" en Autoevaluación y define qué falta para cumplir 100%.',
+      'Actualiza el Plan de Trabajo con las actividades pendientes.',
+      'Fija fechas de cumplimiento en Vencimientos para no perder el control.',
+    ],
+  },
+  aceptable: {
+    titulo: 'Buen cumplimiento — mantén la evidencia actualizada',
+    pasos: [
+      'Verifica que la evidencia de cada criterio esté documentada y actualizada.',
+      'Programa la próxima autoevaluación en 6 meses (Decreto 1072/2015, Art. 2.2.4.6.1).',
+      'Revisa Vencimientos para que ningún requisito periódico quede sin control.',
+    ],
+  },
+};
+
 // ════════════════════════════════════════════════════════════════════════════════
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════════
@@ -780,7 +822,8 @@ export default function SgSstPage() {
     addVencimiento, deleteVencimiento,
   } = useSST(user?.uid ?? null);
 
-  const [tab, setTab] = useState<Tab>('dashboard');
+  const [tab, setTab]           = useState<Tab>('dashboard');
+  const [showInfo, setShowInfo] = useState(false);
   const { toast, show: showToast } = useToast();
 
   async function handleSetFase(f: SSTFase) {
@@ -792,6 +835,12 @@ export default function SgSstPage() {
 
   if (authLoading || loading) return <LoadingSpinner fullHeight />;
 
+  const accion = ACCIONES_POR_SEMAFORO[score.semaforo] ?? ACCIONES_POR_SEMAFORO.critico;
+  const evaluados = Object.values(data.autoevaluacion).filter(v => v !== '').length;
+  const estandar  = SST_ESTANDARES[data.fase];
+  const totalItems = estandar.grupos.reduce((a, g) => a + g.items.length, 0);
+  const sinEvaluar = evaluados === 0;
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
 
@@ -801,15 +850,54 @@ export default function SgSstPage() {
         title="SG-SST"
         subtitle="Sistema de Gestión de Seguridad y Salud en el Trabajo · Res. 0312/2019"
         actions={
-          <button
-            onClick={() => exportarPDF(score, data.fase, data.autoevaluacion)}
-            className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
-                       text-gray-600 rounded-xl text-sm font-medium transition-colors"
-          >
-            📄 PDF
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowInfo(v => !v)}
+              className="px-3 py-2 bg-teal-50 border border-teal-200 hover:border-teal-300
+                         text-teal-700 rounded-xl text-sm font-medium transition-colors"
+            >
+              ℹ️ ¿Para qué sirve?
+            </button>
+            <button
+              onClick={() => exportarPDF(score, data.fase, data.autoevaluacion)}
+              className="px-3 py-2 bg-white border border-gray-200 hover:border-gray-300
+                         text-gray-600 rounded-xl text-sm font-medium transition-colors"
+            >
+              📄 PDF
+            </button>
+          </div>
         }
       />
+
+      {/* ── Panel de objetivo (collapsible) ── */}
+      {showInfo && (
+        <div className="mb-5 bg-teal-50 border border-teal-200 rounded-2xl p-5">
+          <h3 className="text-sm font-bold text-teal-800 mb-2">¿Qué es el SG-SST y para qué sirve este módulo?</h3>
+          <p className="text-sm text-teal-700 mb-3">
+            El <strong>Sistema de Gestión de Seguridad y Salud en el Trabajo</strong> es obligatorio para todas las IPS
+            con trabajadores en Colombia (Decreto 1072/2015). El Ministerio de Trabajo puede verificarlo en cualquier
+            visita de inspección y sancionar incumplimientos con multas de hasta 500 SMMLV.
+          </p>
+          <p className="text-sm text-teal-700 mb-3">
+            La <strong>Res. 0312/2019</strong> define los estándares mínimos según el tamaño de la empresa.
+            Este módulo te permite autoevaluarte, identificar brechas y llevar un plan de mejora con fechas.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+            {[
+              { paso: '1', label: 'Selecciona tu fase', desc: 'Según el número de trabajadores de la IPS.' },
+              { paso: '2', label: 'Autoevalúate',        desc: 'Revisa cada criterio: Cumple, Parcial o No cumple.' },
+              { paso: '3', label: 'Actúa sobre brechas', desc: 'Crea actividades en Plan de Trabajo y registra vencimientos.' },
+            ].map(s => (
+              <div key={s.paso} className="bg-white rounded-xl p-3 border border-teal-100">
+                <div className="w-7 h-7 rounded-full bg-teal-600 text-white text-sm font-bold
+                                flex items-center justify-center mb-2">{s.paso}</div>
+                <p className="text-xs font-bold text-gray-800">{s.label}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -818,29 +906,74 @@ export default function SgSstPage() {
         </div>
       )}
 
-      {/* Score banner */}
-      <div className={`mb-6 p-4 rounded-xl border-2 flex items-center gap-4
-        ${score.semaforo === 'aceptable'
-          ? 'bg-emerald-50 border-emerald-200'
-          : score.semaforo === 'moderado'
-          ? 'bg-amber-50 border-amber-200'
-          : 'bg-red-50 border-red-200'}`}>
-        <div className={`text-4xl font-black
-          ${score.semaforo === 'aceptable' ? 'text-emerald-600'
-            : score.semaforo === 'moderado' ? 'text-amber-600'
-            : 'text-red-600'}`}>
-          {score.pct}%
+      {/* ── Score banner ── */}
+      {sinEvaluar ? (
+        /* Aún no ha evaluado — mostrar guía de inicio */
+        <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-2xl p-5">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">🚀</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-blue-800 mb-1">Comienza tu autoevaluación SG-SST</p>
+              <p className="text-sm text-blue-700 mb-3">
+                Todavía no has evaluado ningún criterio. Primero <strong>selecciona la fase</strong> según el número
+                de trabajadores de tu IPS (ver Dashboard), luego ve a <strong>Autoevaluación</strong> y marca
+                el estado de cada estándar.
+              </p>
+              <button
+                onClick={() => setTab('autoevaluacion')}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl
+                           text-sm font-semibold transition-colors"
+              >
+                Ir a Autoevaluación →
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex-1">
-          <p className="text-sm font-bold text-gray-800">{score.label}</p>
-          <p className="text-xs text-gray-500">
-            {SST_FASE_LABELS[data.fase]} · {score.obtenido}/{score.total} pts
-          </p>
+      ) : (
+        /* Ya evaluó — mostrar score + acción recomendada */
+        <div className={`mb-6 rounded-2xl border-2 overflow-hidden
+          ${score.semaforo === 'aceptable'
+            ? 'border-emerald-200'
+            : score.semaforo === 'moderado'
+            ? 'border-amber-200'
+            : 'border-red-200'}`}>
+          {/* Score header */}
+          <div className={`p-4 flex items-center gap-4
+            ${score.semaforo === 'aceptable'
+              ? 'bg-emerald-50'
+              : score.semaforo === 'moderado'
+              ? 'bg-amber-50'
+              : 'bg-red-50'}`}>
+            <div className={`text-4xl font-black
+              ${score.semaforo === 'aceptable' ? 'text-emerald-600'
+                : score.semaforo === 'moderado' ? 'text-amber-600'
+                : 'text-red-600'}`}>
+              {score.pct}%
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-gray-800">{score.label}</p>
+              <p className="text-xs text-gray-500">
+                {SST_FASE_LABELS[data.fase]} · {score.obtenido}/{score.total} pts · {evaluados}/{totalItems} criterios evaluados
+              </p>
+            </div>
+            {saving && (
+              <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            )}
+          </div>
+          {/* Acción recomendada */}
+          <div className="bg-white px-4 py-3 border-t border-gray-100">
+            <p className="text-xs font-bold text-gray-700 mb-2">📌 {accion.titulo}</p>
+            <ol className="space-y-1">
+              {accion.pasos.map((p, i) => (
+                <li key={i} className="text-xs text-gray-600 flex gap-2">
+                  <span className="font-bold text-teal-600 flex-shrink-0">{i + 1}.</span>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-        {saving && (
-          <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-        )}
-      </div>
+      )}
 
       <TabBar tabs={TABS} active={tab} onChange={setTab} />
 
