@@ -42,9 +42,15 @@ if [ -f "$REPO_ROOT/normalis-repair.sh" ]; then
     REPAIRED=$(git diff --name-only 2>/dev/null || true)
     if [ -n "$REPAIRED" ]; then
       echo ""
-      echo "  [AUTO-REPAIR] Archivos reparados y agregados al commit:"
+      echo "  [AUTO-REPAIR] Archivos reparados en disco:"
       echo "$REPAIRED" | while IFS= read -r f; do echo "    + $f"; done
-      git add -u "$REPO_ROOT" 2>/dev/null || true
+      echo ""
+      echo "  Ejecuta: git add -u && git commit (para incluir las reparaciones)"
+      echo "============================================================"
+      echo "  COMMIT PAUSADO — re-stagea los archivos reparados"
+      echo "============================================================"
+      echo ""
+      exit 1
     fi
     echo ""
     echo "============================================================"
