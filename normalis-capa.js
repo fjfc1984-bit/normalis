@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────
 (function() {
   'use strict';
-  const escH = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  const _escH = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
   // ══════════════════════════════════════════════
   // ESTADO LOCAL
@@ -95,12 +95,12 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
               <span style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px">${c.numero || 'CAPA'}</span>
               <span style="background:${estBg};color:${estColor};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700">${estLabel}</span>
-              ${c.origen ? `<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:20px;font-size:11px">${escH(c.origen)}</span>` : ''}
+              ${c.origen ? `<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:20px;font-size:11px">${_escH(c.origen)}</span>` : ''}
             </div>
-            <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px">${escH((c.descripcion||'').substring(0,100))}</div>
-            ${c.accionCorrectiva ? `<div style="font-size:12px;color:#475569;margin-bottom:6px">↳ ${escH(c.accionCorrectiva.substring(0,120))}</div>` : ''}
+            <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px">${_escH((c.descripcion||'').substring(0,100))}</div>
+            ${c.accionCorrectiva ? `<div style="font-size:12px;color:#475569;margin-bottom:6px">↳ ${_escH(c.accionCorrectiva.substring(0,120))}</div>` : ''}
             <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#94a3b8">
-              ${c.responsable ? `<span>👤 ${escH(c.responsable)}</span>` : ''}
+              ${c.responsable ? `<span>👤 ${_escH(c.responsable)}</span>` : ''}
               ${c.area ? `<span>📍 ${c.area.replace(/[<>]/g,'')}</span>` : ''}
               <span>📅 Límite: ${fechaL}</span>
               ${diasLabel ? `<span style="color:${vencida||diasRest<=3?'#ef4444':'#f59e0b'};font-weight:600">${diasLabel}</span>` : ''}

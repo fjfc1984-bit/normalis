@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────
 (function() {
   'use strict';
-  const escH = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  const _escH = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 
   // ══════════════════════════════════════════════
   // CATÁLOGO DE INDICADORES — Res. 256/2016 Anexo 1
@@ -258,7 +258,7 @@
           semaforoBg = cumple ? '#d1fae5' : '#fee2e2';
         }
         const histHTML = registros.slice(0, 3).map(r =>
-          `<span style="font-size:11px;background:#f1f5f9;padding:2px 8px;border-radius:6px;color:#475569">${escH(r.periodo)}: <strong>${escH(r.valor)}${ind.unidad !== '%' && ind.unidad !== 'días' ? '' : ind.unidad === '%' ? '%' : 'd'}</strong></span>`
+          `<span style="font-size:11px;background:#f1f5f9;padding:2px 8px;border-radius:6px;color:#475569">${_escH(r.periodo)}: <strong>${_escH(r.valor)}${ind.unidad !== '%' && ind.unidad !== 'días' ? '' : ind.unidad === '%' ? '%' : 'd'}</strong></span>`
         ).join(' ');
 
         html += `

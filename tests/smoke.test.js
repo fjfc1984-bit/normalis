@@ -240,19 +240,23 @@ test('bloquea rol pendiente', () => {
   assert(login.includes("'pendiente'") || login.includes('"pendiente"'), 'login.html no maneja rol pendiente');
 });
 
-// ─── 6. registro.html ─────────────────────────────────────────────────────────
+// ─── 6. registro.html + registro-app.js ──────────────────────────────────────
 console.log('\n📝 registro.html');
 
-const reg = readFile('registro.html');
+const reg    = readFile('registro.html');
+// registro.html delega toda la lógica a registro-app.js (refactor Task #registro-split)
+const regApp = fileExists('registro-app.js') ? readFile('registro-app.js') : reg;
 
 test("asigna rol: 'pendiente'", () => {
-  // El código puede tener espacios extra: rol:            'pendiente'
-  assert(/rol:\s+'pendiente'/.test(reg) || reg.includes("rol:'pendiente'"),
-    "registro.html no asigna rol 'pendiente'");
+  // La lógica puede estar en registro-app.js (archivo externo) o inline en registro.html
+  const src = reg + regApp;
+  assert(/rol:\s+'pendiente'/.test(src) || src.includes("rol:'pendiente'"),
+    "registro(.html|app.js) no asigna rol 'pendiente'");
 });
 
 test('crea documento en colección usuarios', () => {
-  assert(reg.includes("'usuarios'") || reg.includes('"usuarios"'), 'No escribe en colección usuarios');
+  const src = reg + regApp;
+  assert(src.includes("'usuarios'") || src.includes('"usuarios"'), 'No escribe en colección usuarios');
 });
 
 // ─── 7. Firebase config consistente ──────────────────────────────────────────
@@ -260,7 +264,8 @@ console.log('\n🔥 Firebase config');
 
 const FIREBASE_APP_ID = '1:328915530941:web:8e77246bd2e326e115b3d4';
 // normativa-app-v2.html ya no tiene Firebase config inline — está en normalis-main.js (Task #263)
-const htmlFiles = ['index.html', 'login.html', 'registro.html', 'admin.html'];
+// registro.html delega config a registro-app.js
+const htmlFiles = ['index.html', 'login.html', 'admin.html'];
 
 for (const f of htmlFiles) {
   test(`${f} tiene App ID correcto`, () => {
@@ -268,6 +273,12 @@ for (const f of htmlFiles) {
     assert(content.includes(FIREBASE_APP_ID), `Firebase appId incorrecto o ausente en ${f}`);
   });
 }
+
+// registro-app.js tiene su propio firebaseConfig
+test('registro-app.js tiene App ID correcto', () => {
+  const content = readFile('registro-app.js');
+  assert(content.includes(FIREBASE_APP_ID), 'Firebase appId incorrecto o ausente en registro-app.js');
+});
 
 // ─── 8. normalis-firestore.js — NIT sharing ───────────────────────────────────
 console.log('\n🔄 fsSync NIT sharing');
