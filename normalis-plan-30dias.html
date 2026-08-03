@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>NormaLis · Plan 30 días · Primer cliente pago</title>
+<style>
+  :root {
+    --bg: #071a12; --card: #0d2820; --border: rgba(74,184,150,.2);
+    --teal: #4ab896; --teal-dim: rgba(74,184,150,.12);
+    --text: #e0f0e8; --muted: #7ab899; --white: #fff;
+    --red: #ff7070; --amber: #ffaa44; --green: #4ab896;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; line-height:1.6; }
+  .wrap { max-width:900px; margin:0 auto; padding:48px 32px; }
+
+  /* Header */
+  .logo { font-size:22px; font-weight:900; color:var(--teal); margin-bottom:4px; }
+  .logo span { color:var(--white); }
+  h1 { font-size:42px; font-weight:900; letter-spacing:-1.5px; line-height:1.1;
+       background:linear-gradient(135deg,#fff,#4ab896); -webkit-background-clip:text;
+       -webkit-text-fill-color:transparent; background-clip:text; margin:16px 0 8px; }
+  .subtitle { font-size:18px; color:var(--muted); margin-bottom:36px; }
+
+  /* Verdict box */
+  .verdict {
+    background:rgba(74,184,150,.08); border:1px solid rgba(74,184,150,.3);
+    border-left:4px solid var(--teal); border-radius:12px;
+    padding:20px 24px; margin-bottom:40px;
+    font-size:16px; color:var(--text); line-height:1.7;
+  }
+  .verdict strong { color:var(--teal); }
+
+  /* Week cards */
+  .week {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:18px; margin-bottom:24px; overflow:hidden;
+  }
+  .week-header {
+    padding:20px 28px; display:flex; align-items:center; gap:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .week-num {
+    width:52px; height:52px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:900; color:var(--white);
+  }
+  .wn1 { background:linear-gradient(135deg,#1a5e4a,#4ab896); }
+  .wn2 { background:linear-gradient(135deg,#1a3a5e,#4a96b8); }
+  .wn3 { background:linear-gradient(135deg,#5e4a1a,#b89644); }
+  .wn4 { background:linear-gradient(135deg,#3a1a5e,#8a4ab8); }
+
+  .week-title { flex:1; }
+  .week-title h3 { font-size:20px; font-weight:800; color:var(--white); margin-bottom:2px; }
+  .week-title .dates { font-size:14px; color:var(--muted); }
+  .week-badge {
+    font-size:13px; font-weight:700; padding:5px 14px; border-radius:100px;
+    letter-spacing:.3px;
+  }
+  .badge-comercial { background:rgba(74,184,150,.2); color:var(--teal); }
+  .badge-cierre { background:rgba(255,170,68,.2); color:var(--amber); }
+  .badge-tecnico { background:rgba(100,150,255,.2); color:#88aaff; }
+
+  .week-body { padding:24px 28px; }
+
+  /* Actions */
+  .action-row {
+    display:flex; gap:12px; align-items:flex-start;
+    padding:14px 0; border-bottom:1px solid rgba(74,184,150,.08);
+  }
+  .action-row:last-child { border-bottom:none; padding-bottom:0; }
+  .action-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+  .action-content { flex:1; }
+  .action-title { font-size:16px; font-weight:700; color:var(--white); margin-bottom:3px; }
+  .action-desc { font-size:14px; color:var(--muted); line-height:1.5; }
+  .action-tag {
+    display:inline-block; margin-top:6px;
+    font-size:12px; font-weight:700; padding:2px 10px;
+    border-radius:6px; letter-spacing:.3px;
+  }
+  .tag-hoy { background:rgba(255,110,110,.18); color:#ff8080; }
+  .tag-prep { background:rgba(74,184,150,.15); color:var(--teal); }
+  .tag-tecnico { background:rgba(100,150,255,.15); color:#88aaff; }
+  .tag-content { background:rgba(200,150,255,.15); color:#cc88ff; }
+
+  /* Metric targets */
+  .targets {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:20px;
+  }
+  .target-box {
+    background:rgba(74,184,150,.07); border:1px solid rgba(74,184,150,.15);
+    border-radius:12px; padding:16px 18px; text-align:center;
+  }
+  .target-num { font-size:32px; font-weight:900; color:var(--teal); line-height:1; }
+  .target-lbl { font-size:13px; color:var(--muted); margin-top:4px; }
+
+  /* Risk + triage */
+  .risk-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:32px; }
+  .risk-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;
+  }
+  .risk-card h4 { font-size:15px; font-weight:700; color:var(--white); margin-bottom:8px; }
+  .risk-card p { font-size:14px; color:var(--muted); line-height:1.5; }
+  .risk-card.hi { border-left:3px solid var(--red); }
+  .risk-card.med { border-left:3px solid var(--amber); }
+  .risk-card.low { border-left:3px solid var(--green); }
+
+  /* Bottom CTA */
+  .cta-block {
+    background:linear-gradient(135deg,rgba(74,184,150,.12),rgba(26,94,74,.08));
+    border:1px solid rgba(74,184,150,.3); border-radius:18px;
+    padding:28px 32px; margin-top:40px; text-align:center;
+  }
+  .cta-block h3 { font-size:24px; font-weight:800; color:var(--white); margin-bottom:8px; }
+  .cta-block p { font-size:16px; color:var(--muted); }
+
+  /* Divider */
+  .divider { border:none; border-top:1px solid var(--border); margin:36px 0; }
+
+  /* Inline emphasis */
+  em { color:var(--teal); font-style:normal; font-weight:600; }
+  strong { color:var(--white); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo">Norma<span>Lis</span></div>
+  <h1>Plan de 30 días<br>hacia el primer cliente pago</h1>
+  <p class="subtitle">Agosto 2026 · Fundador: Fernando Fuentes</p>
+
+  <div class="verdict">
+    <strong>Diagnóstico central:</strong> NormaLis tiene 346 tareas técnicas completadas, 28 módulos funcionales, pipeline de pagos Bold.co activo, videos de demostración listos y arquitectura de producción real. El único gap es comercial: convertir accesos piloto en pagos recurrentes.
+    <br><br>
+    Este plan dedica <strong>80% del tiempo al esfuerzo comercial</strong> y 20% a deuda técnica puntual. La prioridad técnica más urgente —actualizar CLAUDE.md— toma 2 horas, no 2 días.
+  </div>
+
+  <!-- ══ SEMANA 1 ══ -->
+  <div class="week">
+    <div class="week-header">
+      <div class="week-num wn1">1</div>
+      <div class="week-title">
+        <h3>Activar — Contacto directo con todos los pilotos y leads</h3>
+        <div class="dates">3 – 9 agosto</div>
+      </div>
+      <span class="week-badge badge-comercial">Comercial</span>
+    </div>
+    <div class="week-body">
+
+      <div class="action-row">
+        <div class="action-icon">📋</div>
+        <div class="action-content">
+          <div class="action-title">Mapear el estado real de cada piloto</div>
+          <div class="action-desc">Entrar a admin.html → Pilotos y crear una tabla simple: nombre IPS, fecha de vencimiento, última sesión registrada, módulos usados. Sin este mapa, el outreach es a ciegas.</div>
+          <span class="action-tag tag-hoy">Hoy, día 1</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📱</div>
+        <div class="action-content">
+          <div class="action-title">WhatsApp personal a cada piloto activo</div>
+          <div class="action-desc">No email, no campaña masiva — mensaje de Fernando directamente. "Hola [nombre], vi que usaste el módulo de habilitación la semana pasada. ¿Cómo va el proceso? ¿Qué criterios les están generando más dificultad?" El objetivo es una conversación, no vender todavía.</div>
+          <span class="action-tag tag-hoy">Días 1-2</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📧</div>
+        <div class="action-content">
+          <div class="action-title">Email a todos los leads capturados en index.html</div>
+          <div class="action-desc">Los leads que solicitaron demo ya expresaron interés. Mensaje corto: "Soy Fernando, el fundador. Creé NormaLis porque vi cómo IPS como la tuya pierden habilitación por falta de herramientas. ¿Tienes 20 minutos esta semana para que te muestre cómo resuelve tu caso específico?" Personaliza con el tipo de IPS si está disponible.</div>
+          <span class="action-tag tag-hoy">Días 2-3</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🎬</div>
+        <div class="action-content">
+          <div class="action-title">Grabar y publicar el video continuo en LinkedIn</div>
+          <div class="action-desc">El video normalis-video.html está listo. Grabarlo con Loom, subirlo a LinkedIn como video nativo (no link). Título: "Cómo una IPS de fisioterapia cumplió el 100% de los criterios de habilitación en 3 semanas." Tagear a 3-5 directores de IPS que conozcas personalmente.</div>
+          <span class="action-tag tag-content">Días 3-4</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🔧</div>
+        <div class="action-content">
+          <div class="action-title">Actualizar CLAUDE.md (deuda técnica urgente)</div>
+          <div class="action-desc">Corregir la referencia a 9,000 líneas en normativa-app-v2.html, actualizar el conteo de módulos de 12 a 28, y reflejar que normalis-main.js concentra la lógica principal. Toma 2 horas. Evita confusión en próximas ediciones.</div>
+          <span class="action-tag tag-tecnico">Día 5, 2h</span>
+        </div>
+      </div>
+
+      <div class="targets">
+        <div class="target-box"><div class="target-num">5+</div><div class="target-lbl">Conversaciones abiertas</div></div>
+        <div class="target-box"><div class="target-num">3+</div><div class="target-lbl">Demos agendadas</div></div>
+        <div class="target-box"><div class="target-num">1</div><div class="target-lbl">Video publicado LinkedIn</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SEMANA 2 ══ -->
+  <div class="week">
+    <div class="week-header">
+      <div class="week-num wn2">2</div>
+      <div class="week-title">
+        <h3>Demostrar — Demos personalizadas, objeciones, propuestas</h3>
+        <div class="dates">10 – 16 agosto</div>
+      </div>
+      <span class="week-badge badge-comercial">Comercial</span>
+    </div>
+    <div class="week-body">
+
+      <div class="action-row">
+        <div class="action-icon">💻</div>
+        <div class="action-content">
+          <div class="action-title">Hacer las demos agendadas — formato de 20 minutos</div>
+          <div class="action-desc"><strong>Estructura:</strong> 3 min — pregunta sobre su mayor dolor hoy (inspección próxima, PAMEC atrasado, etc.) · 12 min — mostrar exactamente cómo NormaLis resuelve ese dolor específico · 5 min — preguntar qué les impediría empezar esta semana. No demuestres todo. Demuestra su problema.</div>
+          <span class="action-tag tag-hoy">Días 8-12</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">💬</div>
+        <div class="action-content">
+          <div class="action-title">Documentar objeciones reales</div>
+          <div class="action-desc">Cada "no" o "después" tiene una razón. Las más comunes en SaaS B2B colombiano: "no tenemos presupuesto ahora", "necesito consultarlo con la junta", "ya tenemos un sistema". Anota exactamente lo que digan. Eso es el insumo para mejorar el pitch, no un fracaso.</div>
+          <span class="action-tag tag-prep">Días 8-12</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📄</div>
+        <div class="action-content">
+          <div class="action-title">Enviar propuesta dentro de las 2 horas post-demo</div>
+          <div class="action-desc">El one-pager PDF ya existe. Después de cada demo, personalizar con el tipo de IPS, el plan recomendado y los módulos que más le aplican. Enviarlo el mismo día. Cada hora de espera reduce 30% la probabilidad de cierre.</div>
+          <span class="action-tag tag-hoy">Mismo día del demo</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📊</div>
+        <div class="action-content">
+          <div class="action-title">Agregar lazy loading a normalis-main.js</div>
+          <div class="action-desc">El archivo de 337KB carga todo al inicio. Con <code>import()</code> dinámico, PAMEC, SST y Documentos pueden cargarse solo cuando el usuario entra a cada módulo. Resultado: primera carga ~40% más rápida para IPS en conexiones móviles. Esto importa si los prospects hacen la prueba en su teléfono durante la demo.</div>
+          <span class="action-tag tag-tecnico">Días 13-14, 4h</span>
+        </div>
+      </div>
+
+      <div class="targets">
+        <div class="target-box"><div class="target-num">3+</div><div class="target-lbl">Demos realizadas</div></div>
+        <div class="target-box"><div class="target-num">2+</div><div class="target-lbl">Propuestas enviadas</div></div>
+        <div class="target-box"><div class="target-num">1</div><div class="target-lbl">Objeción resuelta con argumento nuevo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SEMANA 3 ══ -->
+  <div class="week">
+    <div class="week-header">
+      <div class="week-num wn3">3</div>
+      <div class="week-title">
+        <h3>Cerrar — Primer pago recurrente</h3>
+        <div class="dates">17 – 23 agosto</div>
+      </div>
+      <span class="week-badge badge-cierre">Cierre</span>
+    </div>
+    <div class="week-body">
+
+      <div class="action-row">
+        <div class="action-icon">📞</div>
+        <div class="action-content">
+          <div class="action-title">Llamada de seguimiento a todas las propuestas enviadas</div>
+          <div class="action-desc">No esperarlos. A los 5 días de la propuesta: "¿Tuviste chance de revisarla? ¿Surgió alguna pregunta?" Si dicen que necesitan aprobación interna: "¿Qué información necesita la persona que decide? Puedo mandarla directamente." El follow-up persistente (no agresivo) es el diferenciador entre cerrar y no cerrar.</div>
+          <span class="action-tag tag-hoy">Días 15-18</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🎁</div>
+        <div class="action-content">
+          <div class="action-title">Oferta de lanzamiento con fecha límite real</div>
+          <div class="action-desc">Para los pilotos que vencen en agosto: "Si confirmas antes del 23 de agosto, tu plan Profesional queda a $330K/mes (primer año) en lugar de $399K — y mantenemos tu historial de auditorías del piloto." La fecha límite debe ser real. No es presión falsa, es que el precio de lanzamiento sí tiene fecha de expiración.</div>
+          <span class="action-tag tag-hoy">Días 17-23</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🔗</div>
+        <div class="action-content">
+          <div class="action-title">Verificar el flujo completo Bold.co → Firestore → acceso</div>
+          <div class="action-desc">Hacer una compra de prueba real con el plan Básico. Confirmar que el webhook Bold activa el rol 'cliente' en Firestore y que normalis-plans.js desbloquea los módulos correctos. Si algo falla aquí y un cliente real paga pero no puede entrar, el daño es irreparable. Hacerlo antes de cualquier cierre.</div>
+          <span class="action-tag tag-tecnico">Día 17, 2h</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🏆</div>
+        <div class="action-content">
+          <div class="action-title">Meta: primer pago Bold.co recibido</div>
+          <div class="action-desc">El objetivo de la semana es ver una transacción real en el dashboard de Bold. No importa si es Básico o Profesional. El primer pago valida el modelo. Activa el ciclo: cliente paga → Fernando puede invertir en mejoras → mejoras atraen más clientes.</div>
+          <span class="action-tag tag-hoy">Semana 3</span>
+        </div>
+      </div>
+
+      <div class="targets">
+        <div class="target-box"><div class="target-num">1</div><div class="target-lbl">Primer pago recurrente</div></div>
+        <div class="target-box"><div class="target-num">100%</div><div class="target-lbl">Flujo Bold → acceso verificado</div></div>
+        <div class="target-box"><div class="target-num">2+</div><div class="target-lbl">Propuestas en negociación</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SEMANA 4 ══ -->
+  <div class="week">
+    <div class="week-header">
+      <div class="week-num wn4">4</div>
+      <div class="week-title">
+        <h3>Escalar — Segundo cierre + activar canal de referidos</h3>
+        <div class="dates">24 – 31 agosto</div>
+      </div>
+      <span class="week-badge badge-comercial">Comercial + Técnico</span>
+    </div>
+    <div class="week-body">
+
+      <div class="action-row">
+        <div class="action-icon">🤝</div>
+        <div class="action-content">
+          <div class="action-title">Activar el referido del primer cliente</div>
+          <div class="action-desc">Si pagaron, están satisfechos o al menos comprometidos. Mensaje directo: "¿Conoces otras IPS que estén preparando su habilitación? Si nos refieres y contratan, tu próximo mes es gratis." El canal más eficiente en salud colombiana es el boca a boca entre directores de IPS que se conocen en el gremio.</div>
+          <span class="action-tag tag-hoy">Día 22-25</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📝</div>
+        <div class="action-content">
+          <div class="action-title">Caso de éxito del primer cliente (aunque sea interno)</div>
+          <div class="action-desc">Documenta: qué tipo de IPS, cuántos criterios tenían cubiertos antes vs. después, cuánto tiempo tardaron en completar la autoevaluación. No necesitas publicarlo todavía — pero tenerlo estructurado convierte cada conversación futura en evidencia, no en promesa.</div>
+          <span class="action-tag tag-prep">Días 25-28</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">🔬</div>
+        <div class="action-content">
+          <div class="action-title">Tests de comportamiento para PAMEC y Habilitación</div>
+          <div class="action-desc">Con un cliente real usando el sistema, cualquier bug en PAMEC es urgente. Agregar 5-8 tests Jest que validen la lógica central: que calcAuditScore() retorne el porcentaje correcto, que un criterio marcado "cumple" persista en Firestore, que el plan de mejora se genere con los campos obligatorios. Toma un día y protege al primer cliente.</div>
+          <span class="action-tag tag-tecnico">Días 28-30, 1 día</span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-icon">📈</div>
+        <div class="action-content">
+          <div class="action-title">Revisión de métricas del mes + plan de septiembre</div>
+          <div class="action-desc">Al cerrar agosto: ¿cuántas demos se hicieron? ¿Cuántas propuestas enviadas? ¿Cuántos cierres? ¿Qué objeciones se repitieron? Esos datos definen el foco de septiembre. Si el cuello de botella fue "no agendaban demo", el problema es el alcance. Si agendaban pero no cerraban, el problema es el pitch.</div>
+          <span class="action-tag tag-prep">Día 31</span>
+        </div>
+      </div>
+
+      <div class="targets">
+        <div class="target-box"><div class="target-num">2+</div><div class="target-lbl">Clientes pagos al mes</div></div>
+        <div class="target-box"><div class="target-num">1</div><div class="target-lbl">Caso de éxito documentado</div></div>
+        <div class="target-box"><div class="target-num">3+</div><div class="target-lbl">Nuevos referidos en pipeline</div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Riesgos -->
+  <h2 style="font-size:26px;font-weight:800;color:var(--white);margin-bottom:20px">Riesgos activos y cómo gestionarlos</h2>
+  <div class="risk-grid">
+    <div class="risk-card hi">
+      <h4>🔴 Sin pilotos activos que usen el sistema</h4>
+      <p>Si nadie está usando NormaLis en piloto hoy, el plan de conversión es más largo. En ese caso la prioridad de semana 1 es conseguir 2-3 pilotos nuevos antes que intentar convertir.</p>
+    </div>
+    <div class="risk-card hi">
+      <h4>🔴 Flujo Bold.co roto o sin probar</h4>
+      <p>Si el webhook no está configurado correctamente, un pago real generará frustración. Esto hay que resolverlo en semana 3 antes de cualquier cierre. Es el único bloqueo técnico urgente.</p>
+    </div>
+    <div class="risk-card med">
+      <h4>🟡 Carga lenta en demos móvil</h4>
+      <p>Si el prospect ve el demo en su celular con 3G y tarda 10 segundos en cargar, la primera impresión es negativa. Mitiga haciéndolo desde tu computador y compartiendo pantalla en la llamada.</p>
+    </div>
+    <div class="risk-card med">
+      <h4>🟡 Competencia desconocida en el pipeline</h4>
+      <p>ISOlución o Qualipro pueden estar en conversación con el mismo prospect. Pregunta directamente: "¿Están evaluando otra herramienta?" Si dicen que sí, el diferenciador es Fernando — el conocimiento de la norma colombiana que ningún software genérico tiene.</p>
+    </div>
+    <div class="risk-card low">
+      <h4>🟢 CLAUDE.md desactualizado</h4>
+      <p>Riesgo bajo. Afecta solo ediciones futuras de código, no la venta. Corregirlo en 2 horas durante semana 1 lo cierra completamente.</p>
+    </div>
+    <div class="risk-card low">
+      <h4>🟢 Sin tests de comportamiento</h4>
+      <p>Bajo hasta tener clientes reales. El validador maestro protege la integridad estructural. Cuando el primer cliente pague, agregar 8 tests Jest se vuelve urgente.</p>
+    </div>
+  </div>
+
+  <!-- CTA final -->
+  <div class="cta-block">
+    <h3>El producto está listo. La venta es el trabajo de agosto.</h3>
+    <p>Cada día sin un cliente pagando no es un fracaso técnico — es un recordatorio de que el mejor código del mundo necesita alguien que lo use. El siguiente paso es una conversación de WhatsApp, no una línea de código.</p>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:32px">
+    NormaLis · Plan 30 días · Fernando Fuentes · Agosto 2026
+  </p>
+
+</div>
+</body>
+</html>

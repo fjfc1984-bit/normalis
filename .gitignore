@@ -39,3 +39,9 @@ __pycache__/
 upload-rag.bat
 setup-firebase-secrets.bat
 scripts/upload_progress.json
+
+# Videos generados localmente (no van en el repo — usar almacenamiento externo)
+*.mp4
+*.mov
+*.avi
+*.webm

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NormaLis — Video 60s Social Media</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d2820;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    position: relative;
+    color: #fff;
+  }
+
+  /* ── Particles background ── */
+  #particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(-100px) scale(1); opacity: 0; }
+  }
+
+  /* ── Scene base ── */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    padding: 60px;
+    text-align: center;
+  }
+  .scene.active { opacity: 1; }
+
+  /* ── Logo ── */
+  .logo {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: #4ab896;
+    margin-bottom: 8px;
+  }
+  .logo span { color: #fff; }
+
+  /* ── Big headline ── */
+  .headline {
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 0%, #4ab896 60%, #1a5e4a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+  }
+  .headline.red {
+    background: linear-gradient(135deg, #ff6b6b, #ff9f9f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtext {
+    font-size: 28px;
+    color: #a0c8b8;
+    line-height: 1.4;
+    max-width: 780px;
+  }
+  .highlight { color: #4ab896; font-weight: 700; }
+
+  /* ── Pain cards (scene 2) ── */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 960px;
+    margin-top: 30px;
+  }
+  .pain-card {
+    background: rgba(255,80,80,0.12);
+    border: 1px solid rgba(255,100,100,0.3);
+    border-radius: 16px;
+    padding: 24px 20px;
+    font-size: 20px;
+    line-height: 1.4;
+    color: #ffd0d0;
+    transform: translateY(30px);
+    opacity: 0;
+    transition: all 0.5s ease;
+  }
+  .pain-card.show { transform: translateY(0); opacity: 1; }
+  .pain-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── Feature grid (scene 4) ── */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 24px;
+  }
+  .feature-card {
+    background: rgba(74, 184, 150, 0.1);
+    border: 1px solid rgba(74, 184, 150, 0.3);
+    border-radius: 16px;
+    padding: 22px 16px;
+    font-size: 17px;
+    color: #c0e8d8;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: all 0.4s ease;
+    line-height: 1.4;
+  }
+  .feature-card.show { transform: scale(1); opacity: 1; }
+  .feature-icon { font-size: 32px; margin-bottom: 10px; }
+  .feature-label { font-weight: 700; color: #4ab896; font-size: 15px; margin-bottom: 4px; }
+
+  /* ── AI scene (scene 5) ── */
+  .chat-bubble {
+    background: rgba(74, 184, 150, 0.15);
+    border: 1px solid rgba(74, 184, 150, 0.4);
+    border-radius: 20px;
+    padding: 24px 32px;
+    max-width: 820px;
+    text-align: left;
+    margin: 12px 0;
+    font-size: 22px;
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+  }
+  .chat-bubble.right {
+    background: rgba(26, 94, 74, 0.4);
+    border-color: rgba(74, 184, 150, 0.6);
+    transform: translateX(20px);
+    align-self: flex-end;
+  }
+  .chat-bubble.show { opacity: 1; transform: translateX(0); }
+  .chat-label { font-size: 13px; font-weight: 700; color: #4ab896; margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ── Pricing (scene 6) ── */
+  .price-cards {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .price-card {
+    background: rgba(74, 184, 150, 0.08);
+    border: 1px solid rgba(74, 184, 150, 0.25);
+    border-radius: 20px;
+    padding: 32px 28px;
+    width: 260px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.5s ease;
+  }
+  .price-card.featured {
+    background: rgba(74, 184, 150, 0.2);
+    border-color: #4ab896;
+    transform: translateY(20px) scale(1.05);
+  }
+  .price-card.show { opacity: 1; transform: translateY(0) scale(1); }
+  .price-card.featured.show { transform: translateY(0) scale(1.05); }
+  .plan-name { font-size: 18px; font-weight: 700; color: #4ab896; margin-bottom: 8px; }
+  .plan-price { font-size: 38px; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 4px; }
+  .plan-period { font-size: 14px; color: #a0c8b8; margin-bottom: 14px; }
+  .plan-feature { font-size: 15px; color: #c0e8d8; margin: 6px 0; }
+
+  /* ── CTA scene ── */
+  .cta-url {
+    font-size: 56px;
+    font-weight: 900;
+    color: #4ab896;
+    letter-spacing: -1px;
+    margin: 16px 0;
+    text-shadow: 0 0 60px rgba(74,184,150,0.5);
+  }
+  .cta-badge {
+    background: linear-gradient(135deg, #4ab896, #1a5e4a);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 14px 36px;
+    border-radius: 100px;
+    margin-top: 20px;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(74,184,150,0.4); }
+    50%       { box-shadow: 0 0 0 20px rgba(74,184,150,0); }
+  }
+
+  /* ── Progress bar ── */
+  #progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4ab896, #1a5e4a);
+    width: 0%;
+    transition: width 0.5s linear;
+    z-index: 100;
+  }
+
+  /* ── Scene counter ── */
+  #counter {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 14px;
+    color: rgba(160,200,184,0.5);
+    z-index: 100;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  /* ── Start overlay ── */
+  #start-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(13,40,32,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    cursor: pointer;
+    transition: opacity 0.5s ease;
+  }
+  #start-overlay.hidden { opacity: 0; pointer-events: none; }
+  .play-btn {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4ab896, #1a5e4a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 0 60px rgba(74,184,150,0.4);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .play-btn svg { margin-left: 6px; }
+  .start-title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+  .start-sub { font-size: 18px; color: #4ab896; }
+
+  /* ── Glow backgrounds per scene ── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.15;
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- Progress -->
+<div id="progress"></div>
+<div id="counter">1 / 7</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 1 — HOOK
+══════════════════════════════════════════════ -->
+<div class="scene active" id="s1">
+  <div class="glow" style="width:600px;height:600px;background:#4ab896;top:-200px;left:50%;transform:translateX(-50%)"></div>
+  <div class="logo">Norma<span>Lis</span></div>
+  <div class="headline" style="font-size:76px">¿Tu IPS está lista<br>para la habilitación?</div>
+  <div class="subtext">La norma cambió. La tecnología también.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 2 — PROBLEMA
+══════════════════════════════════════════════ -->
+<div class="scene" id="s2">
+  <div class="headline red" style="font-size:56px;margin-bottom:10px">El problema real</div>
+  <div class="subtext" style="margin-bottom:0">Cada año, miles de IPS enfrentan lo mismo:</div>
+  <div class="pain-grid">
+    <div class="pain-card" id="p1"><div class="pain-icon">📋</div>Criterios de habilitación<br>sin organizar</div>
+    <div class="pain-card" id="p2"><div class="pain-icon">⏱️</div>Auditorías que toman<br>semanas enteras</div>
+    <div class="pain-card" id="p3"><div class="pain-icon">📁</div>Documentos en carpetas<br>imposibles de encontrar</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 3 — SOLUCIÓN
+══════════════════════════════════════════════ -->
+<div class="scene" id="s3">
+  <div class="glow" style="width:700px;height:700px;background:#4ab896;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+  <div class="logo" style="font-size:36px;margin-bottom:16px">Norma<span>Lis</span></div>
+  <div class="headline" style="font-size:62px">Software colombiano<br>de habilitación IPS</div>
+  <div class="subtext">Diseñado por fisioterapeutas y auditores<br>para la realidad de tus servicios de salud</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 4 — MÓDULOS
+══════════════════════════════════════════════ -->
+<div class="scene" id="s4">
+  <div class="headline" style="font-size:52px;margin-bottom:0">Todo lo que necesita tu IPS</div>
+  <div class="feature-grid">
+    <div class="feature-card" id="f1"><div class="feature-icon">✅</div><div class="feature-label">Habilitación</div>13.000+ criterios · Res. 3100</div>
+    <div class="feature-card" id="f2"><div class="feature-icon">🎯</div><div class="feature-label">PAMEC</div>Mejoramiento continuo automatizado</div>
+    <div class="feature-card" id="f3"><div class="feature-icon">🦺</div><div class="feature-label">SG-SST</div>Seguridad y salud en el trabajo</div>
+    <div class="feature-card" id="f4"><div class="feature-icon">🤖</div><div class="feature-label">IA Normativa</div>Respuestas con norma citada</div>
+    <div class="feature-card" id="f5"><div class="feature-icon">📄</div><div class="feature-label">Documentos</div>Generación automática</div>
+    <div class="feature-card" id="f6"><div class="feature-icon">📩</div><div class="feature-label">PQRS</div>Gestión de peticiones</div>
+    <div class="feature-card" id="f7"><div class="feature-icon">⚠️</div><div class="feature-label">Incidentes</div>Reporte y seguimiento</div>
+    <div class="feature-card" id="f8"><div class="feature-icon">📅</div><div class="feature-label">Vencimientos</div>Alertas automáticas</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 5 — IA
+══════════════════════════════════════════════ -->
+<div class="scene" id="s5" style="flex-direction:column;gap:0">
+  <div class="headline" style="font-size:50px;margin-bottom:16px">Inteligencia Artificial<br>normativa colombiana</div>
+  <div style="display:flex;flex-direction:column;width:100%;max-width:860px;gap:14px">
+    <div class="chat-bubble" id="cb1">
+      <div class="chat-label">💬 Pregunta</div>
+      ¿Cuáles son los criterios de habilitación para consulta de fisioterapia?
+    </div>
+    <div class="chat-bubble right" id="cb2">
+      <div class="chat-label">🤖 NormaLis IA</div>
+      Según la <strong>Resolución 3100 de 2019</strong>, el servicio requiere: recurso humano certificado, área mínima de 9m², camilla articulada y equipo de electroterapia. <em>Fuente: Anexo Técnico 1, Grupo 1.</em>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 6 — PRECIOS
+══════════════════════════════════════════════ -->
+<div class="scene" id="s6">
+  <div class="headline" style="font-size:52px;margin-bottom:4px">Planes claros, sin sorpresas</div>
+  <div class="subtext" style="font-size:22px;margin-bottom:0">En pesos colombianos · Sin tarjeta de crédito · Cancela cuando quieras</div>
+  <div class="price-cards">
+    <div class="price-card" id="pc1">
+      <div class="plan-name">Básico</div>
+      <div class="plan-price">$199K</div>
+      <div class="plan-period">/mes</div>
+      <div class="plan-feature">✓ 1 sede</div>
+      <div class="plan-feature">✓ Habilitación</div>
+      <div class="plan-feature">✓ IA Normativa</div>
+    </div>
+    <div class="price-card featured" id="pc2">
+      <div class="plan-name">⭐ Profesional</div>
+      <div class="plan-price">$399K</div>
+      <div class="plan-period">/mes · más popular</div>
+      <div class="plan-feature">✓ Todo Básico</div>
+      <div class="plan-feature">✓ PAMEC + SST</div>
+      <div class="plan-feature">✓ Documentos</div>
+    </div>
+    <div class="price-card" id="pc3">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price" style="font-size:26px;margin-top:6px">A la medida</div>
+      <div class="plan-period"> </div>
+      <div class="plan-feature">✓ Sedes ilimitadas</div>
+      <div class="plan-feature">✓ API + integración</div>
+      <div class="plan-feature">✓ Soporte dedicado</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENE 7 — CTA
+══════════════════════════════════════════════ -->
+<div class="scene" id="s7">
+  <div class="glow" style="width:800px;height:800px;background:#4ab896;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+  <div class="logo" style="font-size:40px;margin-bottom:12px">Norma<span>Lis</span></div>
+  <div class="headline" style="font-size:64px">Empieza hoy mismo</div>
+  <div class="subtext">Desde <strong class="highlight">COP 199.000/mes</strong> · Sin contratos · 100% en la nube</div>
+  <div class="cta-url">normalis.co</div>
+  <div class="cta-badge">Solicita tu demo gratuita →</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     START OVERLAY
+══════════════════════════════════════════════ -->
+<div id="start-overlay" onclick="startVideo()">
+  <div class="play-btn">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+  </div>
+  <div class="start-title">NormaLis · Video Social 60s</div>
+  <div class="start-sub">Haz clic para reproducir con narración en voz</div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────
+const SCENES = [
+  { id: 's1', duration: 7000,  text: 'Tu IPS tiene todo para funcionar bien. Pero la habilitación, los documentos y las auditorías no deberían robarte el tiempo que necesitas para atender pacientes.' },
+  { id: 's2', duration: 8000,  text: 'Criterios sin organizar, auditorías que toman semanas, documentos que nadie encuentra. Eso no es falta de compromiso. Es falta de herramientas.' },
+  { id: 's3', duration: 7000,  text: 'NormaLis. El software colombiano de habilitación diseñado por fisioterapeutas y auditores para la realidad de tus servicios de salud.' },
+  { id: 's4', duration: 9000,  text: 'Habilitación con trece mil criterios de la Resolución 3100. PAMEC, SG-SST, generación de documentos, PQRS, incidentes, vencimientos. Todo en un solo lugar.' },
+  { id: 's5', duration: 9000,  text: 'La inteligencia artificial de NormaLis conoce la normativa colombiana. Pregúntale sobre habilitación y te responde citando exactamente el artículo y el anexo técnico de la resolución.' },
+  { id: 's6', duration: 8000,  text: 'Plan Básico desde ciento noventa y nueve mil pesos al mes. Profesional con PAMEC y SST a trescientos noventa y nueve mil. O Enterprise a la medida para redes con múltiples sedes.' },
+  { id: 's7', duration: 7000,  text: 'Empieza hoy mismo. Entra a normalis punto co, solicita tu demo gratuita y descubre cómo miles de IPS colombianas ya están cumpliendo la norma sin estrés.' },
+];
+
+let currentScene = 0;
+let synth = window.speechSynthesis;
+let totalDuration = SCENES.reduce((a, b) => a + b.duration, 0);
+let elapsed = 0;
+let sceneTimers = [];
+
+function getSpanishVoice() {
+  const voices = synth.getVoices();
+  return voices.find(v => v.lang.startsWith('es') && v.name.includes('Google')) ||
+         voices.find(v => v.lang.startsWith('es')) ||
+         voices[0];
+}
+
+function speak(text, onEnd) {
+  synth.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'es-CO';
+  utt.rate = 0.92;
+  utt.pitch = 1.0;
+  utt.volume = 1.0;
+  const voice = getSpanishVoice();
+  if (voice) utt.voice = voice;
+  utt.onend = onEnd;
+  synth.speak(utt);
+}
+
+function updateProgress() {
+  const pct = (elapsed / totalDuration) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+}
+
+function showScene(idx) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  const scene = SCENES[idx];
+  document.getElementById(scene.id).classList.add('active');
+  document.getElementById('counter').textContent = (idx + 1) + ' / ' + SCENES.length;
+
+  // Scene-specific animations
+  if (idx === 1) {
+    setTimeout(() => document.getElementById('p1').classList.add('show'), 300);
+    setTimeout(() => document.getElementById('p2').classList.add('show'), 900);
+    setTimeout(() => document.getElementById('p3').classList.add('show'), 1500);
+  }
+  if (idx === 3) {
+    ['f1','f2','f3','f4','f5','f6','f7','f8'].forEach((id, i) => {
+      setTimeout(() => document.getElementById(id).classList.add('show'), 200 + i * 200);
+    });
+  }
+  if (idx === 4) {
+    setTimeout(() => document.getElementById('cb1').classList.add('show'), 500);
+    setTimeout(() => document.getElementById('cb2').classList.add('show'), 3500);
+  }
+  if (idx === 5) {
+    setTimeout(() => document.getElementById('pc1').classList.add('show'), 300);
+    setTimeout(() => document.getElementById('pc2').classList.add('show'), 700);
+    setTimeout(() => document.getElementById('pc3').classList.add('show'), 1100);
+  }
+
+  speak(scene.text, () => {
+    // Speech ended, wait a tiny moment then advance
+    const timer = setTimeout(() => advanceScene(), 800);
+    sceneTimers.push(timer);
+  });
+
+  // Auto-advance fallback based on duration
+  const timer = setTimeout(() => advanceScene(), scene.duration);
+  sceneTimers.push(timer);
+}
+
+function advanceScene() {
+  sceneTimers.forEach(t => clearTimeout(t));
+  sceneTimers = [];
+  elapsed += SCENES[currentScene].duration;
+  currentScene++;
+  if (currentScene < SCENES.length) {
+    updateProgress();
+    showScene(currentScene);
+  } else {
+    elapsed = totalDuration;
+    updateProgress();
+  }
+}
+
+function startVideo() {
+  const overlay = document.getElementById('start-overlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => overlay.remove(), 600);
+
+  // Preload voices
+  synth.getVoices();
+  setTimeout(() => showScene(0), 300);
+}
+
+// ── Generate particles ──────────────────────────
+(function() {
+  const container = document.getElementById('particles');
+  const colors = ['#4ab896','#1a5e4a','#a0c8b8','#2d8a6a'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 2;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>
