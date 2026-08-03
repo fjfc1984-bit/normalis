@@ -3384,11 +3384,12 @@ function initFirebase(){
     _fbSyncing = true;
     console.log('[Firebase] Inicializado. Org:', _fbOrgId);
     _updateFbStatusUI('🟢 Conectado', 'success');
-    // Auto-load cloud data — esperar a que Firebase Auth resuelva antes de leer Firestore
-    // (evita race condition: Firestore rechaza si el token no está listo aún)
-    firebase.auth(_fb).onAuthStateChanged(function(fbUser){
-      if(fbUser){ loadFromFirestore(); }
-    });
+    // BUG #5 FIX: ya no usamos onAuthStateChanged aquí (evita segundo listener activo).
+    // initFirebase() solo se llama desde la UI, donde el usuario ya está autenticado.
+    // firebase.auth().currentUser ya está disponible en ese momento.
+    var _fbCurrentUser = firebase.auth(_fb).currentUser;
+    if(_fbCurrentUser){ loadFromFirestore(); }
+    // Si currentUser aún no está (edge case: token restaurándose), se puede cargar manualmente.
   } catch(e){
     console.warn('[Firebase] Init error:', e);
     _updateFbStatusUI('🔴 Error al conectar: '+e.message, 'error');
