@@ -464,7 +464,7 @@ function showGuideLink() {
   if (document.getElementById('nl-tour-guide-link')) return;
   var a = document.createElement('a');
   a.id = 'nl-tour-guide-link';
-  a.href = 'guia.html';
+  a.href = 'https://fjfc1984-bit.github.io/normalis/guia.html';
   a.target = '_blank';
   a.innerHTML = '📖 Guía completa';
   a.title = 'Ver la guía interactiva completa de todos los módulos';
