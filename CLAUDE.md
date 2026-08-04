@@ -16,35 +16,21 @@ Colombian SaaS for health regulatory compliance (Resolución 3100/2019 and 465/2
 # There is no build, no npm, no bundler
 ```
 
-### ⚠️ Commits desde Claude (OneDrive lock workaround)
+### Commits desde Claude
 
-El repo está en OneDrive. OneDrive sincroniza `.git` y deja `index.lock` / `HEAD.lock`
-huérfanos, bloqueando commits normales. **Siempre usar este patrón:**
+El repo está en `C:\dev\normalis` (fuera de OneDrive — sin conflictos de lock). Git funciona normalmente:
 
 ```bash
-# 1. Encontrar el repo en el sandbox
-REPO=$(ls -d /sessions/*/mnt/normalis 2>/dev/null | head -1)
+# Encontrar el repo en el sandbox
+REPO=$(ls -d /sessions/*/mnt/dev--normalis 2>/dev/null | head -1)
 
-# 2. Usar índice temporal fuera de OneDrive
-export GIT_INDEX_FILE=/tmp/normalis-index
-
-# 3. Reconstruir índice desde HEAD
-cd "$REPO" && git read-tree HEAD
-
-# 4. Stagear
-git add archivo1.js archivo2.html   # o git add -A
-
-# 5. Commit (--no-verify para evitar hook con git anidado)
-git commit --no-verify -m "tipo: descripción"
-
-# 6. Push
+cd "$REPO"
+git add -A
+git commit -m "tipo: descripción"
 git push origin main
 ```
 
-Si aparece `HEAD.lock: File exists` o `index.lock: File exists`:
-- Abrir `C:\Users\fjfc1\OneDrive\Documentos\GitHub\normalis\.git` en File Explorer
-- Borrar **solo** `HEAD.lock` y/o `index.lock` (0 KB cada uno, Ctrl+click uno por uno)
-- Reintentar
+> **Nota:** El workspace de Cowork apunta a `C:\dev\normalis`. El mount en el sandbox es `/sessions/*/mnt/dev--normalis`.
 
 **Critical workflow for large files (>100KB):**
 - **Never use the GitHub web editor** for `normativa-app-v2.html` (832KB) — CodeMirror 6 only renders visible lines; Replace All hits every match including those inside JS strings

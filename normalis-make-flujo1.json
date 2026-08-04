@@ -1,0 +1,115 @@
+{
+  "name": "NormaLis — Flujo 1: Nuevo Lead → WhatsApp + Notificación",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-firestore:watchDocuments",
+      "version": 1,
+      "parameters": {
+        "connection": "REEMPLAZAR_CON_CONEXION_FIREBASE",
+        "collection": "leads",
+        "orderBy": "fechaSolicitud",
+        "orderDirection": "DESCENDING"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 0, "y": 0 },
+        "restore": { "collection": { "label": "leads" } }
+      }
+    },
+    {
+      "id": 2,
+      "module": "openai-gpt-3:createCompletion",
+      "version": 1,
+      "parameters": {
+        "connection": "REEMPLAZAR_CON_CONEXION_OPENAI",
+        "model": "gpt-4o-mini",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Eres el asistente de ventas de NormaLis, software colombiano de habilitación en salud (Resolución 3100/2019 y 465/2025). Redacta mensajes de WhatsApp cálidos, profesionales y breves (máx 200 palabras). Personaliza según el tipo de IPS. Incluye siempre una llamada a la acción para agendar una demo en normalis.co."
+          },
+          {
+            "role": "user",
+            "content": "Redacta un mensaje de bienvenida para un lead nuevo con estos datos:\n- Nombre: {{1.nombre}}\n- Tipo IPS: {{1.tipoIPS}}\n- Ciudad: {{1.ciudad}}\n\nEl mensaje debe ser personalizado para su tipo de IPS, mencionar que NormaLis les ayuda a preparar su habilitación y PAMEC según la Resolución 3100/2019, e invitarlos a una demo gratuita."
+          }
+        ],
+        "maxTokens": 300,
+        "temperature": 0.7
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0 }
+      }
+    },
+    {
+      "id": 3,
+      "module": "twilio:sendMessage",
+      "version": 1,
+      "parameters": {
+        "connection": "REEMPLAZAR_CON_CONEXION_TWILIO",
+        "from": "whatsapp:+14155238886",
+        "to": "whatsapp:{{1.telefono}}",
+        "body": "{{2.choices[0].message.content}}"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 600, "y": 0 },
+        "notes": "from: número sandbox Twilio. En producción reemplazar con tu número WhatsApp Business aprobado."
+      }
+    },
+    {
+      "id": 4,
+      "module": "gmail:sendEmail",
+      "version": 1,
+      "parameters": {
+        "connection": "REEMPLAZAR_CON_CONEXION_GMAIL",
+        "to": "fjfc1984@gmail.com",
+        "subject": "🔔 Nuevo lead NormaLis — {{1.nombre}}",
+        "bodyType": "html",
+        "body": "<h3>Nuevo lead registrado</h3><table border='1' cellpadding='8' style='border-collapse:collapse'><tr><td><b>Nombre</b></td><td>{{1.nombre}}</td></tr><tr><td><b>Email</b></td><td>{{1.email}}</td></tr><tr><td><b>Teléfono</b></td><td>{{1.telefono}}</td></tr><tr><td><b>Tipo IPS</b></td><td>{{1.tipoIPS}}</td></tr><tr><td><b>Ciudad</b></td><td>{{1.ciudad}}</td></tr></table><br><p>Se envió WhatsApp automático. Dar seguimiento en 24h si no responde.</p>"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 600, "y": 150 }
+      }
+    },
+    {
+      "id": 5,
+      "module": "google-firestore:updateDocument",
+      "version": 1,
+      "parameters": {
+        "connection": "REEMPLAZAR_CON_CONEXION_FIREBASE",
+        "collection": "leads",
+        "documentId": "{{1.id}}",
+        "fields": [
+          { "key": "estado", "value": "contactado" },
+          { "key": "fechaContacto", "value": "{{now}}" },
+          { "key": "mensajeEnviado", "value": "{{2.choices[0].message.content}}" }
+        ]
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 900, "y": 0 }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
+  }
+}
