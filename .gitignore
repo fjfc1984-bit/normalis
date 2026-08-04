@@ -18,6 +18,9 @@ res3100_alcaldia_clean.txt
 node_modules/
 functions/
 
+# Solo se versiona el package.json de Cloud Functions (sin secretos)
+!functions/package.json
+
 # Claves y secrets
 .env
 *.env
