@@ -76,6 +76,29 @@ function openProfModal(id){
     const existing=actions.querySelector('[data-del]');
     if(existing) existing.setAttribute('data-del',id);
   }
+  // Botón verificar RETHUS — añadir o actualizar
+  if(actions){
+    let rethusBtn=actions.querySelector('[data-rethus-btn]');
+    if(!rethusBtn){
+      rethusBtn=document.createElement('button');
+      rethusBtn.className='btn btn-outline btn-sm';
+      rethusBtn.setAttribute('data-rethus-btn','1');
+      actions.insertBefore(rethusBtn,actions.firstChild);
+    }
+    if(p.rethus){
+      rethusBtn.innerHTML='🔍 Verificar RETHUS';
+      rethusBtn.title='Verificar tarjeta profesional No. '+p.rethus+' en RETHUS';
+      rethusBtn.style.display='';
+      rethusBtn.onclick=function(){
+        window.open('https://rethus.minsalud.gov.co/','_blank');
+      };
+    } else {
+      rethusBtn.innerHTML='🔍 Verificar RETHUS';
+      rethusBtn.title='Registra el No. RETHUS al agregar este profesional para verificar directamente';
+      rethusBtn.style.cssText='opacity:0.5;cursor:default';
+      rethusBtn.onclick=function(){ toast('Agrega el No. RETHUS en el perfil del profesional para usar esta función','info'); };
+    }
+  }
   let modal=document.getElementById('prof-modal'); if(modal) modal.style.display='flex';
 }
 
