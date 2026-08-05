@@ -1393,6 +1393,205 @@ async function handleEmail(request, env, cors) {
   }
 }
 
+
+// ── Bold.co Webhook Handler ──────────────────────────────────────────────────
+// Mapeo de link IDs Bold → plan interno
+const BOLD_LINK_PLAN = {
+  'LNK_4JND4JELJ4': 'basico',   // Esencial mensual
+  'LNK_LRR5ZCRUMB': 'pro',      // Profesional mensual
+  'LNK_QX9QJBBLWW': 'basico',   // Esencial anual
+  'LNK_RG2A6L92PU': 'pro',      // Profesional anual
+  'LNK_8Q26PSJHGW': 'implementacion',
+};
+
+async function handleBoldWebhook(request, env) {
+  const rawBody = await request.text();
+
+  // Verificar firma HMAC-SHA256 si está configurada (BOLD_WEBHOOK_SECRET en Cloudflare secrets)
+  const secret = env.BOLD_WEBHOOK_SECRET;
+  if (secret) {
+    const sigHeader = request.headers.get('X-Bold-Signature') ||
+                      request.headers.get('X-Signature')      ||
+                      request.headers.get('Bold-Signature')   || '';
+    try {
+      const encoder  = new TextEncoder();
+      const key      = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const sigBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+      const expected = Array.from(new Uint8Array(sigBytes)).map(b => b.toString(16).padStart(2,'0')).join('');
+      if (expected !== sigHeader) throw new Error('no match');
+    } catch(e) {
+      console.error('[BoldWebhook] Firma inválida:', e.message);
+      return new Response('Firma inválida', { status: 400 });
+    }
+  }
+
+  let event;
+  try { event = JSON.parse(rawBody); } catch {
+    return new Response('JSON inválido', { status: 400 });
+  }
+
+  console.log('[BoldWebhook] Evento recibido:', event.type || event.event || '(sin type)');
+
+  // ── Extraer datos del pago (Bold puede variar la estructura) ────────────────
+  // Soporta: {type, data.object}, {type, data.transaction}, {payment}, {event, transaction}
+  const obj     = event.data?.object || event.data?.transaction || event.transaction || event.payment || event.data || {};
+  const status  = (obj.status || event.status || '').toUpperCase();
+  const evtType = (event.type || event.event || '').toUpperCase();
+
+  // Determinar si el pago fue aprobado
+  const isApproved =
+    status === 'APPROVED' || status === 'PAID' || status === 'COMPLETED' ||
+    evtType.includes('APPROVED') || evtType.includes('COMPLETED') || evtType.includes('PAID');
+
+  if (!isApproved) {
+    console.log(`[BoldWebhook] Pago no aprobado (status=${status}, type=${evtType}) — ignorando`);
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // ── Extraer email del comprador ─────────────────────────────────────────────
+  const email =
+    obj.customer_details?.email || obj.customer?.email ||
+    obj.payer?.email            || obj.billing_details?.email ||
+    obj.email                   || event.customer_email || '';
+
+  // ── Extraer link ID para determinar el plan ─────────────────────────────────
+  const linkId =
+    obj.link?.id           || obj.payment_link?.id    ||
+    obj.metadata?.link_id  || obj.link_id             ||
+    event.link_id          || event.link?.id          || '';
+
+  if (!email) {
+    console.error('[BoldWebhook] Email no encontrado en payload:', JSON.stringify(event).slice(0, 300));
+    return new Response(JSON.stringify({ received: true, warning: 'email_missing' }), {
+      status: 200, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const plan = BOLD_LINK_PLAN[linkId] || 'basico';
+  console.log(`[BoldWebhook] Activando plan=${plan} para email=${email} (link=${linkId || 'unknown'})`);
+
+  try {
+    await activateBoldPlan(email, plan, env);
+  } catch(err) {
+    console.error('[BoldWebhook] Error activando plan:', err.message);
+    await sentryCapture(err, { endpoint: 'POST /bold-webhook', extra: { email, plan, linkId } }, env);
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200, headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function activateBoldPlan(email, plan, env) {
+  if (!env.FIREBASE_SERVICE_KEY) {
+    console.error('[BoldWebhook] FIREBASE_SERVICE_KEY no configurado — no se puede actualizar Firestore');
+    return;
+  }
+
+  const FIRESTORE_BASE = 'https://firestore.googleapis.com/v1/projects/normalis-5587d/databases/(default)/documents';
+  const token = await getFirebaseAdminToken(env.FIREBASE_SERVICE_KEY);
+
+  // Buscar usuario por email en Firestore
+  const qRes = await fetch(`${FIRESTORE_BASE}:runQuery`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: 'usuarios' }],
+        where: { fieldFilter: { field: { fieldPath: 'email' }, op: 'EQUAL', value: { stringValue: email } } },
+        limit: 1,
+      },
+    }),
+  });
+
+  const results = await qRes.json();
+  const docRef  = results?.[0]?.document?.name;
+
+  if (!docRef) {
+    console.warn(`[BoldWebhook] Usuario no encontrado en Firestore para email: ${email}`);
+    return;
+  }
+
+  const uid = docRef.split('/').pop();
+  const now = new Date().toISOString();
+
+  // Actualizar plan en Firestore
+  const updateRes = await fetch(
+    `${FIRESTORE_BASE}/usuarios/${uid}?updateMask.fieldPaths=rol&updateMask.fieldPaths=plan&updateMask.fieldPaths=planActivatedAt&updateMask.fieldPaths=activo`,
+    {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          rol:             { stringValue: 'cliente' },
+          plan:            { stringValue: plan },
+          planActivatedAt: { stringValue: now },
+          activo:          { booleanValue: true },
+        },
+      }),
+    }
+  );
+
+  if (!updateRes.ok) {
+    const errTxt = await updateRes.text();
+    throw new Error(`Firestore update failed: ${errTxt}`);
+  }
+
+  console.log(`[BoldWebhook] ✅ Usuario ${uid} activado — plan: ${plan}`);
+
+  // Enviar email de bienvenida
+  const resendKey = env.RESEND_API_KEY;
+  if (resendKey) {
+    const userRes = await fetch(`${FIRESTORE_BASE}/usuarios/${uid}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (userRes.ok) {
+      const ud  = await userRes.json();
+      const f   = ud.fields || {};
+      const planLabels = { basico: 'Esencial', pro: 'Profesional', implementacion: 'Implementación Guiada' };
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'NormaLis <noreply@normalis.co>',
+          to:   [email],
+          subject: `¡Tu plan NormaLis ${planLabels[plan] || plan} está activo!`,
+          html: tplBienvenidaAprobado({
+            to_email:        email,
+            ips_nombre:      f.nombre?.stringValue        || email,
+            nombre_contacto: f.nombreContacto?.stringValue || '',
+            plan_label:      planLabels[plan] || plan,
+            login_url:       'https://normalis.co/login.html',
+          }),
+        }),
+      });
+      console.log(`[BoldWebhook] ✉️  Email de bienvenida enviado a ${email}`);
+    }
+  }
+}
+
+// Genera un token de acceso Firebase Admin via Service Account JWT
+async function getFirebaseAdminToken(serviceKeyJson) {
+  const sa  = JSON.parse(serviceKeyJson);
+  const now = Math.floor(Date.now() / 1000);
+  const enc = (o) => btoa(JSON.stringify(o)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const hdr = enc({ alg: 'RS256', typ: 'JWT' });
+  const pay = enc({ iss: sa.client_email, sub: sa.client_email, aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600, scope: 'https://www.googleapis.com/auth/datastore' });
+  const si  = `${hdr}.${pay}`;
+
+  const keyDer = Uint8Array.from(atob(sa.private_key.replace(/-----[A-Z ]+-----|\n/g,'')), c => c.charCodeAt(0));
+  const ck  = await crypto.subtle.importKey('pkcs8', keyDer.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', ck, new TextEncoder().encode(si));
+  const jwt = `${si}.${btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_')}`;
+
+  const tr  = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+  });
+  return (await tr.json()).access_token;
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin') || '';
@@ -1412,6 +1611,11 @@ export default {
     // ── POST /email — envío de emails via Resend (server-side) ───────────────
     if (request.method === 'POST' && url.pathname === '/email') {
       return handleEmail(request, env, cors);
+    }
+
+    // ── POST /bold-webhook — activación de plan tras pago Bold.co ────────────
+    if (request.method === 'POST' && url.pathname === '/bold-webhook') {
+      return handleBoldWebhook(request, env);
     }
 
     if (request.method !== 'POST') {
