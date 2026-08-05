@@ -1407,23 +1407,10 @@ const BOLD_LINK_PLAN = {
 async function handleBoldWebhook(request, env) {
   const rawBody = await request.text();
 
-  // Verificar firma HMAC-SHA256 si está configurada (BOLD_WEBHOOK_SECRET en Cloudflare secrets)
-  const secret = env.BOLD_WEBHOOK_SECRET;
-  if (secret) {
-    const sigHeader = request.headers.get('X-Bold-Signature') ||
-                      request.headers.get('X-Signature')      ||
-                      request.headers.get('Bold-Signature')   || '';
-    try {
-      const encoder  = new TextEncoder();
-      const key      = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-      const sigBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
-      const expected = Array.from(new Uint8Array(sigBytes)).map(b => b.toString(16).padStart(2,'0')).join('');
-      if (expected !== sigHeader) throw new Error('no match');
-    } catch(e) {
-      console.error('[BoldWebhook] Firma inválida:', e.message);
-      return new Response('Firma inválida', { status: 400 });
-    }
-  }
+  // Verificar firma Bold (SHA256 de campos del payload + llave secreta)
+  // Bold incluye la firma DENTRO del payload en data.transaction.signature
+  // Fórmula: SHA256(amount + currency + reference + status + BOLD_WEBHOOK_SECRET)
+  const boldSecret = env.BOLD_WEBHOOK_SECRET;
 
   let event;
   try { event = JSON.parse(rawBody); } catch {
@@ -1431,6 +1418,25 @@ async function handleBoldWebhook(request, env) {
   }
 
   console.log('[BoldWebhook] Evento recibido:', event.type || event.event || '(sin type)');
+
+  // ── Verificar firma Bold (si secret configurado) ────────────────────────────
+  if (boldSecret) {
+    try {
+      const tx  = event.data?.transaction || event.transaction || event.data?.object || {};
+      const sig = tx.signature || event.signature || '';
+      if (sig) {
+        const toHash  = String(tx.amount||'') + String(tx.currency||'COP') + String(tx.reference||tx.id||'') + String(tx.status||'') + boldSecret;
+        const hBuf    = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(toHash));
+        const expected= Array.from(new Uint8Array(hBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        if (expected !== sig) {
+          console.error('[BoldWebhook] Firma inválida');
+          return new Response('Firma inválida', { status: 400 });
+        }
+      }
+    } catch(e) {
+      console.error('[BoldWebhook] Error verificando firma:', e.message);
+    }
+  }
 
   // ── Extraer datos del pago (Bold puede variar la estructura) ────────────────
   // Soporta: {type, data.object}, {type, data.transaction}, {payment}, {event, transaction}
