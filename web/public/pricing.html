@@ -134,11 +134,11 @@
   <meta property="og:type"        content="website">
   <meta property="og:url"         content="https://normalis.co/pricing.html">
   <meta property="og:title"       content="Precios NormaLis — Software de Habilitación para IPS">
-  <meta property="og:description" content="Planes desde $290.000 COP/mes. Gestión de habilitación, PAMEC y SG-SST para IPS colombianas. Prueba gratuita disponible.">
+  <meta property="og:description" content="Planes desde $199.000 COP/mes. Gestión de habilitación, PAMEC y SG-SST para IPS colombianas. Prueba gratuita disponible.">
   <meta property="og:image"       content="https://normalis.co/og-image.png">
   <meta name="twitter:card"       content="summary_large_image">
   <meta name="twitter:title"      content="Precios NormaLis — Software de Habilitación para IPS">
-  <meta name="twitter:description" content="Planes desde $290.000 COP/mes. Gestión de habilitación, PAMEC y SG-SST para IPS colombianas. Prueba gratuita disponible.">
+  <meta name="twitter:description" content="Planes desde $199.000 COP/mes. Gestión de habilitación, PAMEC y SG-SST para IPS colombianas. Prueba gratuita disponible.">
 </head>
 <body>
 
@@ -202,10 +202,10 @@
       <div class="plan-desc">Para IPS de baja y mediana complejidad que quieren mantener su habilitación en orden todo el año.</div>
       <div class="plan-price">
         <div class="price-main">
-          <span class="currency cop-symbol">$</span><span id="precio-basico">129.000</span>
+          <span class="currency cop-symbol">$</span><span id="precio-basico">199.000</span>
         </div>
         <div class="price-period" id="periodo-basico">COP / mes · facturado mensualmente</div>
-        <div class="price-anual-note" id="ahorro-basico">Pagas $1.290.000 al año · ahorras $258.000</div>
+        <div class="price-anual-note" id="ahorro-basico">Pagas $1.990.000 al año · ahorras $398.000</div>
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Perfil del establecimiento de salud</li>
@@ -226,10 +226,10 @@
       <div class="plan-desc">Para IPS que necesitan cumplimiento integral: habilitación, PAMEC, SST, PQRS y gestión del talento.</div>
       <div class="plan-price">
         <div class="price-main">
-          <span class="currency cop-symbol">$</span><span id="precio-pro">249.000</span>
+          <span class="currency cop-symbol">$</span><span id="precio-pro">399.000</span>
         </div>
         <div class="price-period" id="periodo-pro">COP / mes</div>
-        <div class="price-anual-note" id="ahorro-pro">Pagas $2.490.000 al año · ahorras $498.000</div>
+        <div class="price-anual-note" id="ahorro-pro">Pagas $3.990.000 al año · ahorras $798.000</div>
       </div>
       <ul class="plan-features">
         <li><span class="check">✓</span> Todo lo del plan Esencial</li>
@@ -292,7 +292,7 @@
       <div class="faq-q" onclick="toggleFaq(this)">
         ¿Cuánto ahorro con el plan anual? <span class="arrow">›</span>
       </div>
-      <div class="faq-a">Con el plan anual pagas 10 meses y recibes 12 — es decir, 2 meses completamente gratis. Esencial: ahorras $258.000 COP al año. Profesional: ahorras $498.000 COP al año. El cobro es único al inicio del año.</div>
+      <div class="faq-a">Con el plan anual pagas 10 meses y recibes 12 — es decir, 2 meses completamente gratis. Esencial: ahorras $398.000 COP al año. Profesional: ahorras $798.000 COP al año. El cobro es único al inicio del año.</div>
     </div>
 
     <div class="faq-item">
@@ -353,8 +353,8 @@
 //   Valor: $350.000 COP   → reemplazar LNK_IMPLEMENTACION
 // ══════════════════════════════════════════════════════════════
 const BOLD_LINKS = {
-  basico:          'https://checkout.bold.co/payment/LNK_4JND4JELJ4',
-  pro:             'https://checkout.bold.co/payment/LNK_LRR5ZCRUMB',
+  basico:          'https://checkout.bold.co/payment/LNK_QH7C9QNC61',
+  pro:             'https://checkout.bold.co/payment/LNK_JTRUHD363J',
   basico_anual:    'https://checkout.bold.co/payment/LNK_QX9QJBBLWW',
   pro_anual:       'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
   implementacion:  'https://checkout.bold.co/payment/LNK_8Q26PSJHGW',
@@ -378,12 +378,12 @@ function setBilling(mode) {
     lblM.classList.remove('active');
     lblA.classList.add('active');
     // Básico anual: $107.500/mes efectivo (redondeado), total $1.290.000
-    document.getElementById('precio-basico').textContent = '107.500';
-    document.getElementById('periodo-basico').textContent = 'COP / mes · facturado $1.290.000/año';
+    document.getElementById('precio-basico').textContent = '166.000';
+    document.getElementById('periodo-basico').textContent = 'COP / mes · facturado $1.990.000/año';
     document.getElementById('ahorro-basico').style.display = 'block';
     // Pro anual: $207.500/mes efectivo, total $2.490.000
-    document.getElementById('precio-pro').textContent = '207.500';
-    document.getElementById('periodo-pro').textContent = 'COP / mes · facturado $2.490.000/año';
+    document.getElementById('precio-pro').textContent = '332.000';
+    document.getElementById('periodo-pro').textContent = 'COP / mes · facturado $3.990.000/año';
     document.getElementById('ahorro-pro').style.display = 'block';
     // Cambiar texto botones
     document.getElementById('btn-basico').textContent = 'Pagar año completo';

@@ -1386,7 +1386,10 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
               <div style="font-size:14px;font-weight:700">Tracker de Capacitaciones Internas</div>
               <div class="text-sm text-muted">Registro de quién completó cada capacitación requerida</div>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="sendReminderMasivo()">📧 Recordatorio masivo</button>
+            <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm" onclick="sendReminderMasivo()">📧 Pendientes</button>
+            <button class="btn btn-primary btn-sm" onclick="openNuevaCapSession()">+ Nueva sesión</button>
+          </div>
           </div>
 
           <!-- Resumen por capacitación -->
@@ -1396,6 +1399,14 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
           <div class="card" style="overflow-x:auto">
             <div class="card-title" style="margin-bottom:14px">Matriz de cumplimiento por persona</div>
             <table class="cap-table" id="cap-matrix"></table>
+          </div>
+
+          <!-- Historial de sesiones registradas -->
+          <div class="card" style="margin-top:14px">
+            <div class="flex-between" style="margin-bottom:12px">
+              <div class="card-title">📋 Sesiones registradas</div>
+            </div>
+            <div id="cap-sessions-list" style="min-height:48px"></div>
           </div>
         </div>
 
@@ -1437,6 +1448,31 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
                 <label style="display:flex;align-items:center;gap=6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-contrato"> Contrato vigente</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-vacunas"> Esquema vacunas</label>
                 <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-bioseg"> Capacitación bioseguridad</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-induccion"> Inducción institucional</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-bls"> BLS/RCP vigente</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-residuos"> Manejo de residuos</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" id="ap-doc-simulacro"> Simulacro emergencias</label>
+              </div>
+            </div>
+            <div class="pm-section" style="margin-top:14px">
+              <div class="pm-section-title">📅 Fechas de vencimiento</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+                <div>
+                  <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Venc. tarjeta profesional</label>
+                  <input id="ap-venc-tarjeta" type="date" style="width:100%;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Venc. contrato</label>
+                  <input id="ap-venc-contrato" type="date" style="width:100%;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Últ. verificación RETHUS</label>
+                  <input id="ap-venc-rethus" type="date" style="width:100%;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Fecha BLS/RCP (vence 2 años)</label>
+                  <input id="ap-fecha-bls" type="date" style="width:100%;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">
+                </div>
               </div>
             </div>
           </div>
@@ -1745,9 +1781,19 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
       <!-- ══ FIRMA DIGITAL Y VERSIONADO ══ -->
       <div class="view" id="view-firma">
         <div class="g2">
+          <div class="card" style="grid-column:1/-1">
+            <div class="flex-between" style="margin-bottom:12px">
+              <div>
+                <div class="card-title">✍️ Firmas del Personal</div>
+                <div class="card-sub">Asigna la firma digital a cada miembro del equipo para actas y documentos</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="renderFirmasPersonal()">🔄 Actualizar</button>
+            </div>
+            <div id="firmas-personal-list" style="min-height:60px"></div>
+          </div>
           <div class="card">
-            <div class="card-title">✍️ Estado de firmas</div>
-            <div class="card-sub">Documentos pendientes de firma del Director Técnico</div>
+            <div class="card-title">✍️ Documentos — firma del Director</div>
+            <div class="card-sub">Documentos institucionales pendientes de firma</div>
             <div id="firma-docs-list" style="margin-top:8px"></div>
           </div>
           <div class="card">

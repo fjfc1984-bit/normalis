@@ -497,7 +497,7 @@
           <label class="form-label">Plan contratado *</label>
           <select class="form-select" id="ips-plan">
             <option value="basico">Esencial — 7 módulos core ($199K/mes)</option>
-            <option value="profesional" selected>Profesional — 16 módulos ($299K/mes)</option>
+            <option value="profesional" selected>Profesional — 16 módulos ($399K/mes)</option>
             <option value="empresarial">Empresarial — acceso total ($499K/mes)</option>
           </select>
         </div>
@@ -1487,7 +1487,7 @@ async function cargarAnalytics() {
     const pagos = ipsList.filter(i => i.estado === 'activo');
 
     // MRR estimado
-    const planPrices = { basico: 199000, profesional: 499000, institucional: 999000 };
+    const planPrices = { basico: 199000, profesional: 399000, institucional: 999000 };
     const mrr = pagos.reduce((sum, i) => sum + (planPrices[i.plan]||0), 0);
 
     document.getElementById('a-kpi-ips').textContent = ipsList.length;
@@ -1590,7 +1590,7 @@ async function aprobarUsuario(uid) {
         <h3 style="color:#f1f5f9;margin:0 0 16px;font-size:16px">📋 Asignar plan al cliente</h3>
         <select id="_plan-sel" style="width:100%;padding:10px;border-radius:8px;background:#0f172a;color:#f1f5f9;border:1px solid #334155;font-size:13px;margin-bottom:16px">
           <option value="basico">Esencial — 7 módulos core ($199K/mes)</option>
-          <option value="profesional" selected>Profesional — 16 módulos ($299K/mes)</option>
+          <option value="profesional" selected>Profesional — 16 módulos ($399K/mes)</option>
           <option value="empresarial">Empresarial — acceso total ($499K/mes)</option>
         </select>
         <div style="display:flex;gap:10px;justify-content:flex-end">

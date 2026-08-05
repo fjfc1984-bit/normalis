@@ -839,6 +839,8 @@ function renderFirmaPanel(){
         ?`<span class="badge b-green">✍ Firmado</span>`
         :`<button class="btn btn-primary btn-sm" onclick="abrirFirma('${d.id}','${d.nombre}')">Firmar</button>`}
     </div>`).join('');
+  // Cargar también firmas del personal
+  if(typeof renderFirmasPersonal==='function') setTimeout(renderFirmasPersonal,50);
 }
 function renderVersiones(){
   const sel=document.getElementById('firma-doc-sel');
@@ -4340,7 +4342,8 @@ function openAddProfModal(){
   document.getElementById('add-prof-modal').style.display='flex';
   ['ap-nombre','ap-cargo','ap-rethus','ap-email'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var sel=document.getElementById('ap-tipo'); if(sel) sel.value='';
-  ['ap-doc-titulo','ap-doc-rethus','ap-doc-contrato','ap-doc-vacunas','ap-doc-bioseg'].forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=false; });
+  ['ap-doc-titulo','ap-doc-rethus','ap-doc-contrato','ap-doc-vacunas','ap-doc-bioseg','ap-doc-induccion','ap-doc-bls','ap-doc-residuos','ap-doc-simulacro'].forEach(function(id){ var el=document.getElementById(id); if(el) el.checked=false; });
+  ['ap-venc-tarjeta','ap-venc-contrato','ap-venc-rethus','ap-fecha-bls'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   setTimeout(function(){ var el=document.getElementById('ap-nombre'); if(el) el.focus(); },100);
 }
 
@@ -4354,7 +4357,7 @@ function saveNewProfesional(){
   var cargo=document.getElementById('ap-cargo').value.trim();
   if(!nombre||!tipo){ toast('Completa nombre y tipo de vinculación','warn'); return; }
   var docs={};
-  ['titulo','rethus','contrato','vacunas','bioseg'].forEach(function(d){
+  ['titulo','rethus','contrato','vacunas','bioseg','induccion','bls','residuos','simulacro'].forEach(function(d){
     var el=document.getElementById('ap-doc-'+d); docs[d]=el?el.checked:false;
   });
   var arr=loadPersonal();
@@ -4366,6 +4369,10 @@ function saveNewProfesional(){
     rethus: document.getElementById('ap-rethus').value.trim(),
     email: document.getElementById('ap-email').value.trim(),
     docs: docs,
+    venc_tarjeta: (document.getElementById('ap-venc-tarjeta')||{}).value||'',
+    venc_contrato: (document.getElementById('ap-venc-contrato')||{}).value||'',
+    venc_rethus: (document.getElementById('ap-venc-rethus')||{}).value||'',
+    fecha_bls: (document.getElementById('ap-fecha-bls')||{}).value||'',
     fecha_ingreso: new Date().toISOString().slice(0,10)
   });
   savePersonal(arr);
@@ -4497,51 +4504,315 @@ function renderVencimientos(){
 }
 
 // ── Talento: renderCapacitaciones dinámico ──
+// ─── CAPACITACIONES: Gestión dinámica + firma de asistencia (Res. 3100/2019 Est. 1) ──────
+const CAP_TOPICS_KEY = 'normalis_cap_topics';
+const CAP_SESSIONS_KEY = 'normalis_cap_sessions';
+const FIRMAS_PERSONAL_KEY = 'normalis_firmas_personal';
+
+function defaultCapTopics(){
+  return [
+    {id:'ct1',nombre:'Bioseguridad y EPP',periodicidad:12,obligatoria:['Asistencial','Auxiliar','Dirección']},
+    {id:'ct2',nombre:'Manejo de Residuos RESPEL',periodicidad:12,obligatoria:['Asistencial','Auxiliar']},
+    {id:'ct3',nombre:'Higiene de Manos (OMS 5 momentos)',periodicidad:12,obligatoria:['Asistencial','Auxiliar','Dirección']},
+    {id:'ct4',nombre:'Tecnovigilancia y Equipos Biomédicos',periodicidad:12,obligatoria:['Asistencial','Auxiliar']},
+    {id:'ct5',nombre:'Derechos del Paciente y Humanización',periodicidad:12,obligatoria:['Asistencial','Auxiliar','Dirección','Administrativo']},
+    {id:'ct6',nombre:'Seguridad del Paciente (IAAS)',periodicidad:6,obligatoria:['Asistencial']},
+    {id:'ct7',nombre:'BLS / Reanimación Cardiopulmonar',periodicidad:24,obligatoria:['Asistencial']},
+    {id:'ct8',nombre:'Inducción Institucional',periodicidad:0,obligatoria:['Asistencial','Auxiliar','Dirección','Administrativo','Auditoría']},
+  ];
+}
+function loadCapTopics(){ try{ var d=JSON.parse(localStorage.getItem(CAP_TOPICS_KEY)); return (d&&d.length)?d:defaultCapTopics(); }catch(e){ return defaultCapTopics(); } }
+function saveCapTopics(arr){ localStorage.setItem(CAP_TOPICS_KEY,JSON.stringify(arr)); }
+function loadCapSessions(){ try{ return JSON.parse(localStorage.getItem(CAP_SESSIONS_KEY)||'[]'); }catch(e){ return []; } }
+function saveCapSessions(arr){ localStorage.setItem(CAP_SESSIONS_KEY,JSON.stringify(arr)); }
+function loadFirmasPersonal(){ try{ return JSON.parse(localStorage.getItem(FIRMAS_PERSONAL_KEY)||'{}'); }catch(e){ return {}; } }
+function saveFirmasPersonal(obj){ localStorage.setItem(FIRMAS_PERSONAL_KEY,JSON.stringify(obj)); }
+function _ipsNombre(){ return localStorage.getItem('normalis_ips_nombre')||(_cfg&&_cfg.nombre)||'IPS'; }
+
 function renderCapacitaciones(){
-  const capSummary = document.getElementById('cap-summary');
-  const capMatrix = document.getElementById('cap-matrix');
-  const arr = loadPersonal();
+  var capSummary=document.getElementById('cap-summary');
+  var capMatrix=document.getElementById('cap-matrix');
+  if(!capSummary||!capMatrix) return;
+  var personal=loadPersonal();
+  var topics=loadCapTopics();
+  var sessions=loadCapSessions();
+  var hoy=new Date();
 
-  const caps = ['Bioseguridad y EPP','Manejo de Residuos','Higiene de Manos','Tecnovigilancia','Derechos del Paciente'];
-
-  if(!capSummary || !capMatrix) return;
-
-  if(arr.length === 0){
-    capSummary.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-muted)">Agrega profesionales para gestionar capacitaciones</div>';
-    capMatrix.innerHTML = '';
-    return;
+  if(personal.length===0){
+    capSummary.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-muted)">Agrega profesionales para gestionar capacitaciones</div>';
+    capMatrix.innerHTML=''; renderCapSessions(); return;
   }
 
-  // Summary cards
-  capSummary.innerHTML = caps.map(function(cap, i){
-    const completed = arr.filter(function(p){ return p.docs && p.docs.bioseg; }).length;
-    const pct = Math.round(completed/arr.length*100);
-    const col = pct===100?'var(--success)':pct>=60?'var(--warning)':'var(--danger)';
-    return '<div class="card" style="padding:14px">'+
-      '<div style="font-size:12px;font-weight:700;margin-bottom:8px">'+cap+'</div>'+
-      '<div style="font-size:22px;font-weight:900;color:'+col+'">'+pct+'%</div>'+
-      '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px">'+
-        '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:2px"></div>'+
-      '</div>'+
-      '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+completed+'/'+arr.length+' completaron</div>'+
+  function personCumpleTopic(p,topic){
+    if(topic.periodicidad===0){
+      return sessions.some(function(s){ return s.topicId===topic.id&&s.asistentes.some(function(a){ return a.personId===p.id&&a.firmadoEn; }); });
+    }
+    var cutoff=new Date(hoy); cutoff.setMonth(cutoff.getMonth()-topic.periodicidad);
+    var cutoffISO=cutoff.toISOString().slice(0,10);
+    return sessions.some(function(s){ return s.topicId===topic.id&&s.fecha>=cutoffISO&&s.asistentes.some(function(a){ return a.personId===p.id&&a.firmadoEn; }); });
+  }
+
+  capSummary.innerHTML=topics.map(function(topic){
+    var eligible=personal.filter(function(p){ return !topic.obligatoria||!topic.obligatoria.length||topic.obligatoria.includes(p.tipo); });
+    var done=eligible.filter(function(p){ return personCumpleTopic(p,topic); }).length;
+    var total=eligible.length||1;
+    var pct=Math.round(done/total*100);
+    var col=pct===100?'var(--success)':pct>=60?'var(--warning)':'var(--danger)';
+    var lastSess=sessions.filter(function(s){ return s.topicId===topic.id; }).sort(function(a,b){ return b.fecha>a.fecha?1:-1; })[0];
+    return '<div class="card" style="padding:12px;cursor:pointer" onclick="openCapTopicSessions(''+topic.id+'')" title="Ver sesiones de '+topic.nombre+'">'+
+      '<div style="font-size:11px;font-weight:700;margin-bottom:4px">'+topic.nombre+'</div>'+
+      (topic.periodicidad>0?'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">📅 Cada '+topic.periodicidad+' meses</div>':'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">📋 Una vez (inducción)</div>')+
+      '<div style="font-size:20px;font-weight:900;color:'+col+'">'+pct+'%</div>'+
+      '<div style="height:4px;background:var(--border);border-radius:2px;margin-top:4px"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:2px;transition:width .6s"></div></div>'+
+      '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">'+done+'/'+total+' completaron</div>'+
+      (lastSess?'<div style="font-size:10px;color:var(--primary);margin-top:2px">Última sesión: '+lastSess.fecha+'</div>':'<div style="font-size:10px;color:var(--danger);margin-top:2px">Sin sesiones aún</div>')+
     '</div>';
   }).join('');
 
-  // Matrix
-  capMatrix.innerHTML = '<thead><tr><th style="text-align:left;padding:8px;font-size:12px">Profesional</th>'+
-    caps.map(function(c){ return '<th style="padding:8px;font-size:10px;text-align:center">'+c.split(' ')[0]+'</th>'; }).join('')+
-    '<th style="padding:8px;font-size:12px;text-align:center">Total</th></tr></thead>'+
-    '<tbody>'+arr.map(function(p){
-      const done = p.docs && p.docs.bioseg ? caps.length : 0; // simplified
-      return '<tr>'+
-        '<td style="padding:8px;font-size:13px">'+p.nombre+'</td>'+
-        caps.map(function(){ return '<td style="text-align:center;padding:8px">'+(p.docs&&p.docs.bioseg?'✅':'⬜')+'</td>'; }).join('')+
-        '<td style="text-align:center;padding:8px;font-weight:700">'+done+'/'+caps.length+'</td>'+
-      '</tr>';
-    }).join('')+'</tbody>';
+  var thead='<thead><tr><th style="text-align:left;padding:8px;font-size:12px;white-space:nowrap">Profesional</th>'+
+    topics.map(function(t){ return '<th style="padding:4px 6px;font-size:9px;text-align:center;max-width:60px;white-space:normal;line-height:1.2">'+t.nombre.split(' ').slice(0,2).join(' ')+'</th>'; }).join('')+
+    '<th style="padding:8px;font-size:11px;text-align:center">Cumpl.</th></tr></thead>';
+
+  var tbody='<tbody>'+personal.map(function(p){
+    var cells=topics.map(function(topic){
+      var eligible=!topic.obligatoria||!topic.obligatoria.length||topic.obligatoria.includes(p.tipo);
+      if(!eligible) return '<td style="text-align:center;padding:6px"><span style="color:var(--text-muted);font-size:11px">—</span></td>';
+      var ok=personCumpleTopic(p,topic);
+      var lastSig=sessions.filter(function(s){ return s.topicId===topic.id; })
+        .flatMap(function(s){ return s.asistentes.filter(function(a){ return a.personId===p.id&&a.firmadoEn; }).map(function(a){ return a.firmadoEn; }); })
+        .sort().reverse()[0];
+      return '<td style="text-align:center;padding:6px" title="'+(ok?'Firmado '+lastSig:'Pendiente')+'">'+
+        (ok?'<span style="font-size:15px" title="'+lastSig+'">✍️</span>':'<span style="font-size:15px">⬜</span>')+
+      '</td>';
+    }).join('');
+    var eligibleTopics=topics.filter(function(t){ return !t.obligatoria||!t.obligatoria.length||t.obligatoria.includes(p.tipo); });
+    var okCount=eligibleTopics.filter(function(t){ return personCumpleTopic(p,t); }).length;
+    var pct2=eligibleTopics.length>0?Math.round(okCount/eligibleTopics.length*100):100;
+    var col2=pct2===100?'var(--success)':pct2>=60?'var(--warning)':'var(--danger)';
+    return '<tr><td style="padding:8px;font-size:13px;white-space:nowrap;font-weight:600">'+p.nombre.split(' ').slice(0,2).join(' ')+'<br><span style="font-size:10px;font-weight:400;color:var(--text-muted)">'+p.tipo+'</span></td>'+
+      cells+'<td style="text-align:center;padding:6px;font-weight:800;color:'+col2+'">'+pct2+'%</td></tr>';
+  }).join('')+'</tbody>';
+  capMatrix.innerHTML=thead+tbody;
+  renderCapSessions();
 }
 
-// ── sendReminderMasivo ──
+function renderCapSessions(){
+  var el=document.getElementById('cap-sessions-list'); if(!el) return;
+  var sessions=loadCapSessions();
+  var topics=loadCapTopics();
+  if(!sessions.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Sin sesiones registradas aún — haz clic en <strong>+ Nueva sesión</strong> para registrar la primera capacitación</div>';
+    return;
+  }
+  el.innerHTML=sessions.slice().reverse().map(function(s){
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'+
+      '<div style="width:36px;height:36px;border-radius:50%;background:var(--primary-light,rgba(13,148,136,.12));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎓</div>'+
+      '<div style="flex:1">'+
+        '<div style="font-size:13px;font-weight:700">'+s.topicNombre+'</div>'+
+        '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">'+s.fecha+' · '+s.facilitador+' · '+s.duracion+' min · <strong>'+s.asistentes.length+' asistentes</strong></div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+
+          s.asistentes.slice(0,6).map(function(a){ return '<span style="font-size:10px;padding:2px 8px;background:var(--success-light,rgba(16,185,129,.12));color:var(--success,#10b981);border-radius:20px">✍ '+a.nombre.split(' ')[0]+'</span>'; }).join('')+
+          (s.asistentes.length>6?'<span style="font-size:10px;color:var(--text-muted)">+'+( s.asistentes.length-6)+' más</span>':'')+
+        '</div>'+
+      '</div>'+
+      '<button onclick="generarActaCapacitacion(''+s.id+'')" style="flex-shrink:0;font-size:11px;padding:6px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--primary);font-weight:600" title="Generar acta">📄 Acta</button>'+
+    '</div>';
+  }).join('');
+}
+
+function openCapTopicSessions(topicId){
+  var sessions=loadCapSessions().filter(function(s){ return s.topicId===topicId; });
+  var topics=loadCapTopics();
+  var t=topics.find(function(x){ return x.id===topicId; });
+  if(!t) return;
+  if(!sessions.length){ toast('Sin sesiones para "'+t.nombre+'" — regístralas con + Nueva sesión','info'); return; }
+  // Show last session details
+  var last=sessions.slice().sort(function(a,b){ return b.fecha>a.fecha?1:-1; })[0];
+  toast('Última sesión de "'+t.nombre+'": '+last.fecha+' · '+last.asistentes.length+' asistentes','info');
+}
+
+function openNuevaCapSession(){
+  var topics=loadCapTopics();
+  var personal=loadPersonal();
+  if(!topics.length){ toast('No hay temas definidos','warn'); return; }
+  var mid='ncs-modal';
+  var ex=document.getElementById(mid); if(ex) ex.remove();
+  var m=document.createElement('div');
+  m.id=mid;
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  var asisHTML=personal.length===0
+    ?'<div style="color:var(--text-muted);font-size:12px;padding:8px;text-align:center">Agrega profesionales en Talento Humano primero</div>'
+    :personal.map(function(p){ return '<label style="display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;border-radius:6px" onmouseover="this.style.background='var(--bg-3, #f1f5f9)'" onmouseout="this.style.background=''"><input type="checkbox" class="ncs-ast-check" value="'+p.id+'" style="width:16px;height:16px;accent-color:var(--primary)"><span style="font-size:13px;font-weight:600">'+p.nombre+'</span><span style="font-size:11px;color:var(--text-muted);margin-left:auto">'+p.tipo+'</span></label>'; }).join('');
+  m.innerHTML='<div style="background:var(--bg);border-radius:16px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'+
+      '<div><div style="font-size:16px;font-weight:800">🎓 Registrar Sesión de Capacitación</div><div style="font-size:12px;color:var(--text-muted)">Se genera acta con firmas de asistencia</div></div>'+
+      '<button onclick="document.getElementById('ncs-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted)">×</button>'+
+    '</div>'+
+    '<div style="display:grid;gap:12px">'+
+      '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Tema de capacitación *</label>'+
+        '<select id="ncs-topic" style="width:100%;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">'+
+          '<option value="">Selecciona el tema...</option>'+topics.map(function(t){ return '<option value="'+t.id+'">'+t.nombre+'</option>'; }).join('')+
+        '</select></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+        '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Fecha *</label>'+
+          '<input id="ncs-fecha" type="date" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit"></div>'+
+        '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Duración (min)</label>'+
+          '<input id="ncs-duracion" type="number" value="60" min="15" max="480" style="width:100%;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit"></div>'+
+      '</div>'+
+      '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Facilitador / Instructor</label>'+
+        '<input id="ncs-facilitador" placeholder="Nombre del instructor o entidad" style="width:100%;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit"></div>'+
+      '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Asistentes * — marcar quiénes asistieron</label>'+
+        '<div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg-2)">'+asisHTML+'</div>'+
+        '<div style="display:flex;gap:8px;margin-top:6px">'+
+          '<button onclick="document.querySelectorAll('.ncs-ast-check').forEach(function(c){c.checked=true;})" style="font-size:11px;padding:4px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text)">Todos</button>'+
+          '<button onclick="document.querySelectorAll('.ncs-ast-check').forEach(function(c){c.checked=false;})" style="font-size:11px;padding:4px 8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text)">Ninguno</button>'+
+        '</div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">'+
+      '<button onclick="document.getElementById('ncs-modal').remove()" style="padding:10px 20px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);font-family:inherit;font-size:13px">Cancelar</button>'+
+      '<button onclick="guardarCapSession()" style="padding:10px 20px;background:var(--primary);border:none;border-radius:8px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;font-weight:700">💾 Registrar sesión</button>'+
+    '</div>'+
+  '</div>';
+  document.body.appendChild(m);
+}
+
+function guardarCapSession(){
+  var topicId=document.getElementById('ncs-topic').value;
+  var fecha=document.getElementById('ncs-fecha').value;
+  var facilitador=(document.getElementById('ncs-facilitador').value||'').trim();
+  var duracion=parseInt(document.getElementById('ncs-duracion').value||'60');
+  var topics=loadCapTopics();
+  var topic=topics.find(function(t){ return t.id===topicId; });
+  if(!topicId||!topic){ toast('Selecciona un tema','warn'); return; }
+  if(!fecha){ toast('Indica la fecha','warn'); return; }
+  var checks=document.querySelectorAll('.ncs-ast-check:checked');
+  if(!checks.length){ toast('Selecciona al menos un asistente','warn'); return; }
+  var personal=loadPersonal();
+  var ahora=new Date().toISOString();
+  var session={
+    id:'cap-'+Date.now(),
+    topicId:topicId, topicNombre:topic.nombre, fecha:fecha,
+    facilitador:facilitador||'Equipo interno', duracion:duracion, registradoEn:ahora,
+    asistentes:Array.from(checks).map(function(c){
+      var p=personal.find(function(x){ return x.id===parseInt(c.value); });
+      return {personId:parseInt(c.value),nombre:p?p.nombre:'?',tipo:p?p.tipo:'',cargo:p?p.cargo:'',firmadoEn:ahora};
+    })
+  };
+  var sessions=loadCapSessions(); sessions.push(session); saveCapSessions(sessions);
+  document.getElementById('ncs-modal').remove();
+  renderCapacitaciones();
+  toast('✅ Sesión de '+topic.nombre+' registrada · '+session.asistentes.length+' asistentes','success');
+  setTimeout(function(){
+    if(typeof nlConfirm==='function'){
+      nlConfirm('¿Generar el Acta de Capacitación con firmas?','Generar Acta','var(--primary)').then(function(ok){ if(ok) generarActaCapacitacion(session.id); });
+    }
+  },600);
+}
+
+function generarActaCapacitacion(sessionId){
+  var sessions=loadCapSessions();
+  var s=sessions.find(function(x){ return x.id===sessionId; });
+  if(!s){ toast('Sesión no encontrada','error'); return; }
+  var firmas=loadFirmasPersonal();
+  var ipsN=_ipsNombre();
+  var nit=(_cfg&&_cfg.nit)||'---';
+  var ciudad=(_cfg&&_cfg.ciudad)||'';
+  var director=(_cfg&&_cfg.director)||'Director Técnico';
+  var w=window.open('','_blank','width=820,height=950');
+  if(!w){ toast('Activa ventanas emergentes para generar el acta','warn'); return; }
+  var firmasHTML=s.asistentes.map(function(a,i){
+    var fDato=firmas[a.personId];
+    var fDisplay=fDato?fDato.nombre:a.nombre;
+    return '<tr>'+
+      '<td style="padding:10px 12px;border:1px solid #dde;font-size:13px">'+(i+1)+'</td>'+
+      '<td style="padding:10px 12px;border:1px solid #dde;font-size:13px;font-weight:600">'+a.nombre+'</td>'+
+      '<td style="padding:10px 12px;border:1px solid #dde;font-size:12px;color:#555">'+a.cargo+'</td>'+
+      '<td style="padding:10px 12px;border:1px solid #dde;text-align:center">'+
+        '<div style="font-family:'Dancing Script','Brush Script MT',cursive;font-size:19px;color:#1e40af;border-bottom:1px solid #aaa;padding-bottom:4px;min-width:140px;display:inline-block">'+fDisplay+'</div>'+
+        '<div style="font-size:9px;color:#999;margin-top:2px">'+new Date(a.firmadoEn).toLocaleDateString('es-CO')+'</div>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+  w.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Acta '+s.topicNombre+'</title>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">'+
+    '<style>body{font-family:Arial,sans-serif;margin:40px;color:#1e293b;font-size:13px}h1{font-size:16px;text-align:center;font-weight:800;margin:0 0 4px}'+
+    '.sub{text-align:center;font-size:12px;color:#64748b;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#0d9488;color:#fff;padding:10px 12px;font-size:12px;text-align:left}'+
+    '.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px}'+
+    '.il .lbl{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}.il .val{font-size:13px;font-weight:700;color:#1e293b;margin-top:2px}'+
+    '.ff{margin-top:50px;display:grid;grid-template-columns:1fr 1fr;gap:40px}.fb{text-align:center;border-top:1px solid #1e293b;padding-top:10px;font-size:11px;color:#64748b}'+
+    '@media print{.np{display:none}}</style></head><body>'+
+    '<h1>ACTA DE CAPACITACIÓN</h1>'+
+    '<div class="sub">'+ipsN+' · NIT '+nit+' · '+ciudad+'</div>'+
+    '<div class="sub" style="font-size:11px;color:#94a3b8">Res. 3100/2019 Est. 1 · Talento Humano · Generado: '+new Date().toLocaleString('es-CO')+'</div>'+
+    '<div class="ig">'+
+      '<div class="il"><div class="lbl">Tema</div><div class="val">'+s.topicNombre+'</div></div>'+
+      '<div class="il"><div class="lbl">Fecha</div><div class="val">'+s.fecha+'</div></div>'+
+      '<div class="il"><div class="lbl">Facilitador</div><div class="val">'+s.facilitador+'</div></div>'+
+      '<div class="il"><div class="lbl">Duración</div><div class="val">'+s.duracion+' minutos</div></div>'+
+      '<div class="il"><div class="lbl">Total asistentes</div><div class="val">'+s.asistentes.length+' personas</div></div>'+
+      '<div class="il"><div class="lbl">No. Acta</div><div class="val">CAP-'+s.id.slice(-6)+'</div></div>'+
+    '</div>'+
+    '<table><thead><tr><th style="width:40px">No.</th><th>Nombre completo</th><th>Cargo</th><th style="width:200px">Firma de asistencia</th></tr></thead>'+
+    '<tbody>'+firmasHTML+'</tbody></table>'+
+    '<div class="ff">'+
+      '<div class="fb"><div style="font-family:'Dancing Script',cursive;font-size:20px;color:#1e40af;margin-bottom:6px">'+director+'</div>Director Técnico<br>'+ipsN+'</div>'+
+      '<div class="fb"><div style="height:30px"></div>Sello del establecimiento</div>'+
+    '</div>'+
+    '<div class="np" style="text-align:center;margin-top:30px">'+
+      '<button onclick="window.print()" style="padding:12px 28px;background:#0d9488;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:700">🖨️ Imprimir / Guardar PDF</button>'+
+    '</div></body></html>');
+  w.document.close();
+}
+
+function sendReminderMasivo(){
+  var personal=loadPersonal();
+  var topics=loadCapTopics();
+  var sessions=loadCapSessions();
+  var hoy=new Date();
+  if(!personal.length){ toast('No hay profesionales registrados','warn'); return; }
+  function personCumple(p,topic){
+    if(topic.periodicidad===0) return sessions.some(function(s){ return s.topicId===topic.id&&s.asistentes.some(function(a){ return a.personId===p.id&&a.firmadoEn; }); });
+    var cutoff=new Date(hoy); cutoff.setMonth(cutoff.getMonth()-topic.periodicidad);
+    var ci=cutoff.toISOString().slice(0,10);
+    return sessions.some(function(s){ return s.topicId===topic.id&&s.fecha>=ci&&s.asistentes.some(function(a){ return a.personId===p.id&&a.firmadoEn; }); });
+  }
+  var pendientes=[];
+  personal.forEach(function(p){
+    var myTopics=topics.filter(function(t){ return !t.obligatoria||!t.obligatoria.length||t.obligatoria.includes(p.tipo); });
+    var faltantes=myTopics.filter(function(t){ return !personCumple(p,t); });
+    if(faltantes.length) pendientes.push({persona:p,faltantes:faltantes});
+  });
+  if(!pendientes.length){ toast('✅ Todo el personal está al día con las capacitaciones','success'); return; }
+  var mid='rm-'+Date.now();
+  var m=document.createElement('div');
+  m.id=mid;
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML='<div style="background:var(--bg);border-radius:16px;padding:24px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'+
+      '<div><div style="font-size:15px;font-weight:800">📧 Capacitaciones pendientes</div>'+
+      '<div style="font-size:12px;color:var(--text-muted)">'+pendientes.length+' persona(s) con temas por completar</div></div>'+
+      '<button onclick="document.getElementById(''+mid+'').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted)">×</button>'+
+    '</div>'+
+    pendientes.map(function(item){
+      return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'+
+        '<div style="font-weight:700;font-size:13px">'+item.persona.nombre+' <span style="font-weight:400;color:var(--text-muted);font-size:11px">· '+item.persona.tipo+'</span></div>'+
+        '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">'+
+          item.faltantes.map(function(t){ return '<span style="font-size:11px;padding:3px 8px;background:rgba(239,68,68,.1);color:#ef4444;border-radius:20px">'+t.nombre+'</span>'; }).join('')+
+        '</div>'+
+        (item.persona.email?'<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">✉️ '+item.persona.email+'</div>':'')+
+      '</div>';
+    }).join('')+
+    '<div style="margin-top:14px;padding:12px;background:var(--bg-2);border-radius:8px;font-size:12px;color:var(--text-muted)">'+
+      '💡 <strong>Próximo paso:</strong> Registra sesiones con <strong>+ Nueva sesión</strong>. El acta con firmas se genera automáticamente.'+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">'+
+      '<button onclick="document.getElementById(''+mid+'').remove()" style="padding:10px 20px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);font-family:inherit;font-size:13px">Cerrar</button>'+
+      '<button onclick="document.getElementById(''+mid+'').remove();openNuevaCapSession();" style="padding:10px 20px;background:var(--primary);border:none;border-radius:8px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;font-weight:700">+ Registrar sesión ahora</button>'+
+    '</div>'+
+  '</div>';
+  document.body.appendChild(m);
+}
+
 
 // ── openAddClienteModal (Panel Consultor) ──
 const CLIENTES_KEY = 'normalis_clientes';
@@ -6193,4 +6464,133 @@ function toggleSbMore() {
     }
   } catch(e){}
 })();
+
+// ─── CUMPLIMIENTO DOCUMENTAL TALENTO HUMANO (Res. 3100/2019) ─────────────────
+function getDocCompliance(p){
+  // Docs requeridos por tipo de vinculación según Res. 3100/2019 Est. 1
+  const reqByTipo = {
+    'Asistencial':    ['titulo','rethus','contrato','vacunas','bioseg','induccion'],
+    'Auxiliar':       ['titulo','contrato','vacunas','bioseg','induccion','residuos'],
+    'Dirección':      ['titulo','rethus','contrato'],
+    'Auditoría':      ['titulo','contrato','bioseg'],
+    'Administrativo': ['contrato','induccion'],
+  };
+  const req = reqByTipo[p.tipo] || ['contrato'];
+  const docs = p.docs || {};
+  const ok = req.filter(function(d){ return docs[d]; }).length;
+  const total = req.length;
+  const pct = Math.round((ok/total)*100);
+  // Evaluar vencimientos próximos (< 60 días)
+  const hoy = new Date();
+  const warnings = [];
+  const vencCampos = [
+    {key:'venc_tarjeta', label:'Tarjeta profesional'},
+    {key:'venc_contrato', label:'Contrato'},
+    {key:'venc_rethus',  label:'Verificación RETHUS'},
+    {key:'fecha_bls',    label:'BLS/RCP'},
+  ];
+  vencCampos.forEach(function(vc){
+    if(p[vc.key]){
+      var vd = new Date(p[vc.key]);
+      var dias = Math.ceil((vd - hoy)/(1000*60*60*24));
+      if(dias < 0)  warnings.push({label:vc.label, dias:dias, tipo:'vencido'});
+      else if(dias <= 60) warnings.push({label:vc.label, dias:dias, tipo:'proximo'});
+    }
+  });
+  // RETHUS no verificado en más de 12 meses
+  if(p.venc_rethus){
+    var rv = new Date(p.venc_rethus);
+    var meses = (hoy - rv)/(1000*60*60*24*30);
+    if(meses > 12) warnings.push({label:'RETHUS sin re-verificar', dias:Math.round(meses*30), tipo:'rethus'});
+  } else if(p.tipo === 'Asistencial' || p.tipo === 'Dirección'){
+    warnings.push({label:'RETHUS nunca verificado', dias:null, tipo:'rethus'});
+  }
+  var color = pct === 100 ? '#10b981' : pct >= 70 ? '#f59e0b' : '#ef4444';
+  return { pct:pct, ok:ok, total:total, req:req, warnings:warnings, color:color };
+}
+
+function openRethusVerification(rethusNum, nombre){
+  if(rethusNum){
+    try { navigator.clipboard.writeText(rethusNum); } catch(e){}
+    toast('No. RETHUS '+rethusNum+' copiado — pegarlo en el buscador RETHUS','info');
+  }
+  // Intenta abrir la consulta pública directa
+  window.open('https://rethus.minsalud.gov.co/Paginas/ConsultaPublica.aspx','_blank');
+}
+
+// ─── FIRMA DIGITAL DEL PERSONAL (Res. 3100/2019 Est. 1) ─────────────────────
+function renderFirmasPersonal(){
+  var el=document.getElementById('firmas-personal-list'); if(!el) return;
+  var personal=loadPersonal();
+  var firmas=loadFirmasPersonal();
+  if(!personal.length){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-muted)">Agrega profesionales en Talento Humano para asignarles firma digital</div>';
+    return;
+  }
+  el.innerHTML=personal.map(function(p){
+    var f=firmas[p.id];
+    var ini=(p.nombre||'?').split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'+
+      '<div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0">'+ini+'</div>'+
+      '<div style="flex:1">'+
+        '<div style="font-size:13px;font-weight:700">'+p.nombre+'</div>'+
+        '<div style="font-size:11px;color:var(--text-muted)">'+p.cargo+' · '+p.tipo+'</div>'+
+      '</div>'+
+      (f
+        ?'<div style="text-align:right;flex-shrink:0">'+
+            '<div style="font-family:'Dancing Script','Brush Script MT',cursive;font-size:17px;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:2px;min-width:120px">'+f.nombre+'</div>'+
+            '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">Asignada '+f.asignadoEn.slice(0,10)+'</div>'+
+          '</div>'+
+          '<button onclick="asignarFirmaPersonal('+p.id+')" style="margin-left:10px;flex-shrink:0;font-size:11px;padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--text)">✏️</button>'
+        :'<button onclick="asignarFirmaPersonal('+p.id+')" style="flex-shrink:0;font-size:12px;padding:7px 14px;background:var(--primary);border:none;border-radius:8px;cursor:pointer;color:#fff;font-weight:600;white-space:nowrap">✍️ Asignar firma</button>'
+      )+
+    '</div>';
+  }).join('');
+}
+
+function asignarFirmaPersonal(personId){
+  var personal=loadPersonal();
+  var p=personal.find(function(x){ return x.id===personId; });
+  if(!p) return;
+  var firmas=loadFirmasPersonal();
+  var existing=firmas[personId];
+  var mid='afp-'+Date.now();
+  var m=document.createElement('div');
+  m.id=mid;
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML='<div style="background:var(--bg);border-radius:16px;padding:24px;max-width:440px;width:100%">'+
+    '<div style="font-size:16px;font-weight:800;margin-bottom:4px">✍️ Firma digital</div>'+
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:20px">'+p.nombre+' · '+p.cargo+'</div>'+
+    '<div style="margin-bottom:12px">'+
+      '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Nombre completo para firma (aparece en actas y documentos)</label>'+
+      '<input id="'+mid+'-n" value="'+(existing?existing.nombre:p.nombre)+'" placeholder="Nombre completo..." style="width:100%;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit">'+
+    '</div>'+
+    '<div style="margin-bottom:18px">'+
+      '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:8px">Vista previa:</label>'+
+      '<div style="text-align:center;border:1px solid var(--border);border-radius:8px;padding:16px;background:var(--bg-2)">'+
+        '<div id="'+mid+'-sig" style="font-family:'Dancing Script','Brush Script MT',cursive;font-size:26px;color:var(--primary);border-bottom:1px solid #aaa;padding-bottom:6px;display:inline-block;min-width:180px">'+(existing?existing.nombre:p.nombre)+'</div>'+
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">'+p.cargo+' · '+_ipsNombre()+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end">'+
+      '<button onclick="document.getElementById(''+mid+'').remove()" style="padding:10px 20px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text);font-family:inherit;font-size:13px">Cancelar</button>'+
+      '<button onclick="confirmarFirmaPersonal(''+mid+'','+personId+')" style="padding:10px 20px;background:var(--primary);border:none;border-radius:8px;cursor:pointer;color:#fff;font-family:inherit;font-size:13px;font-weight:700">💾 Guardar firma</button>'+
+    '</div>'+
+  '</div>';
+  document.body.appendChild(m);
+  var inp=document.getElementById(mid+'-n');
+  var sig=document.getElementById(mid+'-sig');
+  if(inp&&sig) inp.addEventListener('input',function(){ sig.textContent=inp.value||p.nombre; });
+}
+
+function confirmarFirmaPersonal(mid,personId){
+  var nombre=(document.getElementById(mid+'-n').value||'').trim();
+  if(!nombre){ toast('Ingresa el nombre para la firma','warn'); return; }
+  var firmas=loadFirmasPersonal();
+  firmas[personId]={nombre:nombre,asignadoEn:new Date().toISOString()};
+  saveFirmasPersonal(firmas);
+  document.getElementById(mid).remove();
+  if(typeof renderFirmasPersonal==='function') renderFirmasPersonal();
+  toast('✍️ Firma asignada a '+nombre.split(' ')[0],'success');
+}
 // END:normalis-main.js — NormaLis integrity seal

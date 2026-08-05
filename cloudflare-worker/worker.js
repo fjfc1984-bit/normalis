@@ -1397,11 +1397,16 @@ async function handleEmail(request, env, cors) {
 // ── Bold.co Webhook Handler ──────────────────────────────────────────────────
 // Mapeo de link IDs Bold → plan interno
 const BOLD_LINK_PLAN = {
+  // ── pricing.html (standalone) ──────────────────────────────────────────────
   'LNK_4JND4JELJ4': 'basico',   // Esencial mensual
   'LNK_LRR5ZCRUMB': 'pro',      // Profesional mensual
-  'LNK_QX9QJBBLWW': 'basico',   // Esencial anual
-  'LNK_RG2A6L92PU': 'pro',      // Profesional anual
   'LNK_8Q26PSJHGW': 'implementacion',
+  // ── Homepage normalis.co/#precios (Next.js page.tsx) ──────────────────────
+  'LNK_QH7C9QNC61': 'basico',   // Básico mensual (homepage)
+  'LNK_JTRUHD363J': 'pro',      // Profesional mensual (homepage)
+  // ── Anuales (compartidos entre homepage y pricing.html) ───────────────────
+  'LNK_QX9QJBBLWW': 'basico',   // Esencial/Básico anual
+  'LNK_RG2A6L92PU': 'pro',      // Profesional anual
 };
 
 async function handleBoldWebhook(request, env) {
