@@ -1615,12 +1615,14 @@ async function aprobarUsuario(uid) {
       fechaAprobacion: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // Enviar email de bienvenida automáticamente
+    // Enviar email de bienvenida con plan asignado
     if (uData.email) {
+      const planLabels = { basico: 'Esencial', profesional: 'Profesional', empresarial: 'Empresarial' };
       sendWorkerEmail('bienvenida_aprobado', {
         to_email:        uData.email,
         ips_nombre:      uData.nombre        || uData.email,
         nombre_contacto: uData.nombreContacto || '',
+        plan_label:      planLabels[planSeleccionado] || planSeleccionado,
         login_url:       'https://normalis.co/login.html'
       });
       showToast('Usuario aprobado — email de bienvenida enviado ✉️', 'success');
@@ -1635,8 +1637,18 @@ async function rechazarUsuario(uid) {
   const ok = await nlConfirm('¿Rechazar esta solicitud?', 'Rechazar', '#ef4444');
   if (!ok) return;
   try {
+    const snap = await db.collection('usuarios').doc(uid).get();
+    const uData = snap.exists ? snap.data() : {};
     await db.collection('usuarios').doc(uid).update({ rol: 'rechazado', estado: 'rechazado' });
-    showToast('Solicitud rechazada', 'warning');
+    // Notificar al solicitante
+    if (uData.email) {
+      sendWorkerEmail('solicitud_rechazada', {
+        to_email:        uData.email,
+        ips_nombre:      uData.nombre        || uData.email,
+        nombre_contacto: uData.nombreContacto || ''
+      });
+    }
+    showToast('Solicitud rechazada — email enviado', 'warning');
   } catch(e) { showToast('Error al rechazar: ' + e.message, 'error'); }
 }
 

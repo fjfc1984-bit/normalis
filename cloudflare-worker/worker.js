@@ -1108,7 +1108,8 @@ function tplBienvenidaPiloto({ ips_nombre, to_name, email_acceso, password_tempo
   </div></body></html>`;
 }
 
-function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, login_url }) {
+function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, plan_label, login_url }) {
+  const plan = plan_label || 'Profesional';
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
   .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
@@ -1116,6 +1117,7 @@ function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, login_url }) {
   .header h1{color:#fff;margin:0;font-size:24px}
   .body{padding:32px 40px;color:#1e293b;line-height:1.6}
   .badge{display:inline-block;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:20px;padding:6px 16px;font-weight:700;font-size:14px;margin-bottom:16px}
+  .plan-box{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 20px;margin:16px 0;font-size:15px}
   .btn{display:inline-block;background:#00796B;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px}
   .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
   </style></head><body>
@@ -1125,9 +1127,31 @@ function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, login_url }) {
       <div class="badge">✅ Tu cuenta ha sido aprobada</div>
       <p>Hola <strong>${nombre_contacto || ips_nombre}</strong>,</p>
       <p>Nos complace informarte que el acceso de <strong>${ips_nombre}</strong> a NormaLis ha sido <strong>aprobado</strong>.</p>
+      <div class="plan-box">📋 <strong>Plan asignado: ${plan}</strong></div>
       <p>Ya puedes ingresar a la plataforma y comenzar a gestionar el cumplimiento normativo de tu IPS con las herramientas de auditoría de la Res. 3100/2019 y Res. 465/2025.</p>
       <a href="${login_url || 'https://normalis.co/login.html'}" class="btn">Ingresar ahora →</a>
       <p style="margin-top:24px;font-size:13px;color:#64748b">¿Tienes preguntas? Escríbenos a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a></p>
+    </div>
+    <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
+  </div></body></html>`;
+}
+
+function tplSolicitudRechazada({ ips_nombre, nombre_contacto }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#7f1d1d;padding:32px 40px;text-align:center}
+  .header h1{color:#fff;margin:0;font-size:24px}
+  .body{padding:32px 40px;color:#1e293b;line-height:1.6}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>Solicitud de acceso</h1></div>
+    <div class="body">
+      <p>Hola <strong>${nombre_contacto || ips_nombre}</strong>,</p>
+      <p>Hemos revisado la solicitud de acceso de <strong>${ips_nombre}</strong> a NormaLis y en este momento no podemos aprobarla.</p>
+      <p>Si crees que hubo un error o tienes información adicional, escríbenos a <a href="mailto:fjfc1984@gmail.com">fjfc1984@gmail.com</a> y con gusto la revisamos.</p>
+      <p style="margin-top:24px;font-size:13px;color:#64748b">Gracias por tu interés en NormaLis.</p>
     </div>
     <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
   </div></body></html>`;
@@ -1231,7 +1255,7 @@ async function handleEmail(request, env, cors) {
   catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
 
   const { type, data } = body || {};
-  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin'];
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'solicitud_rechazada', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin'];
   if (!VALID_TYPES.includes(type)) {
     return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -1239,7 +1263,7 @@ async function handleEmail(request, env, cors) {
   }
 
   // Emails de admin → requieren Firebase ID token válido
-  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado') {
+  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'solicitud_rechazada') {
     const authHeader = request.headers.get('Authorization') || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!idToken) {
@@ -1285,6 +1309,14 @@ async function handleEmail(request, env, cors) {
       to: [data.to_email],
       subject: `✅ Tu acceso a NormaLis fue aprobado — ${data.ips_nombre || ''}`,
       html: tplBienvenidaAprobado(data),
+    };
+  } else if (type === 'solicitud_rechazada') {
+    if (!data?.to_email) return new Response(JSON.stringify({ error: 'Campo to_email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to_email],
+      subject: `Solicitud de acceso a NormaLis — ${data.ips_nombre || ''}`,
+      html: tplSolicitudRechazada(data),
     };
   } else if (type === 'lead_admin') {
     if (!data?.email) return new Response(JSON.stringify({ error: 'Campo email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
