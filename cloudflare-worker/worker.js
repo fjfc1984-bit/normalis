@@ -1077,6 +1077,84 @@ async function verifyFirebaseToken(idToken) {
 }
 
 // Plantillas HTML de email
+
+function tplMarketing(data) {
+  const nombre = data.nombre || 'equipo de salud';
+  const ciudad = data.ciudad ? ` en ${data.ciudad}` : '';
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Novedades NormaLis</title></head><body style="margin:0;padding:0;background:#f0fdfa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdfa;padding:32px 16px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(13,148,136,.12)">
+<tr><td style="background:linear-gradient(135deg,#0D9488 0%,#0f766e 100%);padding:36px 40px;text-align:center">
+  <div style="font-size:36px;margin-bottom:10px">🏥</div>
+  <div style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px">NormaLis</div>
+  <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:12px;letter-spacing:1px;text-transform:uppercase">Software de Habilitacion en Salud &middot; Colombia</p>
+</td></tr>
+<tr><td style="padding:36px 40px 20px">
+  <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3">Hola ${nombre}${ciudad} 👋</h1>
+  <p style="margin:0;color:#475569;font-size:15px;line-height:1.7">Tenemos novedades importantes en <strong style="color:#0D9488">NormaLis</strong> que van a simplificar tu proceso de habilitacion segun la <strong>Resolucion 3100/2019</strong>. Aqui lo que hay nuevo:</p>
+</td></tr>
+<tr><td style="padding:0 40px 18px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdfa;border-radius:12px;border-left:4px solid #0D9488">
+    <tr><td style="padding:18px 22px">
+      <div style="font-size:22px;margin-bottom:6px">📋</div>
+      <strong style="font-size:15px;color:#0f172a">Verificacion documental de Talento Humano</strong>
+      <p style="margin:6px 0 0;color:#475569;font-size:13px;line-height:1.6">Registra 9 documentos por profesional (titulo, RETHUS, contrato, vacunas, bioseguridad, induccion, BLS/RCP, residuos, simulacros) y obtén el <strong>% de cumplimiento automatico</strong> por tipo de vinculacion — exactamente como lo exige la Res. 3100/2019.</p>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0 40px 18px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fefce8;border-radius:12px;border-left:4px solid #eab308">
+    <tr><td style="padding:18px 22px">
+      <div style="font-size:22px;margin-bottom:6px">🚦</div>
+      <strong style="font-size:15px;color:#0f172a">Semaforo de vencimientos</strong>
+      <p style="margin:6px 0 0;color:#475569;font-size:13px;line-height:1.6">Visualiza en tiempo real la vigencia de tarjetas profesionales, contratos, RETHUS y BLS/RCP. Rojo = vencido, Amarillo = por vencer, Verde = al dia. Sin sorpresas en visitas de verificacion.</p>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0 40px 18px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdfa;border-radius:12px;border-left:4px solid #0D9488">
+    <tr><td style="padding:18px 22px">
+      <div style="font-size:22px;margin-bottom:6px">🔍</div>
+      <strong style="font-size:15px;color:#0f172a">Verificacion RETHUS en un clic</strong>
+      <p style="margin:6px 0 0;color:#475569;font-size:13px;line-height:1.6">Copia el numero de tarjeta y abre directamente la Consulta Publica de MinSalud. Sin busquedas manuales.</p>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0 40px 18px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fdf4ff;border-radius:12px;border-left:4px solid #a855f7">
+    <tr><td style="padding:18px 22px">
+      <div style="font-size:22px;margin-bottom:6px">✍️</div>
+      <strong style="font-size:15px;color:#0f172a">Capacitaciones con firma de asistencia</strong>
+      <p style="margin:6px 0 0;color:#475569;font-size:13px;line-height:1.6">Lleva el control de 8 temas obligatorios con periodicidad configurable. Registra sesiones, los asistentes firman digitalmente, y genera el <strong>Acta de Capacitacion imprimible</strong> con firmas cursivas — lista para tu carpeta de habilitacion.</p>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0 40px 28px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border-radius:12px;border-left:4px solid #f97316">
+    <tr><td style="padding:18px 22px">
+      <div style="font-size:22px;margin-bottom:6px">🖊️</div>
+      <strong style="font-size:15px;color:#0f172a">Firma digital por colaborador</strong>
+      <p style="margin:6px 0 0;color:#475569;font-size:13px;line-height:1.6">Asigna la representacion digital de la firma a cada miembro del personal. Aparece automaticamente en todas las actas — sin imprimir ni escanear.</p>
+    </td></tr>
+  </table>
+</td></tr>
+<tr><td style="padding:0 40px 36px;text-align:center">
+  <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6">¿Quieres ver estas funcionalidades con tu IPS?</p>
+  <a href="https://normalis.co" style="display:inline-block;background:linear-gradient(135deg,#0D9488,#0f766e);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:15px;box-shadow:0 4px 15px rgba(13,148,136,.35)">Solicitar demo gratuita</a>
+  <p style="margin:20px 0 0;color:#94a3b8;font-size:13px">O responde directamente este correo, con gusto te atendemos.</p>
+</td></tr>
+<tr><td style="background:#f8fafc;padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center">
+  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#0D9488">NormaLis</p>
+  <p style="margin:0 0 4px;font-size:12px;color:#94a3b8">Software colombiano de habilitacion y auditoria en salud</p>
+  <p style="margin:0;font-size:12px;color:#cbd5e1"><a href="https://normalis.co" style="color:#0D9488;text-decoration:none">normalis.co</a> &middot; <a href="mailto:hola@normalis.co" style="color:#0D9488;text-decoration:none">hola@normalis.co</a></p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
 function tplBienvenidaPiloto({ ips_nombre, to_name, email_acceso, password_temporal, fecha_onboarding, meet_link }) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
@@ -1255,7 +1333,7 @@ async function handleEmail(request, env, cors) {
   catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
 
   const { type, data } = body || {};
-  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'solicitud_rechazada', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin'];
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'solicitud_rechazada', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin', 'marketing'];
   if (!VALID_TYPES.includes(type)) {
     return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -1263,7 +1341,7 @@ async function handleEmail(request, env, cors) {
   }
 
   // Emails de admin → requieren Firebase ID token válido
-  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'solicitud_rechazada') {
+  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'solicitud_rechazada' || type === 'marketing') {
     const authHeader = request.headers.get('Authorization') || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!idToken) {
@@ -1341,6 +1419,14 @@ async function handleEmail(request, env, cors) {
       to: ['fjfc1984@gmail.com'],
       subject: `🏥 Nueva solicitud NormaLis — ${data.ips_nombre || data.email}`,
       html: tplNuevaSolicitudAdmin(data),
+    };
+  } else if (type === 'marketing') {
+    if (!data?.to_email) return new Response(JSON.stringify({ error: 'Campo to_email requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to_email],
+      subject: data.subject || 'Novedades en NormaLis — Software de Habilitacion en Salud',
+      html: tplMarketing(data),
     };
   }
 
