@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import DemoPlayer from './DemoPlayer';
 
 export default function DemoVideoPage() {
   const [playing, setPlaying] = useState(false);
@@ -36,13 +37,10 @@ export default function DemoVideoPage() {
             <p className="text-gray-400 text-sm mt-1">Haz clic para reproducir</p>
           </div>
         ) : (
-          /* Embedded auto-playing HTML demo */
-          <iframe
-            src="/normalis-demo-video.html"
-            className="w-full aspect-video rounded-2xl border border-gray-800"
-            title="Demo NormaLis"
-            allowFullScreen
-          />
+          /* Demo player — componente React nativo (sin iframe) */
+          <div className="rounded-2xl border border-gray-800 overflow-hidden" style={{ lineHeight: 0 }}>
+            <DemoPlayer />
+          </div>
         )}
       </div>
 
