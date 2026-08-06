@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# normalis-validate.sh — Master integrity validator for NormaLis
-# Exit 0 = all checks passed | Exit 1 = critical failures found
-# Usage: bash normalis-validate.sh [--verbose]
+# normalis-validate.sh — Validador de integridad NormaLis (arquitectura Next.js)
+# Arquitectura actual: Next.js 15 + Firebase v11 + Vercel — sin archivos HTML/JS legacy
+# Exit 0 = OK | Exit 1 = errores críticos
+# Uso: bash normalis-validate.sh [--verbose]
 
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WEB="$REPO/web"
 VERBOSE="${1:-}"
 ERRORS=0
 WARNINGS=0
@@ -15,52 +17,39 @@ YLW='\033[1;33m'
 BLU='\033[0;34m'
 NC='\033[0m'
 
-pass()  { echo -e "${GRN}✔${NC} $1"; }
-fail()  { echo -e "${RED}✘ CRITICAL: $1${NC}"; ((ERRORS++)) || true; }
-warn()  { echo -e "${YLW}⚠ WARNING:  $1${NC}"; ((WARNINGS++)) || true; }
-info()  { [[ "$VERBOSE" == "--verbose" ]] && echo -e "${BLU}ℹ${NC} $1" || true; }
+pass()   { echo -e "${GRN}✔${NC} $1"; }
+fail()   { echo -e "${RED}✘ CRITICAL: $1${NC}"; ((ERRORS++)) || true; }
+warn()   { echo -e "${YLW}⚠ WARNING:  $1${NC}"; ((WARNINGS++)) || true; }
+info()   { [[ "$VERBOSE" == "--verbose" ]] && echo -e "${BLU}ℹ${NC} $1" || true; }
 section(){ echo -e "\n${BLU}━━━ $1 ━━━${NC}"; }
 
+echo ""
+echo "============================================================"
+echo "  NormaLis — Validación pre-commit (Next.js)"
+echo "============================================================"
+
 # ─────────────────────────────────────────────
-section "1. Existencia de archivos críticos"
+section "1. Archivos críticos del proyecto Next.js"
 # ─────────────────────────────────────────────
-CRITICAL_FILES=(
-  "normativa-app-v2.html"
-  "normalis-chat.js"
-  "normalis-data-audit.js"
-  "normalis-audit-score.js"
-  "normalis-docs.js"
-  "normalis-pdf.js"
-  "normalis-capa.js"
-  "normalis-indicadores.js"
-  "normalis-pqrs.js"
-  "normalis-incidentes.js"
-  "normalis-vencimientos.js"
-  "normalis-simulacro.js"
-  "normalis-bitacora.js"
-  "normalis-firestore.js"
-  "normalis-styles.css"
-  "admin.html"
-  "login.html"
-  "registro.html"
-  "index.html"
-  "normalis-pilot.js"
-  "normalis-tour.js"
-  "normalis-autofix.js"
-  "normalis-utils.js"
-  "normalis-auth.js"
-  "normalis-pamec.js"
-  "normalis-export.js"
-  "normalis-users.js"
-  "normalis-automations.js"
-  "normalis-sst.js"
-  "normalis-plans.js"
-  "normalis-checklist.js"
-  "normalis-multiusuario.js"
-  "normalis-main.js"
+NEXTJS_FILES=(
+  "web/package.json"
+  "web/next.config.ts"
+  "web/tailwind.config.ts"
+  "web/tsconfig.json"
+  "web/lib/firebase.ts"
+  "web/app/layout.tsx"
+  "web/app/page.tsx"
+  "web/app/login/page.tsx"
+  "web/app/registro/page.tsx"
+  "web/app/dashboard/page.tsx"
+  "web/app/admin/page.tsx"
+  "web/app/success/page.tsx"
+  "web/app/demo/page.tsx"
+  "web/app/demo/DemoPlayer.tsx"
+  "firestore.rules"
 )
 
-for f in "${CRITICAL_FILES[@]}"; do
+for f in "${NEXTJS_FILES[@]}"; do
   path="$REPO/$f"
   if [[ ! -f "$path" ]]; then
     fail "Archivo faltante: $f"
@@ -74,476 +63,214 @@ for f in "${CRITICAL_FILES[@]}"; do
 done
 
 # ─────────────────────────────────────────────
-section "2. Tamaño mínimo de archivos JS/CSS"
+section "2. Archivos HTML legacy — NO deben existir en raíz"
 # ─────────────────────────────────────────────
-declare -A MIN_SIZES=(
-  ["normalis-chat.js"]=5000
-  ["normalis-data-audit.js"]=5000
-  ["normalis-audit-score.js"]=3000
-  ["normalis-docs.js"]=15000
-  ["normalis-pdf.js"]=3000
-  ["normalis-capa.js"]=5000
-  ["normalis-indicadores.js"]=8000
-  ["normalis-pqrs.js"]=2000
-  ["normalis-incidentes.js"]=2000
-  ["normalis-vencimientos.js"]=2000
-  ["normalis-simulacro.js"]=3000
-  ["normalis-bitacora.js"]=5000
-  ["normalis-firestore.js"]=10000
-  ["normalis-tour.js"]=3000
-  ["normalis-autofix.js"]=3000
-  ["normalis-utils.js"]=500
-  ["normalis-auth.js"]=1000
-  ["normalis-pamec.js"]=5000
-  ["normalis-export.js"]=2000
-  ["normalis-users.js"]=500
-  ["normalis-automations.js"]=3000
-  ["normalis-sst.js"]=50000
-  ["normalis-plans.js"]=3000
-  ["normalis-checklist.js"]=5000
-  ["normalis-multiusuario.js"]=5000
-  ["normalis-styles.css"]=30000
-  ["normativa-app-v2.html"]=150000
-  ["normalis-main.js"]=300000
+LEGACY_FILES=(
+  "index.html"
+  "login.html"
+  "registro.html"
+  "admin.html"
+  "normativa-app-v2.html"
+  "success.html"
+  "normalis-main.js"
+  "normalis-styles.css"
 )
 
-for f in "${!MIN_SIZES[@]}"; do
+for f in "${LEGACY_FILES[@]}"; do
   path="$REPO/$f"
   if [[ -f "$path" ]]; then
-    sz=$(wc -c < "$path")
-    min="${MIN_SIZES[$f]}"
-    if (( sz < min )); then
-      fail "$f demasiado pequeño: ${sz} bytes (mínimo ${min}) — posible truncamiento"
-    else
-      pass "$f tamaño OK (${sz} bytes ≥ ${min})"
-    fi
+    fail "Archivo legacy presente en raíz: $f — debe eliminarse (ya migrado a Next.js)"
+  else
+    pass "$f no existe en raíz (correcto)"
   fi
 done
 
 # ─────────────────────────────────────────────
-section "3. Sellos de integridad (integrity seals)"
+section "3. /web/public/ — sin HTML de la app"
 # ─────────────────────────────────────────────
-declare -A SEALS=(
-  ["normalis-chat.js"]="END:normalis-chat.js"
-  ["normalis-data-audit.js"]="END:normalis-data-audit.js"
-  ["normalis-audit-score.js"]="END:normalis-audit-score.js"
-  ["normalis-docs.js"]="END:normalis-docs.js"
-  ["normalis-pdf.js"]="END:normalis-pdf.js"
-  ["normalis-capa.js"]="END:normalis-capa.js"
-  ["normalis-indicadores.js"]="END:normalis-indicadores.js"
-  ["normalis-pqrs.js"]="END:normalis-pqrs.js"
-  ["normalis-incidentes.js"]="END:normalis-incidentes.js"
-  ["normalis-vencimientos.js"]="END:normalis-vencimientos.js"
-  ["normalis-simulacro.js"]="END:normalis-simulacro.js"
-  ["normalis-bitacora.js"]="END:normalis-bitacora.js"
-  ["normalis-firestore.js"]="END:normalis-firestore.js"
-  ["normalis-tour.js"]="END:normalis-tour.js"
-  ["normalis-autofix.js"]="END:normalis-autofix.js"
-  ["normalis-utils.js"]="END:normalis-utils.js"
-  ["normalis-auth.js"]="END:normalis-auth.js"
-  ["normalis-pamec.js"]="END:normalis-pamec.js"
-  ["normalis-export.js"]="END:normalis-export.js"
-  ["normalis-users.js"]="END:normalis-users.js"
-  ["normalis-automations.js"]="END:normalis-automations.js"
-  ["normalis-sst.js"]="END:normalis-sst.js"
-  ["normalis-plans.js"]="END:normalis-plans.js"
-  ["normalis-checklist.js"]="END:normalis-checklist.js"
-  ["normalis-multiusuario.js"]="END:normalis-multiusuario.js"
-  ["normalis-styles.css"]="END:normalis-styles.css"
-  ["normalis-main.js"]="END:normalis-main.js"
+PUBLIC_HTML_FILES=(
+  "web/public/normativa-app-v2.html"
+  "web/public/normalis-demo-video.html"
+  "web/public/pricing.html"
+  "web/public/success.html"
 )
 
-for f in "${!SEALS[@]}"; do
-  path="$REPO/$f"
-  seal="${SEALS[$f]}"
-  if [[ -f "$path" ]]; then
-    if grep -q "$seal" "$path"; then
-      pass "$f sello de integridad presente"
-    else
-      fail "$f sin sello de integridad — archivo posiblemente truncado"
-    fi
-  fi
-done
-
-# ─────────────────────────────────────────────
-section "4. normativa-app-v2.html — estructura HTML"
-# ─────────────────────────────────────────────
-APP="$REPO/normativa-app-v2.html"
-if [[ -f "$APP" ]]; then
-  # File must end with </html>
-  if tail -5 "$APP" | grep -q '</html>'; then
-    pass "normativa-app-v2.html cierra con </html>"
-  else
-    fail "normativa-app-v2.html NO termina con </html> — truncamiento activo"
-  fi
-
-  if tail -5 "$APP" | grep -q '</body>'; then
-    pass "normativa-app-v2.html cierra con </body>"
-  else
-    fail "normativa-app-v2.html NO termina con </body>"
-  fi
-
-  # Script tag balance
-  OPEN=$(grep -c '<script' "$APP" || true)
-  CLOSE=$(grep -c '</script>' "$APP" || true)
-  if [[ "$OPEN" -eq "$CLOSE" ]]; then
-    pass "normativa-app-v2.html: <script> balanceados ($OPEN apertura = $CLOSE cierre)"
-  else
-    fail "normativa-app-v2.html: <script> DESBALANCEADOS ($OPEN apertura ≠ $CLOSE cierre)"
-  fi
-
-  # Must reference all 12 module scripts
-  MODULES=(
-    "normalis-data-audit.js"
-    "normalis-chat.js"
-    "normalis-audit-score.js"
-    "normalis-pdf.js"
-    "normalis-capa.js"
-    "normalis-indicadores.js"
-    "normalis-pqrs.js"
-    "normalis-incidentes.js"
-    "normalis-vencimientos.js"
-    "normalis-simulacro.js"
-    "normalis-bitacora.js"
-    "normalis-firestore.js"
-    "normalis-tour.js"
-    "normalis-main.js"
-    "normalis-styles.css"
-  )
-  # normalis-docs.js y normalis-sst.js son lazy-loaded desde normalis-main.js — no tienen <script src> directo
-  # Módulos que se cargan de forma lazy (via nlLazyLoad) en vez de <script src>
-  LAZY_MODULES=("normalis-sst.js" "normalis-pamec.js" "normalis-docs.js" "normalis-export.js")
-  for mod in "${MODULES[@]}"; do
-    # Verificar si es módulo lazy: acepta tanto <script src> como comentario lazy: o referencia en nlLazyLoad
-    is_lazy=false
-    for lm in "${LAZY_MODULES[@]}"; do
-      if [ "$mod" = "$lm" ]; then is_lazy=true; break; fi
-    done
-    if grep -qE "src=\"$mod(\?v=[0-9]+)?\"|href=\"$mod(\?v=[0-9]+)?\"" "$APP"; then
-      pass "normativa-app-v2.html referencia $mod"
-    elif $is_lazy && grep -q "$mod" "$APP"; then
-      pass "normativa-app-v2.html referencia $mod (lazy-loaded)"
-    else
-      fail "normativa-app-v2.html NO referencia $mod"
-    fi
-  done
-fi
-
-# ─────────────────────────────────────────────
-section "5. Funciones críticas en módulos JS"
-# ─────────────────────────────────────────────
-declare -A CRITICAL_FUNCTIONS=(
-  # chat
-  ["getAnswer"]="normalis-chat.js"
-  ["normAnswers"]="normalis-chat.js"
-  # audit data
-  ["areasDB"]="normalis-data-audit.js"
-  ["renderAreaCards"]="normalis-data-audit.js"
-  ["renderAuditQ"]="normalis-data-audit.js"
-  ["setAns"]="normalis-data-audit.js"
-  # audit score
-  ["calcAuditScore"]="normalis-audit-score.js"
-  ["showResults"]="normalis-audit-score.js"
-  ["logAuditCompleted"]="normalis-audit-score.js"
-  # docs
-  ["openDocViewer"]="normalis-docs.js"
-  ["openDocPreview"]="normalis-docs.js"
-  # pdf
-  ["printAuditReport"]="normalis-pdf.js"
-  # capa
-  ["saveCAPA"]="normalis-capa.js"
-  ["renderCAPAs"]="normalis-capa.js"
-  ["cerrarCAPA"]="normalis-capa.js"
-  # indicadores
-  ["renderIndicadores"]="normalis-indicadores.js"
-  ["saveIndicador"]="normalis-indicadores.js"
-  ["exportarIndicadoresPDF"]="normalis-indicadores.js"
-  # pqrs
-  ["savePQRS"]="normalis-pqrs.js"
-  ["renderPQRS"]="normalis-pqrs.js"
-  # incidentes
-  ["saveIncidente"]="normalis-incidentes.js"
-  ["renderIncidentes"]="normalis-incidentes.js"
-  # vencimientos
-  ["saveVenc"]="normalis-vencimientos.js"
-  ["renderVencimientos"]="normalis-vencimientos.js"
-  # simulacro
-  ["renderSimulacro"]="normalis-simulacro.js"
-  ["toggleSimItem"]="normalis-simulacro.js"
-  # bitacora
-  ["logAction"]="normalis-bitacora.js"
-  ["renderBitacora"]="normalis-bitacora.js"
-  # firestore
-  ["buildUserContext"]="normalis-firestore.js"
-  ["mostrarOnboarding"]="normalis-firestore.js"
-  ["renderROI"]="normalis-firestore.js"
-  ["xaiResponder"]="normalis-firestore.js"
-  # tour
-  ["startNormalisTour"]="normalis-tour.js"
-  # checklist
-  ["cargarChecklist"]="normalis-checklist.js"
-  ["_renderChecklist"]="normalis-checklist.js"
-  ["registrarRespuestaChecklist"]="normalis-checklist.js"
-  # multiusuario
-  ["renderEquipoIPS"]="normalis-multiusuario.js"
-  ["_escH"]="normalis-multiusuario.js"
-  ["getRolIPS"]="normalis-multiusuario.js"
-  # sst
-  ["renderSST"]="normalis-sst.js"
-  ["calcSSTScore"]="normalis-sst.js"
-  ["sstGuardarActividad"]="normalis-sst.js"
-  ["initPlanGating"]="normalis-plans.js"
-  ["isModuleAllowed"]="normalis-plans.js"
-)
-
-for fn in "${!CRITICAL_FUNCTIONS[@]}"; do
-  file="${CRITICAL_FUNCTIONS[$fn]}"
-  path="$REPO/$file"
-  if [[ -f "$path" ]]; then
-    if grep -q "$fn" "$path"; then
-      pass "$file contiene $fn()"
-    else
-      fail "$file NO contiene $fn() — función crítica faltante"
-    fi
-  fi
-done
-
-# ─────────────────────────────────────────────
-section "6. admin.html — 9 reglas de integridad"
-# ─────────────────────────────────────────────
-ADMIN="$REPO/admin.html"
-if [[ -f "$ADMIN" ]]; then
-
-  # Rule 1: 2 app script blocks + 1 Sentry block = 3 total (Sentry added in session 136)
-  INLINE_SCRIPTS=$(grep -c '^<script>' "$ADMIN" || true)
-  # also count <script> not followed by src=
-  INLINE_SCRIPTS2=$(grep -c '<script>' "$ADMIN" || true)
-  if [[ "$INLINE_SCRIPTS2" -eq 3 ]] || [[ "$INLINE_SCRIPTS2" -eq 2 ]]; then
-    pass "admin.html: bloques <script> inline OK ($INLINE_SCRIPTS2 — 2 app + Sentry)"
-  else
-    warn "admin.html: $INLINE_SCRIPTS2 bloques <script> inline (esperados: 2 ó 3)"
-  fi
-
-  # Rule 2: Toast div in HTML (not inside script)
-  if grep -q 'id="toast"' "$ADMIN"; then
-    pass "admin.html: toast div presente"
-  else
-    fail "admin.html: toast div FALTANTE"
-  fi
-
-  # Rule 3: crearIPS uses rol: 'piloto' (allow multiple spaces between : and value)
-  if grep -qE "rol:[[:space:]]+'piloto'" "$ADMIN"; then
-    pass "admin.html: crearIPS usa rol: 'piloto'"
-  else
-    fail "admin.html: crearIPS NO usa rol: 'piloto' — verificar manualmente"
-  fi
-
-  # Rule 4: No token.claims
-  if grep -q 'token\.claims' "$ADMIN"; then
-    fail "admin.html: contiene token.claims — Custom Claims prohibidos"
-  else
-    pass "admin.html: sin referencias a token.claims"
-  fi
-
-  # Rule 5: Exactly 1 active onAuthStateChanged listener (not counting comment lines)
-  AUTH_COUNT=$(grep -v '^\s*//' "$ADMIN" | grep -c 'onAuthStateChanged' || true)
-  if [[ "$AUTH_COUNT" -eq 1 ]]; then
-    pass "admin.html: exactamente 1 onAuthStateChanged (activo)"
-  else
-    fail "admin.html: $AUTH_COUNT listeners de onAuthStateChanged fuera de comentarios (debe ser 1)"
-  fi
-
-  # Rule 6: initApp defined exactly once
-  INITAPP_COUNT=$(grep -c 'function initApp' "$ADMIN" || true)
-  if [[ "$INITAPP_COUNT" -eq 1 ]]; then
-    pass "admin.html: initApp() definida exactamente 1 vez"
-  else
-    fail "admin.html: initApp() definida $INITAPP_COUNT veces (debe ser 1)"
-  fi
-
-  # Rule 7: 8 critical functions present
-  ADMIN_FUNCTIONS=("doLogin" "crearIPS" "cargarSolicitudes" "cargarLeads" "showToast" "escucharProspectos" "cargarPilotos" "cargarAnalytics")
-  for fn in "${ADMIN_FUNCTIONS[@]}"; do
-    if grep -q "function $fn\|$fn = function" "$ADMIN"; then
-      pass "admin.html: $fn() presente"
-    else
-      fail "admin.html: $fn() FALTANTE — función crítica"
-    fi
-  done
-
-  # Rule 8: File ends with </body> and </html>
-  if tail -3 "$ADMIN" | grep -q '</html>'; then
-    pass "admin.html: cierra con </html>"
-  else
-    fail "admin.html: NO termina con </html> — truncamiento detectado"
-  fi
-
-  # Rule 9: crearIPS uses datos.nombre for IPS name
-  if grep -q 'datos\.nombre' "$ADMIN"; then
-    pass "admin.html: crearIPS usa datos.nombre (nombre de IPS)"
-  else
-    warn "admin.html: no se encontró datos.nombre en crearIPS — verificar manualmente"
-  fi
-fi
-
-# ─────────────────────────────────────────────
-section "7. Consistencia de Firebase config"
-# ─────────────────────────────────────────────
-FIREBASE_PROJECT="normalis-5587d"
-FILES_WITH_FIREBASE=("normativa-app-v2.html" "admin.html" "login.html" "registro.html" "index.html")
-
-for f in "${FILES_WITH_FIREBASE[@]}"; do
+for f in "${PUBLIC_HTML_FILES[@]}"; do
   path="$REPO/$f"
   if [[ -f "$path" ]]; then
-    if grep -q 'firebase' "$path"; then
-      if grep -q "$FIREBASE_PROJECT" "$path"; then
-        pass "$f: Firebase project ID correcto ($FIREBASE_PROJECT)"
-      else
-        # might not initialize firebase directly
-        info "$f: no contiene Firebase project ID (puede ser normal)"
-      fi
-    else
-      info "$f: no usa Firebase"
-    fi
+    fail "HTML de app en /web/public/: $f — debe eliminarse o migrar a Next.js"
+  else
+    pass "$f no está en /web/public/ (correcto)"
   fi
 done
 
-# Verify apiKey is consistent
+# ─────────────────────────────────────────────
+section "4. Firebase config — consistencia"
+# ─────────────────────────────────────────────
+FIREBASE_LIB="$REPO/web/lib/firebase.ts"
+EXPECTED_PROJECT="normalis-5587d"
 EXPECTED_KEY="AIzaSyArUb9rzv6lHeunq_bPgbbe0vmekysx5R4"
-for f in "${FILES_WITH_FIREBASE[@]}"; do
+
+if [[ -f "$FIREBASE_LIB" ]]; then
+  # firebase.ts usa variables de entorno NEXT_PUBLIC_* — verificar que las referencias existen
+  if grep -q 'NEXT_PUBLIC_FIREBASE_PROJECT_ID\|'"$EXPECTED_PROJECT" "$FIREBASE_LIB"; then
+    pass "firebase.ts: projectId o variable de entorno presente"
+  else
+    fail "firebase.ts: projectId faltante"
+  fi
+
+  if grep -q 'NEXT_PUBLIC_FIREBASE_API_KEY\|'"$EXPECTED_KEY" "$FIREBASE_LIB"; then
+    pass "firebase.ts: apiKey o variable de entorno presente"
+  else
+    fail "firebase.ts: apiKey faltante"
+  fi
+
+  # Debe exportar auth y db
+  if grep -q 'export.*auth\|export const auth' "$FIREBASE_LIB"; then
+    pass "firebase.ts: exporta auth"
+  else
+    fail "firebase.ts: no exporta auth"
+  fi
+
+  if grep -q 'export.*db\|export const db' "$FIREBASE_LIB"; then
+    pass "firebase.ts: exporta db (Firestore)"
+  else
+    fail "firebase.ts: no exporta db"
+  fi
+fi
+
+# ─────────────────────────────────────────────
+section "5. next.config.ts — redirects HTML legacy"
+# ─────────────────────────────────────────────
+NEXT_CFG="$REPO/web/next.config.ts"
+if [[ -f "$NEXT_CFG" ]]; then
+  REQUIRED_REDIRECTS=("login.html" "registro.html" "admin.html" "normativa-app-v2.html" "success.html")
+  for r in "${REQUIRED_REDIRECTS[@]}"; do
+    if grep -q "$r" "$NEXT_CFG"; then
+      pass "next.config.ts: redirect para $r presente"
+    else
+      warn "next.config.ts: redirect para $r faltante (usuarios con bookmarks recibirán 404)"
+    fi
+  done
+fi
+
+# ─────────────────────────────────────────────
+section "6. demo/page.tsx — sin iframe a HTML legacy"
+# ─────────────────────────────────────────────
+DEMO_PAGE="$REPO/web/app/demo/page.tsx"
+if [[ -f "$DEMO_PAGE" ]]; then
+  if grep -q 'normalis-demo-video.html' "$DEMO_PAGE"; then
+    fail "demo/page.tsx: todavía referencia normalis-demo-video.html via iframe — usar DemoPlayer"
+  else
+    pass "demo/page.tsx: sin referencia a HTML legacy"
+  fi
+
+  if grep -q 'DemoPlayer' "$DEMO_PAGE"; then
+    pass "demo/page.tsx: importa DemoPlayer (componente React nativo)"
+  else
+    warn "demo/page.tsx: no importa DemoPlayer — verificar si usa componente React"
+  fi
+fi
+
+# ─────────────────────────────────────────────
+section "7. DemoPlayer.tsx — integridad"
+# ─────────────────────────────────────────────
+DEMO_PLAYER="$REPO/web/app/demo/DemoPlayer.tsx"
+if [[ -f "$DEMO_PLAYER" ]]; then
+  sz=$(wc -c < "$DEMO_PLAYER")
+  if (( sz < 10000 )); then
+    fail "DemoPlayer.tsx demasiado pequeño: ${sz} bytes — posible truncamiento"
+  else
+    pass "DemoPlayer.tsx tamaño OK (${sz} bytes)"
+  fi
+
+  if grep -q 'useEffect' "$DEMO_PLAYER" && grep -q 'useState' "$DEMO_PLAYER"; then
+    pass "DemoPlayer.tsx: hooks React presentes"
+  else
+    fail "DemoPlayer.tsx: hooks React faltantes"
+  fi
+
+  if grep -q 'requestAnimationFrame' "$DEMO_PLAYER"; then
+    pass "DemoPlayer.tsx: secuenciador rAF presente"
+  else
+    warn "DemoPlayer.tsx: requestAnimationFrame no encontrado"
+  fi
+fi
+
+# ─────────────────────────────────────────────
+section "8. firestore.rules — colecciones críticas"
+# ─────────────────────────────────────────────
+RULES="$REPO/firestore.rules"
+if [[ -f "$RULES" ]]; then
+  REQUIRED_COLLECTIONS=("usuarios" "capas" "vencimientos" "indicadores" "auditorias" "personal" "capacitaciones" "simulacros" "pamec" "leads" "pilotos" "prospectos")
+  for col in "${REQUIRED_COLLECTIONS[@]}"; do
+    if grep -q "match /${col}" "$RULES"; then
+      pass "firestore.rules: colección /$col presente"
+    else
+      fail "firestore.rules: colección /$col FALTANTE — acceso denegado en producción"
+    fi
+  done
+
+  # No debe tener token.claims
+  if grep -q 'token\.claims' "$RULES"; then
+    fail "firestore.rules: contiene token.claims — no se usan Custom Claims en NormaLis"
+  else
+    pass "firestore.rules: sin token.claims"
+  fi
+
+  # Debe tener regla de denegación al final
+  if grep -q 'allow read, write: if false' "$RULES"; then
+    pass "firestore.rules: regla de denegación catch-all presente"
+  else
+    warn "firestore.rules: no se encontró regla de denegación catch-all — verificar"
+  fi
+fi
+
+# ─────────────────────────────────────────────
+section "9. success/page.tsx — sin links rotos"
+# ─────────────────────────────────────────────
+SUCCESS_PAGE="$REPO/web/app/success/page.tsx"
+if [[ -f "$SUCCESS_PAGE" ]]; then
+  if grep -q 'normativa-app-v2.html' "$SUCCESS_PAGE"; then
+    fail "success/page.tsx: link roto a normativa-app-v2.html — usar /dashboard"
+  else
+    pass "success/page.tsx: sin links a HTML legacy"
+  fi
+
+  if grep -q 'href="/dashboard"' "$SUCCESS_PAGE"; then
+    pass "success/page.tsx: link a /dashboard correcto"
+  else
+    warn "success/page.tsx: no se encontró link a /dashboard — verificar"
+  fi
+fi
+
+# ─────────────────────────────────────────────
+section "10. Archivos de marketing de video — presencia opcional"
+# ─────────────────────────────────────────────
+VIDEO_FILES=("web/public/normalis-video.html" "web/public/normalis-video-60s.html" "web/public/normalis-video-90s.html")
+for f in "${VIDEO_FILES[@]}"; do
   path="$REPO/$f"
-  if [[ -f "$path" ]] && grep -q 'apiKey' "$path"; then
-    if grep -q "$EXPECTED_KEY" "$path"; then
-      pass "$f: Firebase apiKey correcto"
-    else
-      fail "$f: Firebase apiKey DIFERENTE — posible config incorrecta"
-    fi
+  if [[ -f "$path" ]]; then
+    info "$f presente (herramienta de marketing — OK si es intencional)"
+    pass "$f: presente (video marketing)"
+  else
+    info "$f no existe (puede haberse eliminado)"
   fi
 done
-
-# ─────────────────────────────────────────────
-section "8. login.html — funciones críticas"
-# ─────────────────────────────────────────────
-LOGIN="$REPO/login.html"
-if [[ -f "$LOGIN" ]]; then
-  LOGIN_FUNCTIONS=("prefillAppData" "normalis_onboarding_done" "normalis_cfg")
-  for fn in "${LOGIN_FUNCTIONS[@]}"; do
-    if grep -q "$fn" "$LOGIN"; then
-      pass "login.html: $fn presente"
-    else
-      fail "login.html: $fn FALTANTE"
-    fi
-  done
-
-  # Routing: clientes y pilotos van a normativa-app-v2.html
-  if grep -q 'normativa-app-v2.html' "$LOGIN"; then
-    pass "login.html: routing a normativa-app-v2.html presente"
-  else
-    fail "login.html: NO redirige a normativa-app-v2.html"
-  fi
-
-  # No custom claims
-  if grep -q 'token\.claims' "$LOGIN"; then
-    fail "login.html: contiene token.claims — prohibido"
-  else
-    pass "login.html: sin token.claims"
-  fi
-fi
-
-# ─────────────────────────────────────────────
-section "9. Módulos JS — sin etiquetas <script> duplicadas"
-# ─────────────────────────────────────────────
-APP="$REPO/normativa-app-v2.html"
-if [[ -f "$APP" ]]; then
-  # Check only actual <script src="..."> tags, not comments
-  MODULES_TO_CHECK=("normalis-data-audit.js" "normalis-chat.js" "normalis-audit-score.js"
-     "normalis-pdf.js" "normalis-capa.js" "normalis-indicadores.js" "normalis-pqrs.js" "normalis-incidentes.js"
-    "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-bitacora.js" "normalis-firestore.js" "normalis-tour.js"
-  "normalis-utils.js" "normalis-auth.js" "normalis-pamec.js" "normalis-export.js" "normalis-users.js" "normalis-automations.js"  "normalis-plans.js")
-  for mod in "${MODULES_TO_CHECK[@]}"; do
-    TAG_COUNT=$(grep -cE "<script src=\"$mod(\?v=[0-9]+)?\"" "$APP" || true)
-    if [[ "$TAG_COUNT" -gt 1 ]]; then
-      fail "normativa-app-v2.html: <script src=\"$mod\"> duplicado ($TAG_COUNT veces)"
-    elif [[ "$TAG_COUNT" -eq 1 ]]; then
-      pass "normativa-app-v2.html: $mod sin duplicados"
-    fi
-  done
-fi
-
-# ─────────────────────────────────────────────
-section "10. registro.html — rol pendiente"
-# ─────────────────────────────────────────────
-REG="$REPO/registro.html"
-REGAPP="$REPO/registro-app.js"
-if [[ -f "$REG" ]]; then
-  # El rol puede estar en registro.html (inline) o en registro-app.js (modular)
-  if grep -q "rol.*pendiente\|pendiente.*rol" "$REG" || { [[ -f "$REGAPP" ]] && grep -q "rol.*pendiente\|pendiente.*rol" "$REGAPP"; }; then
-    pass "registro.html: asigna rol 'pendiente' en registro"
-  else
-    fail "registro.html: NO asigna rol 'pendiente' — flujo de aprobación roto"
-  fi
-fi
-
-# ─────────────────────────────────────────────
-section "11. SyntaxErrors comunes — keywords duplicados"
-# ─────────────────────────────────────────────
-# Detecta errores que rompen todo el script (const const, let let, etc.)
-DOUBLE_KW_FILES=("normativa-app-v2.html" "normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pamec.js" "normalis-automations.js")
-for f in "${DOUBLE_KW_FILES[@]}"; do
-  fp="$REPO/$f"
-  [[ ! -f "$fp" ]] && continue
-  if grep -Eq "\bconst const\b|\blet let\b|\bvar var\b|\bfunction function\b" "$fp"; then
-    fail "$f: keyword duplicado (const const / let let / var var) — causa SyntaxError"
-  else
-    pass "$f: sin keywords duplicados"
-  fi
-done
-
-# ─────────────────────────────────────────────
-section "12. Orden de carga — módulos no deben llamar funciones inline al top-level"
-# ─────────────────────────────────────────────
-# Funciones definidas en el inline script de normativa-app-v2.html
-# que los módulos externos NO deben llamar directamente al top-level
-# (deben envolverlas en DOMContentLoaded o typeof check)
-INLINE_FNS=("showGenDone" "startSession" "verifyPin" "initApp" "showView" "toast")
-JS_MODULES=("normalis-docs.js" "normalis-firestore.js" "normalis-auth.js" "normalis-utils.js" "normalis-chat.js" "normalis-audit-score.js" "normalis-bitacora.js" "normalis-pqrs.js" "normalis-incidentes.js" "normalis-vencimientos.js" "normalis-simulacro.js" "normalis-pamec.js" "normalis-automations.js" "normalis-tour.js" "normalis-export.js" "normalis-users.js" "normalis-sst.js")
-for mod in "${JS_MODULES[@]}"; do
-  fp="$REPO/$mod"
-  [[ ! -f "$fp" ]] && continue
-  for fn in "${INLINE_FNS[@]}"; do
-    # Buscar uso directo al top-level: línea que contiene la función
-    # pero NO está dentro de una función/DOMContentLoaded/typeof check
-    # Heurística: si aparece como `= fnName;` o `fnName();` fuera de una función
-    if grep -Eq "^(const|let|var) _orig[A-Za-z]+ = ${fn};" "$fp" 2>/dev/null; then
-      fail "$mod: hook directo a '${fn}' al top-level sin DOMContentLoaded — ReferenceError en carga"
-    fi
-  done
-  pass "$mod: sin hooks top-level peligrosos"
-done
-
-# ─────────────────────────────────────────────
-section "13. normativa-app-v2.html — líneas mínimas post-edición"
-# ─────────────────────────────────────────────
-APP="$REPO/normativa-app-v2.html"
-if [[ -f "$APP" ]]; then
-  LINES=$(wc -l < "$APP")
-  if [[ "$LINES" -lt 2000 ]]; then
-    fail "normativa-app-v2.html: solo $LINES líneas — archivo posiblemente truncado (mínimo 2000)"
-  else
-    pass "normativa-app-v2.html: $LINES líneas — integridad de longitud OK"
-  fi
-fi
 
 # ─────────────────────────────────────────────
 echo ""
 echo -e "${BLU}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-if [[ $ERRORS -eq 0 ]]; then
-  echo -e "${GRN}✔ VALIDACIÓN COMPLETA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
-  echo -e "${GRN}  NormaLis está en estado íntegro. Seguro para commit/deploy.${NC}"
+if [[ $ERRORS -eq 0 && $WARNINGS -eq 0 ]]; then
+  echo -e "${GRN}✔ VALIDACIÓN COMPLETA — 0 errores, 0 advertencias${NC}"
+  echo -e "${GRN}  NormaLis Next.js está íntegro. Seguro para commit/deploy.${NC}"
   exit 0
-else  echo -e "${RED}✘ VALIDACIÓN FALLIDA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
+elif [[ $ERRORS -eq 0 ]]; then
+  echo -e "${YLW}⚠ VALIDACIÓN CON ADVERTENCIAS — 0 errores críticos, $WARNINGS advertencias${NC}"
+  echo -e "${YLW}  Seguro para commit, pero revisar advertencias.${NC}"
+  exit 0
+else
+  echo -e "${RED}✘ VALIDACIÓN FALLIDA — $ERRORS errores críticos, $WARNINGS advertencias${NC}"
   echo -e "${RED}  Corregir errores críticos antes de hacer commit.${NC}"
   exit 1
 fi
-
-
