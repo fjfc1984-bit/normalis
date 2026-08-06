@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
       { source: '/terminos.html',         destination: '/terminos',  permanent: true },
       { source: '/politica-privacidad.html', destination: '/politica-privacidad', permanent: true },
       { source: '/status.html',           destination: '/status',    permanent: true },
+      { source: '/success.html',          destination: '/success',   permanent: true },
+      { source: '/guia.html',             destination: '/demo',      permanent: true },
     ];
   },
 };
