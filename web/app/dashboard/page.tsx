@@ -8,6 +8,7 @@ import Link from 'next/link';
 // ── Módulos ────────────────────────────────────────────────────────────────
 const MODULES = [
   { href: '/dashboard/chat',         title: 'Asistente IA',  desc: 'Consultas sobre habilitación y normativa', icon: '🤖', color: 'border-violet-400', badge: 'Nuevo' },
+  { href: '/dashboard/personal',     title: 'Talento Humano', desc: 'Hojas de vida, capacitaciones y firma digital', icon: '👤', color: 'border-teal-400' },
   { href: '/dashboard/auditoria',    title: 'Auditoría',     desc: 'Res. 3100/2019 — 22 modalidades',         icon: '🔍', color: 'border-purple-400' },
   { href: '/dashboard/pamec',        title: 'PAMEC',         desc: 'Programa de auditoría de calidad',        icon: '📈', color: 'border-teal-400' },
   { href: '/dashboard/capas',        title: 'CAPAs',         desc: 'Acciones correctivas y preventivas',      icon: '✓',  color: 'border-green-400' },

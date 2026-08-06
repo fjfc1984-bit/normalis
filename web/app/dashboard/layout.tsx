@@ -24,6 +24,7 @@ function NitWarningBanner() {
 const NAV_ITEMS = [
   { href: '/dashboard',               label: 'Dashboard',    icon: '⊞' },
   { href: '/dashboard/chat',          label: 'Asistente IA', icon: '🤖' },
+  { href: '/dashboard/personal',      label: 'Talento Humano', icon: '👤' },
   { href: '/dashboard/auditoria',     label: 'Auditoría',    icon: '🔍' },
   { href: '/dashboard/pamec',         label: 'PAMEC',        icon: '📈' },
   { href: '/dashboard/capas',         label: 'CAPAs',        icon: '✓' },
