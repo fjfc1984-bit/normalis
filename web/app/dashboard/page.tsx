@@ -170,7 +170,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-10 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 text-center">
-        NormaLis · Resolución 3100/2019 · Resolución 465/2025 · Resolución 256/2016
+        NormaLis · Resolución 1732/2026 (vigente) · Transición desde Res. 3100/2019 · Res. 256/2016
       </div>
     </div>
   );

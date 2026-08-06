@@ -6,6 +6,47 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+// ── Banner cambio normativo Res. 1732/2026 ────────────────────────────────────
+const BANNER_KEY = 'normalis_banner_1732_v1';
+
+function NormativaBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(BANNER_KEY) !== 'dismissed') {
+      setVisible(true);
+    }
+  }, []);
+
+  function dismiss() {
+    localStorage.setItem(BANNER_KEY, 'dismissed');
+    setVisible(false);
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div className="bg-teal-600 text-white text-sm px-4 py-2.5 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="shrink-0 text-base">📢</span>
+        <span className="leading-snug">
+          <strong>Nuevo marco normativo:</strong> La Resolución 1732 de 2026 (firmada el 5 ago. 2026)
+          deroga la Res. 3100/2019. Período de transición:{' '}
+          <strong>12 meses hasta agosto 2027</strong>. NormaLis está actualizando todos los módulos para acompañarle.
+        </span>
+      </div>
+      <button
+        onClick={dismiss}
+        aria-label="Cerrar aviso"
+        className="shrink-0 text-teal-100 hover:text-white text-xl leading-none font-bold transition-colors"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
 
 function NitWarningBanner() {
   const { nit, loading } = useAuth();
@@ -86,6 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-auto bg-gray-50">
+          <NormativaBanner />
           <NitWarningBanner />
           <main className="flex-1">
             {children}
