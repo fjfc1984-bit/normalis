@@ -9,8 +9,8 @@
 import { useEffect, useState } from 'react';
 import {
   collection, query, onSnapshot,
-  doc, updateDoc, addDoc, serverTimestamp,
-  Timestamp, where, orderBy,
+  doc, updateDoc, setDoc, addDoc, serverTimestamp,
+  Timestamp, where,
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db } from '@/lib/firebase';
@@ -171,7 +171,8 @@ function PilotosTab({ show }: { show: (m: string, t: 'success'|'error') => void 
       const expires = new Date();
       expires.setDate(expires.getDate() + parseInt(form.dias));
 
-      await updateDoc(doc(db, 'usuarios', user.uid), {
+      // setDoc (no updateDoc) — el documento usuarios/{uid} no existe aún
+      await setDoc(doc(db, 'usuarios', user.uid), {
         nombre:         form.nombre,          // IPS name
         nombreContacto: form.nombreContacto,  // contact person
         email:          form.email,

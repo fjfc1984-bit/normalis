@@ -1,176 +1,365 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * Dashboard home — NormaLis
+ * KPIs en tiempo real: última auditoría, CAPAs abiertas, vencimientos próximos,
+ * countdown visita, y acceso rápido a los 13 módulos.
+ */
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  collection, query, where, orderBy, limit,
+  getDocs, onSnapshot, Timestamp,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { useFechaVisita } from '@/lib/useFechaVisita';
-import Link from 'next/link';
 
-// ── Módulos ────────────────────────────────────────────────────────────────
-const MODULES = [
-  { href: '/dashboard/chat',         title: 'Asistente IA',  desc: 'Consultas sobre habilitación y normativa', icon: '🤖', color: 'border-violet-400', badge: 'Nuevo' },
-  { href: '/dashboard/personal',     title: 'Talento Humano', desc: 'Hojas de vida, capacitaciones y firma digital', icon: '👤', color: 'border-teal-400' },
-  { href: '/dashboard/auditoria',    title: 'Auditoría',     desc: 'Res. 3100/2019 — 22 modalidades',         icon: '🔍', color: 'border-purple-400' },
-  { href: '/dashboard/pamec',        title: 'PAMEC',         desc: 'Programa de auditoría de calidad',        icon: '📈', color: 'border-teal-400' },
-  { href: '/dashboard/capas',        title: 'CAPAs',         desc: 'Acciones correctivas y preventivas',      icon: '✓',  color: 'border-green-400' },
-  { href: '/dashboard/indicadores',  title: 'Indicadores',   desc: 'Calidad Res. 256/2016',                   icon: '📊', color: 'border-blue-400' },
-  { href: '/dashboard/vencimientos', title: 'Vencimientos',  desc: 'Documentos y fechas límite',              icon: '📅', color: 'border-amber-400' },
-  { href: '/dashboard/sg-sst',       title: 'SG-SST',        desc: 'Seguridad y salud en el trabajo',         icon: '🦺', color: 'border-orange-400' },
-  { href: '/dashboard/simulacros',   title: 'Simulacro',     desc: 'Lista de chequeo pre-visita Secretaría',  icon: '🔔', color: 'border-red-300' },
-  { href: '/dashboard/documentos',   title: 'Documentos',    desc: 'Plantillas y documentos normativos',      icon: '📄', color: 'border-sky-400' },
-  { href: '/dashboard/pqrs',         title: 'PQRS',          desc: 'Peticiones, quejas y reclamos',           icon: '📬', color: 'border-pink-400' },
-  { href: '/dashboard/incidentes',   title: 'Incidentes',    desc: 'Eventos adversos y seguridad del paciente',icon: '🛡️', color: 'border-rose-400' },
-  { href: '/dashboard/bitacora',     title: 'Bitácora',      desc: 'Registro de actividades y auditorías',    icon: '📋', color: 'border-gray-400' },
-];
-
-// ── Countdown widget ───────────────────────────────────────────────────────
-function CountdownWidget() {
-  const { fechaVisita, daysLeft, urgency, loading, saving, setFecha, clearFecha } = useFechaVisita();
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft]     = useState('');
-
-  function startEdit() {
-    setDraft(fechaVisita ?? '');
-    setEditing(true);
-  }
-
-  async function confirm() {
-    if (!draft) return;
-    await setFecha(draft);
-    setEditing(false);
-  }
-
-  function cancel() { setEditing(false); }
-
-  const palette = {
-    urgente:   { bg: 'bg-red-50',   border: 'border-red-300',   text: 'text-red-700',   badge: 'bg-red-100 text-red-700',    label: 'Urgente — inicia auditoría ya' },
-    pronto:    { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-700', label: 'Poco tiempo — revisa cronograma' },
-    ok:        { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-700', badge: 'bg-green-100 text-green-700', label: 'Buen tiempo — sigue el plan' },
-    vencida:   { bg: 'bg-gray-50',  border: 'border-gray-300',  text: 'text-gray-500',  badge: 'bg-gray-100 text-gray-500',   label: 'Fecha vencida — actualiza la fecha' },
-    sin_fecha: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-500', badge: 'bg-slate-100 text-slate-500', label: 'Configura tu fecha de visita' },
-  };
-  const p = palette[urgency];
-
-  if (loading) {
-    return <div className="rounded-xl border border-slate-100 bg-slate-50 p-5 animate-pulse h-28" />;
-  }
+// ── SVG Ring (compliance score) ────────────────────────────────────────────────
+function ScoreRing({ pct, size = 120 }: { pct: number; size?: number }) {
+  const r     = (size - 16) / 2;
+  const circ  = 2 * Math.PI * r;
+  const dash  = (pct / 100) * circ;
+  const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  const track = pct >= 80 ? '#dcfce7' : pct >= 50 ? '#fef3c7' : '#fee2e2';
 
   return (
-    <div className={`rounded-xl border ${p.border} ${p.bg} p-5 flex items-center justify-between gap-4`}>
-      {/* Left — número de días */}
-      <div className="flex items-center gap-4">
-        <div className={`text-4xl font-black tabular-nums ${p.text}`}>
-          {daysLeft !== null ? (daysLeft < 0 ? '—' : daysLeft) : '?'}
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rotate-[-90deg]">
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={track}   strokeWidth={10} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color}   strokeWidth={10}
+              strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+              style={{ transition: 'stroke-dasharray 1.2s ease' }} />
+    </svg>
+  );
+}
+
+// ── KPI card ───────────────────────────────────────────────────────────────────
+interface KpiProps {
+  label:    string;
+  value:    string | number;
+  sub?:     string;
+  accent:   string;  // tailwind bg class
+  textColor:string;
+  icon:     string;
+  href?:    string;
+}
+
+function KpiCard({ label, value, sub, accent, textColor, icon, href }: KpiProps) {
+  const content = (
+    <div className={`bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow ${href ? 'cursor-pointer' : ''}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className={`w-10 h-10 rounded-xl ${accent} flex items-center justify-center text-xl`}>
+          {icon}
         </div>
+        {href && (
+          <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        )}
+      </div>
+      <p className={`text-3xl font-bold tabular-nums ${textColor}`}>{value}</p>
+      <p className="text-xs font-medium text-gray-500 mt-1">{label}</p>
+      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+    </div>
+  );
+  return href ? <Link href={href}>{content}</Link> : content;
+}
+
+// ── Module card ────────────────────────────────────────────────────────────────
+interface Module {
+  href:    string;
+  title:   string;
+  desc:    string;
+  icon:    string;
+  bg:      string;
+  badge?:  string;
+}
+
+const MODULES: Module[] = [
+  { href:'/dashboard/chat',         title:'Asistente IA',   desc:'Normativa y habilitación con IA', icon:'🤖', bg:'bg-violet-50', badge:'Nuevo' },
+  { href:'/dashboard/auditoria',    title:'Auditoría',      desc:'Res. 3100/2019 · 22 modalidades',  icon:'🔍', bg:'bg-teal-50' },
+  { href:'/dashboard/pamec',        title:'PAMEC',          desc:'Programa de auditoría PHVA',       icon:'📈', bg:'bg-emerald-50' },
+  { href:'/dashboard/capas',        title:'CAPAs',          desc:'Acciones correctivas y preventivas',icon:'✅', bg:'bg-green-50' },
+  { href:'/dashboard/indicadores',  title:'Indicadores',    desc:'Calidad Res. 256/2016',            icon:'📊', bg:'bg-blue-50' },
+  { href:'/dashboard/personal',     title:'Talento Humano', desc:'Hojas de vida y capacitaciones',   icon:'👥', bg:'bg-indigo-50' },
+  { href:'/dashboard/vencimientos', title:'Vencimientos',   desc:'Documentos y fechas críticas',     icon:'📅', bg:'bg-amber-50' },
+  { href:'/dashboard/sg-sst',       title:'SG-SST',         desc:'Seguridad Res. 0312/2019',         icon:'🦺', bg:'bg-orange-50' },
+  { href:'/dashboard/simulacros',   title:'Simulacro',      desc:'Lista pre-visita Secretaría',      icon:'🔔', bg:'bg-red-50' },
+  { href:'/dashboard/documentos',   title:'Documentos',     desc:'Plantillas y normativa',            icon:'📄', bg:'bg-sky-50' },
+  { href:'/dashboard/pqrs',         title:'PQRS',           desc:'Peticiones, quejas y reclamos',    icon:'📬', bg:'bg-pink-50' },
+  { href:'/dashboard/incidentes',   title:'Incidentes',     desc:'Eventos adversos y seguridad',     icon:'🛡️', bg:'bg-rose-50' },
+  { href:'/dashboard/bitacora',     title:'Bitácora',       desc:'Registro de actividades',          icon:'📋', bg:'bg-gray-50' },
+];
+
+// ── Countdown widget ───────────────────────────────────────────────────────────
+function CountdownCard() {
+  const { fechaVisita, daysLeft, urgency, loading, saving, setFecha, clearFecha } = useFechaVisita();
+  const [editing, setEditing] = useState(false);
+  const [draft,   setDraft]   = useState('');
+
+  const cfg = {
+    urgente:   { color: 'text-red-600',   bg: 'bg-red-50',   border: 'border-red-200',  label: 'Urgente', icon: '🚨' },
+    pronto:    { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200',label: 'Pronto',  icon: '⚠️' },
+    ok:        { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200',label: 'OK',      icon: '✅' },
+    vencida:   { color: 'text-gray-500',  bg: 'bg-gray-50',  border: 'border-gray-200', label: 'Vencida', icon: '📅' },
+    sin_fecha: { color: 'text-gray-400',  bg: 'bg-gray-50',  border: 'border-gray-200', label: 'Sin fecha',icon:'📅' },
+  }[urgency];
+
+  if (loading) return <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm h-36 animate-pulse" />;
+
+  return (
+    <div className={`bg-white rounded-2xl p-5 border ${cfg.border} shadow-sm`}>
+      <div className="flex items-start justify-between mb-3">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-wide ${p.text}`}>
-            {daysLeft !== null && daysLeft >= 0 ? 'días para la visita' : 'días'}
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Próxima visita de habilitación
           </p>
-          <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${p.badge}`}>
-            {p.label}
-          </span>
-          {fechaVisita && !editing && (
-            <p className="text-xs text-gray-400 mt-1">
-              {new Date(fechaVisita).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+          {fechaVisita && (
+            <p className="text-xs text-gray-400">
+              {new Date(fechaVisita).toLocaleDateString('es-CO', { day:'numeric', month:'long', year:'numeric' })}
             </p>
           )}
         </div>
+        <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${cfg.bg} ${cfg.color}`}>
+          {cfg.icon} {cfg.label}
+        </span>
       </div>
 
-      {/* Right — edición */}
-      <div className="shrink-0">
-        {editing ? (
-          <div className="flex flex-col gap-2 items-end">
-            <input
-              type="date"
-              value={draft}
-              onChange={e => setDraft(e.target.value)}
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-400"
-              min={new Date().toISOString().split('T')[0]}
-            />
-            <div className="flex gap-2">
-              <button onClick={cancel} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-                Cancelar
-              </button>
+      <div className="flex items-end justify-between">
+        <div>
+          <span className={`text-5xl font-black tabular-nums ${cfg.color}`}>
+            {daysLeft !== null ? (daysLeft < 0 ? '—' : daysLeft) : '?'}
+          </span>
+          {daysLeft !== null && daysLeft >= 0 && (
+            <span className="ml-2 text-sm text-gray-400">días</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1 items-end text-right">
+          {editing ? (
+            <>
+              <input
+                type="date"
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              <div className="flex gap-2">
+                <button onClick={() => setEditing(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancelar</button>
+                <button
+                  onClick={async () => { if (draft) { await setFecha(draft); setEditing(false); } }}
+                  disabled={!draft || saving}
+                  className="text-xs bg-teal-600 text-white px-3 py-1 rounded-lg disabled:opacity-50"
+                >
+                  {saving ? '…' : 'Guardar'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
               <button
-                onClick={confirm}
-                disabled={!draft || saving}
-                className="text-xs bg-primary-600 text-white px-3 py-1 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                onClick={() => { setDraft(fechaVisita ?? ''); setEditing(true); }}
+                className="text-xs text-teal-600 hover:text-teal-800 font-semibold"
               >
-                {saving ? 'Guardando…' : 'Guardar'}
+                {fechaVisita ? 'Cambiar fecha' : 'Configurar fecha →'}
               </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1 items-end">
-            <button
-              onClick={startEdit}
-              className="text-xs text-primary-600 hover:text-primary-800 font-medium transition-colors"
-            >
-              {fechaVisita ? 'Cambiar fecha' : 'Configurar fecha'}
-            </button>
-            {fechaVisita && (
-              <button onClick={clearFecha} className="text-xs text-gray-300 hover:text-red-400 transition-colors">
-                Quitar
-              </button>
-            )}
-          </div>
-        )}
+              {fechaVisita && (
+                <button onClick={clearFecha} className="text-xs text-gray-300 hover:text-red-400">
+                  Quitar
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Página ─────────────────────────────────────────────────────────────────
+// ── Main page ──────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { nombre, rol } = useAuth();
+  const { user, nombre, nit, rol } = useAuth();
+
+  // ── Real data ──
+  const [auditScore,   setAuditScore]   = useState<number | null>(null);
+  const [capasAbiertas, setCapasAbiertas] = useState<number | null>(null);
+  const [vencProximos,  setVencProximos]  = useState<number | null>(null);
+  const [loadingKpis,   setLoadingKpis]   = useState(true);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Última auditoría (score)
+    getDocs(
+      query(
+        collection(db, 'auditorias'),
+        where('uid', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(1),
+      )
+    ).then(snap => {
+      if (!snap.empty) {
+        const d = snap.docs[0].data();
+        const score = d.score ?? d.puntaje ?? d.porcentaje ?? null;
+        setAuditScore(typeof score === 'number' ? Math.round(score) : null);
+      }
+    }).catch(() => null);
+
+    // CAPAs abiertas
+    const capasUnsub = onSnapshot(
+      query(collection(db, 'capas'), where('uid', '==', user.uid), where('estado', '!=', 'cerrada')),
+      snap => setCapasAbiertas(snap.size),
+    );
+
+    // Vencimientos próximos (≤30 días)
+    const hoy   = new Date();
+    const en30d = new Date(Date.now() + 30 * 86_400_000);
+    const vencUnsub = onSnapshot(
+      query(
+        collection(db, 'vencimientos'),
+        where('uid', '==', user.uid),
+        where('fecha', '>=', Timestamp.fromDate(hoy)),
+        where('fecha', '<=', Timestamp.fromDate(en30d)),
+      ),
+      snap => setVencProximos(snap.size),
+    );
+
+    setLoadingKpis(false);
+
+    return () => { capasUnsub(); vencUnsub(); };
+  }, [user?.uid]);
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+  const hoy = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long' });
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">
-          Bienvenido{nombre ? `, ${nombre}` : ''}
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Panel de habilitación y calidad en salud · NormaLis
+    <div className="p-6 max-w-7xl mx-auto">
+
+      {/* ── Header ── */}
+      <div className="mb-8">
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-sm text-gray-400 capitalize">{hoy}</p>
+            <h1 className="text-2xl font-bold text-gray-900 mt-0.5">
+              {greeting}{nombre ? `, ${nombre}` : ''}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Panel de habilitación y calidad · NormaLis
+            </p>
+          </div>
           {rol === 'piloto' && (
-            <span className="ml-2 bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
-              Cuenta piloto
+            <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-200">
+              🕐 Cuenta piloto
             </span>
           )}
-        </p>
+        </div>
       </div>
 
-      {/* Widget próxima visita */}
-      <div className="mb-6">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-          Próxima visita de habilitación
-        </p>
-        <CountdownWidget />
-      </div>
+      {/* ── Compliance score + KPIs ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-8">
 
-      {/* Módulos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {MODULES.map(m => (
-          <Link
-            key={m.href}
-            href={m.href}
-            className={`relative bg-white rounded-xl p-5 border-l-4 ${m.color}
-                        shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5`}
-          >
-            {m.badge && (
-              <span className="absolute top-3 right-3 text-xs bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-medium">
-                {m.badge}
+        {/* Score ring — ocupa 1 col */}
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col items-center justify-center gap-2">
+          <div className="relative">
+            <ScoreRing pct={auditScore ?? 0} size={120} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-black text-gray-800 tabular-nums">
+                {auditScore !== null ? `${auditScore}%` : '—'}
               </span>
-            )}
-            <div className="text-2xl mb-3">{m.icon}</div>
-            <h3 className="font-semibold text-gray-800 text-sm">{m.title}</h3>
-            <p className="text-xs text-gray-500 mt-1 leading-snug">{m.desc}</p>
-          </Link>
-        ))}
+            </div>
+          </div>
+          <p className="text-xs font-semibold text-gray-500 text-center">Último cumplimiento</p>
+          {auditScore === null && (
+            <Link href="/dashboard/auditoria" className="text-xs text-teal-600 font-semibold hover:underline">
+              Iniciar auditoría →
+            </Link>
+          )}
+        </div>
+
+        {/* KPIs — 4 cols */}
+        <div className="lg:col-span-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <KpiCard
+            label="CAPAs abiertas"
+            value={loadingKpis ? '…' : (capasAbiertas ?? 0)}
+            sub={capasAbiertas ? 'Requieren seguimiento' : 'Todo al día'}
+            accent={capasAbiertas ? 'bg-red-100' : 'bg-green-100'}
+            textColor={capasAbiertas ? 'text-red-600' : 'text-green-600'}
+            icon="✓"
+            href="/dashboard/capas"
+          />
+          <KpiCard
+            label="Vencimientos ≤30d"
+            value={loadingKpis ? '…' : (vencProximos ?? 0)}
+            sub={vencProximos ? 'Documentos por renovar' : 'Sin alertas'}
+            accent={vencProximos ? 'bg-amber-100' : 'bg-green-100'}
+            textColor={vencProximos ? 'text-amber-600' : 'text-green-600'}
+            icon="📅"
+            href="/dashboard/vencimientos"
+          />
+          <KpiCard
+            label="NIT"
+            value={nit || '—'}
+            sub={nit ? 'IPS registrada' : 'Completar perfil'}
+            accent="bg-teal-100"
+            textColor="text-teal-700"
+            icon="🏥"
+          />
+          <KpiCard
+            label="Estado"
+            value={rol === 'cliente' ? 'Activo' : rol === 'piloto' ? 'Piloto' : (rol ?? '—')}
+            sub="Plan actual"
+            accent="bg-emerald-100"
+            textColor="text-emerald-700"
+            icon="✅"
+          />
+        </div>
       </div>
 
-      <div className="mt-10 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 text-center">
-        NormaLis · Resolución 1732/2026 (vigente) · Transición desde Res. 3100/2019 · Res. 256/2016
+      {/* ── Countdown ── */}
+      <div className="mb-8">
+        <CountdownCard />
+      </div>
+
+      {/* ── Módulos ── */}
+      <div className="mb-2">
+        <h2 className="text-base font-semibold text-gray-700 mb-4">Módulos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {MODULES.map(m => (
+            <Link
+              key={m.href}
+              href={m.href}
+              className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group relative overflow-hidden"
+            >
+              {/* Badge */}
+              {m.badge && (
+                <span className="absolute top-2.5 right-2.5 text-xs bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full font-semibold" style={{ fontSize:'10px' }}>
+                  {m.badge}
+                </span>
+              )}
+
+              {/* Icon box */}
+              <div className={`w-10 h-10 ${m.bg} rounded-xl flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform`}>
+                {m.icon}
+              </div>
+
+              {/* Text */}
+              <p className="text-sm font-semibold text-gray-800 leading-snug">{m.title}</p>
+              <p className="text-xs text-gray-400 mt-1 leading-snug">{m.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-10 text-center">
+        <p className="text-xs text-gray-300">
+          NormaLis · Resolución 1732/2026 (vigente, período de transición hasta ago. 2027)
+          · Res. 465/2025 · Res. 256/2016
+        </p>
       </div>
     </div>
   );
