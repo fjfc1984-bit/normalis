@@ -251,6 +251,42 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // personal/{id} — módulo Talento Humano (Next.js dashboard)
+    // ════════════════════════════════════════════════════════════════════════
+    match /personal/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // capacitaciones/{id} — sesiones del módulo Talento Humano (Next.js)
+    // ════════════════════════════════════════════════════════════════════════
+    match /capacitaciones/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
