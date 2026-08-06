@@ -287,6 +287,35 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // simulacros/{nit} — lista de chequeo pre-visita (módulo Simulacro Next.js)
+    // docId = nit de la IPS — acceso por uid o por NIT del equipo
+    // ════════════════════════════════════════════════════════════════════════
+    match /simulacros/{nit} {
+      allow read: if isAuthenticated() && (
+        sameNIT(nit) ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        sameNIT(nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // pamec/{nit} — módulo PAMEC (documento único por IPS, docId = nit)
+    // ════════════════════════════════════════════════════════════════════════
+    match /pamec/{nit} {
+      allow read: if isAuthenticated() && (
+        sameNIT(nit) ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        sameNIT(nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
