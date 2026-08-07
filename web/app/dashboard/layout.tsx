@@ -48,10 +48,11 @@ const NAV_GROUPS = [
   {
     label: 'Calidad',
     items: [
-      { href: '/dashboard/auditoria',   label: 'Auditoría',   icon: AuditIcon },
-      { href: '/dashboard/pamec',       label: 'PAMEC',       icon: ChartIcon },
-      { href: '/dashboard/capas',       label: 'CAPAs',       icon: CheckIcon },
-      { href: '/dashboard/indicadores', label: 'Indicadores', icon: BarIcon },
+      { href: '/dashboard/auditoria',       label: 'Auditoría',      icon: AuditIcon },
+      { href: '/dashboard/analisis-riesgo', label: 'Riesgo IA',      icon: RiskIcon, badge: 'IA' },
+      { href: '/dashboard/pamec',           label: 'PAMEC',          icon: ChartIcon },
+      { href: '/dashboard/capas',           label: 'CAPAs',          icon: CheckIcon },
+      { href: '/dashboard/indicadores',     label: 'Indicadores',    icon: BarIcon },
     ],
   },
   {
@@ -83,6 +84,7 @@ const NAV_GROUPS = [
 function HomeIcon()    { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>; }
 function BotIcon()     { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 11V7m-4 4V9m8 2V9M8 21v-2m8 2v-2M9 7h6M12 3v4"/></svg>; }
 function AuditIcon()   { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/></svg>; }
+function RiskIcon()    { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>; }
 function ChartIcon()   { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>; }
 function CheckIcon()   { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>; }
 function BarIcon()     { return <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>; }
