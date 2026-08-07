@@ -209,7 +209,7 @@ export default function DemoPlayer() {
   const elapsedRef  = useRef(0);
   const idxRef      = useRef(0);
   const rafRef      = useRef<number>(0);
-  const timerRef    = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Chat typewriter
   const typeChat = useCallback(() => {
@@ -555,9 +555,9 @@ export default function DemoPlayer() {
           <div className="s10-plans">
             {[
               { name:'Básico', price:'$199.000', period:'COP / mes · $166K anual', feat:['1 sede · 2 usuarios','Auditoría Res. 3100 básica','Generador de documentos (5 plantillas)','Calendario de vencimientos','Dashboard de cumplimiento'], href:'https://checkout.bold.co/payment/LNK_QH7C9QNC61' },
-              { name:'Profesional', price:'$399.000', period:'COP / mes · $332K anual', feat:['1 sede · 5 usuarios','Auditoría completa 559 criterios','PAMEC + Indicadores Res. 256','SG-SST Res. 0312/2019','Chat IA normativo','PQRS, incidentes y bitácora'], href:'https://checkout.bold.co/payment/LNK_JTRUHD363J', feat:true },
+              { name:'Profesional', price:'$399.000', period:'COP / mes · $332K anual', feat:['1 sede · 5 usuarios','Auditoría completa 559 criterios','PAMEC + Indicadores Res. 256','SG-SST Res. 0312/2019','Chat IA normativo','PQRS, incidentes y bitácora'], href:'https://checkout.bold.co/payment/LNK_JTRUHD363J', featured:true },
               { name:'Enterprise', price:'A la medida', period:'Sedes y usuarios ilimitados', feat:['Todo el plan Profesional','Sedes y usuarios ilimitados','Integraciones a la medida','Capacitación presencial','Soporte dedicado 24/7'], href:'mailto:info@normalis.co' },
-            ].map((p: { name: string; price: string; period: string; feat: string[]; href: string; featured?: boolean }) => (
+            ].map((p: { name: string; price: string; period: string; feat: string[]; href: string; featured?: boolean; }) => (
               <div key={p.name} className={`s10-plan${p.featured?' feat':''}`}>
                 <div className="s10-pname">{p.name}</div>
                 <div className="s10-price">{p.price}</div>

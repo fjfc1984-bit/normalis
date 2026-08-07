@@ -493,7 +493,7 @@ export default function PersonalPage() {
     addSesion,
   } = useCapacitaciones(uid, nit);
 
-  const { toast, showToast, hideToast } = useToast();
+  const { toast, show: showToast } = useToast();
 
   const [tab,          setTab]          = useState('personal');
   const [showModal,    setShowModal]    = useState(false);
@@ -539,7 +539,7 @@ export default function PersonalPage() {
 
   if (loading) return (
     <div className="p-8 flex justify-center">
-      <LoadingSpinner label="Cargando Talento Humano…" />
+      <LoadingSpinner />
     </div>
   );
 
@@ -644,7 +644,7 @@ export default function PersonalPage() {
         />
       )}
 
-      <Toast {...toast} onClose={hideToast} />
+      <Toast toast={toast} />
     </div>
   );
 }
