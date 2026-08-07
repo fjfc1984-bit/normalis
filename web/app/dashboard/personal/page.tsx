@@ -271,7 +271,7 @@ function PersonalCard({
           {p.tarjetaNum && (
             <p className="text-xs text-gray-400 flex items-center gap-1 flex-wrap">
               TP: {p.tarjetaNum}
-              <a href={`https://www.rethus.minsalud.gov.co/Consultas/Registro`}
+              <a href={`http://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx`}
                  target="_blank" rel="noopener noreferrer"
                  className="text-teal-600 hover:text-teal-700 hover:underline font-medium ml-1"
                  title="Verificar en RETHUS — Ministerio de Salud (Res. 1732/2026 Art. 10)">
@@ -280,7 +280,7 @@ function PersonalCard({
             </p>
           )}
           {!p.tarjetaNum && (
-            <a href="https://www.rethus.minsalud.gov.co/Consultas/Registro"
+            <a href="http://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx"
                target="_blank" rel="noopener noreferrer"
                className="text-xs text-teal-600 hover:underline">
               Consultar RETHUS ↗
@@ -601,7 +601,7 @@ export default function PersonalPage() {
           <p className="text-amber-700 mt-0.5">
             La nueva norma exige <strong>verificación RETHUS online</strong> con evidencia conservada (no basta copia física de la tarjeta).
             Período de transición hasta el <strong>5 agosto 2027</strong>.{' '}
-            <a href="https://www.rethus.minsalud.gov.co/Consultas/Registro"
+            <a href="http://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx"
                target="_blank" rel="noopener noreferrer"
                className="text-teal-700 underline font-medium">
               Consultar RETHUS oficial ↗
