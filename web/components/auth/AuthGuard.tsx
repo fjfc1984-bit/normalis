@@ -5,14 +5,14 @@
  * Wrapper que redirige a /login si el usuario no está autenticado
  * o si su rol no está en la lista de roles permitidos.
  */
-'use client';
 
+import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, type NormalisRole } from '@/lib/auth';
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   allowedRoles?: NormalisRole[];
 }
 

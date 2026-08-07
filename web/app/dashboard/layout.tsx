@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuth } from '@/lib/auth';
 import { signOut } from 'firebase/auth';
@@ -233,7 +234,7 @@ function MobileHeader({ onMenu }: { onMenu: () => void }) {
 }
 
 // ── Layout ─────────────────────────────────────────────────────────────────────
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Close mobile menu on route change
