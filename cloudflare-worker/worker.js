@@ -985,7 +985,58 @@ REGLAS DE RESPUESTA:
 5. Si no está en el corpus: decir "No encontré información verificada en mi corpus. Verifica en minsalud.gov.co, mintrabajo.gov.co o contacta tu Secretaría de Salud."
 6. NUNCA inventar artículos, fechas, plazos, porcentajes o requisitos.
 7. Responder en español colombiano, tono profesional, máximo 6 párrafos.
-8. Advertir que la interpretación definitiva la tiene la autoridad competente (Secretaría de Salud departamental o Ministerio de Trabajo).`;
+8. Advertir que la interpretación definitiva la tiene la autoridad competente (Secretaría de Salud departamental o Ministerio de Trabajo).
+
+=== RESOLUCIÓN 1732 DE 2026 — NUEVO MANUAL DE HABILITACIÓN ===
+ENTRADA EN VIGOR: 5 de agosto de 2026. DEROGA INTEGRALMENTE Res. 3100/2019.
+PERÍODO DE TRANSICIÓN: 12 meses — los prestadores pueden continuar operando bajo Res. 3100/2019 hasta el 5 de agosto de 2027 sin sanción.
+FUENTE: Texto oficial publicado en Diario Oficial. Verificar versión vigente en minsalud.gov.co.
+
+CAMBIOS ESTRUCTURALES CLAVE:
+— Los 7 estándares de habilitación se mantienen con criterios actualizados.
+— Se agregan DOS NUEVAS CATEGORÍAS: Telemedicina (autónoma) y Régimen Diferencial.
+— Infraestructura incluye requisitos de infraestructura digital (TIC, conectividad).
+— Historia Clínica Electrónica (HCE) pasa de opcional a preferida; se exige interoperabilidad.
+— Nuevos códigos REPS para telemedicina y servicios diferenciados.
+— Verificación documental digital habilitada para Secretarías de Salud.
+
+ESTÁNDAR 1 — TALENTO HUMANO (Res. 1732/2026, Art. 10):
+Mantiene los requisitos de Res. 3100/2019 (RETHUS, perfiles por servicio, contratos) y agrega:
+1. PERFILES DE TELESALUD: Los profesionales que prestan servicios de telemedicina deben acreditar competencias en tecnologías de información en salud, además del perfil clínico habitual. El prestador debe documentar los perfiles para modalidad sincrónica, asincrónica y telemonitoreo.
+2. PERFILES EXTRAMURALES: Para servicios prestados fuera de la sede habilitada (domicilio, comunidades, eventos), se deben definir perfiles específicos de talento humano que garanticen la seguridad del paciente en condiciones de menor infraestructura.
+3. VERIFICACIÓN RETHUS ONLINE OBLIGATORIA: La verificación de la tarjeta profesional en RETHUS debe realizarse a través del portal oficial del MINSALUD (https://www.rethus.minsalud.gov.co) y el prestador debe conservar evidencia del resultado de la consulta. Ya no basta con tener copia física de la tarjeta.
+4. SUFICIENCIA DE TALENTO HUMANO: El prestador debe demostrar que cuenta con el personal SUFICIENTE para la carga asistencial proyectada, no solo que los contratos existen. Se evalúa la relación profesional/paciente según tipo de servicio.
+5. IDONEIDAD DEMOSTRADA: Para médicos especialistas, la idoneidad incluye evidencia de formación continua (mínimo 30 horas/año de educación médica continuada, verificables).
+
+ESTÁNDAR 7 — INTERDEPENDENCIA (Res. 1732/2026):
+Amplía las relaciones de interdependencia para incluir:
+— Servicios de telemedicina ↔ servicios presenciales: definir protocolos de referencia para casos que requieran atención física.
+— Servicio de telemedicina requiere respaldo presencial documentado para emergencias identificadas durante la teleconsulta.
+
+TELEMEDICINA — NUEVA CATEGORÍA AUTÓNOMA:
+Tres tipos reconocidos, cada uno con requisitos propios de habilitación:
+1. SINCRÓNICA: teleconsulta en tiempo real (video/audio). Requiere plataforma segura con cifrado, acuerdo de nivel de servicio (SLA) documentado, y protocolo de falla tecnológica.
+2. ASINCRÓNICA: intercambio diferido de información clínica (imágenes, reportes, segunda opinión). Requiere identificación segura del paciente y trazabilidad completa.
+3. TELEMONITOREO: seguimiento remoto de parámetros vitales. Requiere dispositivos certificados, protocolo de alertas y escalamiento.
+REPS: Se habilitan con nuevos códigos diferenciados — NO se habilitaban bajo los códigos de consulta externa tradicional.
+
+RÉGIMEN DIFERENCIAL — NUEVA CATEGORÍA:
+Aplica a: IPS rurales, IPS étnicas (resguardos, comunidades afrodescendientes), IPS fronterizas.
+Requisitos simplificados en infraestructura y dotación, adaptados al contexto geográfico y poblacional.
+Los 7 estándares se verifican con criterios diferenciales, definidos en el Anexo Técnico de la Res. 1732/2026.
+
+HISTORIA CLÍNICA (Estándar 6 — actualización 2026):
+— HCE (Historia Clínica Electrónica) es el formato preferido. Los prestadores que aún usan HC en papel deben tener plan de migración documentado.
+— Interoperabilidad REQUERIDA con el sistema de información nacional de salud (RNEC/SISPRO).
+— El sistema de HCE debe garantizar: log de auditoría de accesos, trazabilidad de modificaciones, firma electrónica del profesional, y disponibilidad 24/7.
+
+ACCIÓN INMEDIATA RECOMENDADA (hasta agosto 2027):
+1. Realizar autoevaluación comparativa entre criterios 3100/2019 y 1732/2026.
+2. Identificar brechas en: infraestructura digital, perfiles de telesalud, verificación RETHUS online.
+3. Documentar plan de actualización con fechas de cierre antes del 5 de agosto de 2027.
+4. No es necesario cambiar la inscripción REPS hasta el vencimiento del período de transición.
+
+NOTA CRÍTICA: Esta información se basa en el texto oficial de Res. 1732/2026 y el análisis interno de NormaLis (agosto 2026). Para interpretaciones específicas, consultar la Secretaría de Salud departamental o el Ministerio de Salud y Protección Social.`;
 
 function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin);

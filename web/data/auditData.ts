@@ -158,7 +158,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · Ley 23/1981 · Res. 2278/2021",
+      "norm": "Res. 1732/2026 Art. 10 (tr. hasta ago. 2027) · Res. 3100/2019 Est. 1 · RETHUS · Ley 23/1981",
       "q": [
         "¿Todos los profesionales de la salud que prestan servicios tienen tarjeta profesional vigente verificable en el RETHUS del Ministerio de Salud?",
         "¿Los médicos especialistas tienen su especialización reconocida y registrada en RETHUS correspondiente a los procedimientos que realizan?",
@@ -169,7 +169,11 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El establecimiento tiene plan de capacitación continua con registros de asistencia del último año: BLS/ACLS, bioseguridad y normativa vigente?",
         "¿El personal asistencial cuenta con carné de vacunación al día: Hepatitis B (esquema completo), tétanos y demás vacunas para riesgo biológico?",
         "¿Se realiza evaluación del desempeño del personal asistencial al menos una vez al año con registros y planes de mejoramiento documentados?",
-        "¿Existe protocolo para manejo de accidente de trabajo con material biológico (pinchazo, salpicadura) conocido por TODO el personal y con insumos disponibles?"
+        "¿Existe protocolo para manejo de accidente de trabajo con material biológico (pinchazo, salpicadura) conocido por TODO el personal y con insumos disponibles?",
+        "¿La verificación de la tarjeta profesional en RETHUS se realiza a través del portal oficial del MINSALUD (rethus.minsalud.gov.co) y se conserva evidencia impresa o digital del resultado de la consulta? (Res. 1732/2026 Art. 10 — ya no basta copia física de la tarjeta)",
+        "¿Si la IPS presta servicios de telemedicina, los profesionales asignados tienen documentados sus perfiles específicos para modalidad sincrónica, asincrónica o telemonitoreo, incluyendo competencias en tecnologías de información en salud? (Res. 1732/2026 Art. 10 — aplica solo a prestadores con telemedicina habilitada)",
+        "¿La IPS puede demostrar suficiencia de talento humano para su carga asistencial proyectada, mediante cálculo documentado de la relación profesional/paciente según tipo de servicio habilitado? (Res. 1732/2026 Art. 10 — no basta con que los contratos existan)",
+        "¿Los médicos especialistas acreditan educación médica continuada verificable (mínimo 30 horas/año) como evidencia de idoneidad demostrada, de acuerdo con el Estándar de Talento Humano de Res. 1732/2026 Art. 10?"
       ]
     },
     {

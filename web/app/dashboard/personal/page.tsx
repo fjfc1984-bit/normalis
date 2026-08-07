@@ -268,7 +268,24 @@ function PersonalCard({
             )}
           </div>
           <p className="text-xs text-gray-500 mt-0.5">{p.tipo} · {p.vinculacion}</p>
-          {p.tarjetaNum && <p className="text-xs text-gray-400">TP: {p.tarjetaNum}</p>}
+          {p.tarjetaNum && (
+            <p className="text-xs text-gray-400 flex items-center gap-1 flex-wrap">
+              TP: {p.tarjetaNum}
+              <a href={`https://www.rethus.minsalud.gov.co/Consultas/Registro`}
+                 target="_blank" rel="noopener noreferrer"
+                 className="text-teal-600 hover:text-teal-700 hover:underline font-medium ml-1"
+                 title="Verificar en RETHUS — Ministerio de Salud (Res. 1732/2026 Art. 10)">
+                Verificar RETHUS ↗
+              </a>
+            </p>
+          )}
+          {!p.tarjetaNum && (
+            <a href="https://www.rethus.minsalud.gov.co/Consultas/Registro"
+               target="_blank" rel="noopener noreferrer"
+               className="text-xs text-teal-600 hover:underline">
+              Consultar RETHUS ↗
+            </a>
+          )}
         </div>
         <ComplianceBadge pct={pct} />
       </div>
@@ -547,7 +564,7 @@ export default function PersonalPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <SectionHeader
         title="Talento Humano"
-        subtitle="Res. 3100/2019 Estándar 1 — Gestión del personal asistencial y administrativo"
+        subtitle="Res. 1732/2026 Art. 10 · Res. 3100/2019 Est. 1 — Gestión del personal asistencial y administrativo"
         actions={
           tab === 'personal' ? (
             <button
@@ -574,6 +591,23 @@ export default function PersonalPage() {
         <KpiCard label="Personal activo"     value={activos}   />
         <KpiCard label="Docs incompletos"    value={sinDocs}   colorClass={sinDocs > 0 ? 'text-amber-600' : 'text-green-700'} />
         <KpiCard label="Capacitaciones"      value={totalCap}  />
+      </div>
+
+      {/* Banner Res. 1732/2026 */}
+      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+        <span className="text-amber-500 text-lg mt-0.5 shrink-0">⚠️</span>
+        <div>
+          <p className="font-semibold text-amber-800">Res. 1732/2026 en vigor desde el 5 ago. 2026</p>
+          <p className="text-amber-700 mt-0.5">
+            La nueva norma exige <strong>verificación RETHUS online</strong> con evidencia conservada (no basta copia física de la tarjeta).
+            Período de transición hasta el <strong>5 agosto 2027</strong>.{' '}
+            <a href="https://www.rethus.minsalud.gov.co/Consultas/Registro"
+               target="_blank" rel="noopener noreferrer"
+               className="text-teal-700 underline font-medium">
+              Consultar RETHUS oficial ↗
+            </a>
+          </p>
+        </div>
       </div>
 
       <TabBar tabs={TABS} active={tab} onChange={setTab} />
