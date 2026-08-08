@@ -10,6 +10,8 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import AuthGuard from '@/components/auth/AuthGuard';
 import {
@@ -19,6 +21,7 @@ import {
   nivelBg,
   type EstandarRisk,
 } from '@/lib/useRiskAnalysis';
+import type { PamecDoc, PamecItem, PamecAccion } from '@/lib/pamecTypes';
 
 // ── Types PAMEC ───────────────────────────────────────────────────────────────
 interface PamecAccion {
@@ -103,6 +106,7 @@ function AnalisisRiesgoContent() {
   const [pamecLoading, setPamecLoading] = useState(false);
   const [pamecError,   setPamecError]  = useState<string>('');
   const [pamecOpen,    setPamecOpen]   = useState(false);
+  const [pamecSaved,   setPamecSaved]  = useState(false);
 
   const runAiAnalysis = useCallback(async () => {
     if (topRiesgo.length === 0) return;
@@ -192,8 +196,60 @@ function AnalisisRiesgoContent() {
       const data = await res.json() as { ok?: boolean; pamec?: PamecPlan; error?: string; raw?: string };
       if (!res.ok || !data.ok) {
         setPamecError(data.error ?? `Error ${res.status}`);
-      } else {
-        setPamecPlan(data.pamec ?? null);
+        return;
+      }
+
+      const pamecData = data.pamec;
+      if (!pamecData) { setPamecError('La IA no devolvió un plan válido.'); return; }
+      setPamecPlan(pamecData);
+
+      // ── Guardar en Firestore pamec/{nit} ──────────────────────────────
+      if (nit) {
+        try {
+          // Mapear hallazgos → PamecItem[]
+          const newItems: PamecItem[] = pamecData.hallazgos.map(h => ({
+            id:         crypto.randomUUID(),
+            proceso:    `[${h.estandar}] ${h.descripcion.slice(0, 100)}`,
+            indicador:  h.indicador_verificacion,
+            meta:       h.meta,
+            brecha:     h.causa_raiz,
+            prioridad:  (h.tipo === 'GRAVE' ? 'alta' : h.tipo === 'MODERADO' ? 'media' : 'baja') as PamecItem['prioridad'],
+            estado:     'pendiente' as const,
+            creadoEn:   new Date().toISOString(),
+          }));
+
+          // Mapear acciones → PamecAccion[] enlazadas a su item
+          const newAcciones: PamecAccion[] = pamecData.hallazgos.flatMap((h, i) =>
+            (h.acciones ?? []).map(a => ({
+              id:           crypto.randomUUID(),
+              itemId:       newItems[i]?.id ?? '',
+              descripcion:  a.descripcion,
+              responsable:  a.responsable ?? '',
+              fechaLimite:  a.fecha_fin ?? '',
+              estado:       'pendiente' as const,
+            }))
+          );
+
+          // Cargar doc existente y hacer APPEND (no sobreescribir trabajo manual)
+          const pamecRef = doc(db, 'pamec', nit);
+          const snap = await getDoc(pamecRef);
+          const existing = snap.exists() ? (snap.data() as PamecDoc) : null;
+
+          await setDoc(pamecRef, {
+            nit,
+            fase:      'plan',
+            items:     [...(existing?.items    ?? []), ...newItems],
+            acciones:  [...(existing?.acciones ?? []), ...newAcciones],
+            updatedAt: new Date().toISOString(),
+            _ts:       serverTimestamp(),
+          } satisfies Omit<PamecDoc, '_ts'> & { _ts: ReturnType<typeof serverTimestamp> }, { merge: false });
+
+          setPamecSaved(true);
+          setTimeout(() => setPamecSaved(false), 5000);
+        } catch (saveErr) {
+          // Error de guardado no es fatal — el plan sigue visible en pantalla
+          console.error('[PAMEC] Error guardando en Firestore:', saveErr);
+        }
       }
     } catch (err) {
       setPamecError(`Error de red: ${String(err)}`);
@@ -484,6 +540,25 @@ function AnalisisRiesgoContent() {
 
           {pamecOpen && (
             <div className="border-t border-teal-100">
+              {/* Toast guardado */}
+              {pamecSaved && (
+                <div className="mx-5 mt-4 flex items-center gap-3 bg-emerald-50 border border-emerald-200
+                                rounded-xl px-4 py-3 text-sm text-emerald-800">
+                  <span className="text-lg">✅</span>
+                  <div className="flex-1">
+                    <span className="font-semibold">PAMEC guardado en el módulo.</span>
+                    {' '}Los hallazgos y acciones ya están disponibles para editar y hacer seguimiento.
+                  </div>
+                  <Link
+                    href="/dashboard/pamec"
+                    className="shrink-0 text-xs font-bold text-emerald-700 hover:underline border border-emerald-300
+                               bg-white rounded-lg px-3 py-1.5"
+                  >
+                    Ir al módulo PAMEC →
+                  </Link>
+                </div>
+              )}
+
               {/* Estado vacío */}
               {!pamecPlan && !pamecLoading && !pamecError && (
                 <div className="text-center py-10 px-6">
