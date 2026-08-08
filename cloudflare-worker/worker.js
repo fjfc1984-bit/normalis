@@ -1150,9 +1150,7 @@ HALLAZGO ${i + 1}:
 - Descripción del incumplimiento: ${h.descripcion || ''}
 - Tipo: ${h.tipo || 'No especificado'} (GRAVE / MODERADO / LEVE)
 - Causa raíz identificada: ${h.causaRaiz || 'Por determinar'}
-`.trim()).join('
-
-');
+`.trim()).join('\n\n');
 
   const pamecPrompt = `Eres un experto en calidad y habilitación de servicios de salud en Colombia (Res. 1732/2026 y Res. 3100/2019).
 
