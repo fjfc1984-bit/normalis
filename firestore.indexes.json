@@ -1,6 +1,54 @@
 {
   "indexes": [
     {
+      "collectionGroup": "capas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "nit",           "order": "ASCENDING" },
+        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "capas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid",           "order": "ASCENDING" },
+        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "vencimientos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "nit",        "order": "ASCENDING" },
+        { "fieldPath": "fechaLimite","order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "vencimientos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid",        "order": "ASCENDING" },
+        { "fieldPath": "fechaLimite","order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "indicadores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "nit",  "order": "ASCENDING" },
+        { "fieldPath": "fecha","order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "indicadores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid",  "order": "ASCENDING" },
+        { "fieldPath": "fecha","order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "personal",
       "queryScope": "COLLECTION",
       "fields": [

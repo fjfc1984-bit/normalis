@@ -13,6 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db as fbDb } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { useCapas } from '@/lib/useCapas';
+import AuthGuard from '@/components/auth/AuthGuard';
 import CapaForm from '../CapaForm';
 import type { Capa, CapaFormData } from '@/lib/capaTypes';
 import { CAPA_ESTADO_CFG, CAPA_ORIGEN_LABELS } from '@/lib/capaTypes';
@@ -99,7 +100,7 @@ function CapaReadOnly({ capa }: { capa: Capa }) {
 // ════════════════════════════════════════════════
 //  Página principal [id]
 // ════════════════════════════════════════════════
-export default function EditCapaPage({ params }: { params: Promise<{ id: string }> }) {
+function EditCapaContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router  = useRouter();
   const { user, nit } = useAuth();
@@ -239,5 +240,13 @@ export default function EditCapaPage({ params }: { params: Promise<{ id: string 
         />
       )}
     </div>
+  );
+}
+
+export default function EditCapaPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <AuthGuard>
+      <EditCapaContent params={params} />
+    </AuthGuard>
   );
 }

@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useCapas } from '@/lib/useCapas';
+import AuthGuard from '@/components/auth/AuthGuard';
+import { LoadingSpinner } from '@/components/ui';
 import CapaForm from '../CapaForm';
 import type { CapaFormData } from '@/lib/capaTypes';
 import { CAPA_EMPTY_FORM } from '@/lib/capaTypes';
@@ -21,9 +23,9 @@ function defaultFechaLimite(): string {
   return d.toISOString().split('T')[0];
 }
 
-export default function NuevaCapaPage() {
+function NuevaCapaContent() {
   const router = useRouter();
-  const { user, nit } = useAuth();
+  const { user, nit, loading: authLoading } = useAuth();
   const { createCapa } = useCapas(user?.uid ?? null, nit || null);
 
   const [saving, setSaving] = useState(false);
@@ -34,15 +36,22 @@ export default function NuevaCapaPage() {
     fechaLimite: defaultFechaLimite(),
   };
 
+  // Esperar a que auth cargue — evita el `if (!user) return` silencioso
+  if (authLoading) return <LoadingSpinner fullHeight />;
+
   async function handleSubmit(data: CapaFormData) {
-    if (!user) return;
+    if (!user) {
+      setError('Sesión no disponible. Recarga la página e intenta de nuevo.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      await createCapa(data, user.uid, nit ?? '');
+      await createCapa(data, user.uid, nit || '');
       router.push('/dashboard/capas');
     } catch (e) {
-      setError(`Error al crear la CAPA: ${e instanceof Error ? e.message : String(e)}`);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(`Error al crear la CAPA: ${msg}`);
       setSaving(false);
     }
   }
@@ -70,5 +79,13 @@ export default function NuevaCapaPage() {
         submitLabel="Crear CAPA"
       />
     </div>
+  );
+}
+
+export default function NuevaCapaPage() {
+  return (
+    <AuthGuard>
+      <NuevaCapaContent />
+    </AuthGuard>
   );
 }
