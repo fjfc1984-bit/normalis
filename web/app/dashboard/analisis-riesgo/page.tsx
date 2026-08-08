@@ -5,7 +5,7 @@
  *
  * Motor de análisis predictivo de riesgo normativo.
  * Agrega hallazgos de TODOS los segmentos auditados → ranking por los 7
- * Estándares de Res. 3100/2019 → análisis narrativo vía Worker IA.
+ * Estándares de Res. 1732/2026 → análisis narrativo + PAMEC vía Worker IA.
  */
 
 import { useState, useCallback } from 'react';
@@ -20,7 +20,36 @@ import {
   type EstandarRisk,
 } from '@/lib/useRiskAnalysis';
 
-const WORKER_URL = 'https://normalis.fjfc1984.workers.dev';
+// ── Types PAMEC ───────────────────────────────────────────────────────────────
+interface PamecAccion {
+  num:         number;
+  descripcion: string;
+  responsable: string;
+  fecha_inicio: string;
+  fecha_fin:   string;
+  recursos:    string;
+}
+interface PamecHallazgo {
+  num:                    number;
+  estandar:               string;
+  criterio:               string;
+  descripcion:            string;
+  tipo:                   string;
+  causa_raiz:             string;
+  acciones:               PamecAccion[];
+  indicador_verificacion: string;
+  meta:                   string;
+  seguimiento:            string;
+}
+interface PamecPlan {
+  ips_nombre:         string;
+  fecha_generacion:   string;
+  hallazgos:          PamecHallazgo[];
+  responsable_pamec:  string;
+  periodo_vigencia:   string;
+}
+
+const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? 'https://normalis.fjfc1984.workers.dev';
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 function NivelBadge({ nivel }: { nivel: EstandarRisk['nivel'] }) {
@@ -69,6 +98,12 @@ function AnalisisRiesgoContent() {
   const [aiError,     setAiError]     = useState<string>('');
   const [expanded,    setExpanded]    = useState<string | null>(null);
 
+  // ── PAMEC state ──────────────────────────────────────────────────────────
+  const [pamecPlan,    setPamecPlan]   = useState<PamecPlan | null>(null);
+  const [pamecLoading, setPamecLoading] = useState(false);
+  const [pamecError,   setPamecError]  = useState<string>('');
+  const [pamecOpen,    setPamecOpen]   = useState(false);
+
   const runAiAnalysis = useCallback(async () => {
     if (topRiesgo.length === 0) return;
     setAiLoading(true);
@@ -100,6 +135,72 @@ function AnalisisRiesgoContent() {
       setAiLoading(false);
     }
   }, [topRiesgo, nombre, resolvedUid, nit]);
+
+  const generatePamec = useCallback(async () => {
+    if (!user || estandares.every(e => e.nivel === 'sin datos')) return;
+    setPamecLoading(true);
+    setPamecError('');
+    setPamecPlan(null);
+    setPamecOpen(true);
+
+    // Obtener token Firebase
+    let idToken = '';
+    try {
+      idToken = await (user as import('firebase/auth').User).getIdToken();
+    } catch {
+      setPamecError('No se pudo obtener el token de autenticación.');
+      setPamecLoading(false);
+      return;
+    }
+
+    // Convertir no-conformidades top → hallazgos PAMEC (máx 6)
+    const tipoMap: Record<EstandarRisk['nivel'], string> = {
+      alto: 'GRAVE', moderado: 'MODERADO', bajo: 'LEVE', 'sin datos': 'LEVE',
+    };
+    const hallazgos = estandares
+      .filter(e => e.nivel !== 'sin datos' && e.nonConfs.length > 0)
+      .slice(0, 6)
+      .map(e => ({
+        estandar:    e.label,
+        criterio:    e.criterio,
+        descripcion: e.nonConfs[0]?.question?.slice(0, 200) ?? 'Incumplimiento detectado',
+        tipo:        tipoMap[e.nivel],
+        causaRaiz:   e.nonConfs[0]?.answer === 'no'
+          ? 'Criterio no implementado — se requiere acción inmediata'
+          : 'Cumplimiento parcial — proceso en transición o documentación incompleta',
+      }));
+
+    if (hallazgos.length === 0) {
+      setPamecError('No hay hallazgos con no-conformidades para generar el PAMEC.');
+      setPamecLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${WORKER_URL}/api/pamec`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          hallazgos,
+          context: { ips_nombre: nombre ?? 'IPS', nit: nit ?? '' },
+        }),
+      });
+
+      const data = await res.json() as { ok?: boolean; pamec?: PamecPlan; error?: string; raw?: string };
+      if (!res.ok || !data.ok) {
+        setPamecError(data.error ?? `Error ${res.status}`);
+      } else {
+        setPamecPlan(data.pamec ?? null);
+      }
+    } catch (err) {
+      setPamecError(`Error de red: ${String(err)}`);
+    } finally {
+      setPamecLoading(false);
+    }
+  }, [user, estandares, nombre, nit]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
@@ -337,6 +438,209 @@ function AnalisisRiesgoContent() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* PAMEC block */}
+      {estandares.some(e => e.nivel !== 'sin datos' && e.nonConfs.length > 0) && (
+        <div className="bg-white rounded-2xl border border-teal-200 shadow-sm overflow-hidden">
+          <button
+            onClick={() => setPamecOpen(o => !o)}
+            className="w-full px-5 py-4 flex items-center justify-between gap-3 hover:bg-teal-50 transition-colors"
+          >
+            <div className="text-left">
+              <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                📋 Plan de Acción y Mejora — PAMEC
+                {pamecPlan && (
+                  <span className="text-[10px] bg-teal-100 text-teal-700 font-bold px-2 py-0.5 rounded-full">
+                    {pamecPlan.hallazgos.length} hallazgo{pamecPlan.hallazgos.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Genera automáticamente el Plan de Superación de Hallazgos (Res. 1732/2026)
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={e => { e.stopPropagation(); generatePamec(); }}
+                disabled={pamecLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-xs
+                           font-semibold rounded-lg hover:bg-teal-700 disabled:opacity-60
+                           disabled:cursor-not-allowed transition-colors shadow-sm"
+              >
+                {pamecLoading ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generando…
+                  </>
+                ) : (
+                  <>📋 {pamecPlan ? 'Regenerar' : 'Generar PAMEC'}</>
+                )}
+              </button>
+              <span className="text-gray-300 text-sm">{pamecOpen ? '▲' : '▼'}</span>
+            </div>
+          </button>
+
+          {pamecOpen && (
+            <div className="border-t border-teal-100">
+              {/* Estado vacío */}
+              {!pamecPlan && !pamecLoading && !pamecError && (
+                <div className="text-center py-10 px-6">
+                  <p className="text-4xl mb-3">📋</p>
+                  <p className="text-sm text-gray-500 max-w-sm mx-auto">
+                    Haz clic en <strong>Generar PAMEC</strong> para obtener un Plan de Acción
+                    y Mejoramiento estructurado con acciones, responsables y plazos según
+                    los {totalNonConfs} hallazgos de tus auditorías.
+                  </p>
+                </div>
+              )}
+
+              {/* Loading */}
+              {pamecLoading && (
+                <div className="flex items-center gap-3 py-10 justify-center">
+                  <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm text-gray-500">Generando plan PAMEC con IA normativa…</p>
+                </div>
+              )}
+
+              {/* Error */}
+              {pamecError && !pamecLoading && (
+                <div className="m-5 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                  {pamecError}
+                  <button
+                    onClick={generatePamec}
+                    className="ml-3 text-red-600 underline text-xs"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+
+              {/* Plan PAMEC */}
+              {pamecPlan && !pamecLoading && (
+                <div className="p-5 space-y-5">
+                  {/* Header info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3
+                                  bg-teal-50 border border-teal-100 rounded-xl px-4 py-3 text-xs">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <span className="text-gray-600">
+                        <span className="font-semibold text-gray-800">IPS:</span> {pamecPlan.ips_nombre}
+                      </span>
+                      <span className="text-gray-600">
+                        <span className="font-semibold text-gray-800">Fecha:</span> {pamecPlan.fecha_generacion}
+                      </span>
+                      <span className="text-gray-600">
+                        <span className="font-semibold text-gray-800">Vigencia:</span> {pamecPlan.periodo_vigencia}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => window.print()}
+                      className="text-teal-700 border border-teal-300 bg-white px-3 py-1.5 rounded-lg
+                                 hover:bg-teal-50 transition-colors font-medium"
+                    >
+                      🖨️ Imprimir / PDF
+                    </button>
+                  </div>
+
+                  {/* Hallazgos */}
+                  <div className="space-y-4">
+                    {pamecPlan.hallazgos.map((h, idx) => {
+                      const tipoCfg = {
+                        GRAVE:    { bg: 'bg-red-50 border-red-200',    badge: 'bg-red-100 text-red-700',    icon: '🔴' },
+                        MODERADO: { bg: 'bg-amber-50 border-amber-200', badge: 'bg-amber-100 text-amber-700', icon: '🟡' },
+                        LEVE:     { bg: 'bg-blue-50 border-blue-200',   badge: 'bg-blue-100 text-blue-700',   icon: '🔵' },
+                      } as Record<string, { bg: string; badge: string; icon: string }>;
+                      const cfg = tipoCfg[h.tipo] ?? tipoCfg['LEVE'];
+
+                      return (
+                        <div key={idx} className={`rounded-xl border p-4 ${cfg.bg}`}>
+                          {/* Hallazgo header */}
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-xs font-black text-gray-500">#{h.num}</span>
+                                <span className="text-sm font-bold text-gray-800">{h.estandar}</span>
+                                <span className="text-xs text-gray-500">{h.criterio}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>
+                                  {cfg.icon} {h.tipo}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-700 leading-relaxed">{h.descripcion}</p>
+                            </div>
+                          </div>
+
+                          {/* Causa raíz */}
+                          <div className="mb-3">
+                            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                              Causa raíz
+                            </p>
+                            <p className="text-xs text-gray-700">{h.causa_raiz}</p>
+                          </div>
+
+                          {/* Acciones */}
+                          <div className="mb-3">
+                            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                              Acciones de mejora
+                            </p>
+                            <div className="space-y-2">
+                              {h.acciones.map((a, ai) => (
+                                <div key={ai} className="bg-white/70 rounded-lg p-3 border border-black/5">
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-[10px] font-black text-gray-400 mt-0.5 shrink-0">
+                                      A{a.num}
+                                    </span>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-gray-800 mb-1">{a.descripcion}</p>
+                                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-gray-500">
+                                        <span>👤 {a.responsable}</span>
+                                        <span>📅 {a.fecha_inicio} → {a.fecha_fin}</span>
+                                        {a.recursos && <span>🔧 {a.recursos}</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Indicador + Meta */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="bg-white/70 rounded-lg p-3 border border-black/5">
+                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                Indicador de verificación
+                              </p>
+                              <p className="text-xs text-gray-700">{h.indicador_verificacion}</p>
+                            </div>
+                            <div className="bg-white/70 rounded-lg p-3 border border-black/5">
+                              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                Meta / Seguimiento
+                              </p>
+                              <p className="text-xs text-gray-700">{h.meta}</p>
+                              {h.seguimiento && (
+                                <p className="text-[10px] text-gray-500 mt-1">{h.seguimiento}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer PAMEC */}
+                  <div className="flex items-center justify-between border-t border-teal-100 pt-4 text-xs text-gray-500">
+                    <span>Responsable PAMEC: <strong className="text-gray-700">{pamecPlan.responsable_pamec}</strong></span>
+                    <Link
+                      href="/dashboard/capas"
+                      className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
+                    >
+                      Convertir acciones en CAPAs →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

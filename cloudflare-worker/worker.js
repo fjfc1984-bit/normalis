@@ -1093,6 +1093,159 @@ async function handleAreas(request, cors) {
 }
 
 
+// ── /api/pamec handler ───────────────────────────────────────────────────────
+async function handlePamec(request, env, cors) {
+  // 1. Auth
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), {
+      status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+  try {
+    const fbRes = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }) }
+    );
+    if (!fbRes.ok) {
+      return new Response(JSON.stringify({ error: 'Token inválido' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    const fbData = await fbRes.json();
+    if (!fbData.users || fbData.users.length === 0) {
+      return new Response(JSON.stringify({ error: 'Usuario no encontrado' }), {
+        status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+  } catch {
+    return new Response(JSON.stringify({ error: 'Error verificando token' }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // 2. Parsear body
+  let body;
+  try { body = await request.json(); } catch {
+    return new Response(JSON.stringify({ error: 'JSON inválido' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const { hallazgos, context } = body || {};
+  if (!Array.isArray(hallazgos) || hallazgos.length === 0) {
+    return new Response(JSON.stringify({ error: 'Campo "hallazgos" requerido (array no vacío)' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+  const ips_nombre = context?.ips_nombre || 'IPS';
+  const nit        = context?.nit        || '';
+
+  // 3. Construir prompt PAMEC
+  const hallazgosTexto = hallazgos.map((h, i) => `
+HALLAZGO ${i + 1}:
+- Estándar / Criterio: ${h.estandar || ''} — ${h.criterio || ''}
+- Descripción del incumplimiento: ${h.descripcion || ''}
+- Tipo: ${h.tipo || 'No especificado'} (GRAVE / MODERADO / LEVE)
+- Causa raíz identificada: ${h.causaRaiz || 'Por determinar'}
+`.trim()).join('
+
+');
+
+  const pamecPrompt = `Eres un experto en calidad y habilitación de servicios de salud en Colombia (Res. 1732/2026 y Res. 3100/2019).
+
+La IPS "${ips_nombre}"${nit ? ` (NIT: ${nit})` : ''} realizó una auditoría interna de habilitación y encontró los siguientes hallazgos de incumplimiento:
+
+${hallazgosTexto}
+
+Genera un Plan de Acción y Mejoramiento (PAMEC / Plan de Superación de Hallazgos) estructurado en JSON con el siguiente formato EXACTO:
+
+{
+  "ips_nombre": "${ips_nombre}",
+  "fecha_generacion": "AAAA-MM-DD",
+  "hallazgos": [
+    {
+      "num": 1,
+      "estandar": "Nombre del estándar",
+      "criterio": "Código y descripción breve del criterio",
+      "descripcion": "Descripción del hallazgo",
+      "tipo": "GRAVE|MODERADO|LEVE",
+      "causa_raiz": "Causa raíz identificada",
+      "acciones": [
+        {
+          "num": 1,
+          "descripcion": "Descripción concreta de la acción de mejora",
+          "responsable": "Cargo del responsable",
+          "fecha_inicio": "AAAA-MM-DD",
+          "fecha_fin": "AAAA-MM-DD",
+          "recursos": "Recursos necesarios"
+        }
+      ],
+      "indicador_verificacion": "Indicador medible para verificar el cumplimiento",
+      "meta": "Meta cuantificable (ej: 100% de registros actualizados)",
+      "seguimiento": "Mecanismo de seguimiento y verificación"
+    }
+  ],
+  "responsable_pamec": "Coordinador de Calidad",
+  "periodo_vigencia": "6 meses desde la fecha de generación"
+}
+
+INSTRUCCIONES:
+- Para hallazgos GRAVES: mínimo 4 acciones, plazos máx. 3 meses
+- Para hallazgos MODERADOS: mínimo 3 acciones, plazos máx. 4 meses  
+- Para hallazgos LEVES: mínimo 2 acciones, plazos máx. 6 meses
+- Las fechas inicio/fin deben ser realistas (inicio: hoy, fin: según gravedad)
+- Los indicadores deben ser medibles y verificables
+- Usa terminología oficial colombiana de habilitación (Res. 1732/2026)
+- Responde ÚNICAMENTE con el JSON válido, sin texto adicional antes ni después`;
+
+  // 4. Llamar Workers AI
+  if (!env.AI) {
+    return new Response(JSON.stringify({ error: 'Binding AI no disponible' }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  let aiText = '';
+  try {
+    const aiResponse = await env.AI.run('@cf/meta/llama-3.1-8b-instruct-fp8', {
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: pamecPrompt },
+      ],
+      max_tokens: 4096,
+      temperature: 0.3,
+    });
+    aiText = aiResponse?.response || aiResponse?.result?.response || '';
+  } catch (e) {
+    return new Response(JSON.stringify({ error: 'Error en Workers AI', detail: String(e) }), {
+      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // 5. Extraer JSON de la respuesta
+  let pamecData;
+  try {
+    // Buscar bloque JSON en la respuesta (puede venir con texto adicional)
+    const jsonMatch = aiText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No se encontró JSON en la respuesta');
+    pamecData = JSON.parse(jsonMatch[0]);
+  } catch (e) {
+    // Si falla el parse, devolver la respuesta cruda para debugging
+    return new Response(JSON.stringify({ error: 'Error parseando respuesta AI', raw: aiText }), {
+      status: 422, headers: { ...cors, 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ ok: true, pamec: pamecData }), {
+    status: 200,
+    headers: { ...cors, 'Content-Type': 'application/json' },
+  });
+}
+
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // EMAIL SERVICE — Resend API (server-side, clave nunca expuesta al cliente)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1754,6 +1907,11 @@ export default {
     // ── GET /api/areas — datos de auditoría (requiere auth) ──────────────────
     if (request.method === 'GET' && url.pathname === '/api/areas') {
       return handleAreas(request, cors);
+    }
+
+    // ── POST /api/pamec — generación de Plan de Acción y Mejora (PAMEC) ────────
+    if (request.method === 'POST' && url.pathname === '/api/pamec') {
+      return handlePamec(request, env, cors);
     }
 
     // ── POST /email — envío de emails via Resend (server-side) ───────────────
