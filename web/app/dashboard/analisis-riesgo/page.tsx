@@ -23,36 +23,50 @@ import {
 } from '@/lib/useRiskAnalysis';
 import type { PamecDoc, PamecItem, PamecAccion } from '@/lib/pamecTypes';
 
-// ── Types PAMEC ───────────────────────────────────────────────────────────────
-interface PamecAccion {
-  num:         number;
-  descripcion: string;
-  responsable: string;
+// ── Types PAMEC (estructura retornada por la IA — distinta de PamecAccion de Firestore) ──
+interface AIAccion {
+  num:          number;
+  descripcion:  string;
+  responsable:  string;
   fecha_inicio: string;
-  fecha_fin:   string;
-  recursos:    string;
+  fecha_fin:    string;
+  recursos:     string;
 }
-interface PamecHallazgo {
+interface AIHallazgo {
   num:                    number;
   estandar:               string;
   criterio:               string;
   descripcion:            string;
   tipo:                   string;
   causa_raiz:             string;
-  acciones:               PamecAccion[];
+  acciones:               AIAccion[];
   indicador_verificacion: string;
   meta:                   string;
   seguimiento:            string;
 }
-interface PamecPlan {
+interface AIPamecPlan {
   ips_nombre:         string;
   fecha_generacion:   string;
-  hallazgos:          PamecHallazgo[];
+  hallazgos:          AIHallazgo[];
   responsable_pamec:  string;
   periodo_vigencia:   string;
 }
 
 const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? 'https://normalis.fjfc1984.workers.dev';
+
+/** Construye la URL de /capas/nueva pre-llenada con datos del PAMEC */
+function buildCapaUrl(h: AIHallazgo, a: AIAccion): string {
+  const params = new URLSearchParams({
+    descripcion:      h.descripcion.slice(0, 500),
+    causaRaiz:        h.causa_raiz,
+    accionCorrectiva: a.descripcion,
+    responsable:      a.responsable,
+    fechaLimite:      a.fecha_fin,
+    area:             `${h.estandar}${h.criterio ? ` · ${h.criterio}` : ''}`,
+    origen:           'pamec',
+  });
+  return `/dashboard/capas/nueva?${params.toString()}`;
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 function NivelBadge({ nivel }: { nivel: EstandarRisk['nivel'] }) {
@@ -102,7 +116,7 @@ function AnalisisRiesgoContent() {
   const [expanded,    setExpanded]    = useState<string | null>(null);
 
   // ── PAMEC state ──────────────────────────────────────────────────────────
-  const [pamecPlan,    setPamecPlan]   = useState<PamecPlan | null>(null);
+  const [pamecPlan,    setPamecPlan]   = useState<AIPamecPlan | null>(null);
   const [pamecLoading, setPamecLoading] = useState(false);
   const [pamecError,   setPamecError]  = useState<string>('');
   const [pamecOpen,    setPamecOpen]   = useState(false);
@@ -193,7 +207,7 @@ function AnalisisRiesgoContent() {
         }),
       });
 
-      const data = await res.json() as { ok?: boolean; pamec?: PamecPlan; error?: string; raw?: string };
+      const data = await res.json() as { ok?: boolean; pamec?: AIPamecPlan; error?: string; raw?: string };
       if (!res.ok || !data.ok) {
         setPamecError(data.error ?? `Error ${res.status}`);
         return;
@@ -667,10 +681,19 @@ function AnalisisRiesgoContent() {
                                     </span>
                                     <div className="flex-1">
                                       <p className="text-xs text-gray-800 mb-1">{a.descripcion}</p>
-                                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-gray-500">
+                                      <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-[10px] text-gray-500">
                                         <span>👤 {a.responsable}</span>
                                         <span>📅 {a.fecha_inicio} → {a.fecha_fin}</span>
                                         {a.recursos && <span>🔧 {a.recursos}</span>}
+                                        <Link
+                                          href={buildCapaUrl(h, a)}
+                                          className="ml-auto shrink-0 inline-flex items-center gap-1 px-2.5 py-1
+                                                     bg-teal-50 border border-teal-200 text-teal-700 rounded-lg
+                                                     hover:bg-teal-100 hover:border-teal-400 transition-colors
+                                                     text-[10px] font-semibold"
+                                        >
+                                          + Crear CAPA
+                                        </Link>
                                       </div>
                                     </div>
                                   </div>
@@ -706,10 +729,10 @@ function AnalisisRiesgoContent() {
                   <div className="flex items-center justify-between border-t border-teal-100 pt-4 text-xs text-gray-500">
                     <span>Responsable PAMEC: <strong className="text-gray-700">{pamecPlan.responsable_pamec}</strong></span>
                     <Link
-                      href="/dashboard/capas"
+                      href="/dashboard/pamec"
                       className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
                     >
-                      Convertir acciones en CAPAs →
+                      Ver módulo PAMEC →
                     </Link>
                   </div>
                 </div>
@@ -720,18 +743,7 @@ function AnalisisRiesgoContent() {
       )}
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Link
-          href="/dashboard/capas"
-          className="bg-white border border-gray-200 rounded-xl p-4 hover:border-teal-400
-                     hover:shadow-sm transition-all flex items-center gap-3"
-        >
-          <span className="text-2xl">📝</span>
-          <div>
-            <p className="text-sm font-semibold text-gray-800">Plan de mejoramiento</p>
-            <p className="text-xs text-gray-400">Crear CAPAs desde hallazgos</p>
-          </div>
-        </Link>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Link
           href="/dashboard/auditoria"
           className="bg-white border border-gray-200 rounded-xl p-4 hover:border-teal-400
