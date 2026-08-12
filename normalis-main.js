@@ -4689,7 +4689,6 @@ var _nlModuleMap = {
   sst:    { src: 'normalis-sst.js?v=20260717',    init: function(){ if(typeof renderSST==='function') renderSST(); } },
   pamec:  { src: 'normalis-pamec.js?v=20260717',  init: function(){ if(typeof renderPamecModule==='function') renderPamecModule(); } },
   docs:   { src: 'normalis-docs.js?v=20260717',   init: null },
-  export: { src: 'normalis-export.js?v=20260717', init: null },
 };
 
 function nlLazyLoad(mod, cb) {

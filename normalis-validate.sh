@@ -55,7 +55,6 @@ CRITICAL_FILES=(
   "normalis-automations.js"
   "normalis-sst.js"
   "normalis-plans.js"
-  "normalis-checklist.js"
   "normalis-multiusuario.js"
   "normalis-main.js"
 )
@@ -100,7 +99,6 @@ declare -A MIN_SIZES=(
   ["normalis-automations.js"]=3000
   ["normalis-sst.js"]=50000
   ["normalis-plans.js"]=3000
-  ["normalis-checklist.js"]=5000
   ["normalis-multiusuario.js"]=5000
   ["normalis-styles.css"]=30000
   ["normativa-app-v2.html"]=150000
@@ -147,7 +145,6 @@ declare -A SEALS=(
   ["normalis-automations.js"]="END:normalis-automations.js"
   ["normalis-sst.js"]="END:normalis-sst.js"
   ["normalis-plans.js"]="END:normalis-plans.js"
-  ["normalis-checklist.js"]="END:normalis-checklist.js"
   ["normalis-multiusuario.js"]="END:normalis-multiusuario.js"
   ["normalis-styles.css"]="END:normalis-styles.css"
   ["normalis-main.js"]="END:normalis-main.js"
@@ -212,7 +209,7 @@ if [[ -f "$APP" ]]; then
   )
   # normalis-docs.js y normalis-sst.js son lazy-loaded desde normalis-main.js — no tienen <script src> directo
   # Módulos que se cargan de forma lazy (via nlLazyLoad) en vez de <script src>
-  LAZY_MODULES=("normalis-sst.js" "normalis-pamec.js" "normalis-docs.js" "normalis-export.js")
+  LAZY_MODULES=("normalis-sst.js" "normalis-pamec.js" "normalis-docs.js")
   for mod in "${MODULES[@]}"; do
     # Verificar si es módulo lazy: acepta tanto <script src> como comentario lazy: o referencia en nlLazyLoad
     is_lazy=false
@@ -280,10 +277,9 @@ declare -A CRITICAL_FUNCTIONS=(
   ["xaiResponder"]="normalis-firestore.js"
   # tour
   ["startNormalisTour"]="normalis-tour.js"
-  # checklist
-  ["cargarChecklist"]="normalis-checklist.js"
-  ["_renderChecklist"]="normalis-checklist.js"
-  ["registrarRespuestaChecklist"]="normalis-checklist.js"
+  # crosswalk
+  ["initCrosswalk"]="normalis-crosswalk.js"
+  ["renderCrosswalk"]="normalis-crosswalk.js"
   # multiusuario
   ["renderEquipoIPS"]="normalis-multiusuario.js"
   ["_escH"]="normalis-multiusuario.js"
