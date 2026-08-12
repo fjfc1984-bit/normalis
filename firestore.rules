@@ -134,8 +134,10 @@ service cloud.firestore {
         isAdmin()
       );
 
+      // Al crear: el uid y el nit del documento deben ser los del usuario real
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
@@ -155,7 +157,8 @@ service cloud.firestore {
       );
 
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
@@ -176,7 +179,8 @@ service cloud.firestore {
       );
 
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
@@ -187,14 +191,23 @@ service cloud.firestore {
 
     // ════════════════════════════════════════════════════════════════════════
     // invitaciones/{code} — sistema de invitaciones de equipo IPS
+    // Solo visible para miembros de la misma IPS o el invitado por email
     // ════════════════════════════════════════════════════════════════════════
     match /invitaciones/{code} {
-      allow read: if isAuthenticated();
+      // Leer: solo el creador, miembros del mismo NIT, el invitado por email, o admin
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.creadoPor == request.auth.uid ||
+        resource.data.email == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email ||
+        sameNIT(resource.data.nit)
+      );
 
       allow create: if isAuthenticated() &&
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in
           ['cliente', 'piloto', 'admin'] &&
-        request.resource.data.creadoPor == request.auth.uid;
+        request.resource.data.creadoPor == request.auth.uid &&
+        // El NIT de la invitación debe coincidir con el NIT del creador
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update: if isAuthenticated() &&
         (resource.data.creadoPor == request.auth.uid || isAdmin() ||
@@ -230,9 +243,19 @@ service cloud.firestore {
 
     // ════════════════════════════════════════════════════════════════════════
     // normalis_orgs/{orgId} — sincronización secundaria (normalis-main.js)
+    // orgId = NIT de la IPS — solo accesible para miembros del mismo NIT o admin
     // ════════════════════════════════════════════════════════════════════════
     match /normalis_orgs/{orgId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == orgId ||
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit_ips == orgId
+      );
+      allow write: if isAuthenticated() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == orgId ||
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit_ips == orgId
+      );
     }
 
     // ════════════════════════════════════════════════════════════════════════
