@@ -219,6 +219,7 @@ function nav(id){
   if(id==='capa'){setTimeout(()=>{try{renderCAPAs();}catch(e){console.warn('capa',e);}},80);}
   if(id==='indicadores'){setTimeout(()=>{try{renderIndicadores();}catch(e){console.warn('indicadores',e);}},80);}
   if(id==='equipo'){setTimeout(()=>{try{renderEquipoIPS();}catch(e){console.warn('equipo',e);}},80);}
+  if(id==='crosswalk'){setTimeout(()=>{try{initCrosswalk();}catch(e){console.warn('crosswalk',e);}},80);}
   // Log navigation (skip high-frequency nav items to keep log meaningful)
   if(typeof logActivity==='function' && !['dashboard','actividad'].includes(id)){
     logActivity('nav', id, viewTitles[id]?viewTitles[id][0]:'');
