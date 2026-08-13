@@ -1,0 +1,282 @@
+'use client';
+
+/**
+ * web/app/dashboard/firma/page.tsx
+ * Módulo Firma y Versiones — firma digital de documentos institucionales
+ * Base legal: Res. 3100/2019 — Procesos Prioritarios Est. 5 y normas referenciadas
+ */
+
+import { useState } from 'react';
+import { useAuth } from '@/lib/auth';
+import { useFirma, FIRMA_CATALOGO } from '@/lib/useFirma';
+import type { FirmaDoc, FirmaDocId } from '@/lib/useFirma';
+import {
+  SectionHeader, LoadingSpinner, Toast, useToast,
+  KpiCard, ConfirmModal,
+} from '@/components/ui';
+
+// ── CSS ───────────────────────────────────────────────────────────────────────
+
+const INPUT = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white';
+const LABEL = 'block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1';
+const BTN_P = 'px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors';
+const BTN_S = 'px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-lg transition-colors';
+
+// ── Modal de firma ────────────────────────────────────────────────────────────
+
+function FirmaModal({
+  doc: fdoc,
+  directorDefault,
+  onSave,
+  onClose,
+}: {
+  doc:            FirmaDoc;
+  directorDefault: string;
+  onSave:         (firmante: string) => Promise<void>;
+  onClose:        () => void;
+}) {
+  const [firmante, setFirmante] = useState(directorDefault);
+  const [saving,   setSaving]   = useState(false);
+  const cat = FIRMA_CATALOGO.find(c => c.id === fdoc.id)!;
+
+  async function handleFirmar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!firmante.trim()) return;
+    setSaving(true);
+    try { await onSave(firmante.trim()); onClose(); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div>
+            <h3 className="text-base font-bold text-gray-800">Firmar documento</h3>
+            <p className="text-xs text-teal-600 mt-0.5">{fdoc.nombre}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+        </div>
+
+        {/* Preview del documento */}
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{cat.icono}</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">{fdoc.nombre}</p>
+              <p className="text-xs text-gray-500">{cat.base}</p>
+              <p className="text-xs text-gray-400 mt-0.5">Versión {fdoc.version}</p>
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleFirmar} className="px-6 py-5 space-y-4">
+          <div>
+            <label className={LABEL}>Director Técnico firmante *</label>
+            <input
+              className={INPUT}
+              value={firmante}
+              onChange={e => setFirmante(e.target.value)}
+              placeholder="Nombre completo del Director Técnico"
+              required
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              La firma tiene validez ante la Secretaría de Salud departamental.
+            </p>
+          </div>
+
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-xs text-teal-700">
+            <p className="font-bold mb-1">✍️ Firma digital electrónica</p>
+            <p>Al firmar confirmas que revisaste y aprobaste este documento como Director Técnico responsable de la habilitación. Fecha: {new Date().toLocaleDateString('es-CO')}.</p>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
+            <button type="submit" disabled={saving} className={BTN_P}>
+              {saving ? 'Firmando…' : '✍️ Firmar documento'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Página principal ──────────────────────────────────────────────────────────
+
+export default function FirmaPage() {
+  const { user, nombre: ipsNombre } = useAuth();
+  const { items, loading, firmar, revocar } = useFirma(user?.uid ?? null);
+  const { toast, showToast } = useToast();
+
+  const [firmaModal,  setFirmaModal]  = useState<FirmaDoc | null>(null);
+  const [revocarConf, setRevocarConf] = useState<FirmaDoc | null>(null);
+
+  const firmados   = items.filter(d => d.firmado);
+  const sinFirmar  = items.filter(d => !d.firmado);
+  const porcentaje = items.length > 0 ? Math.round((firmados.length / items.length) * 100) : 0;
+
+  async function handleFirma(firmante: string) {
+    if (!firmaModal) return;
+    await firmar(firmaModal.id as FirmaDocId, firmante);
+    showToast(`✅ ${firmaModal.nombre} firmado correctamente`, 'success');
+  }
+
+  async function handleRevocar() {
+    if (!revocarConf) return;
+    await revocar(revocarConf.id as FirmaDocId);
+    setRevocarConf(null);
+    showToast('Firma revocada', 'info');
+  }
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <SectionHeader
+        title="Firma y Versiones"
+        subtitle="Control documental con firma del Director Técnico · Res. 3100/2019"
+      />
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard label="Total documentos"  value={items.length}    icon="📄" />
+        <KpiCard label="Firmados"          value={firmados.length}  icon="✅" />
+        <KpiCard label="Sin firma"         value={sinFirmar.length} icon="⏳" borderColorClass={sinFirmar.length > 0 ? "border-amber-400" : "border-gray-200"} colorClass={sinFirmar.length > 0 ? "text-amber-600" : "text-gray-800"} />
+        <KpiCard label="Completitud"       value={`${porcentaje}%`} icon="📊" />
+      </div>
+
+      {/* Barra de progreso */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-semibold text-gray-700">Estado documental</p>
+          <p className="text-sm font-bold text-teal-600">{porcentaje}% firmado</p>
+        </div>
+        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full transition-all duration-500"
+            style={{ width: `${porcentaje}%` }}
+          />
+        </div>
+        {sinFirmar.length > 0 && (
+          <p className="text-xs text-amber-600 mt-2">
+            ⚠️ {sinFirmar.length} documento{sinFirmar.length !== 1 ? 's' : ''} pendiente{sinFirmar.length !== 1 ? 's' : ''} de firma del Director Técnico
+          </p>
+        )}
+      </div>
+
+      {/* Documentos sin firmar */}
+      {sinFirmar.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+            Pendientes de firma ({sinFirmar.length})
+          </h2>
+          <div className="grid gap-3">
+            {sinFirmar.map(d => {
+              const cat = FIRMA_CATALOGO.find(c => c.id === d.id)!;
+              return (
+                <div
+                  key={d.id}
+                  className="bg-white border-2 border-amber-200 rounded-xl p-5 flex items-center justify-between hover:border-amber-300 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl">{cat.icono}</span>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{d.nombre}</p>
+                      <p className="text-xs text-gray-500">{cat.base}</p>
+                      <p className="text-xs text-amber-600 mt-0.5">⏳ Sin firma — Versión {d.version}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setFirmaModal(d)}
+                    className={BTN_P}
+                  >
+                    ✍️ Firmar
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Documentos firmados */}
+      {firmados.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+            Firmados ({firmados.length})
+          </h2>
+          <div className="grid gap-3">
+            {firmados.map(d => {
+              const cat = FIRMA_CATALOGO.find(c => c.id === d.id)!;
+              return (
+                <div
+                  key={d.id}
+                  className="bg-white border border-green-200 rounded-xl p-5 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl">{cat.icono}</span>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{d.nombre}</p>
+                      <p className="text-xs text-gray-500">{cat.base}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                          ✅ Firmado
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {d.firmante} · {d.fecha}
+                        </span>
+                        <span className="text-xs text-gray-400">v{d.version}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setRevocarConf(d)}
+                    className="text-xs text-gray-400 hover:text-red-600 transition-colors px-3 py-1.5 border border-gray-200 hover:border-red-200 rounded-lg"
+                  >
+                    Revocar firma
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Nota legal */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-700">
+        <p className="font-bold mb-1">ℹ️ Nota sobre firma electrónica</p>
+        <p>
+          La firma digital en NormaLis registra el nombre del Director Técnico y la fecha de aprobación
+          en Firestore. Ante una visita de habilitación, estos registros respaldan el control documental.
+          Para documentos con efectos jurídicos, complementa con firma manuscrita o certificada.
+        </p>
+      </div>
+
+      {/* Modales */}
+      {firmaModal && (
+        <FirmaModal
+          doc={firmaModal}
+          directorDefault={ipsNombre ?? ''}
+          onSave={handleFirma}
+          onClose={() => setFirmaModal(null)}
+        />
+      )}
+
+      {revocarConf && (
+        <ConfirmModal
+          title="Revocar firma"
+          description={`¿Revocar la firma de "${revocarConf.nombre}"? El documento quedará sin firma del Director Técnico.`}
+          onConfirm={handleRevocar}
+          onCancel={() => setRevocarConf(null)}
+          confirmVariant="danger"
+        />
+      )}
+
+      {toast && <Toast message={toast.message} type={toast.type} />}
+    </div>
+  );
+}

@@ -22,19 +22,22 @@ function NitWarningBanner() {
 }
 
 const NAV_ITEMS = [
-  { href: '/dashboard',               label: 'Dashboard',    icon: '⊞' },
-  { href: '/dashboard/chat',          label: 'Asistente IA', icon: '🤖' },
-  { href: '/dashboard/auditoria',     label: 'Auditoría',    icon: '🔍' },
-  { href: '/dashboard/pamec',         label: 'PAMEC',        icon: '📈' },
-  { href: '/dashboard/capas',         label: 'CAPAs',        icon: '✓' },
-  { href: '/dashboard/indicadores',   label: 'Indicadores',  icon: '📊' },
-  { href: '/dashboard/vencimientos',  label: 'Vencimientos', icon: '📅' },
-  { href: '/dashboard/sg-sst',        label: 'SG-SST',       icon: '🦺' },
-  { href: '/dashboard/simulacros',    label: 'Simulacro',    icon: '🔔' },
-  { href: '/dashboard/documentos',    label: 'Documentos',   icon: '📄' },
-  { href: '/dashboard/pqrs',          label: 'PQRS',         icon: '📬' },
-  { href: '/dashboard/incidentes',    label: 'Incidentes',   icon: '🛡️' },
-  { href: '/dashboard/bitacora',      label: 'Bitácora',     icon: '📋' },
+  { href: '/dashboard',                    label: 'Dashboard',       icon: '⊞'  },
+  { href: '/dashboard/chat',               label: 'Asistente IA',    icon: '🤖' },
+  { href: '/dashboard/auditoria',          label: 'Auditoría',       icon: '🔍' },
+  { href: '/dashboard/pamec',              label: 'PAMEC',           icon: '📈' },
+  { href: '/dashboard/capas',              label: 'CAPAs',           icon: '✓'  },
+  { href: '/dashboard/indicadores',        label: 'Indicadores',     icon: '📊' },
+  { href: '/dashboard/vencimientos',       label: 'Vencimientos',    icon: '📅' },
+  { href: '/dashboard/sg-sst',             label: 'SG-SST',          icon: '🦺' },
+  { href: '/dashboard/simulacros',         label: 'Simulacro',       icon: '🔔' },
+  { href: '/dashboard/documentos',         label: 'Documentos',      icon: '📄' },
+  { href: '/dashboard/pqrs',               label: 'PQRS',            icon: '📬' },
+  { href: '/dashboard/incidentes',         label: 'Incidentes',      icon: '🛡️' },
+  { href: '/dashboard/bitacora',           label: 'Bitácora',        icon: '📋' },
+  { href: '/dashboard/talento',            label: 'Talento Humano',  icon: '👥' },
+  { href: '/dashboard/firma',              label: 'Firma y Versiones', icon: '✍️' },
+  { href: '/dashboard/consentimientos',    label: 'Consentimientos', icon: '📝' },
 ];
 
 function Sidebar() {
