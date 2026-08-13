@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is NormaLis
 
-Colombian SaaS for health regulatory compliance (Resolución 3100/2019 and 465/2025). Targets IPS (healthcare providers) to manage habilitación, PAMEC, and patient safety audits. Static site hosted on **GitHub Pages** at `normalis.co`. All backend is Firebase (Auth + Firestore). No build step — changes go live on push.
+Colombian SaaS for health regulatory compliance. Primary regulation: **Resolución 1732 de 2026** (published August 5, 2026 — replaces Res. 3100/2019, Res. 465/2025, and all modifications; 12-month transition period). Targets IPS (healthcare providers) to manage habilitación, PAMEC, and patient safety audits. Static site hosted on **GitHub Pages** at `normalis.co`. All backend is Firebase (Auth + Firestore). No build step — changes go live on push.
+
+**Marco Regulatorio (agosto 2026):**
+- **Res. 1732/2026** — Marco principal de habilitación (reemplaza Res. 3100/2019 + todas sus modificaciones + Res. 77/2007). Mismos 7 estándares. Nuevos: Telemedicina (Telexperticia, Teleconcepto, Teleconsulta, Telemonitoreo), IHCE (Historia Clínica Electrónica Interoperable), RDA (Resumen Digital de Atención), Plan de Adecuación Progresiva para territorios especiales.
+- **Res. 256/2016** — Indicadores de calidad (sigue vigente).
+- **Res. 1774/2025 (SG-SST)** — Seguridad y salud en el trabajo.
 
 ---
 

@@ -18,7 +18,7 @@ const MODULES = [
   {
     href: '/dashboard/auditoria',
     title: 'Auditoría',
-    desc: 'Res. 3100/2019 — 22 modalidades de servicio',
+    desc: 'Res. 1732/2026 — 22 modalidades de servicio',
     icon: '🔍',
     from: '#00897B', to: '#00BCD4',
   },
@@ -360,6 +360,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Alerta normativa — Res. 1732/2026 */}
+      <div
+        className="mb-5 rounded-xl p-4 flex items-start gap-3"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0,137,123,.10), rgba(0,188,212,.05))',
+          border: '1px solid rgba(0,188,212,.28)',
+        }}
+      >
+        <span className="text-lg flex-shrink-0">🔔</span>
+        <div>
+          <p className="font-bold text-sm leading-snug" style={{ color: '#00251A' }}>
+            Actualización normativa — Resolución 1732 de 2026
+          </p>
+          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#00695C' }}>
+            Reemplaza la Res. 3100/2019 y todas sus modificaciones. Vigente desde agosto 2026 · 12 meses de transición.
+            Mismos 7 estándares — nuevos criterios de telemedicina e historia clínica electrónica interoperable (IHCE).
+          </p>
+        </div>
+      </div>
+
       {/* Countdown */}
       <div className="mb-7">
         <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#00695C', opacity: 0.6 }}>
@@ -381,7 +401,7 @@ export default function DashboardPage() {
       {/* Footer */}
       <div className="mt-8 py-3 text-center text-[10px] font-medium tracking-wide"
            style={{ color: '#00695C', opacity: 0.45 }}>
-        NormaLis · Res. 3100/2019 · Res. 465/2025 · Res. 256/2016
+        NormaLis · Res. 1732/2026 (reemplaza 3100/2019) · Res. 256/2016
       </div>
     </div>
   );

@@ -119,7 +119,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
 
       <div className="relative max-w-5xl mx-auto px-5 text-center">
         <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 text-teal-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-8 backdrop-blur-sm">
-          🏥 Hecho para IPS en Colombia · Res. 3100/2019 + 465/2025
+          🏥 Hecho para IPS en Colombia · Res. 1732/2026
         </div>
 
         <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
@@ -149,8 +149,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
         <div className="flex justify-center gap-2 flex-wrap mb-12">
           {[
             { label: '15 módulos activos', glow: true },
-            { label: 'Res. 3100/2019', glow: false },
-            { label: 'Res. 465/2025', glow: false },
+            { label: 'Res. 1732/2026', glow: true },
             { label: 'ISO 7101:2023', glow: false },
             { label: 'JCI 8ª ed.', glow: false },
             { label: 'PAMEC · SG-SST', glow: false },
@@ -225,7 +224,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
 
 // ─── Compliance band ───────────────────────────────────────────────────────────
 function ComplianceBand() {
-  const pills = ['Ministerio de Salud', 'Res. 3100/2019', 'Res. 465/2025', 'Res. 256/2016 · PAMEC', 'RETHUS · REPS', 'Res. 0312/2019 · SG-SST'];
+  const pills = ['Ministerio de Salud', 'Res. 1732/2026', 'Res. 256/2016 · PAMEC', 'RETHUS · REPS', 'Res. 0312/2019 · SG-SST'];
   return (
     <div className="bg-slate-50 border-y border-slate-200 py-8 px-5">
       <p className="text-center text-xs text-slate-400 uppercase tracking-widest mb-5 font-semibold">
@@ -247,7 +246,7 @@ function Stats() {
   const stats = [
     { num: '780',  suffix: '',  label: 'criterios de auditoría cubiertos en 22 modalidades', icon: '📋' },
     { num: '15',   suffix: '',  label: 'módulos activos en la plataforma', icon: '⊞' },
-    { num: '3',    suffix: '',  label: 'marcos normativos cruzados: Res. 3100 · ISO 7101 · JCI', icon: '🔄' },
+    { num: '3',    suffix: '',  label: 'marcos normativos cruzados: Res. 1732 · ISO 7101 · JCI', icon: '🔄' },
     { num: '100',  suffix: '%', label: 'en línea, sin instalación, desde cualquier dispositivo', icon: '☁️' },
     { num: '200',  suffix: '+', label: 'horas ahorradas al año en gestión de calidad', icon: '⏱️' },
     { num: '50',   suffix: '%', label: 'más rápido en elaboración de informes y CAPAs', icon: '🚀' },
@@ -276,7 +275,7 @@ function Stats() {
 // ─── Problems ──────────────────────────────────────────────────────────────────
 function Problems() {
   const problems = [
-    { icon: '📋', title: 'No saben qué documentos necesitan', desc: 'La Res. 3100/2019 exige más de 50 documentos según el tipo de prestador. Sin guía, siempre falta algo.', color: 'from-red-500 to-orange-500' },
+    { icon: '📋', title: 'No saben qué documentos necesitan', desc: 'La Res. 1732/2026 exige más de 50 documentos según el tipo de prestador. Sin guía, siempre falta algo.', color: 'from-red-500 to-orange-500' },
     { icon: '⏰', title: 'Se enteran tarde de los vencimientos', desc: 'Tarjetas profesionales, vacunas, contratos — nadie lleva el control y la habilitación se pierde por un documento vencido.', color: 'from-orange-500 to-amber-500' },
     { icon: '🔍', title: 'No se auditan antes de la visita', desc: 'La primera vez que saben qué les falta es cuando llega el ente habilitador. Para entonces, es muy tarde.', color: 'from-amber-500 to-yellow-500' },
     { icon: '📉', title: 'No miden ni mejoran', desc: 'Sin indicadores de calidad (Res. 256/2016) ni PAMEC activo, el establecimiento no puede demostrar mejora continua.', color: 'from-rose-500 to-pink-500' },
@@ -309,7 +308,7 @@ function Problems() {
 // ─── Features ─────────────────────────────────────────────────────────────────
 function Features() {
   const features = [
-    { icon: '🔍', title: 'Auditoría Interna',               tag: 'Res. 3100/2019',        desc: '780 criterios en 22 modalidades. Score de habilitación al instante con plan de mejora.', grad: 'from-teal-400 to-cyan-500' },
+    { icon: '🔍', title: 'Auditoría Interna',               tag: 'Res. 1732/2026',        desc: '780 criterios en 22 modalidades. Score de habilitación al instante con plan de mejora.', grad: 'from-teal-400 to-cyan-500' },
     { icon: '📄', title: 'Generador de Documentos',         tag: 'Firma digital',          desc: 'Manual de Bioseguridad, Plan de Residuos, Protocolos y más — listos en minutos con datos de tu IPS.', grad: 'from-blue-400 to-indigo-500' },
     { icon: '⏰', title: 'Control de Vencimientos',         tag: 'Alertas automáticas',    desc: 'Alertas antes de que venzan tarjetas profesionales, vacunas, contratos y certificaciones.', grad: 'from-amber-400 to-orange-500' },
     { icon: '📈', title: 'PAMEC e Indicadores',             tag: 'Res. 256/2016',          desc: 'Registra y monitorea indicadores de satisfacción, eventos adversos, reingresos y más.', grad: 'from-violet-400 to-purple-500' },
@@ -405,7 +404,7 @@ function CrosswalkSection() {
         <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,.1)' }}>
           <div className="grid grid-cols-12 text-xs font-bold uppercase tracking-widest px-5 py-3"
                style={{ background: 'rgba(255,255,255,.05)', borderBottom: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.4)' }}>
-            <span className="col-span-3">Estándar Res. 3100</span>
+            <span className="col-span-3">Estándar Res. 1732/2026</span>
             <span className="col-span-3">ISO 7101:2023</span>
             <span className="col-span-2 text-center">Equiv. ISO</span>
             <span className="col-span-3">JCI 8ª edición</span>
@@ -548,12 +547,12 @@ const SCREENS = [
     id: 'auditoria',
     label: 'Auditoría',
     icon: '🔍',
-    desc: '559 criterios organizados por segmentos según la Res. 3100/2019. Score instantáneo.',
+    desc: '780 criterios según Res. 1732/2026 — mismos 7 estándares, criterios actualizados. Score instantáneo.',
     content: (
       <div className="flex h-full flex-col gap-3 p-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-bold text-white">Auditoría Interna · Res. 3100/2019</div>
+            <div className="text-sm font-bold text-white">Auditoría Interna · Res. 1732/2026</div>
             <div className="text-xs text-slate-400 mt-0.5">Segmento: Talento Humano · 45/52 criterios</div>
           </div>
           <div className="bg-teal-500/20 border border-teal-500/30 rounded-xl px-3 py-1.5 text-center">
@@ -591,12 +590,12 @@ const SCREENS = [
     id: 'chat',
     label: 'Asistente IA',
     icon: '🤖',
-    desc: 'Chat con IA normativa entrenada en Res. 3100, 465/2025, PAMEC y SG-SST.',
+    desc: 'Chat con IA normativa entrenada en Res. 1732/2026, PAMEC y SG-SST.',
     content: (
       <div className="flex h-full flex-col p-3 gap-3">
         <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-          Asistente normativo NormaLis · Res. 3100/2019 · 465/2025
+          Asistente normativo NormaLis · Res. 1732/2026
         </div>
         <div className="flex-1 flex flex-col gap-3 overflow-hidden justify-end">
           <div className="flex justify-end">
@@ -607,13 +606,13 @@ const SCREENS = [
           <div className="flex gap-2">
             <div className="w-7 h-7 rounded-full bg-teal-500 flex items-center justify-center text-xs font-bold flex-shrink-0 shadow">IA</div>
             <div className="bg-slate-800/80 border border-white/10 text-slate-200 text-xs rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%]">
-              Para un consultorio médico (Res. 3100/2019, Grupo 1), los documentos clave son:
+              Para un consultorio médico (Res. 1732/2026, Grupo 1), los documentos clave son:
               <ul className="mt-1.5 flex flex-col gap-1 pl-2">
                 {['Manual de Bioseguridad', 'Plan de Gestión de Residuos', 'Protocolo de Atención al Paciente', 'Hoja de vida con tarjetas profesionales', 'Consentimientos informados'].map((d) => (
                   <li key={d} className="flex gap-1.5 items-start"><span className="text-teal-400 font-bold flex-shrink-0">✓</span>{d}</li>
                 ))}
               </ul>
-              <div className="mt-2 text-teal-400/70 text-xs">Fuente: Art. 12, Res. 3100/2019</div>
+              <div className="mt-2 text-teal-400/70 text-xs">Fuente: Res. 1732/2026, Tomo II</div>
             </div>
           </div>
           <div className="flex justify-end">
@@ -668,7 +667,7 @@ const SCREENS = [
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-bold text-white">Comparador Normativo · Crosswalk</div>
-            <div className="text-xs text-slate-400 mt-0.5">Res. 3100/2019 ↔ ISO 7101:2023 ↔ JCI 8ª ed.</div>
+            <div className="text-xs text-slate-400 mt-0.5">Res. 1732/2026 ↔ ISO 7101:2023 ↔ JCI 8ª ed.</div>
           </div>
           <div className="flex gap-2">
             <div className="bg-teal-500/20 border border-teal-500/30 rounded-xl px-2 py-1 text-center">
@@ -885,7 +884,7 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       name: 'Básico',
       monthly: '$199K', annual: '$166K',
       desc: 'Para consultorios y clínicas de un solo servicio.',
-      features: ['1 sede · 2 usuarios', 'Auditoría Res. 3100 básica', 'Generador de documentos (5 plantillas)', 'Calendario de vencimientos', 'Dashboard de cumplimiento'],
+      features: ['1 sede · 2 usuarios', 'Auditoría Res. 1732/2026 básica', 'Generador de documentos (5 plantillas)', 'Calendario de vencimientos', 'Dashboard de cumplimiento'],
       popular: false, cta: 'Solicitar demo',
       iconBg: 'from-slate-400 to-slate-600',
       boldUrlAnnual: 'https://checkout.bold.co/payment/LNK_QX9QJBBLWW',
@@ -895,7 +894,7 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       name: 'Profesional',
       monthly: '$399K', annual: '$332K',
       desc: 'Para IPS multi-servicio con equipo de calidad.',
-      features: ['1 sede · 5 usuarios', 'Auditoría completa 780 criterios', 'Todos los documentos + firma digital', 'PAMEC e indicadores Res. 256', 'CAPAs + Talento Humano', 'Consentimientos informados', 'PQRS, incidentes y bitácora', 'SG-SST Res. 0312/2019', 'Comparador ISO 7101 / JCI', 'Chat IA normativo', 'Soporte prioritario'],
+      features: ['1 sede · 5 usuarios', 'Auditoría completa Res. 1732/2026 — 780 criterios', 'Todos los documentos + firma digital', 'PAMEC e indicadores Res. 256', 'CAPAs + Talento Humano', 'Consentimientos informados', 'PQRS, incidentes y bitácora', 'SG-SST Res. 0312/2019', 'Comparador ISO 7101 / JCI', 'Chat IA normativo', 'Soporte prioritario'],
       popular: true, cta: 'Solicitar demo',
       iconBg: 'from-teal-400 to-teal-600',
       boldUrlAnnual: 'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
@@ -1090,7 +1089,7 @@ function CTABand({ onDemo }: { onDemo: () => void }) {
 function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   const faqs = [
-    { q: '¿NormaLis aplica para todo tipo de IPS?', a: 'Sí. NormaLis cubre prestadores de baja, mediana y alta complejidad. La auditoría interna filtra los criterios según el tipo de prestador (consultorios, clínicas, hospitales) conforme a la Res. 3100/2019.' },
+    { q: '¿NormaLis aplica para todo tipo de IPS?', a: 'Sí. NormaLis cubre prestadores de baja, mediana y alta complejidad. La auditoría interna filtra los criterios según el tipo de prestador (consultorios, clínicas, hospitales) conforme a la Res. 1732/2026.' },
     { q: '¿Necesito instalar algo?', a: 'No. NormaLis es 100% web. Funciona desde cualquier navegador moderno en computador, tablet o celular. También puedes instalarlo como PWA en Android e iOS para acceso offline.' },
     { q: '¿Los documentos generados tienen validez legal?', a: 'Los documentos generados son plantillas normativas personalizadas con los datos de tu IPS. Debes revisarlos, ajustarlos a tu realidad institucional y firmarlos antes de presentarlos ante el ente habilitador.' },
     { q: '¿Cómo funciona el período de prueba?', a: 'Puedes solicitar una demo guiada completamente gratuita. Durante la demo te mostramos la plataforma completa con los datos de tu tipo de IPS. Sin tarjeta de crédito, sin compromiso.' },
@@ -1137,10 +1136,10 @@ function Footer() {
           <div className="md:col-span-2">
             <div className="font-black text-2xl mb-3">Norma<span className="text-teal-400">Lis</span></div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mb-4">
-              Software colombiano de habilitación y calidad para IPS. Cumplimiento de Resolución 3100/2019 y 465/2025.
+              Software colombiano de habilitación y calidad para IPS. Cumplimiento de Resolución 1732/2026 (reemplaza Res. 3100/2019).
             </p>
             <div className="flex gap-2 flex-wrap">
-              {['Res. 3100/2019', 'Res. 465/2025', 'PAMEC'].map(b => (
+              {['Res. 1732/2026', 'Res. 256/2016', 'PAMEC'].map(b => (
                 <span key={b} className="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs px-3 py-1 rounded-full">
                   {b}
                 </span>
