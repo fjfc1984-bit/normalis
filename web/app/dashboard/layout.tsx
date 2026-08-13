@@ -38,6 +38,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/talento',            label: 'Talento Humano',  icon: '👥' },
   { href: '/dashboard/firma',              label: 'Firma y Versiones', icon: '✍️' },
   { href: '/dashboard/consentimientos',    label: 'Consentimientos', icon: '📝' },
+  { href: '/dashboard/comparador',         label: 'Comparador Normativo', icon: '🔄' },
 ];
 
 function Sidebar() {
