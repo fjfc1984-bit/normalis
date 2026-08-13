@@ -23,6 +23,8 @@
   --radius:        12px;
   --shadow:        0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
   --shadow-md:     0 4px 20px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+  --glow-teal:     0 0 24px rgba(0,188,212,.18), 0 4px 20px rgba(0,0,0,.08);
+  --glow-sm:       0 0 12px rgba(0,188,212,.12);
 }
 
 body {
@@ -33,7 +35,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ── Cards: borde teal, sombra suave ── */
+/* ── Cards base ── */
 .nl-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -41,8 +43,91 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* ── Glass morphism ── */
+.nl-glass {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.65);
+}
+
+/* ── Glow teal ── */
+.nl-glow {
+  box-shadow: var(--glow-teal);
+}
+.nl-glow-sm {
+  box-shadow: var(--glow-sm);
+}
+
+/* ── Gradient text NormaLis ── */
+.nl-gradient-text {
+  background: linear-gradient(135deg, #00897B 0%, #00BCD4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Module card futurista ── */
+.nl-module-card {
+  position: relative;
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(178,223,219,0.55);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.nl-module-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--icon-from, #00897B), transparent);
+  opacity: 0.7;
+}
+.nl-module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,121,107,0.14), 0 2px 8px rgba(0,0,0,0.06);
+  border-color: rgba(38,166,154,0.4);
+}
+.nl-module-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Icon circle ── */
+.nl-icon-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* ── Pulse dot ── */
+@keyframes nl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(0.85); }
+}
+.nl-pulse { animation: nl-pulse 2.2s ease-in-out infinite; }
+
+/* ── Shimmer skeleton ── */
+@keyframes nl-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.nl-skeleton {
+  background: linear-gradient(90deg, #d4edea 25%, #c8e6e2 50%, #d4edea 75%);
+  background-size: 800px 100%;
+  animation: nl-shimmer 1.4s infinite;
+  border-radius: 8px;
+}
+
 /* ── Scrollbar suave ── */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #B2DFDB; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #80CBC4; }
