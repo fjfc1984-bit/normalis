@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 /* NormaLis — Estilos principales
  * Extraído de normativa-app-v2.html
  * No editar inline — siempre editar este archivo
@@ -12,12 +14,12 @@
   --bg:#E0F2F1;--card:#fff;--border:#B2DFDB;
   --text:#00251A;--text-muted:#00695C;
   --radius:12px;--radius-lg:16px;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:0 4px 12px rgba(0,0,0,.1);
-  --shadow-lg:0 10px 40px rgba(0,0,0,.15);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:0 4px 20px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.14),0 6px 16px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 
 /* ── ONBOARDING ── */
 #onboarding{position:fixed;inset:0;background:linear-gradient(135deg,#00251A 0%,#002922 100%);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
@@ -58,14 +60,14 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .app{display:flex;min-height:100vh}
 .sidebar{width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:50}
 .sb-logo{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
-.sb-logo-icon{width:34px;height:34px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;flex-shrink:0}
+.sb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#00897B,#00BCD4);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px;flex-shrink:0;box-shadow:0 0 14px rgba(0,188,212,.3)}
 .sb-logo-text{font-size:17px;font-weight:800;color:#f1f5f9}
 .sb-logo-sub{font-size:10px;color:#475569}
 .sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
 .sb-section{font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.07em;padding:10px 10px 4px;margin-top:6px}
 .sb-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;color:var(--sidebar-text);font-size:13.5px;font-weight:500;transition:all .15s;margin-bottom:1px;position:relative}
-.sb-item:hover{background:rgba(255,255,255,.06);color:#cbd5e1}
-.sb-item.active{background:rgba(0,121,107,.15);color:#26A69A}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#e2e8f0;transform:translateX(2px)}
+.sb-item.active{background:rgba(0,137,123,.18);color:#26A69A;border-left:3px solid #26A69A;padding-left:8px;font-weight:600}
 .sb-item .icon{font-size:15px;width:18px;text-align:center}
 .sb-item i.ti{font-size:16px;width:18px;text-align:center;flex-shrink:0;line-height:1}
 .sb-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px}
@@ -1020,4 +1022,76 @@ button:focus-visible,
   .pricing-grid, .steps-grid { grid-template-columns: 1fr !important; }
   .dash-widgets, .card-grid, .stats-grid { grid-template-columns: 1fr !important; }
 }
+
+/* ── Mejoras visuales quirúrgicas ─────────────────────────────────── */
+/* Botones con gradiente */
+button[onclick*="save"],button[onclick*="guardar"],button[onclick*="Send"],
+.btn-primary,.btn-save,.btn-submit,.view-actions button:first-child{
+  background:linear-gradient(135deg,#00897B 0%,#0097A7 100%) !important;
+  border:none !important;
+  box-shadow:0 3px 14px rgba(0,137,123,.35) !important;
+  font-family:'Inter',system-ui,sans-serif !important;
+  font-weight:600 !important;
+  letter-spacing:.01em !important;
+  transition:transform .15s,box-shadow .15s,filter .15s !important;
+}
+button[onclick*="save"]:hover,button[onclick*="guardar"]:hover,
+.btn-primary:hover,.btn-save:hover{
+  transform:translateY(-1px) !important;
+  box-shadow:0 6px 24px rgba(0,137,123,.45) !important;
+  filter:brightness(1.06) !important;
+}
+
+/* Cards con sombra más definida */
+.card,.metric-card,.kpi-card,[class*="-card"]{
+  box-shadow:var(--shadow) !important;
+  border-radius:14px !important;
+  transition:box-shadow .2s,transform .15s !important;
+}
+[class*="-card"]:hover{
+  box-shadow:var(--shadow-md) !important;
+  transform:translateY(-2px) !important;
+}
+
+/* KPI números — color primary */
+.kpi-value,.metric-value,[class*="kpi-num"]{
+  color:var(--primary) !important;
+  font-weight:900 !important;
+}
+
+/* Inputs — borde más definido y foco con ring */
+input:not([type=range]):not([type=checkbox]):not([type=radio]),
+select,textarea{
+  border:1.5px solid #CBD5E0 !important;
+  border-radius:9px !important;
+  font-family:'Inter',system-ui,sans-serif !important;
+  transition:border-color .15s,box-shadow .15s !important;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--primary) !important;
+  box-shadow:0 0 0 3px rgba(0,121,107,.12) !important;
+  outline:none !important;
+}
+
+/* Scrollbar delgada teal */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,121,107,.3);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,121,107,.55)}
+
+/* Score sidebar */
+.sb-score-val{color:#26A69A;font-size:24px;font-weight:900}
+.sb-score-mini{background:rgba(0,121,107,.1);border:1px solid rgba(0,121,107,.2);border-radius:10px}
+
+/* Toast mejorado */
+.toast{border-left:4px solid var(--primary) !important;border-radius:10px !important;box-shadow:var(--shadow-lg) !important}
+
+/* Tablas */
+thead th{background:var(--primary-light);font-family:'Inter',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+tbody tr:hover{background:rgba(0,121,107,.04)}
+tbody td{font-size:13px;font-family:'Inter',system-ui,sans-serif}
+
+/* Cursor */
+a,button,[role=button]{cursor:pointer}
+
 /* END:normalis-styles.css — NormaLis integrity seal */
