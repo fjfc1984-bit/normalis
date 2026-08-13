@@ -250,7 +250,7 @@ function DocsModal({
 export default function TalentoPage() {
   const { user } = useAuth();
   const { items, loading, error, agregar, actualizar, eliminar } = useTalento(user?.uid ?? null);
-  const { toast, showToast } = useToast();
+  const { toast, show } = useToast();
 
   const [showNuevo,  setShowNuevo]  = useState(false);
   const [docsModal,  setDocsModal]  = useState<Profesional | null>(null);
@@ -275,26 +275,26 @@ export default function TalentoPage() {
     setSaving(true);
     try {
       await agregar(data);
-      showToast('Profesional registrado correctamente', 'success');
+      show('Profesional registrado correctamente', 'success');
     } catch {
-      showToast('Error al guardar', 'error');
+      show('Error al guardar', 'error');
     } finally {
       setSaving(false);
     }
-  }, [agregar, showToast]);
+  }, [agregar, show]);
 
   const handleDocs = useCallback(async (docs: DocumentoProf[]) => {
     if (!docsModal) return;
     await actualizar(docsModal.id, { documentos: docs });
-    showToast('Documentos actualizados', 'success');
-  }, [docsModal, actualizar, showToast]);
+    show('Documentos actualizados', 'success');
+  }, [docsModal, actualizar, show]);
 
   const handleEliminar = useCallback(async () => {
     if (!confirmDel) return;
     await eliminar(confirmDel.id);
     setConfirmDel(null);
-    showToast('Profesional eliminado', 'info');
-  }, [confirmDel, eliminar, showToast]);
+    show('Profesional eliminado', 'info');
+  }, [confirmDel, eliminar, show]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -478,7 +478,7 @@ export default function TalentoPage() {
         />
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast toast={toast} />}
     </div>
   );
 }

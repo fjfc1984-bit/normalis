@@ -110,7 +110,7 @@ function FirmaModal({
 export default function FirmaPage() {
   const { user, nombre: ipsNombre } = useAuth();
   const { items, loading, firmar, revocar } = useFirma(user?.uid ?? null);
-  const { toast, showToast } = useToast();
+  const { toast, show } = useToast();
 
   const [firmaModal,  setFirmaModal]  = useState<FirmaDoc | null>(null);
   const [revocarConf, setRevocarConf] = useState<FirmaDoc | null>(null);
@@ -122,14 +122,14 @@ export default function FirmaPage() {
   async function handleFirma(firmante: string) {
     if (!firmaModal) return;
     await firmar(firmaModal.id as FirmaDocId, firmante);
-    showToast(`✅ ${firmaModal.nombre} firmado correctamente`, 'success');
+    show(`✅ ${firmaModal.nombre} firmado correctamente`, 'success');
   }
 
   async function handleRevocar() {
     if (!revocarConf) return;
     await revocar(revocarConf.id as FirmaDocId);
     setRevocarConf(null);
-    showToast('Firma revocada', 'info');
+    show('Firma revocada', 'info');
   }
 
   if (loading) return <LoadingSpinner />;
@@ -276,7 +276,7 @@ export default function FirmaPage() {
         />
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast toast={toast} />}
     </div>
   );
 }

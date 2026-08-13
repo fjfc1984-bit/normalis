@@ -305,7 +305,7 @@ function DetalleModal({
 export default function ConsentimientosPage() {
   const { user } = useAuth();
   const { items, loading, error, agregar, firmar, eliminar } = useConsentimientos(user?.uid ?? null);
-  const { toast, showToast } = useToast();
+  const { toast, show } = useToast();
 
   const [showNuevo,  setShowNuevo]  = useState(false);
   const [detalle,    setDetalle]    = useState<ConsentimientoItem | null>(null);
@@ -323,13 +323,13 @@ export default function ConsentimientosPage() {
     setSaving(true);
     try {
       await agregar(data);
-      showToast('Consentimiento creado', 'success');
+      show('Consentimiento creado', 'success');
     } catch {
-      showToast('Error al guardar', 'error');
+      show('Error al guardar', 'error');
     } finally {
       setSaving(false);
     }
-  }, [agregar, showToast]);
+  }, [agregar, show]);
 
   const handleFirma = useCallback(async (quien: 'paciente' | 'medico') => {
     if (!detalle) return;
@@ -343,15 +343,15 @@ export default function ConsentimientosPage() {
                (prev.estado === 'firmado_medico'   && quien === 'paciente')) next = 'completo';
       return { ...prev, estado: next };
     });
-    showToast('Firma registrada', 'success');
-  }, [detalle, firmar, showToast]);
+    show('Firma registrada', 'success');
+  }, [detalle, firmar, show]);
 
   const handleEliminar = useCallback(async () => {
     if (!confirmDel) return;
     await eliminar(confirmDel.id);
     setConfirmDel(null);
-    showToast('Consentimiento eliminado', 'info');
-  }, [confirmDel, eliminar, showToast]);
+    show('Consentimiento eliminado', 'info');
+  }, [confirmDel, eliminar, show]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -506,7 +506,7 @@ export default function ConsentimientosPage() {
         />
       )}
 
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast toast={toast} />}
     </div>
   );
 }
