@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import {
   collection, query, onSnapshot,
   doc, updateDoc, addDoc, serverTimestamp,
-  Timestamp, where, orderBy,
+  Timestamp, where, orderBy, limit,
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db } from '@/lib/firebase';
@@ -68,6 +68,25 @@ interface Lead {
   tipoIPS:   string;
   estado:    string;
   createdAt: Timestamp | null;
+}
+
+interface Sesion {
+  id:          string;
+  uid:         string;
+  email:       string;
+  ipsNombre:   string;
+  rol:         string;
+  moduloActual:string;
+  activo:      boolean;
+  ultimaVista: Timestamp | null;
+}
+
+interface Visita {
+  id:        string;
+  sessionId: string;
+  evento:    string;
+  referrer:  string;
+  timestamp: Timestamp | null;
 }
 
 /* ─── Helpers ───────────────────────────────────────────────── */
@@ -423,9 +442,175 @@ function AnalyticsTab() {
   );
 }
 
+
+/* ─── En Vivo Tab ───────────────────────────────────────────── */
+
+function EnVivoTab() {
+  const [sesiones, setSesiones] = useState<Sesion[]>([]);
+  const [visitas,  setVisitas]  = useState<Visita[]>([]);
+  const [leads,    setLeads]    = useState<Lead[]>([]);
+
+  useEffect(() => {
+    const unsubs = [
+      onSnapshot(
+        query(collection(db, 'sesiones'), orderBy('ultimaVista', 'desc'), limit(30)),
+        snap => setSesiones(snap.docs.map(d => ({ id: d.id, ...d.data() } as Sesion))),
+        () => {}
+      ),
+      onSnapshot(
+        query(collection(db, 'visitas'), orderBy('timestamp', 'desc'), limit(20)),
+        snap => setVisitas(snap.docs.map(d => ({ id: d.id, ...d.data() } as Visita))),
+        () => {}
+      ),
+      onSnapshot(
+        query(collection(db, 'leads'), orderBy('fecha', 'desc'), limit(10)),
+        snap => setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() } as Lead))),
+        () => {}
+      ),
+    ];
+    return () => unsubs.forEach(u => u());
+  }, []);
+
+  function agoStr(ts: Timestamp | null): string {
+    if (!ts) return '—';
+    const ms = Date.now() - ts.toDate().getTime();
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `hace ${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `hace ${m}min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `hace ${h}h`;
+    return `hace ${Math.floor(h / 24)}d`;
+  }
+
+  const MOD_LABELS: Record<string, string> = {
+    auditoria:'Auditoría', dashboard:'Dashboard', generador:'Documentos',
+    talento:'Talento', resultados:'Resultados', pqrs:'PQRS',
+    incidentes:'Incidentes', vencimientos:'Vencimientos', bitacora:'Bitácora',
+    roi:'ROI', crosswalk:'Cross-walk', chat:'Consulta IA',
+    simulacro:'Simulacro', capa:'Plan CAPA', pamec:'PAMEC', sst:'SG-SST',
+  };
+
+  const EVENTO_LABELS: Record<string, string> = {
+    pageview:'Visita al landing', demo_open:'Abrió sección demo',
+    cta_click:'Clic en CTA', form_submit:'Envió formulario',
+  };
+
+  const EVENTO_ICONS: Record<string, string> = {
+    pageview:'🌐', demo_open:'📋', cta_click:'🎯', form_submit:'✅',
+  };
+
+  const ACTIVE_WINDOW = 15 * 60 * 1000;
+  const activeSesiones = sesiones.filter(s =>
+    s.activo && s.ultimaVista &&
+    Date.now() - s.ultimaVista.toDate().getTime() < ACTIVE_WINDOW
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Badge activos */}
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-green-600">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+          {activeSesiones.length} usuario{activeSesiones.length !== 1 ? 's' : ''} activo{activeSesiones.length !== 1 ? 's' : ''} en la app ahora mismo
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Usuarios en la app */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">🖥️ Usuarios en la app</h3>
+          {sesiones.length === 0 ? (
+            <p className="text-sm text-gray-400 py-8 text-center">Sin usuarios activos ahora</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {sesiones.map(s => {
+                const isActive = s.activo && s.ultimaVista &&
+                  Date.now() - s.ultimaVista.toDate().getTime() < ACTIVE_WINDOW;
+                return (
+                  <div key={s.id} className="flex items-center gap-3 py-2.5">
+                    <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isActive ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{s.ipsNombre || s.email || 'Usuario'}</p>
+                      <p className="text-xs text-gray-400 truncate">{s.email}{s.rol ? ` · ${s.rol}` : ''}</p>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 font-medium flex-shrink-0">
+                      {MOD_LABELS[s.moduloActual] || s.moduloActual || 'inicio'}
+                    </span>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{agoStr(s.ultimaVista)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Visitas al landing */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">🌐 Visitas al landing</h3>
+          {visitas.length === 0 ? (
+            <p className="text-sm text-gray-400 py-8 text-center">Sin visitas recientes</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {visitas.map(v => (
+                <div key={v.id} className="flex items-center gap-3 py-2.5">
+                  <span className="text-xl flex-shrink-0">{EVENTO_ICONS[v.evento] || '🔵'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{EVENTO_LABELS[v.evento] || v.evento || 'Visita'}</p>
+                    <p className="text-xs text-gray-400 truncate">Ref: {v.referrer || 'directo'}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{agoStr(v.timestamp)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Leads recientes */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">🔔 Últimos leads recibidos</h3>
+        {leads.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">Sin leads recientes</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                  <th className="text-left pb-2 font-medium pr-4">IPS / Tipo</th>
+                  <th className="text-left pb-2 font-medium pr-4">Email</th>
+                  <th className="text-left pb-2 font-medium pr-4">Ciudad</th>
+                  <th className="text-left pb-2 font-medium">Hace</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {leads.map(l => (
+                  <tr key={l.id} className="hover:bg-gray-50">
+                    <td className="py-2 pr-4">
+                      <p className="font-medium text-gray-800">{l.nombre}</p>
+                      <p className="text-xs text-gray-400">{(l as any).tipo || l.tipoIPS || ''}</p>
+                    </td>
+                    <td className="py-2 pr-4">
+                      <a href={`mailto:${l.email}`} className="text-primary-600 hover:underline">{l.email}</a>
+                    </td>
+                    <td className="py-2 pr-4 text-gray-600">{l.ciudad || '—'}</td>
+                    <td className="py-2 text-gray-400 text-xs whitespace-nowrap">
+                      {agoStr((l as any).fecha || l.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main page ─────────────────────────────────────────────── */
 
-const TABS = ['Solicitudes', 'Pilotos', 'CRM', 'Leads', 'Analytics'] as const;
+const TABS = ['Solicitudes', 'Pilotos', 'CRM', 'Leads', 'Analytics', 'En Vivo'] as const;
 type Tab = typeof TABS[number];
 
 export default function AdminPage() {
@@ -466,7 +651,12 @@ export default function AdminPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              {t}
+              {t === 'En Vivo' ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  {t}
+                </span>
+              ) : t}
             </button>
           ))}
         </nav>
@@ -479,6 +669,7 @@ export default function AdminPage() {
         {tab === 'CRM'         && <CRMTab         show={show} />}
         {tab === 'Leads'       && <LeadsTab />}
         {tab === 'Analytics'   && <AnalyticsTab />}
+        {tab === 'En Vivo'    && <EnVivoTab />}
       </main>
     </div>
   );
