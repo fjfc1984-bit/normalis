@@ -755,4 +755,70 @@ function checkVencimientosReminder(userEmail) {
   });
 }
 
+
+// ══════════════════════════════════════════
+// S1 — TRACKING DE SESIONES EN TIEMPO REAL
+// ══════════════════════════════════════════
+(function(){
+  var _sHB  = null;
+  var _sUid = null;
+
+  window.registrarSesion = function(uid, datos) {
+    if (!uid || typeof db === 'undefined') return;
+    _sUid = uid;
+    db.collection('sesiones').doc(uid).set({
+      uid:          uid,
+      email:        datos.email     || '',
+      ipsNombre:    datos.ipsNombre || datos.nombre || '',
+      rol:          datos.rol       || '',
+      moduloActual: 'inicio',
+      activo:       true,
+      ultimaVista:  firebase.firestore.FieldValue.serverTimestamp(),
+      iniciado:     firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(e){ console.warn('[NormaLis] sesion:', e); });
+
+    // Heartbeat cada 3 minutos
+    clearInterval(_sHB);
+    _sHB = setInterval(function(){
+      if (!_sUid || typeof db === 'undefined') return;
+      db.collection('sesiones').doc(_sUid).update({
+        ultimaVista: firebase.firestore.FieldValue.serverTimestamp(),
+        activo:      true
+      }).catch(function(){});
+    }, 3 * 60 * 1000);
+
+    // Marcar inactivo al cerrar ventana
+    window.addEventListener('beforeunload', function(){
+      if (!_sUid || typeof db === 'undefined') return;
+      db.collection('sesiones').doc(_sUid).update({
+        activo:      false,
+        ultimaVista: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(){});
+    }, { once: true });
+  };
+
+  // Actualizar módulo activo
+  window.actualizarModuloActivo = function(modulo) {
+    if (!_sUid || typeof db === 'undefined') return;
+    db.collection('sesiones').doc(_sUid).update({
+      moduloActual: modulo,
+      ultimaVista:  firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function(){});
+  };
+
+  // Registrar visita anónima al landing
+  window.registrarVisitaLanding = function(sessionId, datos) {
+    if (typeof db === 'undefined') return;
+    db.collection('visitas').doc(sessionId).set({
+      sessionId:  sessionId,
+      pagina:     'landing',
+      referrer:   document.referrer || 'directo',
+      userAgent:  navigator.userAgent || '',
+      ciudad:     datos.ciudad || '',
+      evento:     datos.evento || 'pageview',
+      timestamp:  firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(e){ console.warn('[NormaLis] visita:', e); });
+  };
+})();
+
 // END:normalis-firestore.js — NormaLis integrity seal

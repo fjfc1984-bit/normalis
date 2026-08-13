@@ -2811,5 +2811,36 @@ btn-primary btn-sm" onclick="nav('generador')">✨ Generar faltantes</button>
 })();
 </script>
 
+
+<script>
+// ── S1: Session Tracking Hook — NormaLis ──────────────────────────────────
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      try {
+        var uid  = sessionStorage.getItem('normalis_uid');
+        var rol  = sessionStorage.getItem('normalis_rol');
+        if (uid && rol && typeof registrarSesion === 'function') {
+          registrarSesion(uid, {
+            email:     sessionStorage.getItem('normalis_email') || '',
+            ipsNombre: localStorage.getItem('normalis_ips_nombre') || '',
+            nombre:    sessionStorage.getItem('normalis_nombre') || '',
+            rol:       rol
+          });
+        }
+        // Hook nav() para actualizar módulo activo en Firestore
+        if (typeof nav === 'function') {
+          var _origNavS1 = nav;
+          window.nav = function(id) {
+            _origNavS1(id);
+            try { if (typeof actualizarModuloActivo === 'function') actualizarModuloActivo(id); } catch(_){}
+          };
+        }
+      } catch(e) { console.warn('[NormaLis] session hook:', e); }
+    }, 500);
+  });
+})();
+</script>
+
 </body>
 </html>

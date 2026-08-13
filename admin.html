@@ -376,6 +376,10 @@
     <button class="tab-btn" onclick="switchTab('usuarios')">
       👥 Usuarios <span class="tab-badge" id="badge-usuarios">0</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('envivo')">
+      🟢 En Vivo <span class="tab-badge" id="badge-envivo">0</span>
+    </button>
+
   </div>
 </div>
 
@@ -686,6 +690,40 @@
   </div>
 </div>
 
+<div id="tab-envivo" class="tab-panel" style="display:none">
+  <div class="section-header">
+    <h2 class="section-title">🟢 En Vivo</h2>
+    <span class="badge-live" id="envivo-live-badge">0 activos</span>
+  </div>
+
+  <div class="envivo-grid">
+    <!-- Usuarios activos en la app -->
+    <div class="envivo-card">
+      <div class="envivo-card-title">🖥️ Usuarios activos en la app</div>
+      <div id="envivo-sesiones-list">
+        <div class="envivo-empty">Sin usuarios activos ahora</div>
+      </div>
+    </div>
+
+    <!-- Visitas recientes al landing -->
+    <div class="envivo-card">
+      <div class="envivo-card-title">🌐 Visitas recientes al landing</div>
+      <div id="envivo-visitas-list">
+        <div class="envivo-empty">Sin visitas recientes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leads recientes -->
+  <div class="envivo-card" style="margin-bottom:0">
+    <div class="envivo-card-title" style="margin-bottom:16px">🔔 Últimos leads recibidos</div>
+    <div id="envivo-leads-list">
+      <div class="envivo-empty">Sin leads recientes</div>
+    </div>
+  </div>
+</div>
+
+
 </div><!-- /main -->
 
 <!-- ══════════════════════════════════════════════
@@ -941,12 +979,14 @@ function initApp() {
   cargarSolicitudes();
   cargarLeads();
   cargarUsuariosActivos();
+  cargarEnVivo();
 }
 
 // ──────────────────────────────────────────────
 // TAB NAVIGATION
 // ──────────────────────────────────────────────
 function switchTab(id, btnEl) {
+  if (id === 'envivo' && typeof cargarEnVivo === 'function') cargarEnVivo();
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
@@ -1791,6 +1831,141 @@ async function resetPasswordUsuario(email) {
     showToast('Error: ' + e.message, 'error');
   }
 }
+
+// ══════════════════════════════════════════
+// EN VIVO — Real-time session tracker
+// ══════════════════════════════════════════
+var _enVivoUnsubs = [];
+
+function cargarEnVivo() {
+  // Limpiar listeners anteriores
+  _enVivoUnsubs.forEach(function(u){ try{u();}catch(_){} });
+  _enVivoUnsubs = [];
+
+  // ── 1. Sesiones activas de usuarios ──
+  var ACTIVE_WINDOW = 15 * 60 * 1000; // 15 min
+  var unsubSes = db.collection('sesiones')
+    .orderBy('ultimaVista', 'desc')
+    .limit(30)
+    .onSnapshot(function(snap) {
+      var now = Date.now();
+      var rows = [];
+      snap.forEach(function(doc) {
+        var d = doc.data();
+        var ts = d.ultimaVista && d.ultimaVista.toDate ? d.ultimaVista.toDate().getTime() : 0;
+        var isActive = d.activo && (now - ts) < ACTIVE_WINDOW;
+        var ago = ts ? _agoStr(now - ts) : '—';
+        rows.push({ d: d, isActive: isActive, ago: ago, ts: ts });
+      });
+      rows.sort(function(a,b){ return b.ts - a.ts; });
+
+      var activos = rows.filter(function(r){ return r.isActive; }).length;
+      var badge = document.getElementById('badge-envivo');
+      if (badge) badge.textContent = activos;
+      var liveBadge = document.getElementById('envivo-live-badge');
+      if (liveBadge) liveBadge.textContent = activos + (activos===1?' activo':' activos');
+
+      var el = document.getElementById('envivo-sesiones-list');
+      if (!el) return;
+      if (!rows.length) { el.innerHTML = '<div class="envivo-empty">Sin usuarios activos ahora</div>'; return; }
+
+      el.innerHTML = rows.slice(0, 15).map(function(r) {
+        var d = r.d;
+        var modMap = {auditoria:'Auditoría',dashboard:'Dashboard',generador:'Documentos',
+          talento:'Talento',resultados:'Resultados',pqrs:'PQRS',incidentes:'Incidentes',
+          vencimientos:'Vencimientos',bitacora:'Bitácora',roi:'ROI',crosswalk:'Cross-walk',
+          chat:'Consulta IA',simulacro:'Simulacro',capa:'Plan CAPA',pamec:'PAMEC',sst:'SG-SST'};
+        var modLabel = modMap[d.moduloActual] || (d.moduloActual || '—');
+        return '<div class="envivo-row">'
+          + '<div class="envivo-dot' + (r.isActive ? '' : ' inactive') + '"></div>'
+          + '<div class="envivo-info">'
+          +   '<div class="envivo-ips">' + _esc(d.ipsNombre || d.email || 'Usuario') + '</div>'
+          +   '<div class="envivo-meta">' + _esc(d.email || '') + (d.rol?' · '+d.rol:'') + '</div>'
+          + '</div>'
+          + '<div class="envivo-modulo">' + _esc(modLabel) + '</div>'
+          + '<div class="envivo-time">' + r.ago + '</div>'
+          + '</div>';
+      }).join('');
+    }, function(e){ console.warn('[EnVivo] sesiones:', e); });
+
+  _enVivoUnsubs.push(unsubSes);
+
+  // ── 2. Visitas al landing (últimas 24h) ──
+  var unsubVis = db.collection('visitas')
+    .orderBy('timestamp', 'desc')
+    .limit(20)
+    .onSnapshot(function(snap) {
+      var el = document.getElementById('envivo-visitas-list');
+      if (!el) return;
+      if (snap.empty) { el.innerHTML = '<div class="envivo-empty">Sin visitas recientes</div>'; return; }
+
+      var now = Date.now();
+      var html = '';
+      snap.forEach(function(doc) {
+        var d = doc.data();
+        var ts = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate().getTime() : 0;
+        var ago = ts ? _agoStr(now - ts) : '—';
+        var iconMap = {pageview:'🌐',demo_open:'📋',cta_click:'🎯',form_submit:'✅',checklist:'📄'};
+        var icon = iconMap[d.evento] || '🔵';
+        var eventoLabel = {pageview:'Visita al landing',demo_open:'Abrió demo',
+          cta_click:'Clic en CTA',form_submit:'Envió formulario',checklist:'Descargó checklist'}[d.evento] || d.evento || 'Visita';
+        html += '<div class="visita-row">'
+          + '<div class="visita-icon">' + icon + '</div>'
+          + '<div class="visita-info">'
+          +   '<div class="visita-evento">' + _esc(eventoLabel) + '</div>'
+          +   '<div class="visita-meta">Ref: ' + _esc((d.referrer||'directo').slice(0,40)) + ' · ' + ago + '</div>'
+          + '</div></div>';
+      });
+      el.innerHTML = html;
+    }, function(e){ console.warn('[EnVivo] visitas:', e); });
+
+  _enVivoUnsubs.push(unsubVis);
+
+  // ── 3. Leads recientes ──
+  var unsubLeads = db.collection('leads')
+    .orderBy('fecha', 'desc')
+    .limit(10)
+    .onSnapshot(function(snap) {
+      var el = document.getElementById('envivo-leads-list');
+      if (!el) return;
+      if (snap.empty) { el.innerHTML = '<div class="envivo-empty">Sin leads recientes</div>'; return; }
+
+      var now = Date.now();
+      var html = '<table class="data-table"><thead><tr>'
+        + '<th>IPS / Contacto</th><th>Email</th><th>Ciudad</th><th>Fuente</th><th>Hace</th>'
+        + '</tr></thead><tbody>';
+      snap.forEach(function(doc) {
+        var d = doc.data();
+        var ts = d.fecha && d.fecha.toDate ? d.fecha.toDate().getTime() :
+                 d.fecha ? new Date(d.fecha).getTime() : 0;
+        var ago = ts ? _agoStr(now - ts) : '—';
+        html += '<tr>'
+          + '<td><strong>' + _esc(d.nombre||'—') + '</strong><br><small style="color:var(--text-muted)">' + _esc(d.tipo||'') + '</small></td>'
+          + '<td><a href="mailto:' + _esc(d.email||'') + '" style="color:var(--primary)">' + _esc(d.email||'—') + '</a></td>'
+          + '<td>' + _esc(d.ciudad||'—') + '</td>'
+          + '<td><span style="font-size:11px;background:rgba(0,188,212,.12);color:#00bcd4;border-radius:4px;padding:2px 6px">' + _esc(d.fuente||d.tipo||'landing') + '</span></td>'
+          + '<td style="white-space:nowrap">' + ago + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }, function(e){ console.warn('[EnVivo] leads:', e); });
+
+  _enVivoUnsubs.push(unsubLeads);
+}
+
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function _agoStr(ms) {
+  var s = Math.floor(ms / 1000);
+  if (s < 60)  return 'hace ' + s + 's';
+  var m = Math.floor(s / 60);
+  if (m < 60)  return 'hace ' + m + 'min';
+  var h = Math.floor(m / 60);
+  if (h < 24)  return 'hace ' + h + 'h';
+  return 'hace ' + Math.floor(h/24) + 'd';
+}
+
 
 function showToast(msg, type = 'info') {
   const toast = document.getElementById('toast');

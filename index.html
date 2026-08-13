@@ -32,6 +32,7 @@
 <meta name="description" content="Software con IA para gestión de calidad en IPS colombianas. Resolución 3100, auditorías internas, generación de documentos normativos y alertas de habilitación.">
 <link rel="canonical" href="https://normalis.co/">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 // Firebase para captura de leads
@@ -43,6 +44,61 @@
     if(!firebase.apps.length) firebase.initializeApp(cfg);
     window._nlDB = firebase.firestore();
   }catch(e){ window._nlDB = null; }
+})();
+
+// ── Tracking anónimo de visitas al landing ───────────────────────────────
+(function(){
+  var _sessionId = null;
+  try {
+    _sessionId = sessionStorage.getItem('nl_visit_id');
+    if (!_sessionId) {
+      _sessionId = 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+      sessionStorage.setItem('nl_visit_id', _sessionId);
+    }
+  } catch(_) { _sessionId = 'v_anon_' + Date.now(); }
+
+  window._nlVisitId = _sessionId;
+
+  function _trackEvento(evento, extra) {
+    if (!window._nlDB || !_sessionId) return;
+    window._nlDB.collection('visitas').doc(_sessionId + '_' + evento + '_' + Date.now()).set(
+      Object.assign({
+        sessionId: _sessionId,
+        pagina:    'landing',
+        referrer:  document.referrer || 'directo',
+        evento:    evento,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }, extra || {})
+    ).catch(function(){});
+  }
+
+  // Trackear pageview al cargar
+  window.addEventListener('DOMContentLoaded', function(){
+    _trackEvento('pageview');
+
+    // Trackear click en CTA principal
+    document.querySelectorAll('[href*="registro"], [onclick*="registro"], .btn-primary').forEach(function(el){
+      el.addEventListener('click', function(){
+        _trackEvento('cta_click', { cta: el.textContent.trim().slice(0,40) });
+      }, { once: true });
+    });
+
+    // Trackear scroll hasta la sección demo
+    var demoSection = document.getElementById('demo') || document.querySelector('.demo-section, #registro');
+    if (demoSection) {
+      var _demoTracked = false;
+      window.addEventListener('scroll', function(){
+        if (_demoTracked) return;
+        var rect = demoSection.getBoundingClientRect();
+        if (rect.top < window.innerHeight) {
+          _demoTracked = true;
+          _trackEvento('demo_open');
+        }
+      }, { passive: true });
+    }
+  });
+
+  window._nlTrackEvento = _trackEvento;
 })();
 </script>
 <meta property="og:title" content="Normalis | Software de Gestión de Calidad para IPS">
@@ -1129,6 +1185,8 @@ function submitDemo(){
   if(window._nlDB){
     window._nlDB.collection('leads').add(leadData).catch(function(){});
   }
+  // Trackear como evento de visita
+  try { if(typeof window._nlTrackEvento==='function') window._nlTrackEvento('form_submit',{nombre:nombre,ciudad:ciudad,tipo:tipo}); } catch(_){}
 
   // ── 2. Copia local (respaldo) ──────────────────────────────────────────────
   try{
