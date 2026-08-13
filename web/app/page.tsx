@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-const TYPING_WORDS = ['la habilitación.', 'el PAMEC.', 'la visita de la Supersalud.', 'los vencimientos.', 'la acreditación.'];
+const TYPING_WORDS = ['la habilitación.', 'el PAMEC.', 'la visita de la Supersalud.', 'los vencimientos.', 'la acreditación.', 'el SG-SST.', 'la seguridad del paciente.', 'la norma ISO 7101.'];
 
 // ─── Nav ───────────────────────────────────────────────────────────────────────
 function Navbar({ onDemo }: { onDemo: () => void }) {
@@ -20,6 +20,7 @@ function Navbar({ onDemo }: { onDemo: () => void }) {
 
   const navLinks = [
     { href: '#funcionalidades', label: 'Funcionalidades' },
+    { href: '#crosswalk', label: 'ISO / JCI' },
     { href: '#como-funciona', label: 'Cómo funciona' },
     { href: '#preview', label: 'Vista previa' },
     { href: '#precios', label: 'Precios' },
@@ -145,10 +146,23 @@ function Hero({ onDemo }: { onDemo: () => void }) {
         </div>
 
         {/* Floating badges */}
-        <div className="flex justify-center gap-3 flex-wrap mb-12">
-          {['559 criterios', 'Res. 3100/2019', 'PAMEC', 'SG-SST', 'IA normativa'].map(b => (
-            <span key={b} className="bg-white/5 border border-white/10 text-white/60 text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
-              {b}
+        <div className="flex justify-center gap-2 flex-wrap mb-12">
+          {[
+            { label: '15 módulos activos', glow: true },
+            { label: 'Res. 3100/2019', glow: false },
+            { label: 'Res. 465/2025', glow: false },
+            { label: 'ISO 7101:2023', glow: false },
+            { label: 'JCI 8ª ed.', glow: false },
+            { label: 'PAMEC · SG-SST', glow: false },
+            { label: 'IA normativa', glow: true },
+          ].map(b => (
+            <span key={b.label}
+              className="text-xs px-3 py-1.5 rounded-full backdrop-blur-sm font-medium"
+              style={b.glow
+                ? { background: 'rgba(0,188,212,.15)', border: '1px solid rgba(0,188,212,.35)', color: '#67e8f9', boxShadow: '0 0 10px rgba(0,188,212,.15)' }
+                : { background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.6)' }
+              }>
+              {b.label}
             </span>
           ))}
         </div>
@@ -231,9 +245,9 @@ function ComplianceBand() {
 // ─── Stats ─────────────────────────────────────────────────────────────────────
 function Stats() {
   const stats = [
-    { num: '559',  suffix: '',  label: 'criterios de auditoría según Res. 3100', icon: '📋' },
-    { num: '11',   suffix: '',  label: 'segmentos normativos cubiertos', icon: '🎯' },
-    { num: '6',    suffix: '',  label: 'documentos normativos generados automáticamente', icon: '📄' },
+    { num: '780',  suffix: '',  label: 'criterios de auditoría cubiertos en 22 modalidades', icon: '📋' },
+    { num: '15',   suffix: '',  label: 'módulos activos en la plataforma', icon: '⊞' },
+    { num: '3',    suffix: '',  label: 'marcos normativos cruzados: Res. 3100 · ISO 7101 · JCI', icon: '🔄' },
     { num: '100',  suffix: '%', label: 'en línea, sin instalación, desde cualquier dispositivo', icon: '☁️' },
     { num: '200',  suffix: '+', label: 'horas ahorradas al año en gestión de calidad', icon: '⏱️' },
     { num: '50',   suffix: '%', label: 'más rápido en elaboración de informes y CAPAs', icon: '🚀' },
@@ -295,15 +309,21 @@ function Problems() {
 // ─── Features ─────────────────────────────────────────────────────────────────
 function Features() {
   const features = [
-    { icon: '🔍', title: 'Auditoría Interna Completa',       tag: 'Res. 3100/2019',    desc: '559 criterios en 11 segmentos. Obtén tu score de habilitación al instante.', grad: 'from-teal-400 to-cyan-500' },
-    { icon: '📄', title: 'Generador de Documentos',          tag: 'Firma digital',      desc: 'Manual de Bioseguridad, Plan de Residuos, Protocolo de Atención y más — listos en minutos.', grad: 'from-blue-400 to-indigo-500' },
-    { icon: '⏰', title: 'Control de Vencimientos',          tag: 'Alertas automáticas', desc: 'Alertas por email antes de que venzan tarjetas, vacunas, contratos y certificaciones.', grad: 'from-amber-400 to-orange-500' },
-    { icon: '📊', title: 'Indicadores de Calidad PAMEC',     tag: 'Res. 256/2016',      desc: 'Registra y monitorea indicadores de satisfacción, eventos adversos, reingresos y más.', grad: 'from-violet-400 to-purple-500' },
-    { icon: '🤖', title: 'IA Normativa',                     tag: 'Gemini + RAG',       desc: 'Chat con respuestas basadas en normativa colombiana vigente. Rápido, preciso y citado.', grad: 'from-pink-400 to-rose-500' },
-    { icon: '📬', title: 'PQRS Integrado',                   tag: 'Peticiones y quejas', desc: 'Registra, clasifica y gestiona PQR. Exporta reportes para auditorías en segundos.', grad: 'from-emerald-400 to-teal-500' },
-    { icon: '🛡️', title: 'Incidentes y Eventos Adversos',   tag: 'Seguridad del paciente', desc: 'Registro con clasificación por severidad, seguimiento y plan de acción documentado.', grad: 'from-red-400 to-rose-500' },
-    { icon: '🦺', title: 'SG-SST · Seguridad en el Trabajo', tag: 'Res. 0312/2019',    desc: 'Autoevaluación en 3 fases. Score automático y PDF para presentar ante la ARL.', grad: 'from-yellow-400 to-amber-500' },
-    { icon: '📱', title: 'PWA · Funciona Offline',           tag: 'iOS y Android',      desc: 'Instala NormaLis en tu celular. Audita en campo sin conexión y sincroniza después.', grad: 'from-slate-400 to-slate-600' },
+    { icon: '🔍', title: 'Auditoría Interna',               tag: 'Res. 3100/2019',        desc: '780 criterios en 22 modalidades. Score de habilitación al instante con plan de mejora.', grad: 'from-teal-400 to-cyan-500' },
+    { icon: '📄', title: 'Generador de Documentos',         tag: 'Firma digital',          desc: 'Manual de Bioseguridad, Plan de Residuos, Protocolos y más — listos en minutos con datos de tu IPS.', grad: 'from-blue-400 to-indigo-500' },
+    { icon: '⏰', title: 'Control de Vencimientos',         tag: 'Alertas automáticas',    desc: 'Alertas antes de que venzan tarjetas profesionales, vacunas, contratos y certificaciones.', grad: 'from-amber-400 to-orange-500' },
+    { icon: '📈', title: 'PAMEC e Indicadores',             tag: 'Res. 256/2016',          desc: 'Registra y monitorea indicadores de satisfacción, eventos adversos, reingresos y más.', grad: 'from-violet-400 to-purple-500' },
+    { icon: '🤖', title: 'Asistente IA Normativo',          tag: 'Gemini + RAG',           desc: 'Chat con respuestas basadas en normativa colombiana vigente. Rápido, preciso y citado.', grad: 'from-pink-400 to-rose-500' },
+    { icon: '✓',  title: 'CAPAs',                           tag: 'Mejora continua',        desc: 'Acciones correctivas y preventivas con seguimiento, responsables, fechas y evidencias.', grad: 'from-green-400 to-emerald-500' },
+    { icon: '👥', title: 'Talento Humano',                  tag: 'Gestión de personal',    desc: 'Contratos, hojas de vida, tarjetas profesionales y certificaciones del equipo clínico centralizadas.', grad: 'from-cyan-400 to-teal-500' },
+    { icon: '📝', title: 'Consentimientos Informados',      tag: 'Habeas Data · Ley 1581', desc: 'Plantillas de consentimientos por especialidad, historial firmado y trazabilidad documental.', grad: 'from-purple-400 to-violet-500' },
+    { icon: '✍️', title: 'Firma y Versiones',              tag: 'Trazabilidad',           desc: 'Control de versiones de documentos, firma digital y registro de quién aprobó cada cambio.', grad: 'from-indigo-400 to-blue-500' },
+    { icon: '🔄', title: 'Comparador ISO 7101 / JCI',       tag: 'Crosswalk normativo',    desc: 'Cruza los 7 estándares de habilitación con ISO 7101:2023 y JCI 8ª edición. Score de equivalencia.', grad: 'from-sky-400 to-cyan-500' },
+    { icon: '📬', title: 'PQRS Integrado',                  tag: 'Peticiones y quejas',    desc: 'Registra, clasifica y gestiona PQR. Exporta reportes para auditorías en segundos.', grad: 'from-emerald-400 to-teal-500' },
+    { icon: '🛡️', title: 'Incidentes y Eventos Adversos',  tag: 'Seguridad del paciente', desc: 'Registro con clasificación por severidad, seguimiento y plan de acción documentado.', grad: 'from-red-400 to-rose-500' },
+    { icon: '🦺', title: 'SG-SST',                          tag: 'Res. 0312/2019',         desc: 'Autoevaluación en 3 fases. Score automático y PDF para presentar ante la ARL.', grad: 'from-yellow-400 to-amber-500' },
+    { icon: '📋', title: 'Bitácora de Auditoría',           tag: 'Log de actividades',     desc: 'Registro automático de todas las acciones: auditorías, documentos, CAPAs y cambios.', grad: 'from-slate-400 to-slate-500' },
+    { icon: '📱', title: 'PWA · Funciona Offline',          tag: 'iOS y Android',          desc: 'Instala NormaLis en tu celular. Audita en campo sin conexión y sincroniza después.', grad: 'from-gray-400 to-slate-600' },
   ];
   return (
     <section className="py-20 px-5 bg-slate-50" id="funcionalidades">
@@ -313,20 +333,109 @@ function Features() {
           <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">Gestión de calidad integral<br />en un solo lugar</h2>
           <p className="text-slate-500 text-lg">Todo lo que tu IPS necesita para cumplir la normativa y estar lista para cualquier visita.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map(f => (
-            <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 bg-gradient-to-br ${f.grad} shadow-lg`}>
+            <div key={f.title}
+              className="relative bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group overflow-hidden"
+              style={{ borderTop: '2px solid transparent', backgroundImage: 'linear-gradient(white, white), linear-gradient(90deg, transparent, transparent)', backgroundOrigin: 'border-box', backgroundClip: 'padding-box, border-box' }}
+            >
+              {/* Top accent bar */}
+              <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${f.grad} opacity-60 group-hover:opacity-100 transition-opacity`} />
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-4 bg-gradient-to-br ${f.grad} shadow-md shadow-black/10`}>
                 {f.icon}
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">{f.desc}</p>
-              <span className="inline-block bg-teal-50 text-teal-700 border border-teal-100 text-xs font-bold px-3 py-1 rounded-full">
+              <h3 className="font-bold text-slate-900 mb-2 text-sm">{f.title}</h3>
+              <p className="text-xs text-slate-500 leading-relaxed mb-4">{f.desc}</p>
+              <span className="inline-block bg-slate-50 text-slate-600 border border-slate-100 text-[10px] font-bold px-2.5 py-1 rounded-full">
                 ✓ {f.tag}
               </span>
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── ISO / JCI Crosswalk ──────────────────────────────────────────────────────
+function CrosswalkSection() {
+  const estandares = [
+    { label: 'Talento Humano',         iso: '§5.3 · §7.2 · §7.3', isoScore: 88, jci: 'SQE · QPS.3',      jciScore: 82 },
+    { label: 'Infraestructura',        iso: '§7.1 · §8.1',         isoScore: 79, jci: 'FMS.1 · FMS.4',    jciScore: 71 },
+    { label: 'Dotación',               iso: '§7.1.5 · §8.5',       isoScore: 83, jci: 'FMS.8 · AOP.5',    jciScore: 78 },
+    { label: 'Procesos Prioritarios',  iso: '§8.5 · §8.7',         isoScore: 91, jci: 'COP.1 · IPSG',     jciScore: 87 },
+    { label: 'Historia Clínica',       iso: '§7.5 · §8.2',         isoScore: 85, jci: 'MCI.1 · MOI.11',   jciScore: 80 },
+  ];
+  return (
+    <section className="py-20 px-5 overflow-hidden" id="crosswalk"
+      style={{ background: 'linear-gradient(135deg, #0f2027 0%, #0d3d3d 50%, #134e4a 100%)' }}>
+      {/* Glows */}
+      <div className="pointer-events-none absolute left-0 top-1/2 w-64 h-64 rounded-full opacity-15 blur-3xl"
+           style={{ background: 'radial-gradient(circle, #00BCD4, transparent)' }} />
+      <div className="max-w-5xl mx-auto relative">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+          <div>
+            <span className="inline-block bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
+              🔄 Nuevo · Crosswalk normativo
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3 leading-tight">
+              Tu IPS en estándares<br />
+              <span style={{ background: 'linear-gradient(90deg,#26A69A,#00BCD4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                internacionales
+              </span>
+            </h2>
+            <p className="text-slate-400 text-base max-w-lg">
+              NormaLis cruza automáticamente los 7 estándares de habilitación colombiana con <strong className="text-white">ISO 7101:2023</strong> y <strong className="text-white">JCI 8ª edición</strong>. Conoce tu equivalencia internacional sin trabajo extra.
+            </p>
+          </div>
+          <div className="flex gap-4 shrink-0">
+            <div className="text-center p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)' }}>
+              <p className="text-3xl font-black text-cyan-400">~82%</p>
+              <p className="text-xs text-slate-400 mt-0.5">equiv. ISO 7101</p>
+            </div>
+            <div className="text-center p-4 rounded-2xl" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)' }}>
+              <p className="text-3xl font-black" style={{ color: '#A78BFA' }}>~75%</p>
+              <p className="text-xs text-slate-400 mt-0.5">equiv. JCI 8ª ed.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,.1)' }}>
+          <div className="grid grid-cols-12 text-xs font-bold uppercase tracking-widest px-5 py-3"
+               style={{ background: 'rgba(255,255,255,.05)', borderBottom: '1px solid rgba(255,255,255,.08)', color: 'rgba(255,255,255,.4)' }}>
+            <span className="col-span-3">Estándar Res. 3100</span>
+            <span className="col-span-3">ISO 7101:2023</span>
+            <span className="col-span-2 text-center">Equiv. ISO</span>
+            <span className="col-span-3">JCI 8ª edición</span>
+            <span className="col-span-1 text-center">JCI</span>
+          </div>
+          {estandares.map((e, i) => (
+            <div key={e.label}
+              className="grid grid-cols-12 items-center px-5 py-4 text-sm transition-colors"
+              style={{
+                borderBottom: i < estandares.length - 1 ? '1px solid rgba(255,255,255,.06)' : 'none',
+                background: 'rgba(0,0,0,.15)',
+              }}>
+              <span className="col-span-3 font-semibold text-white text-xs">{e.label}</span>
+              <span className="col-span-3 text-[11px] font-mono" style={{ color: '#80CBC4' }}>{e.iso}</span>
+              <div className="col-span-2 flex flex-col items-center gap-1">
+                <span className="text-sm font-black" style={{ color: '#26A69A' }}>{e.isoScore}%</span>
+                <div className="w-full h-1 rounded-full" style={{ background: 'rgba(255,255,255,.1)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${e.isoScore}%`, background: 'linear-gradient(90deg,#26A69A,#00BCD4)' }} />
+                </div>
+              </div>
+              <span className="col-span-3 text-[11px] font-mono" style={{ color: '#A78BFA' }}>{e.jci}</span>
+              <div className="col-span-1 flex flex-col items-center gap-1">
+                <span className="text-sm font-black" style={{ color: '#A78BFA' }}>{e.jciScore}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-xs mt-4" style={{ color: 'rgba(255,255,255,.25)' }}>
+          Disponible en el módulo <strong className="text-white/50">Comparador Normativo</strong> · Solo plan Profesional y Enterprise
+        </p>
       </div>
     </section>
   );
@@ -549,6 +658,98 @@ const SCREENS = [
       </div>
     ),
   },
+  {
+    id: 'crosswalk',
+    label: 'ISO / JCI',
+    icon: '🔄',
+    desc: 'Cruza los estándares colombianos con ISO 7101:2023 y JCI 8ª edición. Score de equivalencia automático.',
+    content: (
+      <div className="flex h-full flex-col p-3 gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-bold text-white">Comparador Normativo · Crosswalk</div>
+            <div className="text-xs text-slate-400 mt-0.5">Res. 3100/2019 ↔ ISO 7101:2023 ↔ JCI 8ª ed.</div>
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-teal-500/20 border border-teal-500/30 rounded-xl px-2 py-1 text-center">
+              <div className="text-sm font-black text-teal-400">82%</div>
+              <div className="text-[9px] text-slate-400">ISO</div>
+            </div>
+            <div className="rounded-xl px-2 py-1 text-center" style={{ background: 'rgba(167,139,250,.15)', border: '1px solid rgba(167,139,250,.3)' }}>
+              <div className="text-sm font-black" style={{ color: '#A78BFA' }}>75%</div>
+              <div className="text-[9px] text-slate-400">JCI</div>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {['ISO 7101', 'JCI 8ª ed.'].map((tab, i) => (
+            <span key={tab} className={`text-xs px-3 py-1 rounded-full border font-semibold ${i === 0 ? 'bg-teal-500 text-white border-teal-500' : 'text-slate-400 border-slate-600'}`}>{tab}</span>
+          ))}
+        </div>
+        <div className="flex-1 flex flex-col gap-2 overflow-hidden">
+          {[
+            { label: 'Talento Humano',       sec: '§5.3 · §7.2 · §7.3', pct: 88 },
+            { label: 'Infraestructura',      sec: '§7.1 · §8.1',         pct: 79 },
+            { label: 'Dotación',             sec: '§7.1.5 · §8.5',       pct: 83 },
+            { label: 'Procesos Prioritarios',sec: '§8.5 · §8.7',         pct: 91 },
+            { label: 'Historia Clínica',     sec: '§7.5 · §8.2',         pct: 85 },
+          ].map((item) => (
+            <div key={item.label} className="bg-slate-800/60 border border-white/5 rounded-lg p-2 flex items-center gap-3">
+              <span className="text-xs text-white font-medium w-28 flex-shrink-0 truncate">{item.label}</span>
+              <span className="text-[10px] font-mono text-teal-400/70 w-24 flex-shrink-0">{item.sec}</span>
+              <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-400" style={{ width: `${item.pct}%` }} />
+              </div>
+              <span className="text-xs font-black text-teal-400 w-8 text-right flex-shrink-0">{item.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'talento',
+    label: 'Talento',
+    icon: '👥',
+    desc: 'Gestión centralizada de contratos, tarjetas profesionales y hojas de vida del equipo clínico.',
+    content: (
+      <div className="flex h-full flex-col p-3 gap-3">
+        <div className="text-sm font-bold text-white">Talento Humano · Gestión de Personal</div>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { num: '8', label: 'Personal activo', color: 'text-teal-400', bg: 'bg-teal-500/10 border-teal-500/20' },
+            { num: '2', label: 'Docs por vencer', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+            { num: '6', label: 'Al día',           color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+          ].map(s => (
+            <div key={s.label} className={`rounded-xl p-2.5 border ${s.bg}`}>
+              <div className={`text-xl font-black ${s.color}`}>{s.num}</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
+          {[
+            { name: 'Dr. Gómez Rueda',      cargo: 'Médico general',   status: 'ok',      vence: 'Mar 2027' },
+            { name: 'Enf. Ramírez López',    cargo: 'Jefe de enfermería', status: 'alerta',  vence: 'Nov 2026' },
+            { name: 'Dr. Vargas Herrera',    cargo: 'Odontólogo',       status: 'ok',      vence: 'Jun 2027' },
+            { name: 'Aux. Torres Medina',    cargo: 'Auxiliar clínica',  status: 'vencido', vence: 'Oct 2026' },
+          ].map(p => (
+            <div key={p.name} className="bg-slate-800/60 border border-white/5 rounded-lg px-3 py-2 flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-600 to-cyan-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                {p.name[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-white truncate">{p.name}</div>
+                <div className="text-[10px] text-slate-400">{p.cargo}</div>
+              </div>
+              <div className="text-[10px] text-slate-500 flex-shrink-0">{p.vence}</div>
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'ok' ? 'bg-emerald-400' : p.status === 'alerta' ? 'bg-amber-400' : 'bg-red-400'}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
 ] as const;
 
 // ─── Demo Video ────────────────────────────────────────────────────────────────
@@ -576,7 +777,7 @@ function DemoVideo() {
             </div>
             <div className="relative text-center">
               <p className="text-white font-black text-xl mb-1">Ver demo completo de NormaLis</p>
-              <p className="text-teal-300 text-sm">Recorrido de 11 módulos · ~2:30 min · Sin registro</p>
+              <p className="text-teal-300 text-sm">Recorrido de 15 módulos · ~3 min · Sin registro</p>
             </div>
           </button>
         ) : (
@@ -590,7 +791,7 @@ function DemoVideo() {
       </div>
       {!playing && (
         <p className="text-center text-xs text-slate-400 mt-3">
-          Habilitación · PAMEC · IA Normativa · SG-SST · Documentos · y más
+          Auditoría · PAMEC · IA Normativa · CAPAs · Talento · Vencimientos · ISO 7101 · JCI · SG-SST · Documentos · y más
         </p>
       )}
     </div>
@@ -694,7 +895,7 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
       name: 'Profesional',
       monthly: '$399K', annual: '$332K',
       desc: 'Para IPS multi-servicio con equipo de calidad.',
-      features: ['1 sede · 5 usuarios', 'Auditoría completa 559 criterios', 'Todos los documentos + firma digital', 'PAMEC e indicadores Res. 256', 'PQRS, incidentes y bitácora', 'SG-SST Res. 0312/2019', 'Chat IA normativo', 'Soporte prioritario'],
+      features: ['1 sede · 5 usuarios', 'Auditoría completa 780 criterios', 'Todos los documentos + firma digital', 'PAMEC e indicadores Res. 256', 'CAPAs + Talento Humano', 'Consentimientos informados', 'PQRS, incidentes y bitácora', 'SG-SST Res. 0312/2019', 'Comparador ISO 7101 / JCI', 'Chat IA normativo', 'Soporte prioritario'],
       popular: true, cta: 'Solicitar demo',
       iconBg: 'from-teal-400 to-teal-600',
       boldUrlAnnual: 'https://checkout.bold.co/payment/LNK_RG2A6L92PU',
@@ -1071,6 +1272,7 @@ export default function LandingPage() {
       <Stats />
       <Problems />
       <Features />
+      <CrosswalkSection />
       <HowItWorks />
       <ProductPreview />
       <Pricing onDemo={() => setDemoOpen(true)} />
