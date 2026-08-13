@@ -2,13 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
+/* ── Design tokens NormaLis — idénticos a normalis-styles.css ── */
 :root {
-  --color-primary: #0d9488;
+  --primary:       #00796B;
+  --primary-dark:  #004D40;
+  --primary-light: #E0F2F1;
+  --success:       #10b981;
+  --warning:       #f59e0b;
+  --danger:        #ef4444;
+  --sidebar-bg:    #00251A;
+  --sidebar-text:  #80CBC4;
+  --sidebar-active:#26A69A;
+  --bg:            #E0F2F1;
+  --card:          #ffffff;
+  --border:        #B2DFDB;
+  --text:          #00251A;
+  --text-muted:    #00695C;
+  --radius:        12px;
+  --shadow:        0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:     0 4px 20px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
 }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  @apply bg-gray-50 text-gray-900 antialiased;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
+
+/* ── Cards: borde teal, sombra suave ── */
+.nl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ── Scrollbar suave ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #B2DFDB; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #80CBC4; }

@@ -22,23 +22,23 @@ function NitWarningBanner() {
 }
 
 const NAV_ITEMS = [
-  { href: '/dashboard',                    label: 'Dashboard',       icon: '⊞'  },
-  { href: '/dashboard/chat',               label: 'Asistente IA',    icon: '🤖' },
-  { href: '/dashboard/auditoria',          label: 'Auditoría',       icon: '🔍' },
-  { href: '/dashboard/pamec',              label: 'PAMEC',           icon: '📈' },
-  { href: '/dashboard/capas',              label: 'CAPAs',           icon: '✓'  },
-  { href: '/dashboard/indicadores',        label: 'Indicadores',     icon: '📊' },
-  { href: '/dashboard/vencimientos',       label: 'Vencimientos',    icon: '📅' },
-  { href: '/dashboard/sg-sst',             label: 'SG-SST',          icon: '🦺' },
-  { href: '/dashboard/simulacros',         label: 'Simulacro',       icon: '🔔' },
-  { href: '/dashboard/documentos',         label: 'Documentos',      icon: '📄' },
-  { href: '/dashboard/pqrs',               label: 'PQRS',            icon: '📬' },
-  { href: '/dashboard/incidentes',         label: 'Incidentes',      icon: '🛡️' },
-  { href: '/dashboard/bitacora',           label: 'Bitácora',        icon: '📋' },
-  { href: '/dashboard/talento',            label: 'Talento Humano',  icon: '👥' },
-  { href: '/dashboard/firma',              label: 'Firma y Versiones', icon: '✍️' },
-  { href: '/dashboard/consentimientos',    label: 'Consentimientos', icon: '📝' },
-  { href: '/dashboard/comparador',         label: 'Comparador Normativo', icon: '🔄' },
+  { href: '/dashboard',                 label: 'Dashboard',            icon: '⊞'  },
+  { href: '/dashboard/chat',            label: 'Asistente IA',         icon: '🤖' },
+  { href: '/dashboard/auditoria',       label: 'Auditoría',            icon: '🔍' },
+  { href: '/dashboard/pamec',           label: 'PAMEC',                icon: '📈' },
+  { href: '/dashboard/capas',           label: 'CAPAs',                icon: '✓'  },
+  { href: '/dashboard/indicadores',     label: 'Indicadores',          icon: '📊' },
+  { href: '/dashboard/vencimientos',    label: 'Vencimientos',         icon: '📅' },
+  { href: '/dashboard/sg-sst',          label: 'SG-SST',               icon: '🦺' },
+  { href: '/dashboard/simulacros',      label: 'Simulacro',            icon: '🔔' },
+  { href: '/dashboard/documentos',      label: 'Documentos',           icon: '📄' },
+  { href: '/dashboard/pqrs',            label: 'PQRS',                 icon: '📬' },
+  { href: '/dashboard/incidentes',      label: 'Incidentes',           icon: '🛡️' },
+  { href: '/dashboard/bitacora',        label: 'Bitácora',             icon: '📋' },
+  { href: '/dashboard/talento',         label: 'Talento Humano',       icon: '👥' },
+  { href: '/dashboard/firma',           label: 'Firma y Versiones',    icon: '✍️' },
+  { href: '/dashboard/consentimientos', label: 'Consentimientos',      icon: '📝' },
+  { href: '/dashboard/comparador',      label: 'Comparador Normativo', icon: '🔄' },
 ];
 
 function Sidebar() {
@@ -46,35 +46,67 @@ function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-primary-900 text-white flex flex-col">
-      <div className="p-5 border-b border-primary-700">
-        <h1 className="text-xl font-bold">NormaLis</h1>
-        <p className="text-xs text-primary-300 mt-1 truncate">{nombre || 'IPS'}</p>
-        <span className="text-xs bg-primary-700 px-2 py-0.5 rounded-full mt-1 inline-block capitalize">
+    <aside className="w-60 min-h-screen flex flex-col fixed top-0 left-0 h-screen z-50"
+           style={{ background: '#00251A' }}>
+
+      {/* Logo */}
+      <div className="px-4 py-5 flex items-center gap-3"
+           style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base text-white flex-shrink-0"
+             style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)', boxShadow: '0 0 14px rgba(0,188,212,.3)' }}>
+          N
+        </div>
+        <div>
+          <p className="text-base font-extrabold text-white leading-none">NormaLis</p>
+          <p className="text-xs mt-0.5 truncate max-w-[130px]"
+             style={{ color: '#475569' }}>{nombre || 'IPS'}</p>
+        </div>
+      </div>
+
+      {/* Badge rol */}
+      <div className="px-4 pt-3 pb-1">
+        <span className="text-xs px-2 py-0.5 rounded-full capitalize font-semibold"
+              style={{ background: 'rgba(0,121,107,.18)', color: '#80CBC4' }}>
           {rol}
         </span>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
-              ${pathname === item.href
-                ? 'bg-primary-600 text-white'
-                : 'text-primary-200 hover:bg-primary-800'}`}
-          >
-            <span>{item.icon}</span>
-            {item.label}
-          </Link>
-        ))}
+      {/* Nav items */}
+      <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
+        {NAV_ITEMS.map(item => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
+              style={active ? {
+                background: 'rgba(0,137,123,.20)',
+                color: '#26A69A',
+                borderLeft: '3px solid #26A69A',
+                paddingLeft: '9px',
+                fontWeight: 600,
+              } : {
+                color: '#80CBC4',
+              }}
+              onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.06)'; (e.currentTarget as HTMLElement).style.color = '#e2e8f0'; } }}
+              onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = '#80CBC4'; } }}
+            >
+              <span className="text-sm w-5 text-center flex-shrink-0">{item.icon}</span>
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="p-4 border-t border-primary-700">
+      {/* Footer */}
+      <div className="px-4 py-4" style={{ borderTop: '1px solid rgba(255,255,255,.07)' }}>
         <button
           onClick={() => signOut(auth)}
-          className="w-full text-left text-xs text-primary-300 hover:text-white transition-colors"
+          className="w-full text-left text-xs transition-colors"
+          style={{ color: '#475569' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#475569'; }}
         >
           Cerrar sesión
         </button>
@@ -86,9 +118,10 @@ function Sidebar() {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen" style={{ background: '#E0F2F1' }}>
         <Sidebar />
-        <div className="flex-1 flex flex-col overflow-auto bg-gray-50">
+        {/* offset por el sidebar fixed */}
+        <div className="flex-1 flex flex-col overflow-auto ml-60" style={{ background: '#E0F2F1' }}>
           <NitWarningBanner />
           <main className="flex-1">
             {children}
