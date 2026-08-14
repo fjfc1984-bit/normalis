@@ -1,0 +1,41 @@
+name: NormaLis Auto Blog - Generador de Contenido SEO
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+jobs:
+  generate-blog-post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generar articulo con Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const fs = require('fs');
+          const temas = ["Como preparar tu IPS para visita de habilitacion","Los 7 estandares Resolucion 3100 de 2019","Plan de mejoramiento IPS paso a paso","PAMEC implementacion practica IPS","Historia clinica electronica requisitos habilitacion","Errores habilitacion consultorios medicos","Medicamentos dispositivos medicos Res 3100","Infraestructura IPS requisitos habilitacion","Renovacion habilitacion IPS checklist","Procesos prioritarios salud documentacion"];
+          const weekNumber = Math.floor(Date.now() / (7*24*60*60*1000));
+          const tema = temas[weekNumber % temas.length];
+          const fecha = new Date().toISOString().split('T')[0];
+          const slug = tema.toLowerCase().replace(/[^a-z0-9 -]/g,'').replace(/ +/g,'-').substring(0,60);
+          const prompt = 'Experto habilitacion IPS Colombia. Articulo blog 700 palabras sobre: ' + tema + '. Referencias Resolucion 3100/2019. CTA normalis.co. Formato Markdown.';
+          const body = JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:1500}});
+          const req = https.request({hostname:'generativelanguage.googleapis.com',path:'/v1beta/models/gemini-1.5-flash:generateContent?key='+process.env.GEMINI_API_KEY,method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)}},(res)=>{let d='';res.on('data',c=>d+=c);res.on('end',()=>{const r=JSON.parse(d);const c=r.candidates[0].content.parts[0].text;const dir='blog';if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(dir+'/'+fecha+'-'+slug+'.md','---\ntitle: "'+tema+'"\ndate: "'+fecha+'"\n---\n\n'+c,'utf8');console.log('OK:'+dir+'/'+fecha+'-'+slug+'.md');});});
+          req.write(body);req.end();
+          EOF
+      - name: Commit y push
+        run: |
+          git config --global user.name "NormaLis Bot"
+          git config --global user.email "bot@normalis.co"
+          git diff --quiet && git diff --staged --quiet || (git add blog/ && git commit -m "feat(blog): SEO auto $(date +%Y-%m-%d)" && git push)
