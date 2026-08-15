@@ -9,11 +9,12 @@
 import { useEffect, useState } from 'react';
 import {
   collection, query, onSnapshot,
-  doc, updateDoc, addDoc, serverTimestamp,
+  doc, updateDoc, setDoc, addDoc, serverTimestamp,
   Timestamp, where, orderBy, limit,
 } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { db } from '@/lib/firebase';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { db, firebaseConfig } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
@@ -185,25 +186,38 @@ function PilotosTab({ show }: { show: (m: string, t: 'success'|'error') => void 
     e.preventDefault();
     setSaving(true);
     try {
-      const auth = getAuth();
-      const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      // ⚠️ CRITICAL: usar app secundaria aislada para crear el usuario.
+      // createUserWithEmailAndPassword en el auth PRINCIPAL auto-signa al nuevo
+      // piloto y desloguea al admin. La app secundaria tiene su propio estado de
+      // autenticación, completamente independiente del singleton principal.
+      const secondaryApp  = initializeApp(firebaseConfig, `normalis-create-${Date.now()}`);
+      const secondaryAuth = getAuth(secondaryApp);
+      let newUser;
+      try {
+        const { user } = await createUserWithEmailAndPassword(secondaryAuth, form.email, form.password);
+        newUser = user;
+      } finally {
+        await deleteApp(secondaryApp);
+      }
+
       const expires = new Date();
       expires.setDate(expires.getDate() + parseInt(form.dias));
 
-      await updateDoc(doc(db, 'usuarios', user.uid), {
-        nombre:         form.nombre,          // IPS name
-        nombreContacto: form.nombreContacto,  // contact person
-        email:          form.email,
-        nit:            form.nit,
-        ciudad:         form.ciudad,
-        tipoIPS:        form.tipoIPS,
-        rol:            'piloto',
-        activo:         true,
-        expiresAt:      Timestamp.fromDate(expires),
-        fechaSolicitud: serverTimestamp(),
-        estado:         'activo',
-        cargo:          '',
-        telefono:       '',
+      await setDoc(doc(db, 'usuarios', newUser.uid), {
+        nombre:             form.nombre,          // IPS name
+        nombreContacto:     form.nombreContacto,  // contact person
+        email:              form.email,
+        nit:                form.nit,
+        ciudad:             form.ciudad,
+        tipoIPS:            form.tipoIPS,
+        rol:                'piloto',
+        activo:             true,
+        expiresAt:          Timestamp.fromDate(expires),
+        fechaSolicitud:     serverTimestamp(),
+        estado:             'activo',
+        cargo:              '',
+        telefono:           '',
+        onboardingCompleto: false,
       });
 
       await addDoc(collection(db, 'ips'), {
