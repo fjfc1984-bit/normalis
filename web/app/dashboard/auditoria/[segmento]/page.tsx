@@ -140,7 +140,15 @@ export default function AuditoriaSegmentoPage({
   }, []);
 
   const handleSave = async () => {
-    await markComplete(score.score, flatQ.length);
+    // Calcular no-conformidades para el Agente Pilar
+    const ncs = getNonConformities(flatQ, answers);
+    const nonConformities = ncs.map(nc => ({
+      qKey:     nc.qKey,
+      areaName: nc.areaName,
+      question: nc.question,
+      answer:   nc.answer as 'no' | 'parcial',
+    }));
+    await markComplete(score.score, flatQ.length, nonConformities);
     setView('results');
     // Trigger AI analysis when going to results
     handleAiAnalysis();

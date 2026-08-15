@@ -9,6 +9,13 @@ import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import type { AuditAnswers } from './auditTypes';
 
+export interface NonConformityItem {
+  qKey:     string;
+  areaName: string;
+  question: string;
+  answer:   'no' | 'parcial';
+}
+
 export interface AuditSession {
   uid: string;
   segmento: string;
@@ -27,7 +34,7 @@ interface UseAuditReturn {
   completed: boolean;
   savedAt: string | null;
   setAnswer: (qKey: string, value: string) => void;
-  markComplete: (score: number, totalQ: number) => Promise<void>;
+  markComplete: (score: number, totalQ: number, nonConformities?: NonConformityItem[]) => Promise<void>;
   resetAudit: () => Promise<void>;
 }
 
@@ -104,7 +111,11 @@ export function useAudit(segmento: string): UseAuditReturn {
     });
   }, [persistAnswers]);
 
-  const markComplete = useCallback(async (score: number, totalQ: number) => {
+  const markComplete = useCallback(async (
+    score: number,
+    totalQ: number,
+    nonConformities?: NonConformityItem[],
+  ) => {
     const user = auth.currentUser;
     if (!user) return;
     setSaving(true);
@@ -122,6 +133,10 @@ export function useAudit(segmento: string): UseAuditReturn {
         answeredQ: answered,
         completedAt: now,
         updatedAt: now,
+        // Campos para Agente Pilar (Cloud Function)
+        nonConformities: nonConformities ?? [],
+        agenteStatus: 'pendiente',   // 'pendiente' | 'procesando' | 'completado' | 'error'
+        agenteProcessedAt: null,
       }, { merge: true });
       setCompleted(true);
       setSavedAt(now);
