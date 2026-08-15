@@ -148,7 +148,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
         {/* Floating badges */}
         <div className="flex justify-center gap-2 flex-wrap mb-12">
           {[
-            { label: '15 módulos activos', glow: true },
+            { label: '16 módulos activos', glow: true },
             { label: 'Res. 1732/2026', glow: true },
             { label: 'ISO 7101:2023', glow: false },
             { label: 'JCI 8ª ed.', glow: false },
@@ -224,7 +224,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
 
 // ─── Compliance band ───────────────────────────────────────────────────────────
 function ComplianceBand() {
-  const pills = ['Ministerio de Salud', 'Res. 1732/2026', 'Res. 256/2016 · PAMEC', 'RETHUS · REPS', 'Res. 0312/2019 · SG-SST'];
+  const pills = ['Ministerio de Salud', 'Res. 1732/2026', 'Res. 256/2016 · PAMEC', 'RETHUS · REPS', 'ISO 31000:2018 · Riesgo', 'Res. 1774/2025 · SG-SST'];
   return (
     <div className="bg-slate-50 border-y border-slate-200 py-8 px-5">
       <p className="text-center text-xs text-slate-400 uppercase tracking-widest mb-5 font-semibold">
@@ -245,7 +245,7 @@ function ComplianceBand() {
 function Stats() {
   const stats = [
     { num: '780',  suffix: '',  label: 'criterios de auditoría cubiertos en 22 modalidades', icon: '📋' },
-    { num: '15',   suffix: '',  label: 'módulos activos en la plataforma', icon: '⊞' },
+    { num: '16',   suffix: '',  label: 'módulos activos en la plataforma', icon: '⊞' },
     { num: '3',    suffix: '',  label: 'marcos normativos cruzados: Res. 1732 · ISO 7101 · JCI', icon: '🔄' },
     { num: '100',  suffix: '%', label: 'en línea, sin instalación, desde cualquier dispositivo', icon: '☁️' },
     { num: '200',  suffix: '+', label: 'horas ahorradas al año en gestión de calidad', icon: '⏱️' },
@@ -320,7 +320,8 @@ function Features() {
     { icon: '🔄', title: 'Comparador ISO 7101 / JCI',       tag: 'Crosswalk normativo',    desc: 'Cruza los 7 estándares de habilitación con ISO 7101:2023 y JCI 8ª edición. Score de equivalencia.', grad: 'from-sky-400 to-cyan-500' },
     { icon: '📬', title: 'PQRS Integrado',                  tag: 'Peticiones y quejas',    desc: 'Registra, clasifica y gestiona PQR. Exporta reportes para auditorías en segundos.', grad: 'from-emerald-400 to-teal-500' },
     { icon: '🛡️', title: 'Incidentes y Eventos Adversos',  tag: 'Seguridad del paciente', desc: 'Registro con clasificación por severidad, seguimiento y plan de acción documentado.', grad: 'from-red-400 to-rose-500' },
-    { icon: '🦺', title: 'SG-SST',                          tag: 'Res. 0312/2019',         desc: 'Autoevaluación en 3 fases. Score automático y PDF para presentar ante la ARL.', grad: 'from-yellow-400 to-amber-500' },
+    { icon: '🦺', title: 'SG-SST',                          tag: 'Res. 1774/2025',         desc: 'Autoevaluación en 3 fases. Score automático y PDF para presentar ante la ARL.', grad: 'from-yellow-400 to-amber-500' },
+    { icon: '⚠️', title: 'Análisis de Riesgo ISO 31000',   tag: 'ISO 31000:2018',         desc: 'Matriz de calor 5×5, 15 riesgos predefinidos para IPS. Trata, prioriza y genera alertas para riesgos extremos.', grad: 'from-orange-400 to-red-500' },
     { icon: '📋', title: 'Bitácora de Auditoría',           tag: 'Log de actividades',     desc: 'Registro automático de todas las acciones: auditorías, documentos, CAPAs y cambios.', grad: 'from-slate-400 to-slate-500' },
     { icon: '📱', title: 'PWA · Funciona Offline',          tag: 'iOS y Android',          desc: 'Instala NormaLis en tu celular. Audita en campo sin conexión y sincroniza después.', grad: 'from-gray-400 to-slate-600' },
   ];
