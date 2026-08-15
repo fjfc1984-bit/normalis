@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/firma/page.tsx
  * Módulo Firma y Versiones — firma digital de documentos institucionales
- * Base legal: Res. 3100/2019 — Procesos Prioritarios Est. 5 y normas referenciadas
+ * Base legal: Res. 1732/2026 — Procesos Prioritarios Est. 5 y normas referenciadas
  */
 
 import { useState } from 'react';
@@ -138,7 +138,7 @@ export default function FirmaPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <SectionHeader
         title="Firma y Versiones"
-        subtitle="Control documental con firma del Director Técnico · Res. 3100/2019"
+        subtitle="Control documental con firma del Director Técnico · Res. 1732/2026"
       />
 
       {/* KPIs */}

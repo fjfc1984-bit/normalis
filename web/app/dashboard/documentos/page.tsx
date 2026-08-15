@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/documentos/page.tsx
  * Módulo de Documentos Normativos — generación y vista previa de 6 manuales
- * Base legal: Res. 3100/2019 · Decreto 351/2014 · Decreto 4725/2005
+ * Base legal: Res. 1732/2026 · Decreto 351/2014 · Decreto 4725/2005
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -423,7 +423,7 @@ export default function DocumentosPage() {
 
       {/* Nota legal */}
       <p className="text-xs text-gray-400 text-center pt-2">
-        Documentos generados conforme a Res. 3100/2019, Decreto 351/2014, Decreto 4725/2005
+        Documentos generados conforme a Res. 1732/2026, Decreto 351/2014, Decreto 4725/2005
         y normativa vigente del Ministerio de Salud de Colombia · NormaLis
       </p>
     </div>

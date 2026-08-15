@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/talento/page.tsx
  * Módulo Talento Humano — gestión de profesionales de la IPS
- * Base legal: Res. 3100/2019 Estándar 1 — Talento Humano
+ * Base legal: Res. 1732/2026 Estándar 1 — Talento Humano
  */
 
 import { useState, useCallback } from 'react';
@@ -302,7 +302,7 @@ export default function TalentoPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <SectionHeader
         title="Talento Humano"
-        subtitle="Gestión de profesionales · Res. 3100/2019 Estándar 1"
+        subtitle="Gestión de profesionales · Res. 1732/2026 Estándar 1"
         actions={
           <button onClick={() => setShowNuevo(true)} className={BTN_P}>
             + Nuevo profesional

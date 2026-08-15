@@ -100,7 +100,7 @@ function SimulacroContent() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Simulacro de Visita</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Lista de verificación pre-visita Secretaría de Salud · Res. 3100/2019
+            Lista de verificación pre-visita Secretaría de Salud · Res. 1732/2026
           </p>
         </div>
         <button onClick={reset} className="text-xs text-gray-400 hover:text-red-500 transition-colors">

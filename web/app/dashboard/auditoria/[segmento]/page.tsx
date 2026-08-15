@@ -330,7 +330,7 @@ export default function AuditoriaSegmentoPage({
 
           {!aiAnalysis && !aiLoading && (
             <p className="text-sm text-teal-700/70">
-              El Asistente IA analizará tus no conformidades y generará un plan de acción priorizado basado en la Res. 3100/2019.
+              El Asistente IA analizará tus no conformidades y generará un plan de acción priorizado basado en la Res. 1732/2026.
             </p>
           )}
         </div>

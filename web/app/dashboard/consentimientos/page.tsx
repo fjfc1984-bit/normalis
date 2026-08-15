@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/consentimientos/page.tsx
  * Módulo Consentimientos Informados
- * Base legal: Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 3100/2019 Est. 6
+ * Base legal: Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 1732/2026 Est. 6
  */
 
 import { useState, useCallback } from 'react';
@@ -156,7 +156,7 @@ function NuevoConModal({
               </p>
               <p className="mt-2 text-gray-400">
                 Base legal: Ley 23/1981 Art. 15 · Res. 13437/1991 Derechos del Paciente ·
-                Res. 3100/2019 Est. 6 Historia Clínica
+                Res. 1732/2026 Est. 6 Historia Clínica
               </p>
             </div>
           )}
@@ -246,7 +246,7 @@ function DetalleModal({
               su realización y declaro que puedo retirar este consentimiento en cualquier momento.
             </p>
             <p className="mt-2 text-gray-400">
-              Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 3100/2019 Est. 6 Historia Clínica
+              Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 1732/2026 Est. 6 Historia Clínica
             </p>
           </div>
 
@@ -359,7 +359,7 @@ export default function ConsentimientosPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <SectionHeader
         title="Consentimientos Informados"
-        subtitle="Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 3100/2019 Est. 6"
+        subtitle="Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 1732/2026 Est. 6"
         actions={
           <button onClick={() => setShowNuevo(true)} className={BTN_P}>
             + Nuevo consentimiento
@@ -406,7 +406,7 @@ export default function ConsentimientosPage() {
         <EmptyState
           icon="📋"
           title="Sin consentimientos registrados"
-          description="Crea el primero para cumplir con la Ley 23/1981 y la Res. 3100/2019."
+          description="Crea el primero para cumplir con la Ley 23/1981 y la Res. 1732/2026."
           action={
             <button onClick={() => setShowNuevo(true)} className={BTN_P}>
               + Primer consentimiento

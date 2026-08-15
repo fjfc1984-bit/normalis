@@ -16,7 +16,7 @@ function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      text: '¡Hola! Soy el asistente de NormaLis. Puedo ayudarte con preguntas sobre habilitación (Resolución 3100/2019 y 465/2025), PAMEC, SG-SST y calidad en salud. ¿En qué puedo ayudarte?',
+      text: '¡Hola! Soy el asistente de NormaLis. Puedo ayudarte con preguntas sobre habilitación (Resolución 1732/2026), PAMEC, SG-SST, ISO 31000 y calidad en salud. ¿En qué puedo ayudarte?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -84,7 +84,7 @@ function ChatContent() {
       <div className="p-4 border-b bg-white">
         <h2 className="text-lg font-semibold text-gray-800">Asistente IA NormaLis</h2>
         <p className="text-xs text-gray-500">
-          Consultas sobre Res. 3100/2019, 465/2025, PAMEC y SG-SST
+          Consultas sobre Res. 1732/2026, PAMEC, SG-SST e ISO 31000
           {nombre ? ` · ${nombre}` : ''}
         </p>
       </div>

@@ -11,7 +11,7 @@ export default function AuditoriaPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Auditoría de habilitación</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Resolución 3100/2019 + Res. 465/2025 — verificación de condiciones por tipo de servicio
+          Resolución 1732/2026 — verificación de condiciones de habilitación por tipo de servicio
         </p>
       </div>
 
@@ -67,7 +67,7 @@ export default function AuditoriaPage() {
       </div>
 
       <p className="mt-6 text-xs text-gray-400 text-center">
-        Criterios basados en Res. 3100/2019 y actualizaciones Res. 465/2025
+        Criterios basados en Res. 1732/2026 (reemplaza Res. 3100/2019 y todas sus modificaciones)
       </p>
     </div>
   );

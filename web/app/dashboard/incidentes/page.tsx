@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/incidentes/page.tsx
  * Módulo de Incidentes y Eventos Adversos
- * Base legal: Res. 3100/2019 Est. 5 · Política Nacional de Seguridad del Paciente
+ * Base legal: Res. 1732/2026 Est. 5 · Política Nacional de Seguridad del Paciente
  */
 
 import { useState, useCallback } from 'react';
@@ -351,7 +351,7 @@ export default function IncidentesPage() {
 
       <SectionHeader
         title="Incidentes y Eventos Adversos"
-        subtitle="Registro y seguimiento de eventos · Res. 3100/2019 Est. 5 · Seguridad del Paciente"
+        subtitle="Registro y seguimiento de eventos · Res. 1732/2026 Est. 5 · Seguridad del Paciente"
         actions={
           <div className="flex gap-2">
             <button
@@ -446,7 +446,7 @@ export default function IncidentesPage() {
       )}
 
       <p className="text-xs text-gray-400 text-center">
-        Res. 3100/2019 Est. 5 · Política Nacional de Seguridad del Paciente · NormaLis
+        Res. 1732/2026 Est. 5 · Política Nacional de Seguridad del Paciente · NormaLis
       </p>
     </div>
   );

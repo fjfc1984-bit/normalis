@@ -422,7 +422,7 @@ export default function PQRSPage() {
 
       {/* Nota legal */}
       <p className="text-xs text-gray-400 text-center">
-        Resolución 13437/1991 — Derechos del Paciente · Resolución 3100/2019 Est. 5 · NormaLis
+        Resolución 13437/1991 — Derechos del Paciente · Resolución 1732/2026 Est. 5 · NormaLis
       </p>
     </div>
   );

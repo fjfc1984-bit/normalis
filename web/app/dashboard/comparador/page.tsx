@@ -43,7 +43,7 @@ const ESTANDARES: Estandar[] = [
     key: 'talento_humano',
     label: 'Talento Humano',
     icon: '👨‍⚕️',
-    res3100: { estandar: 'Est. 1', articulos: 'Art. 5-12 · Res. 3100/2019' },
+    res3100: { estandar: 'Est. 1', articulos: 'Art. 5-12 · Res. 1732/2026' },
     iso7101: {
       seccion: '§5.3 · §7.2 · §7.3',
       nombre: 'Competencia del Personal · Conciencia · Comunicación',
@@ -75,7 +75,7 @@ const ESTANDARES: Estandar[] = [
     key: 'infraestructura',
     label: 'Infraestructura',
     icon: '🏗️',
-    res3100: { estandar: 'Est. 2', articulos: 'Art. 13-22 · Res. 3100/2019 · NSR-10' },
+    res3100: { estandar: 'Est. 2', articulos: 'Art. 13-22 · Res. 1732/2026 · NSR-10' },
     iso7101: {
       seccion: '§7.1.3 · §7.1.4 · §6.4',
       nombre: 'Infraestructura · Ambiente para la Operación · Ambiente de Trabajo',
@@ -118,7 +118,7 @@ const ESTANDARES: Estandar[] = [
         'Identificación del estado de equipos (§8.5.2)',
         'Tecnovigilancia — reporte de incidentes con dispositivos (§8.5.1)',
       ],
-      gap: 'ISO 7101 §7.1.5 exige programa de metrología con trazabilidad BIPM para equipos de medición críticos — más riguroso que la calibración anual de la Res. 3100.',
+      gap: 'ISO 7101 §7.1.5 exige programa de metrología con trazabilidad BIPM para equipos de medición críticos — más riguroso que la calibración anual de la Res. 1732/2026.',
     },
     jci: {
       estandar: 'FMS.8 · FMS.9',
@@ -203,7 +203,7 @@ const ESTANDARES: Estandar[] = [
     key: 'historia_clinica',
     label: 'Historia Clínica',
     icon: '📄',
-    res3100: { estandar: 'Est. 6', articulos: 'Res. 1995/1999 · Res. 3100/2019 Est. 6 · Ley 1581/2012' },
+    res3100: { estandar: 'Est. 6', articulos: 'Res. 1995/1999 · Res. 1732/2026 Est. 6 · Ley 1581/2012' },
     iso7101: {
       seccion: '§7.5 · §8.5.2',
       nombre: 'Información Documentada · Identificación y Trazabilidad',
@@ -235,7 +235,7 @@ const ESTANDARES: Estandar[] = [
     key: 'interdependencia',
     label: 'Interdependencia',
     icon: '🔗',
-    res3100: { estandar: 'Est. 7', articulos: 'Art. 56-60 · Res. 3100/2019 · Dec. 780/2016' },
+    res3100: { estandar: 'Est. 7', articulos: 'Art. 56-60 · Res. 1732/2026 · Dec. 780/2016' },
     iso7101: {
       seccion: '§8.4 · §8.5.5',
       nombre: 'Control de Procesos Externos · Entrega Posterior a la Provisión',
@@ -344,7 +344,7 @@ function EstandarCard({ est }: { est: Estandar }) {
       {/* Barras de progreso */}
       <div className="px-5 pb-4 grid grid-cols-3 gap-4 border-t border-gray-100 pt-3">
         <div>
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">🇨🇴 Res. 3100</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">🇨🇴 Res. 1732/2026</p>
           <ProgressBar value={100} />
         </div>
         <div>
@@ -387,7 +387,7 @@ function EstandarCard({ est }: { est: Estandar }) {
 
               <div>
                 <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-                  ✅ Requisitos ya cubiertos por Res. 3100
+                  ✅ Requisitos ya cubiertos por Res. 1732/2026
                 </p>
                 <ul className="space-y-1">
                   {est.iso7101.requisitos_cubiertos.map((r, i) => (
@@ -415,7 +415,7 @@ function EstandarCard({ est }: { est: Estandar }) {
 
               <div>
                 <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">
-                  ✅ Estándares JCI ya cubiertos por Res. 3100
+                  ✅ Estándares JCI ya cubiertos por Res. 1732/2026
                 </p>
                 <ul className="space-y-1">
                   {est.jci.requisitos_cubiertos.map((r, i) => (
@@ -453,15 +453,15 @@ export default function ComparadorPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <SectionHeader
         title="Comparador Normativo"
-        subtitle="Cross-Walk Res. 3100/2019 ↔ ISO 7101:2023 ↔ JCI 8ª Edición"
+        subtitle="Cross-Walk Res. 1732/2026 ↔ ISO 7101:2023 ↔ JCI 8ª Edición"
       />
 
       {/* Banner global */}
       <div className="bg-gradient-to-r from-teal-700 to-blue-700 rounded-2xl p-6 text-white">
-        <p className="text-sm font-bold mb-4">📊 Equivalencia normativa global al cumplir Res. 3100/2019</p>
+        <p className="text-sm font-bold mb-4">📊 Equivalencia normativa global al cumplir Res. 1732/2026</p>
         <div className="grid grid-cols-3 gap-4">
           {[
-            { norm: '🇨🇴 Res. 3100/2019', pct: 100, sub: 'Colombia — Habilitación' },
+            { norm: '🇨🇴 Res. 1732/2026', pct: 100, sub: 'Colombia — Habilitación' },
             { norm: '🌐 ISO 7101:2023',    pct: avgIso, sub: 'Sistemas de Gestión en Salud' },
             { norm: '⭐ JCI 8ª Edición',   pct: avgJci, sub: 'Joint Commission International' },
           ].map(n => (
@@ -476,7 +476,7 @@ export default function ComparadorPage() {
           ))}
         </div>
         <div className="mt-4 bg-black/20 rounded-xl p-3 text-xs opacity-90">
-          💡 <strong>Cómo leer esto:</strong> Al cumplir la Res. 3100, automáticamente cubres una parte de ISO 7101 y JCI.
+          💡 <strong>Cómo leer esto:</strong> Al cumplir la Res. 1732/2026, automáticamente cubres una parte de ISO 7101 y JCI.
           El porcentaje muestra cuánto ya tienes cubierto en cada norma gracias a tu trabajo de habilitación colombiana.
           Expande cada estándar para ver los requisitos cubiertos y las brechas pendientes.
         </div>
@@ -494,7 +494,7 @@ export default function ComparadorPage() {
         <p className="font-bold mb-1">ℹ️ Nota metodológica</p>
         <p>
           Los porcentajes de equivalencia son estimaciones basadas en el análisis de correspondencia
-          entre los criterios de la Res. 3100/2019, ISO 7101:2023 y JCI 8ª edición. No constituyen
+          entre los criterios de la Res. 1732/2026, ISO 7101:2023 y JCI 8ª edición. No constituyen
           una certificación ni garantizan la aprobación de una auditoría internacional.
           Para acreditación formal, consulta con un organismo certificador acreditado.
         </p>
