@@ -35,11 +35,12 @@ const NAV_GROUPS = [
   {
     label: 'Auditoría y Calidad',
     items: [
-      { href: '/dashboard/auditoria',   label: 'Auditoría',   icon: '🔍' },
-      { href: '/dashboard/pamec',       label: 'PAMEC',        icon: '📈' },
-      { href: '/dashboard/capas',       label: 'CAPAs',        icon: '✓'  },
-      { href: '/dashboard/indicadores', label: 'Indicadores',  icon: '📊' },
-      { href: '/dashboard/comparador',  label: 'Comparador',   icon: '🔄' },
+      { href: '/dashboard/auditoria',    label: 'Auditoría',    icon: '🔍' },
+      { href: '/dashboard/cumplimiento', label: 'Cumplimiento', icon: '⚡' },
+      { href: '/dashboard/pamec',        label: 'PAMEC',        icon: '📈' },
+      { href: '/dashboard/capas',        label: 'CAPAs',        icon: '✓'  },
+      { href: '/dashboard/indicadores',  label: 'Indicadores',  icon: '📊' },
+      { href: '/dashboard/comparador',   label: 'Comparador',   icon: '🔄' },
     ],
   },
   {

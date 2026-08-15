@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import {
@@ -41,6 +42,9 @@ interface RiesgoItem {
   responsable:   string;
   fechaRevision: string;
   descripcion:   string;
+  /** 'auditoria' si fue importado desde Cumplimiento Integrado */
+  origen?:       string;
+  segmento?:     string;
 }
 
 interface NuevoRiesgo {
@@ -431,6 +435,11 @@ function RiesgoCard({
             </span>
             <span className="text-xs text-gray-500">{item.categoria}</span>
             <span className="text-xs text-gray-400">P:{item.probabilidad} × I:{item.impacto}</span>
+            {item.origen === 'auditoria' && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
+                📥 Desde auditoría
+              </span>
+            )}
           </div>
           <p className="text-sm font-semibold text-gray-800">{item.nombre}</p>
           {item.descripcion && (
@@ -625,7 +634,14 @@ export default function AnalisisRiesgoPage() {
         title="Gestión del Riesgo"
         subtitle="ISO 31000:2018 · Res. 1732/2026 Est. 5 — Procesos Prioritarios"
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Link
+              href="/dashboard/cumplimiento"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50
+                         hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition-colors"
+            >
+              📥 Importar desde auditoría
+            </Link>
             <button
               onClick={exportarPDF}
               disabled={riesgos.length === 0}
