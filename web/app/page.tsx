@@ -620,15 +620,15 @@ function HowItWorks() {
 // ── Precios ───────────────────────────────────────────────────────────────────
 function Precios({ onDemo }: { onDemo: () => void }) {
   const plans = [
-    { name: 'Básico', price: '99.000', highlight: false,
+    { name: 'Básico', price: '199.000', highlight: false,
       desc: 'Para consultorios y IPS pequeñas.',
       features: ['Auditoría Res. 1732/2026','PAMEC básico','Vencimientos','1 usuario','Soporte por email'],
       cta: 'Empezar' },
-    { name: 'Profesional', price: '199.000', highlight: true,
+    { name: 'Profesional', price: '399.000', highlight: true,
       desc: 'El más elegido por clínicas y centros médicos.',
       features: ['Todo lo del Básico','SG-SST · CAPAs · Indicadores','Benchmarking IPS','Brecha 1732','Hasta 5 usuarios','Soporte prioritario'],
       cta: '⭐ Más popular' },
-    { name: 'Enterprise', price: '299.000', highlight: false,
+    { name: 'Enterprise', price: 'Personalizado', highlight: false,
       desc: 'Para hospitales y redes de IPS.',
       features: ['Todo lo del Profesional','IA Normativa 24/7','Agente de Cumplimiento','ISO 7101 / JCI','Usuarios ilimitados','API + integraciones'],
       cta: 'Contactar ventas' },
@@ -653,8 +653,8 @@ function Precios({ onDemo }: { onDemo: () => void }) {
               <h3 className={`font-black text-lg mb-1 ${p.highlight ? 'text-white' : 'text-slate-900'}`}>{p.name}</h3>
               <p className={`text-xs mb-5 ${p.highlight ? 'text-slate-400' : 'text-slate-500'}`}>{p.desc}</p>
               <div className="mb-6">
-                <span className={`text-4xl font-black ${p.highlight ? 'text-white' : 'text-slate-900'}`}>${p.price}</span>
-                <span className={`text-sm ml-1 ${p.highlight ? 'text-slate-400' : 'text-slate-400'}`}>/mes COP</span>
+                <span className={`text-4xl font-black ${p.highlight ? 'text-white' : 'text-slate-900'}`}>{p.price === 'Personalizado' ? '' : '$'}{p.price}</span>
+                <span className={`text-sm ml-1 ${p.highlight ? 'text-slate-400' : 'text-slate-400'}`}>{p.price === 'Personalizado' ? 'a la medida' : '/mes COP'}</span>
               </div>
               <ul className="space-y-2.5 mb-7">
                 {p.features.map(f => (
