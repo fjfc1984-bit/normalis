@@ -39,6 +39,7 @@ function runAllAutomations() {
   checkRMExpiry();
   checkPendingCAPAs();
   checkNoAuditIn30Days();
+  checkTransitionPeriod();
   setTimeout(() => renderAutoView(), 400);
 }
 
@@ -51,6 +52,7 @@ function runOnOpenAutomations() {
   setTimeout(() => { try { checkRMExpiry();          } catch(e) {} }, 5500);
   setTimeout(() => { try { checkPendingCAPAs();      } catch(e) {} }, 6500);
   setTimeout(() => { try { checkNoAuditIn30Days();   } catch(e) {} }, 7500);
+  setTimeout(() => { try { checkTransitionPeriod();  } catch(e) {} }, 9000);
   if ('Notification' in window && Notification.permission === 'default') {
     const card = document.getElementById('aut-notif-card');
     if (card && isRuleActive('notify_browser') === false) card.style.display = 'block';
@@ -632,6 +634,32 @@ function clearFirebaseConfig() {
     toast('Firebase desconectado', 'info');
     renderFirebaseConfig();
   });
+}
+
+
+/* ── Período de transición Res. 1732/2026 ────────────────── */
+function checkTransitionPeriod() {
+  if (!isRuleActive('transition_notice')) return;
+  const dismissed = parseInt(localStorage.getItem('normalis_transition_dismissed') || '0');
+  // Mostrar máximo una vez por semana
+  if (dismissed > 0 && Date.now() - dismissed < 7 * 86400000) return;
+  const until = new Date('2027-08-05');
+  const hoy   = new Date();
+  if (hoy >= until) return; // Transición ya terminó
+  const dias  = Math.floor((until - hoy) / 86400000);
+  const meses = Math.ceil(dias / 30);
+  logAutoEvent('transition_notice',
+    '📋 Período de transición Res. 1732/2026',
+    'Vigente desde ago 2026. Tienes hasta agosto 2027 (' + meses + ' meses) para adecuación completa.',
+    '');
+  showAutoBanner('📋 Res. 1732/2026 en período de transición',
+    '⏳ Quedan ~' + meses + ' meses (hasta ago 2027) para adecuación completa. ' +
+    'La norma es vigente y obligatoria para nuevas habilitaciones.',
+    [{ label: 'Entendido', primary: true, fn: () => {
+        localStorage.setItem('normalis_transition_dismissed', Date.now());
+      }
+    },
+    { label: 'Ver brecha', primary: false, fn: () => nav('gap1732') }]);
 }
 
 // END:normalis-automations.js — NormaLis integrity seal

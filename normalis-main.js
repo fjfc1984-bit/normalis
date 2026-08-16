@@ -25,7 +25,7 @@ setTimeout(initFirebase, 800);
 // ONBOARDING — REDISEÑADO v2
 // ═══════════════════════════════════════════
 const OB_STEPS = [
-  { key:'nombre',   icon:'🏥', title:'¿Cómo se llama tu establecimiento?',  msg:'Te ayudaré a preparar tu visita de habilitación con la Res. 3100/2019.',  type:'input',  ph:'Ej: Consultorio Médico San Rafael' },
+  { key:'nombre',   icon:'🏥', title:'¿Cómo se llama tu establecimiento?',  msg:'Te ayudaré a preparar tu visita de habilitación con la Res. 1732/2026 (vigente) · Res. 3100/2019.',  type:'input',  ph:'Ej: Consultorio Médico San Rafael' },
   { key:'tipo',     icon:'🩺', title:'¿Qué tipo de prestador eres?',         msg:'Esto determina qué estándares debes cumplir.',                            type:'chips', chips:['Consultorio Médico','Clínica','Odontología','Laboratorio Clínico','Centro Diagnóstico','Otro'] },
   { key:'prof',     icon:'👥', title:'¿Cuántos profesionales trabajan aquí?', msg:'Incluyendo médicos, auxiliares y administrativos.',                       type:'chips', chips:['1–3 personas','4–8 personas','9–20 personas','Más de 20'] },
   { key:'reps',     icon:'📋', title:'¿Tu REPS está activo?',                 msg:'El REPS es obligatorio para operar legalmente en Colombia.',              type:'chips', chips:['Sí, activo y vigente','En trámite','Aún no lo tengo'] },
@@ -34,7 +34,7 @@ const OB_STEPS = [
 
 const TICK_MSGS = [
   '⚡ Configurando tu perfil normativo…',
-  '🔍 Cargando estándares Res. 3100/2019…',
+  '🔍 Cargando estándares Res. 1732/2026…',
   '📊 Preparando tu dashboard personalizado…',
   '✅ ¡Casi listo! Guardando configuración…',
 ];
@@ -187,10 +187,10 @@ const viewTitles={
   dashboard:['Dashboard','Resumen de cumplimiento y alertas activas'],
   documentos:['Biblioteca Documental','Vista Kanban · 7 documentos'],
   generador:['Generar con IA','Documentos personalizados para tu establecimiento'],
-  auditoria:['Auditoría Simulada','Inspección por áreas físicas · Res. 3100'],
+  auditoria:['Auditoría Simulada','Inspección por áreas físicas · Res. 1732/2026'],
   resultados:['Resultados de Auditoría','Última evaluación: 5 de julio, 2026'],
   cronograma:['Cronograma de Visita','Plan de 6 semanas · Visita próxima'],
-  chat:['Consultor Normativo','Res. 3100/2019 · 544/2023 · 465/2025 · Dec. 351/2014'],
+  chat:['Consultor Normativo','Res. 1732/2026 (reemplaza Res. 3100/2019) · Dec. 351/2014'],
   establecimiento:['Mi Establecimiento','Datos e información del prestador'],
   capa:['Plan de Mejoramiento','Acciones Correctivas y Preventivas · Dec. 1011/2006 · Res. 256/2016'],
   indicadores:['Indicadores de Calidad','SOGCS · Res. 256/2016 · 14 indicadores trazadores · Reporte SISPRO'],
@@ -273,7 +273,7 @@ const genNames={bioseguridad:'Manual de Bioseguridad',tecnovigilancia:'Manual de
 const streamLines=[
   '> Inicializando Claude API…',
   '> Cargando perfil: '+cfg('nombre','Consultorio')+' · '+cfg('ciudad','Colombia')+'',
-  '> Aplicando Resolución 3100 de 2019…',
+  '> Aplicando Resolución 1732 de 2026…',
   '> Cargando Resolución 465 de 2025 (modificatoria)…',
   '> Redactando Sección 1: Objetivo y Alcance…',
   '> Redactando Sección 2: Marco Normativo…',
@@ -282,7 +282,7 @@ const streamLines=[
   '> Insertando datos: Director: '+cfg('director','Director Técnico')+'…',
   '> Redactando Sección 4: Manejo de Residuos RESPEL…',
   '> Verificando criterios de habilitación obligatorios…',
-  '> ✓ Todos los estándares cumplen Res. 3100/2019',
+  '> ✓ Todos los estándares cumplen Res. 1732/2026',
   '> Generando tabla de contenido…',
   '> Firmando documento con metadatos del establecimiento…',
   '> ✅ Documento listo · Personalizado para tu establecimiento · v1.0',
@@ -350,9 +350,9 @@ function resetGen(){
 // ═══════════════════════════════════════════
 const docPreviews={
   bioseguridad:{title:'Manual de Bioseguridad',html:`<h2 style="font-size:16px;font-weight:800;text-align:center;margin-bottom:4px">MANUAL DE BIOSEGURIDAD</h2>
-<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Adaptado a Resolución 3100/2019 · Res. 544/2023 · Res. 465/2025</em></p>
+<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">Consultorio Médico Especializado ${(_cfg&&_cfg.nombre)||"Consultorio"} · NIT ${(_cfg&&_cfg.nit)||"---"}<br>Versión 3.0 · ${new Date().toLocaleDateString("es-CO",{month:"long",year:"numeric"})} · ${(_cfg&&_cfg.ciudad)||""}<br><em>Adaptado a Resolución 1732/2026 (reemplaza Res. 3100/2019 y sus modificaciones)</em></p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">1. Objetivo</h3>
-<p>Establecer los lineamientos de bioseguridad para proteger la salud del personal, pacientes y comunidad, cumpliendo la Resolución 3100 de 2019 y su modificación 465 de 2025.</p>
+<p>Establecer los lineamientos de bioseguridad para proteger la salud del personal, pacientes y comunidad, cumpliendo la Resolución 1732 de 2026 (que reemplaza la Res. 3100/2019 y sus modificaciones).</p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">2. EPP por Área</h3>
 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
 <tr style="background:#f8fafc"><th style="padding:8px;text-align:left;border:1px solid #e2e8f0">Área</th><th style="padding:8px;text-align:left;border:1px solid #e2e8f0">EPP Obligatorio</th></tr>
@@ -366,7 +366,7 @@ const docPreviews={
 <p>Contrato vigente con EcoMédicos S.A.S. (NIT 800.234.567-2). Recolección semanal los martes. Clasificación: rojo (infecciosos), verde (ordinarios), blanco (reciclables), guardián rojo (cortopunzantes).</p>
 <p style="margin-top:20px;font-size:11px;color:#94a3b8;text-align:center">Responsable: Enf. María Torres · Revisión anual obligatoria · Próxima revisión: Julio 2027</p>`},
   atencion:{title:'Protocolo de Atención al Paciente',html:`<h2 style="font-size:16px;font-weight:800;text-align:center;margin-bottom:4px">PROTOCOLO DE ATENCIÓN AL PACIENTE</h2>
-<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">${(_cfg&&_cfg.nombre)||"Consultorio"} · Res. 3100/2019 · ${new Date().getFullYear()}</p>
+<p style="text-align:center;color:#64748b;font-size:12px;margin-bottom:18px">${(_cfg&&_cfg.nombre)||"Consultorio"} · Res. 1732/2026 · ${new Date().getFullYear()}</p>
 <h3 style="font-size:14px;font-weight:800;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin-top:16px">Flujo de Atención</h3>
 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px">
 <tr style="background:#f8fafc"><th style="padding:8px;text-align:left;border:1px solid #e2e8f0">Paso</th><th style="padding:8px;border:1px solid #e2e8f0">Responsable</th><th style="padding:8px;border:1px solid #e2e8f0">Tiempo</th></tr>
@@ -586,7 +586,7 @@ document.getElementById('prof-modal').addEventListener('click',function(e){if(e.
 // ═══════════════════════════════════════════
 // COMPARADOR NORMATIVO
 // ═══════════════════════════════════════════
-// Comparador: Res. 3100/2019 original vs modificaciones (Res. 2215/2020, 1317/2021, 1138/2022, 544/2023)
+// Comparador histórico: Res. 3100/2019 y sus modificaciones — referencia histórica (reemplazadas por Res. 1732/2026)
 const cmpData=[
   {art:'Art. 2',norma:'Res. 544/2023',tema:'Ámbito de aplicación',
    old:'Usaba la palabra "campo" de aplicación. Mencionaba "Los servicios de transporte especial de pacientes" como sujeto de la norma.',
@@ -1265,7 +1265,7 @@ const _moduleHooks={
 };
 
 Object.assign(viewTitles,{
-  comparador:['Comparador Normativo','Res. 3100/2019 vs modificaciones 2020–2023 — cambios reales artículo por artículo'],
+  comparador:['Comparador Normativo','Historial Res. 3100/2019 → Res. 1732/2026 — cambios reales artículo por artículo'],
   roi:['Calculadora de Riesgo y ROI','Cuantifica el impacto financiero de las no conformidades'],
   calendario:['Calendario de Vencimientos','Vista mensual de documentos, vacunas, equipos y contratos'],
   multisede:['Modo Multi-Sede','Gestión consolidada de múltiples establecimientos'],
@@ -1315,7 +1315,7 @@ const NORMATIVA_UPDATES = {
       id: 'r2215-art2',
       norma: 'Res. 2215/2020 · Art. 2',
       tipo: 'Modificación',
-      descripcion: 'Aclara que las disposiciones de la Res. 3100/2019 aplican también a las Instituciones Prestadoras de Servicios de Salud (IPS) con servicios habilitados con anterioridad a su entrada en vigencia.',
+      descripcion: 'Aclara que las disposiciones de la Res. 3100/2019 (vigente hasta ago 2026) aplican también a las Instituciones Prestadoras de Servicios de Salud (IPS) con servicios habilitados con anterioridad a su entrada en vigencia.',
       impacto: 'IPS antiguas deben verificar cumplimiento de todos los estándares del Manual.',
       fecha: '2020-06-16',
     },
@@ -1323,7 +1323,7 @@ const NORMATIVA_UPDATES = {
       id: 'r2215-art3',
       norma: 'Res. 2215/2020 · Art. 3',
       tipo: 'Modificación',
-      descripcion: 'Amplía el plazo de adecuación para establecimientos habilitados antes de la Res. 3100/2019, dándoles tiempo adicional para cumplir los nuevos estándares de infraestructura y dotación.',
+      descripcion: 'Amplía el plazo de adecuación para establecimientos habilitados antes de la Res. 3100/2019 (ver también Res. 1732/2026 Plan de Adecuación Progresiva), dándoles tiempo adicional para cumplir los nuevos estándares de infraestructura y dotación.',
       impacto: 'Verificar si el establecimiento aún está en período de transición.',
       fecha: '2020-06-16',
     },
@@ -2096,6 +2096,9 @@ const AUTO_RULES_DEF = [
   { id:'audit_overdue', icon:'⏰', name:'Recordatorio de auditoría mensual',
     desc:'Si han pasado más de 30 días sin completar una auditoría, recuerda realizarla (Res. 1732/2026)',
     trigger:'on_open', active:true },
+  { id:'transition_notice', icon:'📋', name:'Aviso período de transición Res. 1732/2026',
+    desc:'Recuerda el período de adecuación hasta agosto 2027 — Res. 1732/2026 vigente desde agosto 2026',
+    trigger:'on_open', active:true },
 ];
 
 let _autoCfg = {};
@@ -2421,7 +2424,7 @@ function renderDashboard(){
           <div class="alert-dot dot-r"></div>
           <div style="flex:1">
             <div class="al-title">${n.nc}</div>
-            <div class="al-note">Área: ${n.area} · No conforme en auditoría simulada · Res. 3100/2019</div>
+            <div class="al-note">Área: ${n.area} · No conforme en auditoría simulada · Res. 1732/2026</div>
             <div class="al-action" onclick="nav('generador')">→ Generar documento correctivo</div>
           </div>
           <span class="badge b-red" style="align-self:flex-start">NC</span>
@@ -2440,7 +2443,7 @@ function renderDashboard(){
 
 // ════════════════════════════════════════════════════════════
 // MÓDULO IPS COLOMBIA — Directorio + Servicios + Comparador
-// Fuente: REPS · Resolución 3100 de 2019 · MinSalud Colombia
+// Fuente: REPS · Resolución 1732 de 2026 · MinSalud Colombia
 // ════════════════════════════════════════════════════════════
 
 const IPS_DB = [
@@ -2913,105 +2916,105 @@ const AE_PHASES = [
 const AE_DB = {
   general: {
     documentacion: [
-      {q:'¿El establecimiento tiene Resolución de Habilitación vigente del servicio de salud?', sev:'critica', norm:'Res. 3100/2019 Art. 8'},
-      {q:'¿El Certificado de Habilitación está publicado en lugar visible para el usuario?', sev:'moderada', norm:'Res. 3100/2019 Art. 9'},
+      {q:'¿El establecimiento tiene Resolución de Habilitación vigente del servicio de salud?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Art. 8'},
+      {q:'¿El Certificado de Habilitación está publicado en lugar visible para el usuario?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Art. 9'},
       {q:'¿El plan de emergencias y evacuación está actualizado, aprobado y visible?', sev:'moderada', norm:'Res. 256/2016'},
       {q:'¿El PGIRH (plan de gestión de residuos hospitalarios) está vigente y aprobado?', sev:'moderada', norm:'Dec. 351/2014'},
       {q:'¿El establecimiento tiene Certificado de Bomberos vigente?', sev:'moderada', norm:'NSR-10 · Res. 180294/2008'},
-      {q:'¿El manual de bioseguridad está actualizado y disponible para el personal?', sev:'moderada', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿El manual de bioseguridad está actualizado y disponible para el personal?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
       {q:'¿El establecimiento tiene póliza de responsabilidad civil vigente?', sev:'menor', norm:'Ley 1438/2011 Art. 41'},
     ],
     planta: [
-      {q:'¿El establecimiento tiene baños diferenciados para usuarios y personal?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿El establecimiento tiene baños diferenciados para usuarios y personal?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
       {q:'¿Las áreas cuentan con señalización de rutas de evacuación vigente?', sev:'moderada', norm:'NSR-10 · Res. 180294'},
       {q:'¿Existe rampa o ascensor para acceso de personas con movilidad reducida?', sev:'moderada', norm:'Ley 361/1997 · RETIE'},
       {q:'¿Las instalaciones eléctricas tienen concepto técnico vigente y tableros señalizados?', sev:'critica', norm:'RETIE · Resolución 90708/2013'},
-      {q:'¿El servicio de aseo y limpieza está documentado con frecuencias y productos aprobados?', sev:'menor', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿El servicio de aseo y limpieza está documentado con frecuencias y productos aprobados?', sev:'menor', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
     ],
     talento: [
       {q:'¿El director o gerente médico tiene tarjeta profesional vigente en RETHUS?', sev:'critica', norm:'Ley 23/1981 · RETHUS'},
-      {q:'¿Todo el personal asistencial tiene tarjeta profesional verificable en RETHUS?', sev:'critica', norm:'Res. 3100/2019 Est. 1'},
-      {q:'¿Los contratos o títulos de vinculación del personal están disponibles en el momento de la visita?', sev:'moderada', norm:'Res. 3100/2019 Est. 1'},
-      {q:'¿El personal tiene carné de vacunación con esquema para riesgo biológico (HepB, tétanos)?', sev:'moderada', norm:'Res. 3100/2019 · Min. Trabajo'},
-      {q:'¿Existe programa de inducción y capacitación documentado para el personal?', sev:'menor', norm:'Res. 3100/2019 Est. 1'},
+      {q:'¿Todo el personal asistencial tiene tarjeta profesional verificable en RETHUS?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
+      {q:'¿Los contratos o títulos de vinculación del personal están disponibles en el momento de la visita?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
+      {q:'¿El personal tiene carné de vacunación con esquema para riesgo biológico (HepB, tétanos)?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 · Min. Trabajo'},
+      {q:'¿Existe programa de inducción y capacitación documentado para el personal?', sev:'menor', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
     ],
     dotacion: [
       {q:'¿Los equipos biomédicos tienen registro INVIMA vigente o autorización de uso?', sev:'critica', norm:'Dec. 4725/2005 · INVIMA'},
       {q:'¿Los equipos tienen hojas de vida con mantenimiento preventivo al día?', sev:'moderada', norm:'Dec. 4725/2005 · Tecnovigilancia'},
       {q:'¿Los medicamentos en stock están dentro de su fecha de vencimiento?', sev:'critica', norm:'Decreto 677/1995 · Invima'},
-      {q:'¿El almacenamiento de medicamentos tiene control de temperatura documentado?', sev:'moderada', norm:'Res. 3100/2019 Est. 3'},
+      {q:'¿El almacenamiento de medicamentos tiene control de temperatura documentado?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 3'},
       {q:'¿Los extintores están vigentes, señalizados y en los puntos requeridos?', sev:'moderada', norm:'NSR-10 · Res. 180294/2008'},
     ],
     registros: [
       {q:'¿Las historias clínicas tienen todos los componentes exigidos por la Res. 1995/1999?', sev:'critica', norm:'Res. 1995/1999 Art. 3'},
       {q:'¿El archivo de historias clínicas garantiza confidencialidad y custodia mínima de 20 años?', sev:'moderada', norm:'Res. 1995/1999 Art. 15'},
-      {q:'¿El libro de guardia o registro de atenciones está diligenciado y actualizado?', sev:'moderada', norm:'Res. 3100/2019 Est. 6'},
+      {q:'¿El libro de guardia o registro de atenciones está diligenciado y actualizado?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 6'},
       {q:'¿Existe registro de consentimientos informados por procedimiento?', sev:'moderada', norm:'Ley 23/1981 Art. 15'},
-      {q:'¿Se llevan indicadores de calidad y el PAMEC está activo?', sev:'moderada', norm:'Res. 256/2016 · Res. 3100/2019 Est. 6'},
+      {q:'¿Se llevan indicadores de calidad y el PAMEC está activo?', sev:'moderada', norm:'Res. 256/2016 · Res. 1732/2026 / Res. 3100/2019 Est. 6'},
     ],
   },
   urgencias: {
     documentacion: [
-      {q:'¿El servicio de urgencias tiene habilitación específica vigente para urgencias (Estándar 5)?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
-      {q:'¿Existe protocolo de triage documentado con escala de 5 niveles?', sev:'critica', norm:'Res. 3100/2019 Est. 6'},
+      {q:'¿El servicio de urgencias tiene habilitación específica vigente para urgencias (Estándar 5)?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
+      {q:'¿Existe protocolo de triage documentado con escala de 5 niveles?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 6'},
       {q:'¿Hay convenio activo con IPS de mayor complejidad para referencia de pacientes?', sev:'critica', norm:'Res. 544/2023 Art. 17'},
-      {q:'¿El protocolo de referencia y contrareferencia está disponible y vigente?', sev:'moderada', norm:'Res. 3100/2019 Est. 7'},
+      {q:'¿El protocolo de referencia y contrareferencia está disponible y vigente?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 7'},
       {q:'¿El plan de contingencia para masivos de víctimas está documentado?', sev:'moderada', norm:'Res. 256/2016 · Plan hospitalario'},
     ],
     planta: [
-      {q:'¿El área de triage tiene espacio físico diferenciado y señalizado?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿Existe sala de reanimación/shock con equipos completos disponibles?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿El área de triage tiene espacio físico diferenciado y señalizado?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿Existe sala de reanimación/shock con equipos completos disponibles?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
       {q:'¿El servicio de urgencias es accesible desde el exterior sin barreras arquitectónicas?', sev:'moderada', norm:'Ley 361/1997'},
-      {q:'¿Hay área de espera diferenciada para acompañantes con capacidad suficiente?', sev:'menor', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿La zona de camillas tiene espacio mínimo de 2 m entre ellas?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿Hay área de espera diferenciada para acompañantes con capacidad suficiente?', sev:'menor', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿La zona de camillas tiene espacio mínimo de 2 m entre ellas?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
     ],
     talento: [
-      {q:'¿Hay médico con presencia física en urgencias las 24 horas del día los 365 días?', sev:'critica', norm:'Res. 3100/2019 Est. 1'},
-      {q:'¿La enfermera profesional está presente de forma continua en el servicio?', sev:'critica', norm:'Res. 3100/2019 Est. 1'},
-      {q:'¿El personal de triage tiene certificación en clasificación de emergencias?', sev:'moderada', norm:'Res. 3100/2019 Est. 1'},
-      {q:'¿Todo el personal tiene BLS (Basic Life Support) certificado y vigente?', sev:'moderada', norm:'Res. 3100/2019 Est. 1'},
+      {q:'¿Hay médico con presencia física en urgencias las 24 horas del día los 365 días?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
+      {q:'¿La enfermera profesional está presente de forma continua en el servicio?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
+      {q:'¿El personal de triage tiene certificación en clasificación de emergencias?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
+      {q:'¿Todo el personal tiene BLS (Basic Life Support) certificado y vigente?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 1'},
     ],
     dotacion: [
-      {q:'¿El carro de paro está completo, sellado y con lista de chequeo del día en curso?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿El desfibrilador está operativo con baterías cargadas y verificación reciente?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿Hay oxígeno medicinal disponible y en cantidad suficiente?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿Están disponibles medicamentos de urgencias (epinefrina, atropina, adenosina)?', sev:'critica', norm:'Res. 3100/2019 Est. 3'},
-      {q:'¿Los equipos de inmovilización (collarín, tabla, férulas) están disponibles?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿El carro de paro está completo, sellado y con lista de chequeo del día en curso?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿El desfibrilador está operativo con baterías cargadas y verificación reciente?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿Hay oxígeno medicinal disponible y en cantidad suficiente?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿Están disponibles medicamentos de urgencias (epinefrina, atropina, adenosina)?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 3'},
+      {q:'¿Los equipos de inmovilización (collarín, tabla, férulas) están disponibles?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
     ],
     registros: [
-      {q:'¿Cada paciente atendido tiene historia clínica de urgencias completa desde el ingreso?', sev:'critica', norm:'Res. 1995/1999 · Res. 3100/2019'},
-      {q:'¿Se registra el nivel de triage asignado y la hora de atención efectiva?', sev:'moderada', norm:'Res. 3100/2019 Est. 6'},
-      {q:'¿Las remisiones tienen formato completo con diagnóstico, estado y destino?', sev:'moderada', norm:'Res. 3100/2019 Est. 7'},
+      {q:'¿Cada paciente atendido tiene historia clínica de urgencias completa desde el ingreso?', sev:'critica', norm:'Res. 1995/1999 · Res. 1732/2026 / Res. 3100/2019'},
+      {q:'¿Se registra el nivel de triage asignado y la hora de atención efectiva?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 6'},
+      {q:'¿Las remisiones tienen formato completo con diagnóstico, estado y destino?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 7'},
       {q:'¿Los eventos adversos y casi-eventos se reportan al sistema de farmacovigilancia?', sev:'moderada', norm:'Res. 2003/2014 · SIVIGILA'},
     ],
   },
   quirurgicos: {
     documentacion: [
-      {q:'¿El quirófano tiene habilitación específica vigente para procedimientos quirúrgicos?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
-      {q:'¿Existe protocolo de esterilización documentado y vigente?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
-      {q:'¿La lista de chequeo quirúrgica OMS está implementada y diligenciada en todos los casos?', sev:'critica', norm:'OMS · Res. 3100/2019'},
-      {q:'¿Hay convenio activo con UCI para manejo postoperatorio complejo?', sev:'critica', norm:'Res. 3100/2019 Est. 7'},
-      {q:'¿El protocolo de manejo de emergencias anestésicas está disponible y vigente?', sev:'moderada', norm:'Res. 3100/2019 Est. 6'},
+      {q:'¿El quirófano tiene habilitación específica vigente para procedimientos quirúrgicos?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
+      {q:'¿Existe protocolo de esterilización documentado y vigente?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
+      {q:'¿La lista de chequeo quirúrgica OMS está implementada y diligenciada en todos los casos?', sev:'critica', norm:'OMS · Res. 1732/2026 / Res. 3100/2019'},
+      {q:'¿Hay convenio activo con UCI para manejo postoperatorio complejo?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 7'},
+      {q:'¿El protocolo de manejo de emergencias anestésicas está disponible y vigente?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 6'},
     ],
     planta: [
-      {q:'¿El quirófano tiene dimensiones mínimas de 36 m² con acabados lisos y lavables?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿Los flujos de circulación separan zona estéril, semirrestringida y no restringida?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿La URPA (sala de recuperación) cuenta con monitor y oxígeno por puesto?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿La central de esterilización está físicamente separada del área quirúrgica?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿El quirófano tiene dimensiones mínimas de 36 m² con acabados lisos y lavables?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿Los flujos de circulación separan zona estéril, semirrestringida y no restringida?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿La URPA (sala de recuperación) cuenta con monitor y oxígeno por puesto?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿La central de esterilización está físicamente separada del área quirúrgica?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
     ],
     talento: [
       {q:'¿El cirujano tiene especialización registrada en RETHUS para el procedimiento que realiza?', sev:'critica', norm:'RETHUS · Ley 23/1981'},
-      {q:'¿El anestesiólogo tiene especialización registrada y está presente durante la cirugía?', sev:'critica', norm:'RETHUS · Res. 3100/2019'},
+      {q:'¿El anestesiólogo tiene especialización registrada y está presente durante la cirugía?', sev:'critica', norm:'RETHUS · Res. 1732/2026 / Res. 3100/2019'},
       {q:'¿La instrumentadora tiene título en instrumentación quirúrgica con tarjeta profesional?', sev:'critica', norm:'RETHUS · Ley 784/2002'},
     ],
     dotacion: [
-      {q:'¿El autoclave de esterilización tiene control biológico semanal con registros?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
-      {q:'¿El instrumental esterilizado tiene empaques íntegros y fecha de esterilización vigente?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
-      {q:'¿El desfibrilador del quirófano está operativo y disponible en el área?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿El autoclave de esterilización tiene control biológico semanal con registros?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
+      {q:'¿El instrumental esterilizado tiene empaques íntegros y fecha de esterilización vigente?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
+      {q:'¿El desfibrilador del quirófano está operativo y disponible en el área?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
       {q:'¿Los equipos de anestesia tienen mantenimiento preventivo documentado y al día?', sev:'moderada', norm:'Dec. 4725/2005'},
     ],
     registros: [
-      {q:'¿Cada procedimiento tiene consentimiento informado específico firmado previamente?', sev:'critica', norm:'Ley 23/1981 · Res. 3100/2019'},
+      {q:'¿Cada procedimiento tiene consentimiento informado específico firmado previamente?', sev:'critica', norm:'Ley 23/1981 · Res. 1732/2026 / Res. 3100/2019'},
       {q:'¿Los registros quirúrgicos incluyen: hallazgos, técnica, materiales usados y complicaciones?', sev:'moderada', norm:'Res. 1995/1999'},
       {q:'¿El conteo de gasas e instrumental está documentado en la nota quirúrgica?', sev:'moderada', norm:'OMS Lista Chequeo'},
       {q:'¿Las notas de anestesia incluyen técnica, medicamentos, dosis y monitorización?', sev:'moderada', norm:'Res. 1995/1999'},
@@ -3019,15 +3022,15 @@ const AE_DB = {
   },
   laboratorio: {
     documentacion: [
-      {q:'¿El laboratorio tiene habilitación vigente con resolución de la Secretaría de Salud?', sev:'critica', norm:'Res. 3100/2019'},
-      {q:'¿El laboratorio participa activamente en el PEEC del Ministerio de Salud?', sev:'critica', norm:'Res. 3100/2019 Est. 5 · PEEC'},
+      {q:'¿El laboratorio tiene habilitación vigente con resolución de la Secretaría de Salud?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019'},
+      {q:'¿El laboratorio participa activamente en el PEEC del Ministerio de Salud?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5 · PEEC'},
       {q:'¿El manual de procedimientos analíticos está disponible y actualizado?', sev:'moderada', norm:'NTC-ISO 15189'},
-      {q:'¿Existe mapa de riesgos biológicos del laboratorio documentado?', sev:'moderada', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿Existe mapa de riesgos biológicos del laboratorio documentado?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
     ],
     planta: [
-      {q:'¿Las áreas de toma de muestras y análisis están físicamente separadas?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿El laboratorio tiene zona de lavado exclusiva diferenciada del área analítica?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿Existe ventilación adecuada en el área de análisis y manejo de reactivos?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿Las áreas de toma de muestras y análisis están físicamente separadas?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿El laboratorio tiene zona de lavado exclusiva diferenciada del área analítica?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿Existe ventilación adecuada en el área de análisis y manejo de reactivos?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
     ],
     talento: [
       {q:'¿El bacteriólogo responsable tiene título y tarjeta profesional vigente en RETHUS?', sev:'critica', norm:'Ley 841/2003 · RETHUS'},
@@ -3036,7 +3039,7 @@ const AE_DB = {
     ],
     dotacion: [
       {q:'¿Los equipos de análisis tienen hojas de vida con calibraciones al día?', sev:'critica', norm:'Dec. 4725/2005 · NTC-ISO 15189'},
-      {q:'¿Los reactivos están almacenados a temperatura adecuada y dentro del vencimiento?', sev:'critica', norm:'Res. 3100/2019 Est. 2'},
+      {q:'¿Los reactivos están almacenados a temperatura adecuada y dentro del vencimiento?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
       {q:'¿Existe gabinete de bioseguridad clase II operativo para muestras de riesgo?', sev:'moderada', norm:'NTC-ISO 15189'},
     ],
     registros: [
@@ -3048,13 +3051,13 @@ const AE_DB = {
   },
   odontologia: {
     documentacion: [
-      {q:'¿El consultorio odontológico tiene habilitación vigente para los servicios que presta?', sev:'critica', norm:'Res. 3100/2019'},
-      {q:'¿El protocolo de esterilización está documentado y visible en la central?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿El consultorio odontológico tiene habilitación vigente para los servicios que presta?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019'},
+      {q:'¿El protocolo de esterilización está documentado y visible en la central?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
       {q:'¿El equipo de rayos X tiene protocolo de radioprotección y registro de dosis?', sev:'moderada', norm:'Res. 9031/1990 · Res. 4445/1996'},
     ],
     planta: [
       {q:'¿El consultorio permite circulación de silla de ruedas y tiene accesibilidad universal?', sev:'moderada', norm:'Ley 361/1997'},
-      {q:'¿La central de esterilización tiene flujos definidos (sucio → limpio → estéril)?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿La central de esterilización tiene flujos definidos (sucio → limpio → estéril)?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
       {q:'¿El área de rayos X intraoral tiene blindaje verificado y señalización de radiación?', sev:'critica', norm:'Res. 4445/1996'},
     ],
     talento: [
@@ -3063,14 +3066,14 @@ const AE_DB = {
       {q:'¿El personal tiene carné de vacunación contra Hepatitis B completo?', sev:'moderada', norm:'Min. Trabajo'},
     ],
     dotacion: [
-      {q:'¿La unidad odontológica (sillón, escupidera, lámpara, jeringa triple) está en buen estado?', sev:'moderada', norm:'Res. 3100/2019 Est. 2'},
-      {q:'¿El autoclave clase B tiene control biológico semanal con registros vigentes?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿La unidad odontológica (sillón, escupidera, lámpara, jeringa triple) está en buen estado?', sev:'moderada', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 2'},
+      {q:'¿El autoclave clase B tiene control biológico semanal con registros vigentes?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
       {q:'¿Los guardianes para agujas dentales son seguros y no superan 3/4 de su capacidad?', sev:'moderada', norm:'Dec. 351/2014'},
     ],
     registros: [
-      {q:'¿Cada paciente tiene historia clínica con odontograma actualizado?', sev:'critica', norm:'Res. 1995/1999 · Res. 3100/2019'},
+      {q:'¿Cada paciente tiene historia clínica con odontograma actualizado?', sev:'critica', norm:'Res. 1995/1999 · Res. 1732/2026 / Res. 3100/2019'},
       {q:'¿Existe consentimiento informado específico para cada procedimiento?', sev:'moderada', norm:'Ley 23/1981'},
-      {q:'¿Los ciclos de autoclave tienen registros de temperatura, presión y tiempo?', sev:'critica', norm:'Res. 3100/2019 Est. 5'},
+      {q:'¿Los ciclos de autoclave tienen registros de temperatura, presión y tiempo?', sev:'critica', norm:'Res. 1732/2026 / Res. 3100/2019 Est. 5'},
     ],
   },
 };
@@ -3130,7 +3133,7 @@ const PAMEC_AUTOEVAL_ITEMS = [
   {id:'ae7', cat:'Selección de procesos', texto:'Existe un acta de selección de procesos firmada por el equipo responsable y la dirección.', norma:'Res. 1445/2006 Anexo Técnico 1'},
   {id:'ae8', cat:'Plan de mejoramiento', texto:'El plan de mejoramiento tiene acciones concretas, responsables nominales, recursos asignados y fechas de cierre.', norma:'Art. 5, Res. 1445/2006'},
   {id:'ae9', cat:'Plan de mejoramiento', texto:'Cada acción del plan tiene un indicador de logro medible y cuantificable.', norma:'Art. 5, Res. 1445/2006'},
-  {id:'ae10', cat:'Plan de mejoramiento', texto:'El plan de mejoramiento está disponible para revisión por parte del ente habilitador.', norma:'Res. 3100/2019 Est. 6'},
+  {id:'ae10', cat:'Plan de mejoramiento', texto:'El plan de mejoramiento está disponible para revisión por parte del ente habilitador.', norma:'Res. 1732/2026 / Res. 3100/2019 Est. 6'},
   {id:'ae11', cat:'Indicadores Res. 256/2016', texto:'Se miden y registran los indicadores obligatorios de la Res. 256/2016 aplicables al prestador.', norma:'Res. 256/2016 Art. 3'},
   {id:'ae12', cat:'Indicadores Res. 256/2016', texto:'Los indicadores se reportan al SOGCS en los tiempos establecidos (trimestral o según aplique).', norma:'Res. 256/2016 Art. 6'},
   {id:'ae13', cat:'Indicadores Res. 256/2016', texto:'Se hace análisis de tendencia de los indicadores con al menos 4 mediciones históricas.', norma:'Res. 256/2016 Art. 7'},
