@@ -224,24 +224,29 @@ export default function BenchmarkingPage() {
         nombre:  userData.nombre  || 'Mi IPS',
       });
 
-      // Leer docs individualmente por ID conocido (evita problemas de security rules en list queries)
+      // Leer docs por ID conocido con allSettled — docs inexistentes no tumban la carga
       const SEGMENTOS_CONOCIDOS = [
         'general','domiciliaria','imagenologia','urgencias','internacion',
         'quirurgicos','laboratorio','transporte','rehabilitacion',
         'salud_mental','odontologia',
       ];
-      const auditSnaps = await Promise.all(
+      const results = await Promise.allSettled(
         SEGMENTOS_CONOCIDOS.map(seg =>
           getDoc(doc(db, 'auditorias', `${user.uid}_${seg}`))
         )
       );
-      const mis: AuditScore[] = auditSnaps
-        .filter(snap => snap.exists())
-        .map(snap => ({
-          segmento:    snap.data()?.segmento    ?? '',
-          score:       snap.data()?.score       ?? 0,
-          completedAt: snap.data()?.completedAt ?? '',
-        }))
+      const mis: AuditScore[] = results
+        .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof getDoc>>> =>
+          r.status === 'fulfilled' && r.value.exists()
+        )
+        .map(r => {
+          const d = r.value.data()!;
+          return {
+            segmento:    (d.segmento    as string) ?? '',
+            score:       (d.score       as number) ?? 0,
+            completedAt: (d.completedAt as string) ?? '',
+          };
+        })
         .filter(a => !!a.completedAt && a.score > 0);
       setMisAudits(mis);
 

@@ -256,8 +256,12 @@ service cloud.firestore {
     // docId = {uid}_{segmento} — solo el propietario puede acceder
     // ════════════════════════════════════════════════════════════════════════
     match /auditorias/{docId} {
+      // resource == null cuando el doc no existe — permitir lectura para que
+      // Promise.allSettled pueda verificar qué segmentos existen sin error de permisos
       allow read: if isAuthenticated() && (
-        resource.data.uid == request.auth.uid || isAdmin()
+        resource == null ||
+        resource.data.uid == request.auth.uid ||
+        isAdmin()
       );
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
