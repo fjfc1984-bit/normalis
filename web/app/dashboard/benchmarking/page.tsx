@@ -66,17 +66,42 @@ const SINTETICOS: BenchmarkEntry[] = [
   { segmento: 'odontologia', score: 67, tipoIPS: 'Odontología', ciudad: 'Medellín' },
   { segmento: 'odontologia', score: 80, tipoIPS: 'Odontología', ciudad: 'Bogotá' },
   { segmento: 'odontologia', score: 62, tipoIPS: 'Odontología', ciudad: 'Cali' },
+  // Salud Domiciliaria
+  { segmento: 'domiciliaria', score: 66, tipoIPS: 'Domiciliaria', ciudad: 'Bogotá' },
+  { segmento: 'domiciliaria', score: 71, tipoIPS: 'Domiciliaria', ciudad: 'Medellín' },
+  { segmento: 'domiciliaria', score: 58, tipoIPS: 'Domiciliaria', ciudad: 'Cali' },
+  { segmento: 'domiciliaria', score: 74, tipoIPS: 'Domiciliaria', ciudad: 'Bogotá' },
+  { segmento: 'domiciliaria', score: 63, tipoIPS: 'Domiciliaria', ciudad: 'Barranquilla' },
+  { segmento: 'domiciliaria', score: 69, tipoIPS: 'Domiciliaria', ciudad: 'Bucaramanga' },
+  // Establecimiento General
+  { segmento: 'general', score: 70, tipoIPS: 'General', ciudad: 'Bogotá' },
+  { segmento: 'general', score: 65, tipoIPS: 'General', ciudad: 'Medellín' },
+  { segmento: 'general', score: 78, tipoIPS: 'General', ciudad: 'Cali' },
+  { segmento: 'general', score: 60, tipoIPS: 'General', ciudad: 'Barranquilla' },
+  { segmento: 'general', score: 72, tipoIPS: 'General', ciudad: 'Bogotá' },
+  // Internación
+  { segmento: 'internacion', score: 75, tipoIPS: 'Hospitalización', ciudad: 'Bogotá' },
+  { segmento: 'internacion', score: 68, tipoIPS: 'Hospitalización', ciudad: 'Medellín' },
+  { segmento: 'internacion', score: 82, tipoIPS: 'Hospitalización', ciudad: 'Bogotá' },
+  { segmento: 'internacion', score: 61, tipoIPS: 'Hospitalización', ciudad: 'Cali' },
 ];
 
 const SEGMENTO_LABELS: Record<string, string> = {
+  general:         'Establecimiento General',
+  domiciliaria:    'Salud Domiciliaria',
+  imagenologia:    'Imagenología',
+  urgencias:       'Urgencias',
+  internacion:     'Internación',
+  quirurgicos:     'Quirúrgicos',
+  laboratorio:     'Laboratorio Clínico',
+  transporte:      'Transporte Asistencial',
+  rehabilitacion:  'Rehabilitación',
+  salud_mental:    'Salud Mental',
+  odontologia:     'Odontología',
+  // legados de versión anterior
   consulta_externa:  'Consulta Externa',
-  urgencias:         'Urgencias',
   hospitalizacion:   'Hospitalización',
-  laboratorio:       'Laboratorio',
-  odontologia:       'Odontología',
-  imagenologia:      'Imagenología',
   cirugia:           'Cirugía',
-  salud_mental:      'Salud Mental',
 };
 
 // ── Helpers de stats ─────────────────────────────────────────
@@ -182,6 +207,7 @@ export default function BenchmarkingPage() {
   const [perfil,    setPerfil]      = useState<IpsProfile | null>(null);
   const [segActivo, setSegActivo]   = useState<string>('');
   const [loading,   setLoading]     = useState(true);
+  const [error,     setError]       = useState<string | null>(null);
 
   // Cargar datos del usuario y benchmarks reales
   const cargar = useCallback(async () => {
@@ -228,7 +254,8 @@ export default function BenchmarkingPage() {
       setRealData(real);
 
     } catch (e) {
-      console.error('Error benchmarking:', e);
+      console.error('[Benchmarking] Error al cargar datos:', e);
+      setError('No se pudieron cargar los datos. Verifica tu conexión e intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -295,8 +322,28 @@ export default function BenchmarkingPage() {
         </p>
       </div>
 
+      {/* ── Error de carga ── */}
+      {error && (
+        <div style={{
+          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
+          padding: 16, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center',
+        }}>
+          <span style={{ fontSize: 20 }}>⚠️</span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626' }}>Error al cargar benchmarking</p>
+            <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{error}</p>
+          </div>
+          <button onClick={() => { setError(null); cargar(); }}
+            style={{ marginLeft: 'auto', fontSize: 11, padding: '6px 14px',
+              background: '#dc2626', color: 'white', borderRadius: 8,
+              border: 'none', cursor: 'pointer', fontWeight: 700 }}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {/* ── Sin auditorías completadas ── */}
-      {misAudits.length === 0 && (
+      {!error && misAudits.length === 0 && (
         <div style={{
           background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14,
           padding: 32, textAlign: 'center',
@@ -319,7 +366,7 @@ export default function BenchmarkingPage() {
       )}
 
       {/* ── Con auditorías ── */}
-      {misAudits.length > 0 && (
+      {!error && misAudits.length > 0 && (
         <>
           {/* Selector de servicio */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>

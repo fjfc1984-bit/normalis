@@ -86,7 +86,7 @@ export function useAudit(segmento: string): UseAuditReturn {
         segmento,
         answers: latestAnswers,
         updatedAt: now,
-        completedAt: null,
+        // completedAt lo maneja exclusivamente markComplete — no sobreescribir aquí
       }, { merge: true });
       setSavedAt(now);
     } catch (err) {
