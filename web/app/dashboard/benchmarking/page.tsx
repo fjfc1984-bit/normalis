@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 
@@ -224,17 +224,23 @@ export default function BenchmarkingPage() {
         nombre:  userData.nombre  || 'Mi IPS',
       });
 
-      // Mis auditorías completadas (filtro client-side para evitar índice compuesto)
-      const auditQ = query(
-        collection(db, 'auditorias'),
-        where('uid', '==', user.uid),
+      // Leer docs individualmente por ID conocido (evita problemas de security rules en list queries)
+      const SEGMENTOS_CONOCIDOS = [
+        'general','domiciliaria','imagenologia','urgencias','internacion',
+        'quirurgicos','laboratorio','transporte','rehabilitacion',
+        'salud_mental','odontologia',
+      ];
+      const auditSnaps = await Promise.all(
+        SEGMENTOS_CONOCIDOS.map(seg =>
+          getDoc(doc(db, 'auditorias', `${user.uid}_${seg}`))
+        )
       );
-      const auditSnap = await getDocs(auditQ);
-      const mis: AuditScore[] = auditSnap.docs
-        .map(d => ({
-          segmento:    d.data().segmento    ?? '',
-          score:       d.data().score       ?? 0,
-          completedAt: d.data().completedAt ?? '',
+      const mis: AuditScore[] = auditSnaps
+        .filter(snap => snap.exists())
+        .map(snap => ({
+          segmento:    snap.data()?.segmento    ?? '',
+          score:       snap.data()?.score       ?? 0,
+          completedAt: snap.data()?.completedAt ?? '',
         }))
         .filter(a => !!a.completedAt && a.score > 0);
       setMisAudits(mis);
