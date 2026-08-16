@@ -242,7 +242,7 @@ export default function PROAPage() {
               Plan Profesional+
             </span>
           </div>
-          <p className="text-sm text-slate-500">Programa de Optimización del Uso de Antimicrobianos · MinSalud 2021</p>
+          <p className="text-sm text-slate-500">Programa de Optimización del Uso de Antimicrobianos · <span className="font-semibold text-teal-700">Res. 2471/2022</span> · Plan RAM 2025–2030</p>
         </div>
         {/* KPIs rápidos */}
         <div className="flex gap-3">
@@ -599,7 +599,7 @@ export default function PROAPage() {
           )}
 
           <div className="text-xs text-slate-400 text-center py-2">
-            Generado por NormaLis · PROA — {new Date().toLocaleDateString('es-CO')} · normalis.co
+            Generado por NormaLis · PROA · Res. 2471/2022 · Plan RAM 2025–2030 · Res. 1732/2026 Est. 5 — {new Date().toLocaleDateString('es-CO')}
           </div>
         </div>
       )}
