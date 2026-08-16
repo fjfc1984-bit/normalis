@@ -12,7 +12,10 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import {
+  doc, setDoc, getDoc,
+  collection, addDoc, query, where, getCountFromServer, serverTimestamp,
+} from 'firebase/firestore';
 import { SectionHeader, LoadingSpinner, Toast, useToast } from '@/components/ui';
 import Link from 'next/link';
 import { useEffect } from 'react';
@@ -207,6 +210,34 @@ const ITEMS_GAP: ItemGap[] = [
   },
 ];
 
+// ── Parsear plazo textual → fecha ISO ────────────────────────────────────
+
+function parsePlazo(plazo: string): string {
+  const MESES: Record<string, string> = {
+    enero:'01', febrero:'02', marzo:'03', abril:'04',
+    mayo:'05', junio:'06', julio:'07', agosto:'08',
+    septiembre:'09', octubre:'10', noviembre:'11', diciembre:'12',
+  };
+  const lower = plazo.toLowerCase();
+  for (const [mes, num] of Object.entries(MESES)) {
+    const m = lower.match(new RegExp(`${mes}\\s+(202\\d)`));
+    if (m) {
+      const year = parseInt(m[1]);
+      const mon  = parseInt(num);
+      const last = new Date(year, mon, 0).getDate();
+      return `${year}-${num}-${String(last).padStart(2,'0')}`;
+    }
+  }
+  // Inmediato / al momento de habilitar → +30 días
+  if (lower.includes('inmediato') || lower.includes('habilitar')) {
+    const d = new Date(); d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0,10);
+  }
+  // Continuo / vencimiento → +180 días
+  const d = new Date(); d.setDate(d.getDate() + 180);
+  return d.toISOString().slice(0,10);
+}
+
 // ── Agrupar por categoría ─────────────────────────────────────────────────────
 
 function agrupar(items: ItemGap[]): Record<string, ItemGap[]> {
@@ -258,14 +289,27 @@ export default function Gap1732Page() {
   const [resp, setResp] = useState<RespGap>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+  const [expandidos,    setExpandidos]    = useState<Set<string>>(new Set());
+  const [capaIds,       setCapaIds]       = useState<Record<string,string>>({});
+  const [creatingCapa,  setCreatingCapa]  = useState<string | null>(null);
+  const [userNit,       setUserNit]       = useState<string>('');
 
   // ── Cargar respuestas guardadas ────────────────────────────────────────────
   useEffect(() => {
     if (!user) { setLoading(false); return; }
+    // Cargar NIT del usuario
+    getDoc(doc(db, 'usuarios', user.uid))
+      .then(s => { if (s.exists()) setUserNit(s.data()?.nit ?? ''); })
+      .catch(() => {});
+    // Cargar respuestas + capaIds
     const ref = doc(db, 'gap1732', user.uid);
     getDoc(ref)
-      .then(snap => { if (snap.exists()) setResp(snap.data()?.respuestas ?? {}); })
+      .then(snap => {
+        if (snap.exists()) {
+          setResp(snap.data()?.respuestas ?? {});
+          setCapaIds(snap.data()?.capaIds ?? {});
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [user]);
@@ -293,10 +337,58 @@ export default function Gap1732Page() {
     }
   }, [user, show]);
 
+  // Auto-crear CAPA cuando se detecta no cumplimiento o cumplimiento parcial
+  const autoCrearCapa = async (item: ItemGap) => {
+    if (!user || capaIds[item.id]) return; // ya existe CAPA para este ítem
+    setCreatingCapa(item.id);
+    try {
+      const plazoDate = parsePlazo(item.plazo);
+      const countQ = userNit
+        ? query(collection(db, 'capas'), where('nit', '==', userNit))
+        : query(collection(db, 'capas'), where('uid', '==', user.uid));
+      const countSnap = await getCountFromServer(countQ);
+      const num = String((countSnap.data().count ?? 0) + 1).padStart(3, '0');
+      const capaRef = await addDoc(collection(db, 'capas'), {
+        uid:              user.uid,
+        nit:              userNit ?? '',
+        numero:           `CAPA-${num}`,
+        descripcion:      `[Brecha 1732/2026] ${item.titulo}`,
+        causaRaiz:        `Brecha identificada en análisis Res. 1732/2026 — ${item.categoria}`,
+        accionCorrectiva: item.guia,
+        responsable:      '',
+        area:             item.categoria,
+        fechaLimite:      plazoDate,
+        origen:           'brecha_1732',
+        evidencia:        '',
+        estado:           'abierta',
+        urgencia:         item.urgencia,
+        refGapId:         item.id,
+        fechaCreacion:    serverTimestamp(),
+        fechaActualizacion: null,
+        fechaInicio:      null,
+        fechaCierre:      null,
+      });
+      const newCapaIds = { ...capaIds, [item.id]: capaRef.id };
+      setCapaIds(newCapaIds);
+      await setDoc(doc(db, 'gap1732', user.uid), { capaIds: newCapaIds }, { merge: true });
+      show(`✅ CAPA ${num} creada automáticamente`, 'success');
+    } catch (err: unknown) {
+      console.error('[Gap1732] autoCrearCapa:', err);
+      show('Error al crear CAPA. Verifica permisos de Firestore.', 'error');
+    } finally {
+      setCreatingCapa(null);
+    }
+  };
+
   const setEstado = (id: string, estado: Estado) => {
     const newResp = { ...resp, [id]: estado };
     setResp(newResp);
     guardar(newResp);
+    // Auto-crear CAPA para ítems no conformes o parciales
+    if (estado === 'no_cumple' || estado === 'parcial') {
+      const item = ITEMS_GAP.find(i => i.id === id);
+      if (item) void autoCrearCapa(item);
+    }
   };
 
   const toggleExpandido = (id: string) =>
@@ -449,12 +541,26 @@ export default function Gap1732Page() {
                         </div>
                       )}
 
-                      <button
-                        onClick={() => toggleExpandido(item.id)}
-                        className="mt-1.5 text-[10px] text-teal-600 hover:text-teal-800 font-medium transition-colors"
-                      >
-                        {expandido ? '▲ Ocultar guía' : '▼ Ver guía de implementación'}
-                      </button>
+                      <div className="mt-1.5 flex items-center gap-3 flex-wrap">
+                        <button
+                          onClick={() => toggleExpandido(item.id)}
+                          className="text-[10px] text-teal-600 hover:text-teal-800 font-medium transition-colors"
+                        >
+                          {expandido ? '▲ Ocultar guía' : '▼ Ver guía de implementación'}
+                        </button>
+                        {capaIds[item.id] && (
+                          <a
+                            href={`/dashboard/capas`}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors"
+                            style={{ background:'#ecfdf5', color:'#059669', border:'1px solid #a7f3d0' }}
+                          >
+                            ✅ CAPA creada → Ver
+                          </a>
+                        )}
+                        {creatingCapa === item.id && (
+                          <span className="text-[10px] text-teal-400 animate-pulse">Creando CAPA…</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Selector de estado */}
@@ -503,7 +609,9 @@ export default function Gap1732Page() {
               href="/dashboard/capas"
               className="text-xs px-4 py-2 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 transition-colors"
             >
-              Crear CAPA por cada brecha →
+              {Object.keys(capaIds).length > 0
+                ? `Ver ${Object.keys(capaIds).length} CAPA(s) creadas →`
+                : 'Ver CAPAs →'}
             </Link>
             <Link
               href="/dashboard/cumplimiento"

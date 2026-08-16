@@ -5,7 +5,7 @@
 import type { Timestamp } from 'firebase/firestore';
 
 export type CapaEstado = 'abierta' | 'en_progreso' | 'cerrada';
-export type CapaOrigen = 'auditoria' | 'manual' | 'queja' | 'indicador' | 'supervision';
+export type CapaOrigen = 'auditoria' | 'manual' | 'queja' | 'indicador' | 'supervision' | 'brecha_1732';
 
 export interface Capa {
   id: string;
@@ -53,6 +53,7 @@ export const CAPA_ORIGEN_LABELS: Record<string, string> = {
   queja:       '📣 Queja/PQRS',
   indicador:   '📊 Indicador',
   supervision: '👁 Supervisión',
+  brecha_1732: '⚡ Brecha Res. 1732/2026',
 };
 
 export const CAPA_EMPTY_FORM: CapaFormData = {
