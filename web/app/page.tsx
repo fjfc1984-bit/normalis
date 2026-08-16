@@ -782,7 +782,7 @@ function DemoVideo() {
           </button>
         ) : (
           <iframe
-            src="/normalis-demo-video.html"
+            src="/demo"
             className="w-full aspect-video"
             title="Demo NormaLis"
             allowFullScreen
@@ -862,7 +862,7 @@ function ProductPreview() {
           <div className="bg-slate-50 border-t border-slate-200 px-5 py-3 flex items-center justify-between">
             <p className="text-sm text-slate-500">{SCREENS[active].desc}</p>
             <a
-              href="https://normalis.co/login.html"
+              href="/login"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-bold text-teal-600 hover:text-teal-500 flex items-center gap-1 flex-shrink-0 ml-4"
@@ -969,8 +969,8 @@ function Pricing({ onDemo }: { onDemo: () => void }) {
                     p.monthly === 'A la medida'
                       ? 'mailto:hola@normalis.co?subject=NormaLis%20Enterprise'
                       : annual
-                        ? (p.boldUrlAnnual ?? 'https://fjfc1984-bit.github.io/normalis/registro.html')
-                        : (p.boldUrlMonthly ?? 'https://fjfc1984-bit.github.io/normalis/registro.html')
+                        ? (p.boldUrlAnnual ?? '/registro')
+                        : (p.boldUrlMonthly ?? '/registro')
                   }
                   target={p.monthly !== 'A la medida' ? '_blank' : undefined}
                   rel={p.monthly !== 'A la medida' ? 'noopener noreferrer' : undefined}
@@ -1160,8 +1160,8 @@ function Footer() {
           <div>
             <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Legal</h4>
             <div className="flex flex-col gap-2.5">
-              <a href="https://normalis.co/terminos.html" className="text-sm text-slate-400 hover:text-white transition-colors">Términos y condiciones</a>
-              <a href="https://normalis.co/politica-privacidad.html" className="text-sm text-slate-400 hover:text-white transition-colors">Política de privacidad</a>
+              <a href="/terminos" className="text-sm text-slate-400 hover:text-white transition-colors">Términos y condiciones</a>
+              <a href="/politica-privacidad" className="text-sm text-slate-400 hover:text-white transition-colors">Política de privacidad</a>
               <Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">Ingresar a la app</Link>
             </div>
           </div>
