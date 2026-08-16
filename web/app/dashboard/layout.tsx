@@ -41,7 +41,7 @@ const NAV_GROUPS = [
       { href: '/dashboard/pamec',        label: 'PAMEC',        icon: '📈' },
       { href: '/dashboard/capas',        label: 'CAPAs',        icon: '✓'  },
       { href: '/dashboard/indicadores',  label: 'Indicadores',  icon: '📊' },
-      { href: '/dashboard/comparador',   label: 'Comparador',   icon: '🔄' },
+      { href: '/dashboard/benchmarking',  label: 'Benchmarking', icon: '📊' },
     ],
   },
   {

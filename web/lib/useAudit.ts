@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, addDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import type { AuditAnswers } from './auditTypes';
 
@@ -140,6 +140,20 @@ export function useAudit(segmento: string): UseAuditReturn {
       }, { merge: true });
       setCompleted(true);
       setSavedAt(now);
+
+      // ── Guardar score anónimo para benchmarking (best-effort) ──
+      try {
+        const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+        const userData = userDoc.data() || {};
+        await addDoc(collection(db, 'benchmarks'), {
+          segmento,
+          score,
+          tipoIPS: userData.tipoIPS || 'general',
+          ciudad:  userData.ciudad  || 'Colombia',
+          completedAt: now,
+          // Sin uid ni datos personales — solo el score anónimo
+        });
+      } catch (_) { /* benchmarking no crítico — ignora errores */ }
     } catch (err) {
       console.error('Error marking complete:', err);
     } finally {
