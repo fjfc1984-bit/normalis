@@ -370,7 +370,7 @@ function Hero({ onDemo }: { onDemo: () => void }) {
         </div>
 
         <div className="flex justify-center flex-wrap gap-2">
-          {['19 módulos','Res. 1732/2026','ISO 7101 · JCI','IA Normativa 24/7','Benchmarking','Sin instalación'].map((t, i) => (
+          {['20 módulos','Res. 1732/2026','ISO 7101 · JCI','IA Normativa 24/7','Benchmarking','Sin instalación'].map((t, i) => (
             <span key={t} className="text-xs px-3 py-1.5 rounded-full font-medium"
                   style={i < 4
                     ? { background: 'rgba(0,188,212,.1)', border: '1px solid rgba(0,188,212,.2)', color: '#67e8f9' }
@@ -397,7 +397,7 @@ function ComplianceBand() {
         Normativa oficial colombiana cubierta
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        {['Res. 1732/2026 — Marco principal','Res. 256/2016 — Indicadores','PAMEC · SOGCS','RETHUS · REPS','ISO 31000:2018 · Riesgo','Res. 1774/2025 · SG-SST','ISO 7101:2023 · JCI 8ª ed.','Ley 1581/2012 · Habeas Data'].map(p => (
+        {['Res. 1732/2026 — Marco principal','Res. 256/2016 — Indicadores','Res. 2471/2022 · PROA','PAMEC · SOGCS','RETHUS · REPS','ISO 31000:2018 · Riesgo','Res. 1774/2025 · SG-SST','ISO 7101:2023 · JCI 8ª ed.','Ley 1581/2012 · Habeas Data'].map(p => (
           <span key={p} className="text-xs font-semibold px-4 py-1.5 rounded-full"
                 style={{ background: 'white', border: '1px solid #99f6e4', color: '#0f766e', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
             ✓ {p}
@@ -467,13 +467,14 @@ function Modulos() {
     { icon: '📝', title: 'Consentimientos',             tag: 'Habeas Data',           desc: 'Plantillas por especialidad, historial firmado y trazabilidad completa.', g: 'linear-gradient(135deg,#4c1d95,#a78bfa)' },
     { icon: '🔄', title: 'ISO 7101 / JCI Crosswalk',   tag: 'Crosswalk normativo',   desc: 'Cruza los 7 estándares colombianos con ISO 7101:2023 y JCI 8ª edición.', g: 'linear-gradient(135deg,#1e3a8a,#38bdf8)' },
     { icon: '🤖', title: 'Asistente IA Normativo',      tag: 'Gemini + RAG',          desc: 'Chat con la norma en lenguaje natural. Respuestas citadas 24/7.', g: 'linear-gradient(135deg,#831843,#f472b6)' },
+    { icon: '💊', title: 'PROA',                           tag: 'Plan Profesional+',      desc: 'Res. 2471/2022 · Plan RAM 2025–2030. Checklist PROA, consumo DDD/100 camas-día, registro de intervenciones e informe mensual para el comité de infecciones.', g: 'linear-gradient(135deg,#064e3b,#10b981)' },
   ];
   return (
     <section ref={ref} className="py-24 px-5" style={{ background: '#f8fafc' }} id="modulos">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-14">
           <span className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4"
-                style={{ background: '#f0fdfa', color: '#0f766e', border: '1px solid #99f6e4' }}>19 Módulos activos</span>
+                style={{ background: '#f0fdfa', color: '#0f766e', border: '1px solid #99f6e4' }}>20 Módulos activos</span>
           <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-3 leading-tight">
             Todo lo que su IPS<br />necesita en un solo lugar
           </h2>
@@ -626,7 +627,7 @@ function Precios({ onDemo }: { onDemo: () => void }) {
       cta: 'Empezar' },
     { name: 'Profesional', price: '399.000', highlight: true,
       desc: 'El más elegido por clínicas y centros médicos.',
-      features: ['Todo lo del Básico','SG-SST · CAPAs · Indicadores','Benchmarking IPS','Brecha 1732','Hasta 5 usuarios','Soporte prioritario'],
+      features: ['Todo lo del Básico','SG-SST · CAPAs · Indicadores','PROA — Antimicrobianos','Benchmarking IPS','Brecha 1732','Hasta 5 usuarios','Soporte prioritario'],
       cta: '⭐ Más popular' },
     { name: 'Enterprise', price: 'Personalizado', highlight: false,
       desc: 'Para hospitales y redes de IPS.',
@@ -689,6 +690,7 @@ function FAQ() {
     { q: '¿NormaLis ya tiene la Resolución 1732/2026?', a: 'Sí. Publicada el 5 de agosto de 2026, reemplazó la 3100/2019 y sus modificaciones. NormaLis ya incluye todos los nuevos criterios: Telemedicina, IHCE y Plan de Adecuación Progresiva.' },
     { q: '¿Sirve para todos los tipos de IPS?', a: 'Sí. Cubre 22 modalidades: consultorios, clínicas, hospitales, centros de imágenes, laboratorios, odontología, medicina estética y más.' },
     { q: '¿Necesito instalar algo?', a: 'No. 100% en el navegador. También funciona como app en iOS/Android y puede usarse sin internet — sincroniza al recuperar conexión.' },
+    { q: '¿NormaLis incluye el módulo PROA?', a: 'Sí. El módulo PROA (Res. 2471/2022 · Plan RAM 2025–2030 · Res. 1732/2026 Estándar 5) está incluido en el Plan Profesional y superior. Cubre checklist de madurez del programa, registro de intervenciones, consumo en DDD/100 camas-día por antimicrobiano trazador e informe mensual para el comité de infecciones.' },
     { q: '¿Qué pasa cuando cambia la normativa?', a: 'NormaLis se actualiza automáticamente. Todos los planes incluyen actualizaciones normativas sin costo adicional.' },
     { q: '¿Puedo empezar hoy mismo?', a: 'Sí. Con código de activación el acceso es inmediato. Sin código, un asesor te contacta en menos de 24 horas.' },
     { q: '¿Mis datos están seguros?', a: 'Sí. Google Cloud (Firebase), cifrado en tránsito y en reposo. Ley 1581/2012 (Habeas Data). Sus datos nunca se comparten con terceros.' },
