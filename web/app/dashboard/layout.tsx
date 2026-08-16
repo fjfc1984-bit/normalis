@@ -24,7 +24,10 @@ function NitWarningBanner() {
 }
 
 // Grupos de navegación
-const NAV_GROUPS = [
+const NAV_GROUPS: Array<{
+  label: string;
+  items: Array<{ href: string; label: string; icon: string; badge?: string }>;
+}> = [
   {
     label: 'Principal',
     items: [
@@ -53,6 +56,7 @@ const NAV_GROUPS = [
       { href: '/dashboard/documentos',      label: 'Documentos',     icon: '📄' },
       { href: '/dashboard/pqrs',            label: 'PQRS',           icon: '📬' },
       { href: '/dashboard/incidentes',      label: 'Incidentes',     icon: '🛡️' },
+      { href: '/dashboard/proa',            label: 'PROA',           icon: '💊', badge: 'PRO' },
     ],
   },
   {
@@ -161,6 +165,12 @@ function Sidebar() {
                       {item.icon}
                     </span>
                     {item.label}
+                    {item.badge && (
+                      <span className="ml-1 text-[8px] font-black px-1 py-0.5 rounded"
+                            style={{ background: 'rgba(0,188,212,.25)', color: '#00BCD4', letterSpacing: '0.05em' }}>
+                        {item.badge}
+                      </span>
+                    )}
                     {active && (
                       <span className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
                             style={{ background: '#26A69A', boxShadow: '0 0 5px #26A69A' }} />
