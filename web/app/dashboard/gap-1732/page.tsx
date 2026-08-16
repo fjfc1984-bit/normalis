@@ -280,8 +280,14 @@ export default function Gap1732Page() {
         respuestas: newResp,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-    } catch {
-      show('Error al guardar. Verifica tu conexión.', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
+        show('Sin permiso en Firestore — revisa las reglas de seguridad (colección gap1732).', 'error');
+      } else {
+        show('Error al guardar. Verifica tu conexión.', 'error');
+      }
+      console.error('[Gap1732] guardar error:', err);
     } finally {
       setSaving(false);
     }
