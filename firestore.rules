@@ -48,13 +48,6 @@ service cloud.firestore {
         (myData.nit == nitField || myData.nit_ips == nitField);
     }
 
-    function isDirectorOf(nit) {
-      let myData = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data;
-      return request.auth != null &&
-        myData.nit == nit &&
-        (myData.rol == 'cliente' || myData.rol == 'piloto' || myData.rol == 'admin');
-    }
-
     // ════════════════════════════════════════════════════════════════════════
     // usuarios/{uid} — perfiles de usuario + subcollections de módulos Next.js
     // ════════════════════════════════════════════════════════════════════════
