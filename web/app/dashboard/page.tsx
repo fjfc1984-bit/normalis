@@ -113,6 +113,43 @@ const MODULES = [
     icon: '🔄',
     from: '#0E7490', to: '#22D3EE',
   },
+  {
+    href: '/dashboard/proa',
+    title: 'PROA',
+    desc: 'Optimización de antimicrobianos — Res. 2471/2022',
+    icon: '💊',
+    from: '#7C3AED', to: '#C084FC',
+    badge: 'NUEVO',
+  },
+  {
+    href: '/dashboard/gap-1732',
+    title: 'Brecha 1732',
+    desc: 'Análisis de brecha Res. 1732/2026 vs estado actual',
+    icon: '🆕',
+    from: '#0369A1', to: '#38BDF8',
+    badge: '2026',
+  },
+  {
+    href: '/dashboard/cumplimiento',
+    title: 'Cumplimiento',
+    desc: 'Gestión de riesgos ISO 31000 y cumplimiento normativo',
+    icon: '⚡',
+    from: '#B45309', to: '#FBBF24',
+  },
+  {
+    href: '/dashboard/benchmarking',
+    title: 'Benchmarking',
+    desc: 'Comparación de indicadores entre IPS de la red',
+    icon: '📊',
+    from: '#1E40AF', to: '#93C5FD',
+  },
+  {
+    href: '/dashboard/firma',
+    title: 'Firma Digital',
+    desc: 'Firma electrónica de documentos y actas',
+    icon: '✍️',
+    from: '#4F46E5', to: '#A5B4FC',
+  },
 ];
 
 // ── Countdown futurista ────────────────────────────────────────────────────────

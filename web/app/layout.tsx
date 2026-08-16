@@ -5,19 +5,25 @@ import './globals.css';
 const GA_ID = 'G-R74LQ03RWF';
 
 export const metadata: Metadata = {
-  title:       'NormaLis — Software de Habilitación para IPS en Colombia',
-  description: 'Software con IA para gestión de calidad en IPS colombianas. Resolución 3100/2019, auditorías internas, documentos normativos y alertas de vencimientos.',
-  keywords:    'habilitación IPS, Resolución 3100, PAMEC, software calidad IPS Colombia, auditoría interna IPS',
+  title:       'NormaLis — Software de Habilitación IPS · Res. 1732/2026',
+  description: 'Software con IA para habilitación y auditoría de IPS colombianas. Res. 1732/2026 (reemplaza Res. 3100/2019), PAMEC, PROA, SG-SST, gestión documental y alertas de vencimientos.',
+  keywords:    'habilitación IPS, Resolución 1732 2026, Resolución 3100 2019, PAMEC, PROA antimicrobianos, software calidad IPS Colombia, auditoría interna IPS, habilitación servicios salud Colombia, Secretaría Salud Colombia',
   openGraph: {
-    title:       'NormaLis — Software de Habilitación para IPS en Colombia',
-    description: 'Software con IA para gestión de calidad en IPS colombianas. Resolución 3100/2019, auditorías, documentos normativos y alertas.',
+    title:       'NormaLis — Software de Habilitación IPS · Res. 1732/2026',
+    description: 'Plataforma SaaS para gestión de calidad y habilitación en IPS colombianas. Res. 1732/2026, auditorías, PROA, PAMEC, documentos normativos y alertas.',
     url:         'https://app.normalis.co',
     siteName:    'NormaLis',
     locale:      'es_CO',
     type:        'website',
   },
+  twitter: {
+    card:        'summary_large_image',
+    title:       'NormaLis — Habilitación IPS con IA · Res. 1732/2026',
+    description: 'Software colombiano para auditoría y habilitación de IPS. Cumple con Res. 1732/2026, PAMEC, PROA y más.',
+  },
   icons: { icon: '/favicon.ico' },
   robots: { index: true, follow: true },
+  metadataBase: new URL('https://app.normalis.co'),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
