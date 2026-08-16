@@ -127,8 +127,7 @@ export default function AuditoriaSegmentoPage({
 
   const goNext = useCallback(() => {
     if (isLast) {
-      setView('results');
-      handleAiAnalysis();
+      handleSave();   // llama markComplete() + setView('results') + handleAiAnalysis()
       return;
     }
     setCurrentIdx(i => i + 1);
@@ -493,7 +492,7 @@ export default function AuditoriaSegmentoPage({
                 ✅ Todos los criterios respondidos
               </span>
               <button
-                onClick={() => setView('results')}
+                onClick={handleSave}
                 className="text-teal-600 font-semibold hover:underline"
               >
                 Ver resultados →
