@@ -327,6 +327,21 @@ body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%
         <div class="field-error" id="pass-match-err">Las contraseñas no coinciden.</div>
       </div>
 
+      <!-- Código de activación (opcional) -->
+      <div class="field" id="field-codigo" style="margin-top:4px;">
+        <label for="r-codigo" style="display:flex;align-items:center;gap:6px;">
+          🔑 Código de activación
+          <span style="font-size:10px;padding:2px 7px;background:rgba(0,188,212,.12);color:#0097A7;border-radius:20px;font-weight:600;">Opcional</span>
+        </label>
+        <input type="text" id="r-codigo" placeholder="Ej: NL-A1B2C3D4" maxlength="20"
+               autocomplete="off" autocapitalize="characters" spellcheck="false"
+               style="font-family:monospace;letter-spacing:.08em;text-transform:uppercase;"
+               oninput="this.value=this.value.toUpperCase()">
+        <div class="hint" id="codigo-hint">Si tienes un código recibiste acceso inmediato — sin esperar aprobación.</div>
+        <div id="codigo-ok"  style="display:none;margin-top:4px;font-size:12px;color:#10b981;font-weight:600;">✅ Código válido — acceso activado</div>
+        <div id="codigo-err" style="display:none;margin-top:4px;font-size:12px;color:#ef4444;font-weight:600;"></div>
+      </div>
+
       <div class="terms-check">
         <input type="checkbox" id="r-terms" required>
         <label for="r-terms">Acepto los <a href="/terminos.html" target="_blank" rel="noopener noreferrer">Términos y Condiciones</a> y la <a href="/politica-privacidad.html" target="_blank" rel="noopener noreferrer">Política de Tratamiento de Datos Personales</a> de NormaLis, y autorizo el almacenamiento de los datos de mi IPS conforme a la Ley 1581/2012, Decreto 1377/2013 y Circular SIC 002/2024.</label>
@@ -347,15 +362,24 @@ body::after{content:'';position:fixed;width:400px;height:400px;border-radius:50%
   ══════════════════════════════════════ -->
   <div class="success-screen" id="success-screen">
     <span class="success-icon">🎉</span>
-    <div class="success-title">¡Solicitud enviada!</div>
-    <p class="success-body">
+    <div class="success-title" id="success-title">¡Solicitud enviada!</div>
+    <p class="success-body" id="success-body-pending">
       Tu cuenta ha sido creada para <strong id="success-ips"></strong>.<br><br>
       Un administrador de NormaLis revisará tu solicitud y activará el acceso.<br>
       Te notificaremos a <strong id="success-email"></strong>.
     </p>
-    <div class="success-chips">
+    <p class="success-body" id="success-body-activo" style="display:none;">
+      Tu cuenta piloto para <strong id="success-ips-activo"></strong> está <strong style="color:#10b981;">ACTIVA</strong>.<br><br>
+      Tienes acceso completo por <strong id="success-dias">30</strong> días.<br>
+      Ingresa con <strong id="success-email-activo"></strong>.
+    </p>
+    <div class="success-chips" id="success-chips-pending">
       <span class="schip">⏱ Revisión en 24–48 h</span>
       <span class="schip">📧 Recibirás un correo</span>
+    </div>
+    <div class="success-chips" id="success-chips-activo" style="display:none;">
+      <span class="schip">🚀 Acceso inmediato</span>
+      <span class="schip">✅ Sin esperar aprobación</span>
     </div>
     <a href="login.html" class="btn-primary" style="text-decoration:none;display:inline-flex;width:auto;padding:12px 28px;">
       Ir al inicio de sesión

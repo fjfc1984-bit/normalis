@@ -379,6 +379,9 @@
     <button class="tab-btn" onclick="switchTab('envivo')">
       🟢 En Vivo <span class="tab-badge" id="badge-envivo">0</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('codigos')">
+      🔑 Códigos <span class="tab-badge" id="badge-codigos">0</span>
+    </button>
 
   </div>
 </div>
@@ -724,11 +727,101 @@
 </div>
 
 
+<div id="tab-codigos" class="tab-panel" style="display:none">
+  <div class="section-header">
+    <h2 class="section-title">🔑 Códigos de Activación</h2>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="cargarCodigos()" style="font-size:12px;padding:7px 12px">🔄 Actualizar</button>
+      <button class="btn-primary" onclick="abrirModalCodigo()" style="padding:8px 16px;font-size:13px;">
+        ➕ Generar código
+      </button>
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#f0fdfa,#ecfdf5);border:1px solid #99f6e4;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+    <span style="font-size:20px">💡</span>
+    <div>
+      <p style="font-size:13px;font-weight:700;color:#134e4a;margin-bottom:3px">¿Para qué sirven los códigos?</p>
+      <p style="font-size:12px;color:#0d9488;line-height:1.5">Un código entregado a una IPS les da acceso inmediato como piloto — sin esperar aprobación manual. Ideal para demos, alianzas y prospectos calificados. Cada código es de un solo uso.</p>
+    </div>
+  </div>
+
+  <!-- Tabla de códigos -->
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Estado</th>
+          <th>Días Piloto</th>
+          <th>IPS que lo usó</th>
+          <th>Creado</th>
+          <th>Notas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="codigos-tbody">
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;font-size:13px">Sin códigos generados</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <!-- ══════════════════════════════════════════════
      MODAL: AGREGAR PROSPECTO
 ══════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════
+     MODAL: GENERAR CÓDIGO DE ACTIVACIÓN
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-codigo">
+  <div class="modal">
+    <div class="modal-title">
+      <span>🔑 Generar código de activación</span>
+      <button class="modal-close" onclick="cerrarModalCodigo()">✕</button>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Días de acceso piloto</label>
+        <select class="form-input" id="codigo-dias">
+          <option value="15">15 días</option>
+          <option value="30" selected>30 días</option>
+          <option value="60">60 días</option>
+          <option value="90">90 días</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expira el código en</label>
+        <select class="form-input" id="codigo-expira">
+          <option value="0">Sin vencimiento</option>
+          <option value="7">7 días</option>
+          <option value="30" selected>30 días</option>
+          <option value="60">60 días</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas (para quién es este código)</label>
+      <input type="text" class="form-input" id="codigo-notas" placeholder="Ej: Clínica San Rafael — demo 15 ago">
+    </div>
+
+    <!-- Código generado -->
+    <div id="codigo-generado-wrap" style="display:none;margin-top:12px;background:linear-gradient(135deg,#f0fdfa,#ecfdf5);border:1px solid #99f6e4;border-radius:12px;padding:16px;text-align:center">
+      <p style="font-size:11px;color:#0d9488;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Código generado</p>
+      <p id="codigo-generado-texto" style="font-size:28px;font-weight:900;letter-spacing:.15em;color:#0f766e;font-family:monospace">—</p>
+      <button onclick="copiarCodigo()" style="margin-top:8px;font-size:11px;padding:5px 14px;background:#0d9488;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">📋 Copiar</button>
+    </div>
+
+    <div class="form-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="cerrarModalCodigo()">Cancelar</button>
+      <button class="btn-primary" id="btn-generar-codigo" onclick="generarCodigo()" style="padding:9px 20px;font-size:13px;">
+        Generar código
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-prospecto">
   <div class="modal">
     <div class="modal-title">
@@ -978,6 +1071,7 @@ function initApp() {
   cargarAnalytics();
   cargarSolicitudes();
   cargarLeads();
+  cargarCodigos();
   cargarUsuariosActivos();
   cargarEnVivo();
 }
@@ -1966,6 +2060,156 @@ function _agoStr(ms) {
   return 'hace ' + Math.floor(h/24) + 'd';
 }
 
+
+// ══════════════════════════════════════════════
+// CÓDIGOS DE ACTIVACIÓN
+// ══════════════════════════════════════════════
+
+function abrirModalCodigo() {
+  document.getElementById('codigo-generado-wrap').style.display = 'none';
+  document.getElementById('codigo-notas').value = '';
+  document.getElementById('modal-codigo').classList.add('open');
+}
+
+function cerrarModalCodigo() {
+  document.getElementById('modal-codigo').classList.remove('open');
+}
+
+function generarCodigoStr() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin O, I, 0, 1 (confusos)
+  let code = 'NL-';
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function generarCodigo() {
+  const dias     = parseInt(document.getElementById('codigo-dias').value)   || 30;
+  const expiraDias = parseInt(document.getElementById('codigo-expira').value) || 0;
+  const notas    = document.getElementById('codigo-notas').value.trim();
+  const btn      = document.getElementById('btn-generar-codigo');
+
+  btn.disabled = true;
+  btn.textContent = 'Generando...';
+
+  try {
+    let codigo;
+    let intentos = 0;
+    // Asegurarse de que el código sea único
+    do {
+      codigo = generarCodigoStr();
+      const snap = await db.collection('codigos').doc(codigo).get();
+      if (!snap.exists) break;
+      intentos++;
+    } while (intentos < 5);
+
+    const docData = {
+      codigo:     codigo,
+      usado:      false,
+      activo:     true,
+      diasPiloto: dias,
+      rol:        'piloto',
+      notas:      notas,
+      creadoEn:   firebase.firestore.FieldValue.serverTimestamp(),
+      creadoPor:  auth.currentUser ? auth.currentUser.uid : 'admin',
+      usadoPor:   null,
+      usadoEn:    null,
+      ipsNombre:  null,
+    };
+
+    if (expiraDias > 0) {
+      const exp = new Date();
+      exp.setDate(exp.getDate() + expiraDias);
+      docData.fechaExpiraCodigo = firebase.firestore.Timestamp.fromDate(exp);
+    }
+
+    await db.collection('codigos').doc(codigo).set(docData);
+
+    document.getElementById('codigo-generado-texto').textContent = codigo;
+    document.getElementById('codigo-generado-wrap').style.display = '';
+    btn.textContent = '✅ Generado';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Generar otro'; }, 1500);
+
+    cargarCodigos();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Generar código';
+    showToast('Error al generar código: ' + e.message, 'error');
+  }
+}
+
+function copiarCodigo() {
+  const txt = document.getElementById('codigo-generado-texto').textContent;
+  navigator.clipboard.writeText(txt).then(() => showToast('¡Código copiado!', 'success'));
+}
+
+async function desactivarCodigo(codigo) {
+  if (!confirm('¿Desactivar el código ' + codigo + '? No podrá usarse más.')) return;
+  try {
+    await db.collection('codigos').doc(codigo).update({ activo: false });
+    showToast('Código desactivado.', 'info');
+    cargarCodigos();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function cargarCodigos() {
+  const tbody = document.getElementById('codigos-tbody');
+  if (!tbody) return;
+
+  try {
+    const snap = await db.collection('codigos')
+      .orderBy('creadoEn', 'desc')
+      .limit(50)
+      .get();
+
+    const badge = document.getElementById('badge-codigos');
+    if (badge) badge.textContent = snap.size;
+
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;font-size:13px">Sin códigos generados aún</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d       = doc.data();
+      const fecha   = d.creadoEn ? d.creadoEn.toDate().toLocaleDateString('es-CO') : '—';
+      const usadoEn = d.usadoEn  ? d.usadoEn.toDate().toLocaleDateString('es-CO')  : null;
+
+      let estadoBadge;
+      if (d.usado) {
+        estadoBadge = '<span style="font-size:10px;padding:2px 8px;background:#dcfce7;color:#15803d;border-radius:20px;font-weight:700">✅ Usado</span>';
+      } else if (!d.activo) {
+        estadoBadge = '<span style="font-size:10px;padding:2px 8px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-weight:700">⛔ Inactivo</span>';
+      } else {
+        estadoBadge = '<span style="font-size:10px;padding:2px 8px;background:#fef3c7;color:#b45309;border-radius:20px;font-weight:700">🟡 Disponible</span>';
+      }
+
+      const ipsCell = d.usado && d.ipsNombre
+        ? '<span style="font-size:11px">' + d.ipsNombre + '<br><span style="color:var(--text-muted);font-size:10px">' + (usadoEn || '') + '</span></span>'
+        : '<span style="color:var(--text-muted);font-size:11px">—</span>';
+
+      const accion = (!d.usado && d.activo)
+        ? '<button onclick="desactivarCodigo('' + d.codigo + '')" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid #ef4444;color:#ef4444;border-radius:6px;cursor:pointer">Desactivar</button>'
+        : '';
+
+      return `<tr>
+        <td style="font-family:monospace;font-weight:700;font-size:13px;letter-spacing:.05em">${d.codigo}</td>
+        <td>${estadoBadge}</td>
+        <td style="font-size:12px;text-align:center">${d.diasPiloto || 30} días</td>
+        <td>${ipsCell}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${fecha}</td>
+        <td style="font-size:11px;color:var(--text-muted);max-width:180px;white-space:normal">${d.notas || '—'}</td>
+        <td>${accion}</td>
+      </tr>`;
+    }).join('');
+
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="7" style="color:#ef4444;padding:16px;font-size:12px">Error al cargar: ' + e.message + '</td></tr>';
+  }
+}
 
 function showToast(msg, type = 'info') {
   const toast = document.getElementById('toast');
