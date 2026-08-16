@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, use } from 'react';
+import { useState, useMemo, useCallback, use, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { areasDB, SEGMENT_META } from '@/data/auditData';
@@ -15,7 +15,11 @@ import {
 } from '@/lib/auditScore';
 import { useAudit } from '@/lib/useAudit';
 import { askWorker } from '@/lib/worker';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import {
+  collection, addDoc, doc, getDoc, getCountFromServer,
+  getDocs, query, where, serverTimestamp,
+} from 'firebase/firestore';
 import type { AuditAnswers, AuditAnswer } from '@/lib/auditTypes';
 
 // ─── Reusable answer button ───────────────────────────────────────────────────
@@ -97,8 +101,9 @@ export default function AuditoriaSegmentoPage({
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [view, setView] = useState<View>('checklist');
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAnalysis,      setAiAnalysis]      = useState<string | null>(null);
+  const [aiLoading,       setAiLoading]       = useState(false);
+  const [capasYaCreadas,  setCapasYaCreadas]  = useState(false);
 
   // ── Derived state ───────────────────────────────────────────────────────────
   const progress = calcProgress(flatQ, answers);
@@ -119,6 +124,16 @@ export default function AuditoriaSegmentoPage({
       return { area, answered, total: areaQs.length, firstIdx: areaQs[0]?.globalIdx ?? 0 };
     });
   }, [areas, flatQ, answers]);
+
+  // ── Auto-crear CAPAs al entrar a resultados ────────────────────────────────
+  useEffect(() => {
+    if (view !== 'results' || capasYaCreadas) return;
+    const ncs = getNonConformities(flatQ, answers);
+    if (ncs.length === 0) return;
+    setCapasYaCreadas(true);          // marcar antes de async para evitar doble ejecución
+    void autoCrearCapasDeAuditoria(ncs);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const setAnswer = useCallback((v: AuditAnswer) => {
@@ -162,6 +177,15 @@ export default function AuditoriaSegmentoPage({
     const user = auth.currentUser;
     if (!user || ncs.length === 0) return;
     try {
+      // Anti-duplicado: verificar si ya existen CAPAs para este segmento
+      const existQ = query(
+        collection(db, 'capas'),
+        where('uid', '==', user.uid),
+        where('refSegmento', '==', segmento),
+      );
+      const existSnap = await getDocs(existQ);
+      if (!existSnap.empty) return;   // CAPAs ya creadas para esta auditoría
+
       const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
       const nit = userSnap.data()?.nit ?? '';
       // Agrupar por área
