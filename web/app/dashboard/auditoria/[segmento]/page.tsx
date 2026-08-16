@@ -125,15 +125,19 @@ export default function AuditoriaSegmentoPage({
     });
   }, [areas, flatQ, answers]);
 
-  // ── Auto-crear CAPAs al entrar a resultados ────────────────────────────────
+  // ── Auto-crear CAPAs — se dispara en dos casos:
+  //    1. Al cambiar a vista resultados (auditoría recién completada)
+  //    2. Al cargar la página con una auditoría ya completada (auditorías históricas)
   useEffect(() => {
-    if (view !== 'results' || capasYaCreadas) return;
+    if (capasYaCreadas) return;
+    const disparar = view === 'results' || completed;
+    if (!disparar) return;
     const ncs = getNonConformities(flatQ, answers);
     if (ncs.length === 0) return;
-    setCapasYaCreadas(true);          // marcar antes de async para evitar doble ejecución
+    setCapasYaCreadas(true);
     void autoCrearCapasDeAuditoria(ncs);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, [view, completed]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const setAnswer = useCallback((v: AuditAnswer) => {
