@@ -626,16 +626,26 @@ export default function BenchmarkingPage() {
                       <div style={{ display: 'flex', gap: 8 }}>
                         <span>📋</span>
                         <p style={{ fontSize: 12, color: '#92400e' }}>
-                          Cierra las CAPAs abiertas para mejorar tu score en la próxima auditoría
+                          Crea un Plan de Mejoramiento (CAPA) para cada no conformidad detectada y reaudita para subir tu score
                         </p>
                       </div>
-                      <a href="/dashboard/capas" style={{
-                        display: 'inline-block', marginTop: 4, fontSize: 11, padding: '6px 14px',
-                        background: '#f59e0b', color: 'white', borderRadius: 8,
-                        fontWeight: 700, textDecoration: 'none', width: 'fit-content',
-                      }}>
-                        Ver CAPAs abiertas →
-                      </a>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                        <a href="/dashboard/auditoria/domiciliaria" style={{
+                          display: 'inline-block', fontSize: 11, padding: '6px 14px',
+                          background: '#f59e0b', color: 'white', borderRadius: 8,
+                          fontWeight: 700, textDecoration: 'none',
+                        }}>
+                          Ver no conformidades →
+                        </a>
+                        <a href="/dashboard/capas" style={{
+                          display: 'inline-block', fontSize: 11, padding: '6px 14px',
+                          background: 'white', color: '#92400e', borderRadius: 8,
+                          fontWeight: 700, textDecoration: 'none',
+                          border: '1px solid #f59e0b',
+                        }}>
+                          Crear CAPA →
+                        </a>
+                      </div>
                     </div>
                   ) : (
                     <p style={{ fontSize: 12, color: '#92400e', fontWeight: 600 }}>

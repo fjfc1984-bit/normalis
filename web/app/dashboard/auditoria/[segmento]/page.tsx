@@ -148,9 +148,60 @@ export default function AuditoriaSegmentoPage({
       answer:   nc.answer as 'no' | 'parcial',
     }));
     await markComplete(score.score, flatQ.length, nonConformities);
+
+    // Auto-crear CAPAs agrupadas por área (una CAPA por área con no conformidades)
+    void autoCrearCapasDeAuditoria(ncs);
+
     setView('results');
-    // Trigger AI analysis when going to results
     handleAiAnalysis();
+  };
+
+  const autoCrearCapasDeAuditoria = async (
+    ncs: { qKey: string; areaName: string; areaId: string; icon: string; answer: string }[]
+  ) => {
+    const user = auth.currentUser;
+    if (!user || ncs.length === 0) return;
+    try {
+      const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
+      const nit = userSnap.data()?.nit ?? '';
+      // Agrupar por área
+      const porArea = ncs.reduce<Record<string, typeof ncs>>((acc, nc) => {
+        const key = nc.areaId || nc.areaName;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(nc);
+        return acc;
+      }, {});
+      // Contar CAPAs existentes para numeración
+      const countQ = query(collection(db, 'capas'), where('uid', '==', user.uid));
+      const countSnap = await getCountFromServer(countQ);
+      let nextNum = (countSnap.data().count ?? 0) + 1;
+      for (const [, items] of Object.entries(porArea)) {
+        const area = items[0];
+        const preguntas = items.map(i => `• ${i.question}`).join('\n');
+        await addDoc(collection(db, 'capas'), {
+          uid:              user.uid,
+          nit,
+          numero:           `CAPA-${String(nextNum).padStart(3, '0')}`,
+          descripcion:      `[Auditoría ${meta?.label ?? segmento}] No conformidades en ${area.areaName}`,
+          causaRaiz:        `${items.length} criterio(s) no cumplido(s) detectados en auditoría de habilitación:\n${preguntas}`,
+          accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable del área.',
+          responsable:      '',
+          area:             area.areaName,
+          fechaLimite:      (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().slice(0,10); })(),
+          origen:           'auditoria',
+          evidencia:        '',
+          estado:           'abierta',
+          refSegmento:      segmento,
+          fechaCreacion:    serverTimestamp(),
+          fechaActualizacion: null,
+          fechaInicio:      null,
+          fechaCierre:      null,
+        });
+        nextNum++;
+      }
+    } catch (e) {
+      console.error('[AutoCAPAs] Error al crear CAPAs desde auditoría:', e);
+    }
   };
 
   const handleAiAnalysis = async () => {
