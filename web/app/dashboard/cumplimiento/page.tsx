@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import {
   collection, query, where, getDocs,
-  addDoc, serverTimestamp, onSnapshot,
+  addDoc, serverTimestamp, onSnapshot, orderBy, limit,
 } from 'firebase/firestore';
 import Link from 'next/link';
 import {
@@ -30,11 +30,19 @@ type Nivel = 'bajo' | 'medio' | 'alto' | 'extremo';
 type Tratamiento = 'Evitar' | 'Reducir' | 'Transferir' | 'Aceptar';
 
 interface SavedAudit {
-  uid:         string;
-  segmento:    string;
-  answers:     AuditAnswers;
-  score:       number;
-  completedAt: string | null;
+  uid:            string;
+  segmento:       string;
+  answers:        AuditAnswers;
+  score:          number;
+  completedAt:    string | null;
+  agenteStatus?:  string;
+  agenteResumen?: {
+    riesgosCreados:  number;
+    capasCreadadas:  number;
+    ncsProcessadas:  number;
+    errores:         string[] | null;
+  };
+  agenteProcessedAt?: string;
 }
 
 interface AuditNonConf extends NonConformity {
@@ -163,6 +171,8 @@ export default function CumplimientoPage() {
   const [importing,     setImporting]     = useState(false);
   const [selected,      setSelected]      = useState<Set<string>>(new Set());
   const [showAll,       setShowAll]       = useState(false);
+  const [agenteAudits,  setAgenteAudits]  = useState<SavedAudit[]>([]);
+  const [agenteProcesando, setAgenteProcesando] = useState(false);
 
   // ── Auditorías completadas ─────────────────────────────────────────────────
   useEffect(() => {
@@ -175,6 +185,24 @@ export default function CumplimientoPage() {
       })
       .catch(() => {/* sin permisos aún */})
       .finally(() => setLoading(false));
+  }, [user]);
+
+  // ── Actividad del Agente Pilar (tiempo real) ───────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'auditorias'),
+      where('uid', '==', user.uid),
+    );
+    return onSnapshot(q, snap => {
+      const all = snap.docs.map(d => d.data() as SavedAudit);
+      const procesadas = all.filter(a => a.agenteStatus === 'completado' || a.agenteStatus === 'error');
+      const procesando = all.some(a => a.agenteStatus === 'procesando' || a.agenteStatus === 'pendiente');
+      setAgenteAudits(procesadas.sort((a, b) =>
+        (b.agenteProcessedAt ?? '').localeCompare(a.agenteProcessedAt ?? '')
+      ).slice(0, 5));
+      setAgenteProcesando(procesando);
+    }, () => {});
   }, [user]);
 
   // ── Riesgos ISO 31000 ─────────────────────────────────────────────────────
@@ -303,6 +331,101 @@ export default function CumplimientoPage() {
           </Link>
         }
       />
+
+      {/* ── AGENTE PILAR ──────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border overflow-hidden"
+           style={{ borderColor: agenteProcesando ? '#0d9488' : (agenteAudits.length > 0 ? '#d1fae5' : '#e5e7eb'),
+                    background: agenteProcesando ? 'linear-gradient(135deg,#f0fdfa,#ecfdf5)' : (agenteAudits.length > 0 ? '#f0fdf4' : '#fafafa') }}>
+        <div className="px-5 py-4 flex items-center gap-3"
+             style={{ borderBottom: '1px solid', borderColor: agenteProcesando ? '#99f6e4' : (agenteAudits.length > 0 ? '#bbf7d0' : '#f3f4f6') }}>
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black text-white"
+                 style={{ background: 'linear-gradient(135deg,#0d9488,#0891b2)' }}>
+              🤖
+            </div>
+            {agenteProcesando && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-teal-400 border-2 border-white animate-ping" />
+            )}
+            {!agenteProcesando && agenteAudits.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-800 leading-tight">Agente Pilar</p>
+            <p className="text-[11px] mt-0.5"
+               style={{ color: agenteProcesando ? '#0d9488' : (agenteAudits.length > 0 ? '#059669' : '#9ca3af') }}>
+              {agenteProcesando
+                ? '⚡ Procesando auditoría — generando riesgos y CAPAs con Gemini Pro...'
+                : agenteAudits.length > 0
+                  ? `✅ Activo — ${agenteAudits.reduce((s,a) => s + (a.agenteResumen?.riesgosCreados ?? 0), 0)} riesgos · ${agenteAudits.reduce((s,a) => s + (a.agenteResumen?.capasCreadadas ?? 0), 0)} CAPAs generadas automáticamente`
+                  : 'Esperando primera auditoría completada para activarse'}
+            </p>
+          </div>
+          {(agenteProcesando || agenteAudits.length > 0) && (
+            <div className="flex gap-3 flex-shrink-0">
+              <div className="text-center">
+                <p className="text-lg font-black" style={{ color: '#0d9488' }}>
+                  {agenteAudits.reduce((s,a) => s + (a.agenteResumen?.riesgosCreados ?? 0), 0)}
+                </p>
+                <p className="text-[9px] text-gray-400 uppercase tracking-wide">Riesgos</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-black" style={{ color: '#0891b2' }}>
+                  {agenteAudits.reduce((s,a) => s + (a.agenteResumen?.capasCreadadas ?? 0), 0)}
+                </p>
+                <p className="text-[9px] text-gray-400 uppercase tracking-wide">CAPAs IA</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {agenteAudits.length > 0 ? (
+          <div className="divide-y divide-gray-100">
+            {agenteAudits.map((a, i) => {
+              const meta = SEG_META[a.segmento];
+              const timeAgo = a.agenteProcessedAt
+                ? (() => {
+                    const diff = Date.now() - new Date(a.agenteProcessedAt).getTime();
+                    const mins = Math.floor(diff / 60000);
+                    const hrs  = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+                    if (days > 0) return `hace ${days}d`;
+                    if (hrs  > 0) return `hace ${hrs}h`;
+                    return `hace ${mins}min`;
+                  })()
+                : '';
+              const ok = a.agenteStatus === 'completado';
+              return (
+                <div key={i} className="px-5 py-3 flex items-center gap-3">
+                  <span className="text-base">{meta?.icon ?? '🏥'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-700 truncate">
+                      {meta?.label ?? a.segmento} — Score {a.score}%
+                    </p>
+                    {a.agenteResumen && (
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {ok ? '✅' : '⚠️'} {a.agenteResumen.riesgosCreados} riesgo{a.agenteResumen.riesgosCreados !== 1 ? 's' : ''} · {a.agenteResumen.capasCreadadas} CAPA{a.agenteResumen.capasCreadadas !== 1 ? 's' : ''} IA · {a.agenteResumen.ncsProcessadas} NC analizadas
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] text-gray-400">{timeAgo}</p>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+                      {ok ? 'OK' : 'Error'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : !agenteProcesando ? (
+          <div className="px-5 py-4 text-center">
+            <p className="text-xs text-gray-400">
+              Completa una auditoría → el Agente Pilar creará automáticamente los riesgos ISO 31000 y los planes CAPA con Gemini Pro.
+            </p>
+          </div>
+        ) : null}
+      </div>
 
       {/* ── KPIs ──────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

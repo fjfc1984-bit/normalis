@@ -37,6 +37,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/auditoria',    label: 'Auditoría',    icon: '🔍' },
       { href: '/dashboard/cumplimiento', label: 'Cumplimiento', icon: '⚡' },
+      { href: '/dashboard/gap-1732',    label: 'Brecha 1732', icon: '🆕' },
       { href: '/dashboard/pamec',        label: 'PAMEC',        icon: '📈' },
       { href: '/dashboard/capas',        label: 'CAPAs',        icon: '✓'  },
       { href: '/dashboard/indicadores',  label: 'Indicadores',  icon: '📊' },

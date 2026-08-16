@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NormaLis — Demo Interactiva | Habilitación IPS Colombia</title>
+  <meta name="description" content="Prueba NormaLis sin registro. Ve cómo el Agente Pilar automatiza la habilitación de tu IPS en tiempo real con IA.">
+  <link rel="icon" href="favicon.ico">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #E0F2F1; color: #1a1a1a; min-height: 100vh; }
+
+    /* ── Layout ── */
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: #00251A; position: fixed; top: 0; left: 0; height: 100vh; display: flex; flex-direction: column; z-index: 50; }
+    .main { margin-left: 220px; flex: 1; padding: 24px; }
+
+    /* ── Sidebar ── */
+    .logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#00897B,#00BCD4); display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; font-size: 15px; box-shadow: 0 0 16px rgba(0,188,212,.35); }
+    .logo-text p { font-size: 14px; font-weight: 800; color: white; line-height: 1; }
+    .logo-text span { font-size: 9px; color: #4DB6AC; text-transform: uppercase; letter-spacing: .1em; }
+    .demo-badge { margin: 8px 12px; padding: 6px 10px; background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.3); border-radius: 8px; text-align: center; font-size: 9px; color: #fbbf24; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+    .nav-group-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: rgba(128,203,196,.4); padding: 6px 12px 4px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: #80CBC4; font-size: 12px; font-weight: 500; transition: all .15s; margin-bottom: 2px; text-decoration: none; }
+    .nav-item:hover { background: rgba(255,255,255,.06); color: #e2f8f6; }
+    .nav-item.active { background: rgba(0,137,123,.22); color: #26A69A; border-left: 3px solid #26A69A; padding-left: 9px; font-weight: 600; }
+    .nav-icon { font-size: 13px; width: 18px; text-align: center; }
+
+    /* ── Demo banner ── */
+    .demo-top-bar { background: linear-gradient(90deg,#f59e0b,#d97706); color: #1c1917; padding: 8px 16px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin: -24px -24px 20px; }
+    .demo-top-bar a { color: #1c1917; font-weight: 800; text-decoration: underline; }
+
+    /* ── Cards ── */
+    .card { background: white; border-radius: 16px; border: 1px solid #e5e7eb; padding: 20px; }
+    .card-title { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+    .card-sub { font-size: 11px; color: #6b7280; }
+
+    /* ── Grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; }
+    .gap-16 { gap: 16px; }
+    @media (max-width: 768px) { .grid-5 { grid-template-columns: repeat(2,1fr); } .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── KPI ── */
+    .kpi { background: white; border-radius: 14px; border: 1px solid #e5e7eb; padding: 16px; }
+    .kpi-icon { font-size: 20px; margin-bottom: 6px; }
+    .kpi-val { font-size: 24px; font-weight: 900; }
+    .kpi-lab { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+    /* ── Score gauge ── */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    /* ── Agente Pilar panel ── */
+    .agent-panel { border-radius: 16px; border: 1px solid #99f6e4; background: linear-gradient(135deg,#f0fdfa,#ecfdf5); overflow: hidden; }
+    .agent-header { padding: 16px 20px; border-bottom: 1px solid #99f6e4; display: flex; align-items: center; gap: 12px; }
+    .agent-avatar { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,#0d9488,#0891b2); display: flex; align-items: center; justify-content: center; font-size: 18px; position: relative; flex-shrink: 0; }
+    .pulse { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; border-radius: 50%; background: #34d399; border: 2px solid white; }
+    .pulse::after { content:''; position: absolute; inset: 0; border-radius: 50%; background: #34d399; animation: ping 1.5s ease infinite; }
+    @keyframes ping { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.8);opacity:0} }
+    .agent-activity { padding: 12px 20px; border-bottom: 1px solid #d1fae5; display: flex; align-items: center; gap: 10px; }
+    .agent-activity:last-child { border: none; }
+    .activity-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── NC list ── */
+    .nc-item { padding: 10px 16px; border-bottom: 1px solid #f9fafb; display: flex; align-items: flex-start; gap: 10px; font-size: 12px; }
+    .nc-badge { font-size: 9px; padding: 2px 7px; border-radius: 20px; font-weight: 700; flex-shrink: 0; }
+
+    /* ── Progress bar ── */
+    .prog-bar { height: 6px; border-radius: 4px; background: #e5e7eb; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 4px; transition: width 1.2s ease; }
+
+    /* ── Checklist ── */
+    .check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+    .check-icon { width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+
+    /* ── CTA ── */
+    .cta-section { background: linear-gradient(135deg,#00897B,#0097A7); border-radius: 20px; padding: 32px; text-align: center; color: white; margin-top: 8px; }
+    .cta-btn { display: inline-block; background: white; color: #00697A; font-weight: 800; font-size: 15px; padding: 14px 36px; border-radius: 12px; text-decoration: none; margin-top: 16px; transition: transform .15s; box-shadow: 0 4px 20px rgba(0,0,0,.15); }
+    .cta-btn:hover { transform: translateY(-2px); }
+    .cta-sub { font-size: 12px; margin-top: 10px; color: rgba(255,255,255,.75); }
+
+    /* ── Tab nav ── */
+    .tabs { display: flex; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+    .tab { flex: 1; text-align: center; padding: 8px 4px; border-radius: 9px; font-size: 11px; font-weight: 600; cursor: pointer; color: #6b7280; transition: all .15s; border: none; background: none; }
+    .tab.active { background: white; color: #0d9488; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+    /* ── Misc ── */
+    .section-title { font-size: 18px; font-weight: 800; color: #1f2937; }
+    .section-sub { font-size: 12px; color: #6b7280; margin-top: 2px; margin-bottom: 16px; }
+    .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+    .text-sm { font-size: 13px; } .font-bold { font-weight: 700; } .text-gray { color: #6b7280; }
+    .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-4 { margin-bottom: 16px; }
+    .space-y { display: flex; flex-direction: column; gap: 16px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">N</div>
+      <div class="logo-text">
+        <p>NormaLis</p>
+        <span>Habilitación IPS</span>
+      </div>
+    </div>
+    <div class="demo-badge">🎯 Modo Demo</div>
+    <nav>
+      <div class="nav-group-label">Principal</div>
+      <a class="nav-item" href="#"><span class="nav-icon">⊞</span> Dashboard</a>
+      <a class="nav-item" href="#"><span class="nav-icon">🤖</span> Asistente IA</a>
+
+      <div class="nav-group-label" style="margin-top:12px">Auditoría y Calidad</div>
+      <a class="nav-item active" href="#auditoria" onclick="mostrarVista('auditoria')"><span class="nav-icon">🔍</span> Auditoría</a>
+      <a class="nav-item" href="#cumplimiento" onclick="mostrarVista('cumplimiento')"><span class="nav-icon">⚡</span> Cumplimiento</a>
+      <a class="nav-item" href="#gap" onclick="mostrarVista('gap')"><span class="nav-icon">🆕</span> Brecha 1732</a>
+      <a class="nav-item" href="#"><span class="nav-icon">📈</span> PAMEC</a>
+      <a class="nav-item" href="#capas" onclick="mostrarVista('capas')"><span class="nav-icon">✓</span> CAPAs</a>
+      <a class="nav-item" href="#"><span class="nav-icon">📊</span> Indicadores</a>
+
+      <div class="nav-group-label" style="margin-top:12px">Gestión</div>
+      <a class="nav-item" href="#"><span class="nav-icon">📅</span> Vencimientos</a>
+      <a class="nav-item" href="#"><span class="nav-icon">🦺</span> SG-SST</a>
+      <a class="nav-item" href="#"><span class="nav-icon">📄</span> Documentos</a>
+    </nav>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Demo bar -->
+    <div class="demo-top-bar">
+      🎯 Estás en modo demo — los datos son ficticios. &nbsp;
+      <a href="https://normalis.co/registro.html">Crear cuenta gratis →</a>
+    </div>
+
+    <!-- ══ VISTA: AUDITORÍA ══════════════════════════════════════════════════ -->
+    <div id="vista-auditoria">
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <p class="section-title">Auditoría de Habilitación</p>
+          <p class="section-sub">IPS Demo Bogotá · Consulta Externa · Res. 1732/2026</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span style="font-size:11px;padding:6px 12px;background:#f0fdf4;color:#15803d;border-radius:8px;font-weight:700;border:1px solid #bbf7d0">✅ Autoevaluación completada</span>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid-5 mb-4">
+        <div class="kpi">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-val" style="color:#f59e0b">67%</div>
+          <div class="kpi-lab">Score habilitación</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-val" style="color:#10b981">43</div>
+          <div class="kpi-lab">Ítems conformes</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-icon">❌</div>
+          <div class="kpi-val" style="color:#ef4444">14</div>
+          <div class="kpi-lab">No conformidades</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-val" style="color:#f59e0b">7</div>
+          <div class="kpi-lab">Cumplimiento parcial</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-icon">🤖</div>
+          <div class="kpi-val" style="color:#0d9488">9</div>
+          <div class="kpi-lab">CAPAs generadas IA</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Score por estándar -->
+        <div class="card">
+          <div class="card-title">Score por Estándar</div>
+          <div class="card-sub mb-4">7 Estándares de Habilitación — Res. 1732/2026</div>
+          <div class="space-y" style="gap:10px">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">👥 Talento Humano</span>
+                <span style="font-size:11px;font-weight:700;color:#10b981">88%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:88%;background:#10b981"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">🏗️ Infraestructura</span>
+                <span style="font-size:11px;font-weight:700;color:#f59e0b">72%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:72%;background:#f59e0b"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">🔧 Dotación</span>
+                <span style="font-size:11px;font-weight:700;color:#f59e0b">65%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:65%;background:#f59e0b"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">💊 Medicamentos e Insumos</span>
+                <span style="font-size:11px;font-weight:700;color:#ef4444">48%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:48%;background:#ef4444"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">📋 Procesos Prioritarios</span>
+                <span style="font-size:11px;font-weight:700;color:#f59e0b">71%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:71%;background:#f59e0b"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">📁 Historia Clínica</span>
+                <span style="font-size:11px;font-weight:700;color:#f59e0b">63%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:63%;background:#f59e0b"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:600;color:#374151">🔗 Interdependencia</span>
+                <span style="font-size:11px;font-weight:700;color:#10b981">80%</span>
+              </div>
+              <div class="prog-bar"><div class="prog-fill" style="width:80%;background:#10b981"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agente Pilar -->
+        <div class="agent-panel">
+          <div class="agent-header">
+            <div class="agent-avatar">
+              🤖
+              <div class="pulse"></div>
+            </div>
+            <div style="flex:1">
+              <p style="font-size:13px;font-weight:700;color:#134e4a">Agente Pilar — Activo</p>
+              <p style="font-size:11px;color:#0d9488;margin-top:2px">✅ Procesó tu auditoría · 11 riesgos · 9 CAPAs con Gemini Pro</p>
+            </div>
+            <div style="text-align:right">
+              <p style="font-size:20px;font-weight:900;color:#0d9488">11</p>
+              <p style="font-size:9px;color:#9ca3af">Riesgos</p>
+            </div>
+            <div style="text-align:right">
+              <p style="font-size:20px;font-weight:900;color:#0891b2">9</p>
+              <p style="font-size:9px;color:#9ca3af">CAPAs IA</p>
+            </div>
+          </div>
+          <div>
+            <div class="agent-activity">
+              <div class="activity-dot" style="background:#ef4444"></div>
+              <div style="flex:1;font-size:11px">
+                <strong>Riesgo ALTO creado:</strong> Medicamentos sin doble verificación<br>
+                <span style="color:#9ca3af;font-size:10px">CAPA generada: implementar protocolo doble check · Plazo: 30 días</span>
+              </div>
+              <span style="font-size:9px;color:#9ca3af">hace 3 min</span>
+            </div>
+            <div class="agent-activity">
+              <div class="activity-dot" style="background:#ef4444"></div>
+              <div style="flex:1;font-size:11px">
+                <strong>Riesgo ALTO creado:</strong> HC sin CIE-10 en el 23% de los registros<br>
+                <span style="color:#9ca3af;font-size:10px">CAPA generada: capacitación codificación · Plazo: 45 días</span>
+              </div>
+              <span style="font-size:9px;color:#9ca3af">hace 3 min</span>
+            </div>
+            <div class="agent-activity">
+              <div class="activity-dot" style="background:#f59e0b"></div>
+              <div style="flex:1;font-size:11px">
+                <strong>Riesgo MEDIO creado:</strong> Equipos sin hoja de vida actualizada<br>
+                <span style="color:#9ca3af;font-size:10px">CAPA generada: actualización inventario bioméd. · Plazo: 60 días</span>
+              </div>
+              <span style="font-size:9px;color:#9ca3af">hace 3 min</span>
+            </div>
+            <div class="agent-activity" style="background:#f0fdf4">
+              <div class="activity-dot" style="background:#10b981"></div>
+              <div style="flex:1;font-size:11px;color:#065f46">
+                📧 <strong>Email enviado</strong> al Director Médico con informe completo de 14 hallazgos y 9 CAPAs generadas con IA
+              </div>
+              <span style="font-size:9px;color:#9ca3af">hace 3 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No conformidades -->
+      <div class="card mt-4">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div class="card-title">No-conformidades detectadas</div>
+            <div class="card-sub">14 hallazgos que requieren acción — ordenados por riesgo</div>
+          </div>
+          <button onclick="mostrarVista('capas')" style="font-size:11px;padding:7px 14px;background:#0d9488;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700">Ver CAPAs →</button>
+        </div>
+        <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+          <div class="nc-item" style="background:#fef2f2">
+            <span class="nc-badge" style="background:#fee2e2;color:#dc2626">ALTO</span>
+            <div style="flex:1"><strong>Medicamentos e Insumos</strong> — No existe protocolo de doble verificación para medicamentos de alto riesgo</div>
+            <span style="font-size:9px;color:#dc2626;font-weight:700">No cumple</span>
+          </div>
+          <div class="nc-item" style="background:#fef2f2">
+            <span class="nc-badge" style="background:#fee2e2;color:#dc2626">ALTO</span>
+            <div style="flex:1"><strong>Historia Clínica</strong> — El 23% de los registros no incluye código CIE-10</div>
+            <span style="font-size:9px;color:#dc2626;font-weight:700">No cumple</span>
+          </div>
+          <div class="nc-item" style="background:#fffbeb">
+            <span class="nc-badge" style="background:#fef3c7;color:#b45309">MEDIO</span>
+            <div style="flex:1"><strong>Dotación</strong> — Equipos biomédicos sin hoja de vida actualizada en el último año</div>
+            <span style="font-size:9px;color:#b45309;font-weight:700">Parcial</span>
+          </div>
+          <div class="nc-item" style="background:#fffbeb">
+            <span class="nc-badge" style="background:#fef3c7;color:#b45309">MEDIO</span>
+            <div style="flex:1"><strong>Procesos Prioritarios</strong> — Protocolo de referencia no actualizado en los últimos 12 meses</div>
+            <span style="font-size:9px;color:#b45309;font-weight:700">Parcial</span>
+          </div>
+          <div class="nc-item">
+            <span class="nc-badge" style="background:#f3f4f6;color:#6b7280">BAJO</span>
+            <div style="flex:1;color:#6b7280"><em>+ 10 hallazgos adicionales...</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: CUMPLIMIENTO ═══════════════════════════════════════════════ -->
+    <div id="vista-cumplimiento" style="display:none">
+      <p class="section-title">Cumplimiento Integrado</p>
+      <p class="section-sub">Auditoría · ISO 31000:2018 · ISO 7101:2023 · JCI 8ª ed. — Res. 1732/2026</p>
+
+      <div class="grid-5 mb-4">
+        <div class="kpi"><div class="kpi-icon">🔍</div><div class="kpi-val" style="color:#0d9488">3</div><div class="kpi-lab">Auditorías completadas</div></div>
+        <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val" style="color:#f59e0b">71%</div><div class="kpi-lab">Score promedio</div></div>
+        <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:#f59e0b">31</div><div class="kpi-lab">No conformidades</div></div>
+        <div class="kpi"><div class="kpi-icon">🛡️</div><div class="kpi-val" style="color:#f97316">18</div><div class="kpi-lab">Riesgos ISO 31000</div></div>
+        <div class="kpi"><div class="kpi-icon">✓</div><div class="kpi-val" style="color:#f97316">9</div><div class="kpi-lab">CAPAs pendientes</div></div>
+      </div>
+
+      <!-- Agente Pilar activo -->
+      <div class="agent-panel mb-4">
+        <div class="agent-header">
+          <div class="agent-avatar">🤖<div class="pulse"></div></div>
+          <div style="flex:1">
+            <p style="font-size:13px;font-weight:700;color:#134e4a">Agente Pilar</p>
+            <p style="font-size:11px;color:#0d9488">✅ Activo · Procesó 3 auditorías automáticamente</p>
+          </div>
+          <div style="display:flex;gap:20px">
+            <div style="text-align:center"><p style="font-size:22px;font-weight:900;color:#0d9488">18</p><p style="font-size:9px;color:#9ca3af">Riesgos totales</p></div>
+            <div style="text-align:center"><p style="font-size:22px;font-weight:900;color:#0891b2">9</p><p style="font-size:9px;color:#9ca3af">CAPAs con IA</p></div>
+          </div>
+        </div>
+        <div class="agent-activity">
+          <div class="activity-dot" style="background:#10b981"></div>
+          <div style="flex:1;font-size:11px"><strong>Consulta Externa</strong> — Score 67% · 11 riesgos · 9 CAPAs IA generadas</div>
+          <span style="font-size:9px;color:#9ca3af">hace 3 min</span>
+        </div>
+        <div class="agent-activity">
+          <div class="activity-dot" style="background:#10b981"></div>
+          <div style="flex:1;font-size:11px"><strong>Urgencias</strong> — Score 74% · 5 riesgos · generado ayer</div>
+          <span style="font-size:9px;color:#9ca3af">ayer</span>
+        </div>
+        <div class="agent-activity">
+          <div class="activity-dot" style="background:#10b981"></div>
+          <div style="flex:1;font-size:11px"><strong>Laboratorio</strong> — Score 81% · 2 riesgos · hace 3 días</div>
+          <span style="font-size:9px;color:#9ca3af">hace 3 días</span>
+        </div>
+      </div>
+
+      <!-- Gauges ISO -->
+      <div class="card">
+        <div class="card-title mb-4">Equivalencia con estándares internacionales</div>
+        <div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap">
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 100 100" style="width:110px;height:110px">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#e5e7eb" stroke-width="9"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="9" stroke-dasharray="238.76" stroke-dashoffset="70" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset 1s ease"/>
+              <text x="50" y="48" text-anchor="middle" font-size="20" font-weight="900" fill="#f59e0b">71%</text>
+              <text x="50" y="62" text-anchor="middle" font-size="8.5" fill="#9ca3af">equivalencia</text>
+            </svg>
+            <p style="font-size:12px;font-weight:700;text-align:center">Res. 1732/2026</p>
+            <p style="font-size:10px;color:#9ca3af">Marco principal Colombia</p>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 100 100" style="width:110px;height:110px">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#e5e7eb" stroke-width="9"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" stroke-width="9" stroke-dasharray="238.76" stroke-dashoffset="96" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+              <text x="50" y="48" text-anchor="middle" font-size="20" font-weight="900" fill="#f59e0b">60%</text>
+              <text x="50" y="62" text-anchor="middle" font-size="8.5" fill="#9ca3af">equivalencia</text>
+            </svg>
+            <p style="font-size:12px;font-weight:700;text-align:center">ISO 7101:2023</p>
+            <p style="font-size:10px;color:#9ca3af">Sistemas de gestión calidad</p>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 100 100" style="width:110px;height:110px">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#e5e7eb" stroke-width="9"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#ef4444" stroke-width="9" stroke-dasharray="238.76" stroke-dashoffset="119" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+              <text x="50" y="48" text-anchor="middle" font-size="20" font-weight="900" fill="#ef4444">50%</text>
+              <text x="50" y="62" text-anchor="middle" font-size="8.5" fill="#9ca3af">equivalencia</text>
+            </svg>
+            <p style="font-size:12px;font-weight:700;text-align:center">JCI 8ª Edición</p>
+            <p style="font-size:10px;color:#9ca3af">Estándar internacional</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: BRECHA 1732 ════════════════════════════════════════════════ -->
+    <div id="vista-gap" style="display:none">
+      <p class="section-title">Análisis de Brecha — Res. 1732/2026</p>
+      <p class="section-sub">¿Qué debes implementar antes de agosto 2027?</p>
+
+      <div style="background:linear-gradient(135deg,#f0fdfa,#e0f2fe);border:1px solid #99f6e4;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:24px">⚡</span>
+        <div>
+          <p style="font-size:13px;font-weight:700;color:#0f4c5c">Res. 1732/2026 — Publicada el 5 de agosto de 2026</p>
+          <p style="font-size:11px;color:#0e7490;margin-top:3px">Reemplaza la Res. 3100/2019. Tienes 12 meses de transición. Este análisis muestra exactamente qué debes hacer.</p>
+        </div>
+      </div>
+
+      <!-- Score de preparación demo -->
+      <div class="card mb-4">
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+          <svg viewBox="0 0 120 120" style="width:120px;height:120px;flex-shrink:0">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="301.59" stroke-dashoffset="211" stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:all 1s ease"/>
+            <text x="60" y="56" text-anchor="middle" font-size="24" font-weight="900" fill="#ef4444">30%</text>
+            <text x="60" y="70" text-anchor="middle" font-size="9" fill="#9ca3af">preparación</text>
+          </svg>
+          <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:10px"><p style="font-size:20px;font-weight:900;color:#15803d">2</p><p style="font-size:10px;color:#16a34a">Cumple</p></div>
+            <div style="text-align:center;padding:12px;background:#fffbeb;border-radius:10px"><p style="font-size:20px;font-weight:900;color:#b45309">1</p><p style="font-size:10px;color:#ca8a04">Parcial</p></div>
+            <div style="text-align:center;padding:12px;background:#fef2f2;border-radius:10px"><p style="font-size:20px;font-weight:900;color:#dc2626">4</p><p style="font-size:10px;color:#ef4444">No cumple</p></div>
+            <div style="text-align:center;padding:12px;background:#fff7ed;border-radius:10px"><p style="font-size:20px;font-weight:900;color:#ea580c">8</p><p style="font-size:10px;color:#f97316">Sin evaluar</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checklist demo -->
+      <div class="card">
+        <div class="card-title mb-4">Novedades de la Res. 1732/2026 — Estado en IPS Demo</div>
+        <div>
+          <div class="check-item">
+            <div class="check-icon" style="background:#fef3c7">🆕</div>
+            <div style="flex:1;font-size:12px"><strong>IHCE — Sistema con capacidad de interoperabilidad</strong><br><span style="color:#9ca3af">Historia Clínica Electrónica Interoperable · Plazo: dic 2026</span></div>
+            <span style="font-size:10px;padding:3px 8px;background:#fee2e2;color:#dc2626;border-radius:20px;font-weight:700">No cumple</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" style="background:#fef3c7">🆕</div>
+            <div style="flex:1;font-size:12px"><strong>RDA — Resumen Digital de Atención al alta</strong><br><span style="color:#9ca3af">Obligatorio en cada episodio · Plazo: feb 2027</span></div>
+            <span style="font-size:10px;padding:3px 8px;background:#fee2e2;color:#dc2626;border-radius:20px;font-weight:700">No cumple</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" style="background:#fef3c7">🆕</div>
+            <div style="flex:1;font-size:12px"><strong>Telemedicina — 4 modalidades habilitadas en REPS</strong><br><span style="color:#9ca3af">Teleconsulta, Telexperticia, Teleconcepto, Telemonitoreo</span></div>
+            <span style="font-size:10px;padding:3px 8px;background:#fef3c7;color:#b45309;border-radius:20px;font-weight:700">Parcial</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon" style="background:#f0fdf4">✓</div>
+            <div style="flex:1;font-size:12px"><strong>SG-SST actualizado · Res. 1774/2025</strong><br><span style="color:#9ca3af">Riesgo biológico, químico y psicosocial en salud</span></div>
+            <span style="font-size:10px;padding:3px 8px;background:#f0fdf4;color:#15803d;border-radius:20px;font-weight:700">Cumple</span>
+          </div>
+          <div class="check-item" style="border:none">
+            <div class="check-icon" style="background:#f0fdf4">✓</div>
+            <div style="flex:1;font-size:12px"><strong>Autoevaluación anual documentada en REPS</strong><br><span style="color:#9ca3af">Continúa obligatorio bajo Res. 1732/2026</span></div>
+            <span style="font-size:10px;padding:3px 8px;background:#f0fdf4;color:#15803d;border-radius:20px;font-weight:700">Cumple</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VISTA: CAPAs ══════════════════════════════════════════════════════ -->
+    <div id="vista-capas" style="display:none">
+      <p class="section-title">CAPAs — Planes de Acción</p>
+      <p class="section-sub">9 abiertas · 3 generadas por Agente Pilar con IA · 2 cerradas este mes</p>
+
+      <div class="space-y">
+        <div class="card" style="border-left:4px solid #dc2626">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                <span style="font-size:9px;padding:2px 8px;background:#fee2e2;color:#dc2626;border-radius:20px;font-weight:700;text-transform:uppercase">Alta · Medicamentos</span>
+                <span style="font-size:9px;padding:2px 8px;background:#f0f9ff;color:#0369a1;border-radius:20px;font-weight:700">🤖 Generada por IA</span>
+                <span style="font-size:9px;padding:2px 8px;background:#fef3c7;color:#b45309;border-radius:20px;font-weight:700">⏳ Abierta</span>
+              </div>
+              <p style="font-size:13px;font-weight:700;color:#1f2937">Implementar protocolo de doble verificación para medicamentos de alto riesgo</p>
+              <div style="margin-top:8px;font-size:11px;color:#6b7280;line-height:1.6">
+                <p><strong style="color:#374151">Causa raíz:</strong> Ausencia de procedimiento documentado y socializado para verificación de medicamentos de alto riesgo (insulina, heparina, KCl).</p>
+                <p><strong style="color:#374151">Acción correctiva:</strong> Elaborar, aprobar e implementar protocolo de doble verificación con lista de verificación física. Capacitar a todo el personal de enfermería.</p>
+                <p><strong style="color:#374151">Evidencia:</strong> Protocolo aprobado + actas de capacitación + listas de chequeo diligenciadas.</p>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <p style="font-size:11px;font-weight:700;color:#374151">Responsable</p>
+              <p style="font-size:12px;color:#6b7280">Jefe de Enfermería</p>
+              <p style="font-size:11px;font-weight:700;color:#374151;margin-top:8px">Plazo</p>
+              <p style="font-size:12px;color:#ef4444;font-weight:700">30 días</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #dc2626">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                <span style="font-size:9px;padding:2px 8px;background:#fee2e2;color:#dc2626;border-radius:20px;font-weight:700;text-transform:uppercase">Alta · Historia Clínica</span>
+                <span style="font-size:9px;padding:2px 8px;background:#f0f9ff;color:#0369a1;border-radius:20px;font-weight:700">🤖 Generada por IA</span>
+                <span style="font-size:9px;padding:2px 8px;background:#fef3c7;color:#b45309;border-radius:20px;font-weight:700">⏳ Abierta</span>
+              </div>
+              <p style="font-size:13px;font-weight:700;color:#1f2937">Capacitación en codificación CIE-10 y auditoría de registros</p>
+              <div style="margin-top:8px;font-size:11px;color:#6b7280;line-height:1.6">
+                <p><strong style="color:#374151">Causa raíz:</strong> Falta de capacitación reciente en codificación y ausencia de auditoría sistemática de la completitud de la historia clínica.</p>
+                <p><strong style="color:#374151">Acción correctiva:</strong> Programar jornada de capacitación CIE-10, implementar auditoría aleatoria semanal del 10% de los registros con retroalimentación al médico.</p>
+                <p><strong style="color:#374151">Evidencia:</strong> Actas de capacitación + informe mensual de auditoría de HC + reducción de registros incompletos al 5%.</p>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <p style="font-size:11px;font-weight:700;color:#374151">Responsable</p>
+              <p style="font-size:12px;color:#6b7280">Médico Auditor</p>
+              <p style="font-size:11px;font-weight:700;color:#374151;margin-top:8px">Plazo</p>
+              <p style="font-size:12px;color:#f59e0b;font-weight:700">45 días</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-left:4px solid #10b981;background:#f0fdf4">
+          <div style="display:flex;gap:10px;align-items:center">
+            <span style="font-size:20px">✅</span>
+            <div>
+              <p style="font-size:13px;font-weight:700;color:#065f46">Actualización de hoja de vida de equipos biomédicos</p>
+              <p style="font-size:11px;color:#059669;margin-top:2px">Cerrada · hace 5 días · Responsable: Biomédico · Duración: 12 días</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CTA FINAL ═════════════════════════════════════════════════════════ -->
+    <div class="cta-section">
+      <p style="font-size:24px;font-weight:900;margin-bottom:8px">Tu IPS merece esto — y más</p>
+      <p style="font-size:14px;color:rgba(255,255,255,.85);max-width:480px;margin:0 auto">
+        Lo que acabas de ver no es una presentación. Es NormaLis funcionando con datos reales de tu IPS.
+        El Agente Pilar trabaja automáticamente cada vez que completas una auditoría.
+      </p>
+      <a href="https://normalis.co/registro.html" class="cta-btn">Crear mi cuenta gratis →</a>
+      <p class="cta-sub">Sin tarjeta de crédito · Piloto gratuito 30 días · Soporte en español</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function mostrarVista(vista) {
+    document.querySelectorAll('[id^="vista-"]').forEach(el => el.style.display = 'none');
+    document.getElementById('vista-' + vista).style.display = 'block';
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
