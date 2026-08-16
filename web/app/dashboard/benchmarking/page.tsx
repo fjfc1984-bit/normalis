@@ -198,18 +198,19 @@ export default function BenchmarkingPage() {
         nombre:  userData.nombre  || 'Mi IPS',
       });
 
-      // Mis auditorías completadas
+      // Mis auditorías completadas (filtro client-side para evitar índice compuesto)
       const auditQ = query(
         collection(db, 'auditorias'),
-        where('uid',         '==', user.uid),
-        where('completedAt', '!=', null),
+        where('uid', '==', user.uid),
       );
       const auditSnap = await getDocs(auditQ);
-      const mis: AuditScore[] = auditSnap.docs.map(d => ({
-        segmento:    d.data().segmento,
-        score:       d.data().score ?? 0,
-        completedAt: d.data().completedAt ?? '',
-      }));
+      const mis: AuditScore[] = auditSnap.docs
+        .map(d => ({
+          segmento:    d.data().segmento    ?? '',
+          score:       d.data().score       ?? 0,
+          completedAt: d.data().completedAt ?? '',
+        }))
+        .filter(a => !!a.completedAt && a.score > 0);
       setMisAudits(mis);
 
       if (mis.length > 0 && !segActivo) {
