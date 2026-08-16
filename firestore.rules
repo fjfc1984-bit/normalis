@@ -274,6 +274,122 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // gap1732/{uid} — Análisis de brecha Res. 1732/2026 (Next.js app)
+    // docId = uid del usuario
+    // ════════════════════════════════════════════════════════════════════════
+    match /gap1732/{uid} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // pamec/{nit} — Módulo PAMEC (Plan de Auditoría para el Mejoramiento)
+    // docId = NIT de la IPS
+    // ════════════════════════════════════════════════════════════════════════
+    match /pamec/{nit} {
+      allow read: if isAuthenticated() && (
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // simulacros/{nit} — Módulo Simulacros / Planes de emergencia
+    // docId = NIT de la IPS
+    // ════════════════════════════════════════════════════════════════════════
+    match /simulacros/{nit} {
+      allow read: if isAuthenticated() && (
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // riesgos/{uid}/items/{id} — Gestión de riesgos ISO 31000 (cumplimiento)
+    // Subcollection bajo el uid del usuario
+    // ════════════════════════════════════════════════════════════════════════
+    match /riesgos/{uid}/items/{id} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // benchmarks/{docId} — Módulo Benchmarking entre IPS
+    // ════════════════════════════════════════════════════════════════════════
+    match /benchmarks/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // PROA — Programa de Optimización del Uso de Antimicrobianos
+    // Res. 2471/2022 · Plan RAM 2025-2030
+    // ════════════════════════════════════════════════════════════════════════
+    match /proa_checklist/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
+    match /proa_intervenciones/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
+    match /proa_consumos/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update, delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Subcollections adicionales de usuarios/{uid}
+    // ════════════════════════════════════════════════════════════════════════
+    match /usuarios/{uid}/consentimientos/{id} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    match /usuarios/{uid}/firmaDocs/{id} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    match /usuarios/{uid}/profesionales/{id} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // Denegar todo lo demás
     // ════════════════════════════════════════════════════════════════════════
     match /{document=**} {
