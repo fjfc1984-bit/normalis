@@ -112,10 +112,11 @@ export function getNonConformities(
     .filter(fq => answers[`q${fq.globalIdx}`] === 'no' || answers[`q${fq.globalIdx}`] === 'parcial')
     .map(fq => ({
       globalIdx: fq.globalIdx,
-      areaName: fq.areaName,
-      icon: fq.icon,
-      question: fq.question,
-      answer: answers[`q${fq.globalIdx}`] as 'no' | 'parcial',
+      qKey:      `q${fq.globalIdx}`,
+      areaName:  fq.areaName,
+      icon:      fq.icon,
+      question:  fq.question,
+      answer:    answers[`q${fq.globalIdx}`] as 'no' | 'parcial',
     }));
 }
 

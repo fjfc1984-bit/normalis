@@ -175,7 +175,8 @@ function Histograma({ todos, miScore }: { todos: number[]; miScore: number }) {
 
 // ── Página principal ─────────────────────────────────────────
 export default function BenchmarkingPage() {
-  const { uid } = useAuth();
+  const { user } = useAuth();
+  const uid = user?.uid ?? '';
   const [misAudits, setMisAudits]   = useState<AuditScore[]>([]);
   const [realData,  setRealData]    = useState<BenchmarkEntry[]>([]);
   const [perfil,    setPerfil]      = useState<IpsProfile | null>(null);

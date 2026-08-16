@@ -53,6 +53,7 @@ export interface FlatQuestion {
 
 export interface NonConformity {
   globalIdx: number;
+  qKey:     string;
   areaName: string;
   icon: string;
   question: string;

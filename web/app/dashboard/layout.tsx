@@ -142,14 +142,14 @@ function Sidebar() {
                     } : {
                       color: '#80CBC4',
                     }}
-                    onMouseEnter={e => {
+                    onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       if (!active) {
                         const el = e.currentTarget as HTMLElement;
                         el.style.background = 'rgba(255,255,255,.06)';
                         el.style.color = '#e2f8f6';
                       }
                     }}
-                    onMouseLeave={e => {
+                    onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
                       if (!active) {
                         const el = e.currentTarget as HTMLElement;
                         el.style.background = '';
