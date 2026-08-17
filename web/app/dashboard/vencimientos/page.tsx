@@ -28,8 +28,17 @@ interface Vencimiento {
   createdAt: Timestamp | null;
 }
 
+/** Parsea "YYYY-MM-DD" como fecha local (evita el corrimiento de -1 día que
+ *  causa `new Date('YYYY-MM-DD')` al interpretarse como UTC medianoche). */
+function parseLocalDate(fechaISO: string): Date {
+  const [year, month, day] = fechaISO.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function getDiasRestantes(fechaISO: string): number {
-  return Math.ceil((new Date(fechaISO).getTime() - Date.now()) / 86_400_000);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  return Math.ceil((parseLocalDate(fechaISO).getTime() - hoy.getTime()) / 86_400_000);
 }
 
 function getEstadoBadge(dias: number) {
@@ -195,7 +204,7 @@ export default function VencimientosPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-800 truncate">{v.nombre}</p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {new Date(v.fecha).toLocaleDateString('es-CO', {
+                    {parseLocalDate(v.fecha).toLocaleDateString('es-CO', {
                       day: 'numeric', month: 'long', year: 'numeric',
                     })}
                     {' · '}
