@@ -20,7 +20,7 @@ import {
   collection, addDoc, doc, getDoc,
   getDocs, query, where, serverTimestamp,
 } from 'firebase/firestore';
-import type { AuditAnswers, AuditAnswer } from '@/lib/auditTypes';
+import type { AuditAnswers, AuditAnswer, NonConformity } from '@/lib/auditTypes';
 
 // ─── Reusable answer button ───────────────────────────────────────────────────
 type AnswerKey = AuditAnswer;
@@ -176,7 +176,7 @@ export default function AuditoriaSegmentoPage({
   };
 
   const autoCrearCapasDeAuditoria = async (
-    ncs: { qKey: string; areaName: string; areaId: string; icon: string; answer: string }[]
+    ncs: NonConformity[]
   ) => {
     const user = auth.currentUser;
     if (!user || ncs.length === 0) return;

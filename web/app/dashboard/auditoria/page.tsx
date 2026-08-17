@@ -10,12 +10,13 @@ import {
   collection, addDoc, doc, getDoc, getDocs,
   query, where, serverTimestamp,
 } from 'firebase/firestore';
+import type { AuditAnswers } from '@/lib/auditTypes';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 interface AuditStatus {
   completedAt: string | null;
   score:       number;
-  answers:     Record<string, string>;
+  answers:     AuditAnswers;
 }
 type StatusMap  = Record<string, AuditStatus>;
 type CapaSegMap = Record<string, number>;   // segmento → cantidad de CAPAs

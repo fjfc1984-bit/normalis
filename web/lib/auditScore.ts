@@ -113,6 +113,7 @@ export function getNonConformities(
     .map(fq => ({
       globalIdx: fq.globalIdx,
       qKey:      `q${fq.globalIdx}`,
+      areaId:    fq.areaId,
       areaName:  fq.areaName,
       icon:      fq.icon,
       question:  fq.question,

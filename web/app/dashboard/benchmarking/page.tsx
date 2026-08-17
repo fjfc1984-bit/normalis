@@ -236,11 +236,9 @@ export default function BenchmarkingPage() {
         )
       );
       const mis: AuditScore[] = results
-        .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof getDoc>>> =>
-          r.status === 'fulfilled' && r.value.exists()
-        )
-        .map(r => {
-          const d = r.value.data()!;
+        .flatMap(r => (r.status === 'fulfilled' && r.value.exists()) ? [r.value] : [])
+        .map(snap => {
+          const d = snap.data();
           return {
             segmento:    (d.segmento    as string) ?? '',
             score:       (d.score       as number) ?? 0,
