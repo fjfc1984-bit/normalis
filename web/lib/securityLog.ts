@@ -27,7 +27,8 @@ export type SecurityLogAccion =
   | 'llave_api_revocada'
   | 'llave_api_reactivada'
   | 'llave_api_eliminada'
-  | 'pqrs_respondida';
+  | 'pqrs_respondida'
+  | 'mfa_enrolado';
 
 export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   login:                   'Inicio de sesión',
@@ -38,6 +39,7 @@ export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   llave_api_reactivada:    'Llave API reactivada',
   llave_api_eliminada:     'Llave API eliminada',
   pqrs_respondida:         'PQRS respondida',
+  mfa_enrolado:            'Verificación en dos pasos activada',
 };
 
 export interface SecurityLogItem {

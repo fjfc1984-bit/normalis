@@ -20,6 +20,7 @@ import { logSecurityEvent } from '@/lib/securityLog';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { Toast, useToast } from '@/components/ui/Toast';
+import MfaEnrollBanner from '@/components/MfaEnrollBanner';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 
@@ -645,6 +646,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Toast toast={toast} />
+      <MfaEnrollBanner user={user} />
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">

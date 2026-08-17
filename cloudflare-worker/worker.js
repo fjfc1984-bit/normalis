@@ -46,6 +46,7 @@ const AUDIT_ACCIONES_VALIDAS = [
   'llave_api_reactivada',
   'llave_api_eliminada',
   'pqrs_respondida',
+  'mfa_enrolado',
 ];
 
 // ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───
