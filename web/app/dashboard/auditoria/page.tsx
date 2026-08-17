@@ -1,32 +1,192 @@
 'use client';
 
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { SEGMENT_META, areasDB } from '@/data/auditData';
+import { auth, db } from '@/lib/firebase';
+import {
+  collection, addDoc, doc, getDoc, getDocs,
+  getCountFromServer, query, where, serverTimestamp,
+} from 'firebase/firestore';
 
+// ── Tipos ────────────────────────────────────────────────────────────────────
+interface AuditStatus {
+  completedAt: string | null;
+  score:       number;
+  nonConformities: { qKey: string; areaName: string; question: string; answer: string }[];
+}
+type StatusMap  = Record<string, AuditStatus>;
+type CapaSegMap = Record<string, number>;   // segmento → cantidad de CAPAs creadas
+
+const SEGMENTOS = Object.keys(areasDB);
+
+// ── Auto-crear CAPAs para un segmento ───────────────────────────────────────
+async function sincronizarCapas(
+  uid: string,
+  nit: string,
+  seg: string,
+  ncs: AuditStatus['nonConformities'],
+  nextNum: number,
+): Promise<number> {
+  if (!ncs.length) return nextNum;
+
+  // Anti-dup: ¿ya hay CAPAs para este segmento?
+  const existSnap = await getDocs(
+    query(collection(db, 'capas'), where('uid', '==', uid), where('refSegmento', '==', seg))
+  );
+  if (!existSnap.empty) return nextNum;
+
+  // Agrupar por área
+  const porArea = ncs.reduce<Record<string, typeof ncs>>((acc, nc) => {
+    if (!acc[nc.areaName]) acc[nc.areaName] = [];
+    acc[nc.areaName].push(nc);
+    return acc;
+  }, {});
+
+  let num = nextNum;
+  const meta = SEGMENT_META[seg];
+  for (const [areaName, items] of Object.entries(porArea)) {
+    const preguntas = items.map(i => `• ${i.question}`).join('\n');
+    await addDoc(collection(db, 'capas'), {
+      uid,
+      nit,
+      numero:           `CAPA-${String(num).padStart(3, '0')}`,
+      descripcion:      `[Auditoría ${meta?.label ?? seg}] No conformidades en ${areaName}`,
+      causaRaiz:        `${items.length} criterio(s) no cumplido(s):\n${preguntas}`,
+      accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable.',
+      responsable:      '',
+      area:             areaName,
+      fechaLimite:      (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().slice(0, 10); })(),
+      origen:           'auditoria',
+      evidencia:        '',
+      estado:           'abierta',
+      refSegmento:      seg,
+      fechaCreacion:    serverTimestamp(),
+      fechaActualizacion: null,
+      fechaInicio:      null,
+      fechaCierre:      null,
+    });
+    num++;
+  }
+  return num;
+}
+
+// ── Componente principal ─────────────────────────────────────────────────────
 export default function AuditoriaPage() {
-  const segments = Object.keys(areasDB);
+  const [statusMap,  setStatusMap]  = useState<StatusMap>({});
+  const [capaSegMap, setCapaSegMap] = useState<CapaSegMap>({});
+  const [syncing,    setSyncing]    = useState(false);
+  const [syncDone,   setSyncDone]   = useState(false);
+
+  const cargarYSincronizar = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    setSyncing(true);
+
+    try {
+      // 1. NIT del usuario
+      const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
+      const nit = userSnap.data()?.nit ?? '';
+
+      // 2. Leer todas las auditorías completadas (por ID conocido)
+      const snaps = await Promise.allSettled(
+        SEGMENTOS.map(seg => getDoc(doc(db, 'auditorias', `${user.uid}_${seg}`)))
+      );
+
+      const newStatus: StatusMap = {};
+      const completedSegs: string[] = [];
+
+      snaps.forEach((r, i) => {
+        const seg = SEGMENTOS[i];
+        if (r.status === 'fulfilled' && r.value.exists()) {
+          const d = r.value.data()!;
+          newStatus[seg] = {
+            completedAt:     d.completedAt    ?? null,
+            score:           d.score          ?? 0,
+            nonConformities: d.nonConformities ?? [],
+          };
+          if (d.completedAt) completedSegs.push(seg);
+        }
+      });
+      setStatusMap(newStatus);
+
+      // 3. Contar CAPAs actuales para numeración
+      const countSnap = await getCountFromServer(
+        query(collection(db, 'capas'), where('uid', '==', user.uid))
+      );
+      let nextNum = (countSnap.data().count ?? 0) + 1;
+
+      // 4. Sincronizar CAPAs para cada servicio completado con NC
+      const newCapaMap: CapaSegMap = {};
+      for (const seg of completedSegs) {
+        const ncs = newStatus[seg]?.nonConformities ?? [];
+        if (!ncs.length) continue;
+
+        // Contar CAPAs ya existentes para este segmento
+        const existSnap = await getDocs(
+          query(collection(db, 'capas'), where('uid', '==', user.uid), where('refSegmento', '==', seg))
+        );
+        if (!existSnap.empty) {
+          newCapaMap[seg] = existSnap.size;
+          continue;
+        }
+
+        // Crear CAPAs nuevas
+        const antes = nextNum;
+        nextNum = await sincronizarCapas(user.uid, nit, seg, ncs, nextNum);
+        newCapaMap[seg] = nextNum - antes;
+      }
+      setCapaSegMap(newCapaMap);
+    } catch (e) {
+      console.error('[AuditoriaPage] Error sincronizando CAPAs:', e);
+    } finally {
+      setSyncing(false);
+      setSyncDone(true);
+    }
+  }, []);
+
+  useEffect(() => { void cargarYSincronizar(); }, [cargarYSincronizar]);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Auditoría de habilitación</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Resolución 1732/2026 — verificación de condiciones de habilitación por tipo de servicio
-        </p>
+      {/* Header */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">Auditoría de habilitación</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Resolución 1732/2026 — verificación de condiciones de habilitación por tipo de servicio
+          </p>
+        </div>
+        {syncing && (
+          <span className="text-xs text-teal-600 animate-pulse flex items-center gap-1.5 mt-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-teal-500 animate-ping" />
+            Sincronizando CAPAs…
+          </span>
+        )}
+        {syncDone && !syncing && Object.keys(capaSegMap).length > 0 && (
+          <span className="text-xs text-emerald-600 flex items-center gap-1.5 mt-1">
+            ✅ CAPAs sincronizadas
+          </span>
+        )}
       </div>
 
+      {/* Grid de servicios */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {segments.map(seg => {
-          const meta = SEGMENT_META[seg];
-          const areas = areasDB[seg];
+        {SEGMENTOS.map(seg => {
+          const meta   = SEGMENT_META[seg];
+          const areas  = areasDB[seg];
           const totalQ = areas.reduce((acc, a) => acc + a.q.length, 0);
+          const st     = statusMap[seg];
+          const capas  = capaSegMap[seg] ?? 0;
+          const completada = !!st?.completedAt;
 
           return (
             <Link
               key={seg}
               href={`/dashboard/auditoria/${seg}`}
-              className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-teal-500
+              className="group bg-white rounded-xl border p-5 hover:border-teal-500
                          hover:shadow-md transition-all duration-200 flex flex-col gap-3"
+              style={{ borderColor: completada ? '#99f6e4' : '#e5e7eb' }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -40,27 +200,52 @@ export default function AuditoriaPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-gray-300 group-hover:text-teal-500 text-lg transition-colors">›</span>
+                {/* Score badge o flecha */}
+                {completada ? (
+                  <span className="text-sm font-bold px-2.5 py-1 rounded-xl"
+                    style={{
+                      background: st!.score >= 75 ? '#d1fae5' : st!.score >= 60 ? '#fef3c7' : '#fee2e2',
+                      color:      st!.score >= 75 ? '#065f46' : st!.score >= 60 ? '#92400e' : '#991b1b',
+                    }}>
+                    {st!.score}%
+                  </span>
+                ) : (
+                  <span className="text-gray-300 group-hover:text-teal-500 text-lg transition-colors">›</span>
+                )}
               </div>
 
               <p className="text-xs text-gray-400 line-clamp-1">{meta?.norm}</p>
 
-              <div className="flex flex-wrap gap-1">
-                {areas.slice(0, 3).map(area => (
-                  <span
-                    key={area.id}
-                    className="text-[10px] bg-gray-50 border border-gray-100 text-gray-500
-                               rounded px-2 py-0.5 truncate max-w-[120px]"
-                  >
-                    {area.icon} {area.name}
+              {/* Estado de la auditoría */}
+              {completada ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50
+                                   border border-emerald-200 rounded-full px-2 py-0.5">
+                    ✓ Completada
                   </span>
-                ))}
-                {areas.length > 3 && (
-                  <span className="text-[10px] text-gray-400 px-1 py-0.5">
-                    +{areas.length - 3} más
-                  </span>
-                )}
-              </div>
+                  {capas > 0 && (
+                    <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200
+                                     rounded-full px-2 py-0.5">
+                      📋 {capas} CAPA{capas !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {areas.slice(0, 3).map(area => (
+                    <span key={area.id}
+                      className="text-[10px] bg-gray-50 border border-gray-100 text-gray-500
+                                 rounded px-2 py-0.5 truncate max-w-[120px]">
+                      {area.icon} {area.name}
+                    </span>
+                  ))}
+                  {areas.length > 3 && (
+                    <span className="text-[10px] text-gray-400 px-1 py-0.5">
+                      +{areas.length - 3} más
+                    </span>
+                  )}
+                </div>
+              )}
             </Link>
           );
         })}
