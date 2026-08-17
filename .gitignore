@@ -22,6 +22,14 @@ functions/
 .env
 *.env
 service-account*.json
+.wrangler/
+
+# Cache de build de TypeScript (se regenera solo)
+*.tsbuildinfo
+
+# Archivos temporales de FUSE / OneDrive y locks de Office
+.fuse_hidden*
+~$*
 
 # OS
 .DS_Store
