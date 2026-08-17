@@ -404,13 +404,15 @@ export default function IncidentesPage() {
         { tipo: item.tipo, severidad: item.severidad, desc: item.desc, accion: item.accion },
         idToken,
       );
-      const analisis = {
+      const analisis: AnalisisLondres = {
         estructurado:           res.estructurado,
         factoresContribuyentes: res.factoresContribuyentes ?? [],
         causaRaiz:              res.causaRaiz ?? '',
         accionRecomendada:      res.accionRecomendada ?? '',
-        textoCrudo:             res.textoCrudo,
         generadoEn:             Date.now(),
+        // Firestore rechaza campos con valor `undefined` explícito — solo
+        // se incluye textoCrudo cuando realmente viene en la respuesta.
+        ...(res.textoCrudo !== undefined ? { textoCrudo: res.textoCrudo } : {}),
       };
       await guardarAnalisis(item.id, analisis);
       show('Análisis generado — revísalo antes de considerarlo definitivo.', 'success');
