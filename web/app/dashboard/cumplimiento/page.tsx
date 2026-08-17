@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import {
   collection, query, where, getDocs,
   addDoc, serverTimestamp, onSnapshot, orderBy, limit,
@@ -20,6 +20,7 @@ import {
 import { areasDB } from '@/data/auditData';
 import { buildFlatQuestions, getNonConformities } from '@/lib/auditScore';
 import type { AuditAnswers, NonConformity } from '@/lib/auditTypes';
+import { ejecutarAgentePilar } from '@/lib/agentePilar';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -173,6 +174,8 @@ export default function CumplimientoPage() {
   const [showAll,       setShowAll]       = useState(false);
   const [agenteAudits,  setAgenteAudits]  = useState<SavedAudit[]>([]);
   const [agenteProcesando, setAgenteProcesando] = useState(false);
+  const [agentePendientes, setAgentePendientes] = useState<SavedAudit[]>([]);
+  const [reintentando,  setReintentando]  = useState<string | null>(null);
 
   // ── Auditorías completadas ─────────────────────────────────────────────────
   useEffect(() => {
@@ -197,13 +200,47 @@ export default function CumplimientoPage() {
     return onSnapshot(q, snap => {
       const all = snap.docs.map(d => d.data() as SavedAudit);
       const procesadas = all.filter(a => a.agenteStatus === 'completado' || a.agenteStatus === 'error');
-      const procesando = all.some(a => a.agenteStatus === 'procesando' || a.agenteStatus === 'pendiente');
+      const procesando = all.some(a => a.agenteStatus === 'procesando');
+      // Auditorías completadas cuyo Agente Pilar nunca corrió ('pendiente' —
+      // p. ej. auditorías anteriores a este backend, o una pestaña cerrada
+      // antes de que terminara) o que fallaron ('error'): se ofrece un
+      // reintento manual en vez de dejarlas atascadas para siempre.
+      const pendientes = all.filter(a =>
+        !!a.completedAt && (a.agenteStatus === 'pendiente' || a.agenteStatus === 'error'),
+      );
       setAgenteAudits(procesadas.sort((a, b) =>
         (b.agenteProcessedAt ?? '').localeCompare(a.agenteProcessedAt ?? '')
       ).slice(0, 5));
       setAgenteProcesando(procesando);
+      setAgentePendientes(pendientes);
     }, () => {});
   }, [user]);
+
+  // ── Reintento manual del Agente Pilar para auditorías atascadas/erradas ────
+  const reintentarAgente = useCallback(async (audit: SavedAudit) => {
+    if (!user) return;
+    setReintentando(audit.segmento);
+    try {
+      const areas = areasDB[audit.segmento];
+      if (!areas) throw new Error('Segmento de auditoría no reconocido');
+      const flatQ = buildFlatQuestions(areas);
+      const ncs = getNonConformities(flatQ, audit.answers).map(nc => ({
+        qKey:     nc.qKey,
+        areaName: nc.areaName,
+        question: nc.question,
+        answer:   nc.answer as 'no' | 'parcial',
+      }));
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error('Sesión expirada — vuelve a iniciar sesión');
+      await ejecutarAgentePilar(user.uid, idToken, nit ?? '', audit.segmento, segLabel(audit.segmento), ncs);
+      show('✅ Agente Pilar reprocesado — revisa Análisis de Riesgo y CAPAs.', 'success');
+    } catch (err) {
+      console.error('[Cumplimiento] reintentarAgente:', err);
+      show('Error al reprocesar con el Agente Pilar. Intenta de nuevo en un momento.', 'error');
+    } finally {
+      setReintentando(null);
+    }
+  }, [user, nit, show]);
 
   // ── Riesgos ISO 31000 ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -355,7 +392,7 @@ export default function CumplimientoPage() {
             <p className="text-[11px] mt-0.5"
                style={{ color: agenteProcesando ? '#0d9488' : (agenteAudits.length > 0 ? '#059669' : '#9ca3af') }}>
               {agenteProcesando
-                ? '⚡ Procesando auditoría — generando riesgos y CAPAs con Gemini Pro...'
+                ? '⚡ Procesando auditoría — generando riesgos y CAPAs con IA...'
                 : agenteAudits.length > 0
                   ? `✅ Activo — ${agenteAudits.reduce((s,a) => s + (a.agenteResumen?.riesgosCreados ?? 0), 0)} riesgos · ${agenteAudits.reduce((s,a) => s + (a.agenteResumen?.capasCreadadas ?? 0), 0)} CAPAs generadas automáticamente`
                   : 'Esperando primera auditoría completada para activarse'}
@@ -421,10 +458,41 @@ export default function CumplimientoPage() {
         ) : !agenteProcesando ? (
           <div className="px-5 py-4 text-center">
             <p className="text-xs text-gray-400">
-              Completa una auditoría → el Agente Pilar creará automáticamente los riesgos ISO 31000 y los planes CAPA con Gemini Pro.
+              Completa una auditoría → el Agente Pilar creará automáticamente los riesgos ISO 31000 y los planes CAPA con IA.
             </p>
           </div>
         ) : null}
+
+        {agentePendientes.length > 0 && (
+          <div className="px-5 py-3 border-t" style={{ borderColor: '#fde68a', background: '#fffbeb' }}>
+            <p className="text-[11px] font-semibold text-amber-700 mb-2">
+              ⚠️ {agentePendientes.length} auditoría{agentePendientes.length !== 1 ? 's' : ''} completada{agentePendientes.length !== 1 ? 's' : ''} sin procesar por el Agente Pilar
+            </p>
+            <div className="space-y-1.5">
+              {agentePendientes.map(a => {
+                const meta = SEG_META[a.segmento];
+                const enCurso = reintentando === a.segmento;
+                return (
+                  <div key={a.segmento} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-200">
+                    <span className="text-sm">{meta?.icon ?? '🏥'}</span>
+                    <span className="text-xs text-gray-600 flex-1 min-w-0 truncate">
+                      {meta?.label ?? a.segmento}
+                      {a.agenteStatus === 'error' && <span className="text-red-500"> — error previo</span>}
+                    </span>
+                    <button
+                      onClick={() => reintentarAgente(a)}
+                      disabled={enCurso}
+                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600
+                                 disabled:opacity-50 text-white transition-colors flex-shrink-0"
+                    >
+                      {enCurso ? 'Procesando…' : '🔄 Procesar con Agente Pilar'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── KPIs ──────────────────────────────────────────────────────────── */}

@@ -1,5 +1,5 @@
 /**
- * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.5
+ * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.6
  *
  * Endpoints:
  *   POST /                    → proxy al chat LLM (Cloudflare Workers AI)
@@ -10,6 +10,7 @@
  *   POST /api/v1/incidentes     → reporte de incidentes desde sistemas externos (API key)
  *   POST /audit                 → registra un evento en la bitácora de seguridad (Firebase ID token)
  *   POST /api/analizar-incidente → análisis de causa raíz Protocolo de Londres (Firebase ID token)
+ *   POST /api/agente-pilar       → riesgos ISO 31000 desde no-conformidades de auditoría (Firebase ID token, IA)
  *
  * Bindings requeridos:
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
@@ -79,6 +80,35 @@ Reglas estrictas:
 
 Formato exacto de respuesta (JSON, una sola línea o formateado, sin comentarios):
 {"factoresContribuyentes":[{"categoria":"<una de las 7 categorías exactas>","detalle":"<explicación breve>"}],"causaRaiz":"<causa raíz principal, 1-2 frases>","accionRecomendada":"<acción correctiva concreta y accionable, 1-2 frases>"}`;
+
+// ── Agente Pilar — genera riesgos ISO 31000 a partir de no conformidades
+// de una auditoría de habilitación ya completada. Mismas 8 categorías que
+// web/app/dashboard/analisis-riesgo/page.tsx (Categoria) — deben mantenerse
+// sincronizadas, igual que LONDRES_CATEGORIAS con Incidentes.
+const AGENTE_PILAR_CATEGORIAS = [
+  'Asistencial', 'Normativo', 'Talento Humano', 'Dotación',
+  'Medicamentos', 'Infraestructura', 'Tecnología', 'Financiero',
+];
+const AGENTE_PILAR_TRATAMIENTOS = ['Evitar', 'Reducir', 'Transferir', 'Aceptar'];
+
+const SYSTEM_AGENTE_PILAR_PROMPT = `Eres un auditor experto en gestión de riesgos ISO 31000:2018 aplicado a instituciones prestadoras de salud (IPS) en Colombia, trabajando bajo la Resolución 3100/2019 y su reemplazo, la Resolución 1732/2026.
+
+Se te da una lista de NO CONFORMIDADES detectadas en una auditoría de habilitación de un servicio de salud (criterios donde la respuesta fue "no cumple" o "cumple parcialmente"). Tu tarea es agruparlas en RIESGOS ISO 31000 significativos — no generes un riesgo por cada no conformidad individual, agrupa las que compartan una causa raíz o área común.
+
+Para cada riesgo que identifiques, evalúa:
+- categoria: EXACTAMENTE una de estas 8 opciones: "Asistencial", "Normativo", "Talento Humano", "Dotación", "Medicamentos", "Infraestructura", "Tecnología", "Financiero".
+- probabilidad: entero 1 a 5 (1=Rara <5%, 2=Improbable 5-20%, 3=Posible 20-50%, 4=Probable 50-80%, 5=Casi certeza >80%).
+- impacto: entero 1 a 5 (1=Insignificante, 2=Menor, 3=Moderado, 4=Mayor, 5=Catastrófico).
+- tratamiento: EXACTAMENTE una de: "Evitar", "Reducir", "Transferir", "Aceptar".
+
+Reglas estrictas:
+- Responde EXCLUSIVAMENTE con un objeto JSON válido, sin texto adicional antes ni después, sin bloques de markdown (sin \`\`\`).
+- Genera como máximo 6 riesgos — prioriza los de mayor probabilidad × impacto.
+- No inventes hallazgos que no estén respaldados por las no conformidades dadas.
+- Sé conservador con probabilidad e impacto — solo asigna 4 o 5 cuando la evidencia lo justifique claramente.
+
+Formato exacto de respuesta:
+{"riesgos":[{"nombre":"<nombre corto y claro del riesgo>","categoria":"<una de las 8 categorías exactas>","probabilidad":<1-5>,"impacto":<1-5>,"tratamiento":"<Evitar|Reducir|Transferir|Aceptar>","descripcion":"<1-2 frases explicando el riesgo y su origen en la auditoría>"}]}`;
 
 // ── Checklist público Res. 1732/2026 — mismo contenido que
 // web/app/dashboard/gap-1732/page.tsx (ITEMS_GAP). Se mantiene una copia
@@ -1221,6 +1251,23 @@ function checkAnalisisRateLimit(uid) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para el Agente Pilar — por uid. Se dispara automáticamente
+// al completar una auditoría (una vez por auditoría), más algún reintento
+// manual ocasional — ventana generosa pero acotada, mismo criterio que el
+// análisis de incidentes (consume una inferencia de Workers AI real).
+const _agenteRateMap = new Map();
+function checkAgenteRateLimit(uid) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 6;
+  const key = uid || 'unknown';
+  const entry = _agenteRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _agenteRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
 // SHA-256 de un string → hex. Las llaves API nunca se guardan en texto
 // plano en Firestore, solo su hash — igual que un password.
 async function sha256Hex(text) {
@@ -1667,6 +1714,11 @@ export default {
     // ── POST /api/analizar-incidente — causa raíz Protocolo de Londres (IA) ──
     if (request.method === 'POST' && url.pathname === '/api/analizar-incidente') {
       return handleAnalizarIncidente(request, env, cors);
+    }
+
+    // ── POST /api/agente-pilar — riesgos ISO 31000 desde auditoría (IA) ──────
+    if (request.method === 'POST' && url.pathname === '/api/agente-pilar') {
+      return handleAgentePilar(request, env, cors);
     }
 
     if (request.method !== 'POST') {
@@ -2175,6 +2227,99 @@ Acción inmediata tomada: ${accion && accion.trim() ? accion.trim() : 'Ninguna r
 
   if (parsed) {
     return new Response(JSON.stringify({ ok: true, estructurado: true, ...parsed }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  return new Response(JSON.stringify({ ok: true, estructurado: false, textoCrudo: text }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+
+// ── POST /api/agente-pilar — riesgos ISO 31000 desde no-conformidades de auditoría (IA) ──
+async function handleAgentePilar(request, env, cors) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  const user = await verifyFirebaseToken(idToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!checkAgenteRateLimit(user.uid)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Máximo 6 análisis por minuto.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { segmento, segmentoLabel, nonConformities } = body || {};
+  if (!Array.isArray(nonConformities) || nonConformities.length === 0) {
+    return new Response(JSON.stringify({ error: 'nonConformities requerido (arreglo no vacío)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  if (!env.AI) {
+    return new Response(JSON.stringify({ error: 'Servicio no configurado (binding AI ausente)' }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // Se acota la lista para mantener el prompt dentro de un tamaño razonable.
+  const ncsAcotadas = nonConformities.slice(0, 40);
+  const listaNC = ncsAcotadas
+    .map((nc, i) => {
+      const area = (nc && typeof nc.areaName === 'string' && nc.areaName.trim()) || 'Área no especificada';
+      const pregunta = (nc && typeof nc.question === 'string' && nc.question.trim()) || '';
+      const respuesta = (nc && typeof nc.answer === 'string' && nc.answer.trim()) || '';
+      return `${i + 1}. [${area}] ${pregunta}${respuesta ? ` — Respuesta: ${respuesta}` : ''}`;
+    })
+    .join('\n');
+
+  const userPrompt = `Segmento auditado: ${segmentoLabel || segmento || 'No especificado'}
+No conformidades encontradas (${ncsAcotadas.length}):
+${listaNC}`;
+
+  const messages = [
+    { role: 'system', content: SYSTEM_AGENTE_PILAR_PROMPT },
+    { role: 'user', content: userPrompt },
+  ];
+
+  let text;
+  try {
+    const aiRes = await env.AI.run(CF_AI_MODEL, { messages, temperature: 0.2, max_tokens: 900 });
+    text = aiRes?.response ?? '';
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /api/agente-pilar', extra: { step: 'ai' } }, env);
+    return new Response(JSON.stringify({ error: 'El servicio de IA no está disponible en este momento' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // El modelo puede envolver el JSON en ```json ... ``` a pesar de la
+  // instrucción — se limpia antes de parsear. Si aun así falla, se
+  // devuelve el texto crudo para que el usuario no pierda la respuesta.
+  const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  let riesgos = null;
+  try {
+    const candidate = JSON.parse(cleaned);
+    if (Array.isArray(candidate.riesgos)) {
+      riesgos = candidate.riesgos
+        .filter(r => r && typeof r.nombre === 'string' && r.nombre.trim())
+        .slice(0, 6)
+        .map(r => {
+          const categoria = AGENTE_PILAR_CATEGORIAS.includes(r.categoria) ? r.categoria : 'Normativo';
+          const tratamiento = AGENTE_PILAR_TRATAMIENTOS.includes(r.tratamiento) ? r.tratamiento : 'Reducir';
+          const clamp15 = (v) => {
+            const n = Math.round(Number(v));
+            return Number.isFinite(n) ? Math.min(5, Math.max(1, n)) : 3;
+          };
+          return {
+            nombre: r.nombre.trim().slice(0, 200),
+            categoria,
+            probabilidad: clamp15(r.probabilidad),
+            impacto: clamp15(r.impacto),
+            tratamiento,
+            descripcion: typeof r.descripcion === 'string' ? r.descripcion.trim().slice(0, 600) : '',
+          };
+        });
+    }
+  } catch { /* se maneja abajo con el fallback de texto crudo */ }
+
+  if (riesgos && riesgos.length > 0) {
+    return new Response(JSON.stringify({ ok: true, estructurado: true, riesgos }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
   return new Response(JSON.stringify({ ok: true, estructurado: false, textoCrudo: text }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 }

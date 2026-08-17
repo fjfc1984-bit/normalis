@@ -14,7 +14,9 @@ import {
   scoreLabel,
 } from '@/lib/auditScore';
 import { useAudit } from '@/lib/useAudit';
+import type { NonConformityItem } from '@/lib/useAudit';
 import { askWorker } from '@/lib/worker';
+import { ejecutarAgentePilar } from '@/lib/agentePilar';
 import { auth, db } from '@/lib/firebase';
 import {
   collection, addDoc, doc, getDoc,
@@ -171,8 +173,31 @@ export default function AuditoriaSegmentoPage({
     // Auto-crear CAPAs agrupadas por área (una CAPA por área con no conformidades)
     void autoCrearCapasDeAuditoria(ncs);
 
+    // Agente Pilar (IA): genera riesgos ISO 31000 y CAPAs a partir de las no
+    // conformidades. Se dispara solo aquí — justo al completar la auditoría —
+    // para no reprocesar ni duplicar riesgos en cada revisita a la página.
+    // Para auditorías ya completadas que quedaron "pendiente"/"error", el
+    // reintento se hace desde el botón manual en Cumplimiento Integrado.
+    void dispararAgentePilar(nonConformities);
+
     setView('results');
     handleAiAnalysis();
+  };
+
+  const dispararAgentePilar = async (ncs: NonConformityItem[]) => {
+    // Nota: se llama incluso con ncs.length === 0 — ejecutarAgentePilar
+    // maneja ese caso marcando la auditoría como 'completado' de inmediato
+    // (sin llamar a la IA), evitando que quede en 'pendiente' para siempre.
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      const idToken = await user.getIdToken();
+      const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
+      const nit = (userSnap.data()?.nit as string) ?? '';
+      await ejecutarAgentePilar(user.uid, idToken, nit, segmento, meta?.label ?? segmento, ncs);
+    } catch (e) {
+      console.error('[AgentePilar] Error al disparar el motor:', e);
+    }
   };
 
   const autoCrearCapasDeAuditoria = async (

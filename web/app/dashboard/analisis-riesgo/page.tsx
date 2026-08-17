@@ -447,6 +447,12 @@ function RiesgoCard({
                 📥 Desde auditoría
               </span>
             )}
+            {item.origen === 'agente_pilar' && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 font-bold"
+                    title="Generado automáticamente por IA a partir de una auditoría — requiere revisión humana">
+                🤖 Agente Pilar (IA) — revisar
+              </span>
+            )}
           </div>
           <p className="text-sm font-semibold text-gray-800">{item.nombre}</p>
           {item.descripcion && (

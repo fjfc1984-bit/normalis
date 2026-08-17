@@ -449,7 +449,7 @@ function Modulos() {
   const { ref, inView } = useInView(.1);
   const features = [
     { icon: '🔍', title: 'Auditoría Interna',          tag: 'Res. 1732/2026',        desc: '780 criterios en 22 modalidades. Score al instante + plan de mejora automático.', g: 'linear-gradient(135deg,#00897B,#00BCD4)' },
-    { icon: '⚡', title: 'Agente de Cumplimiento IA',  tag: 'Gemini · Tiempo real',  desc: 'Analiza no conformidades con IA y genera planes de acción priorizados.', g: 'linear-gradient(135deg,#5b21b6,#8b5cf6)' },
+    { icon: '⚡', title: 'Agente de Cumplimiento IA',  tag: 'IA · Tiempo real',      desc: 'Analiza no conformidades con IA y genera planes de acción priorizados.', g: 'linear-gradient(135deg,#5b21b6,#8b5cf6)' },
     { icon: '🆕', title: 'Análisis Brecha 1732',        tag: 'Nueva norma',           desc: 'Mapa exacto de qué exige la nueva resolución vs. dónde está su IPS hoy.', g: 'linear-gradient(135deg,#0284c7,#06b6d4)' },
     { icon: '📈', title: 'PAMEC Digital',               tag: 'Ciclos PHVA',           desc: 'Autoevaluación, planes de mejoramiento y seguimiento con dashboard de ciclos.', g: 'linear-gradient(135deg,#7c3aed,#a855f7)' },
     { icon: '✓',  title: 'CAPAs',                       tag: 'Mejora continua',       desc: 'Acciones correctivas y preventivas con responsables, fechas y evidencias.', g: 'linear-gradient(135deg,#065f46,#34d399)' },
@@ -466,7 +466,7 @@ function Modulos() {
     { icon: '✍️', title: 'Firma y Versiones',           tag: 'Control documental',    desc: 'Firma digital, control de versiones y quién aprobó cada cambio.', g: 'linear-gradient(135deg,#3730a3,#818cf8)' },
     { icon: '📝', title: 'Consentimientos',             tag: 'Habeas Data',           desc: 'Plantillas por especialidad, historial firmado y trazabilidad completa.', g: 'linear-gradient(135deg,#4c1d95,#a78bfa)' },
     { icon: '🔄', title: 'ISO 7101 / JCI Crosswalk',   tag: 'Crosswalk normativo',   desc: 'Cruza los 7 estándares colombianos con ISO 7101:2023 y JCI 8ª edición.', g: 'linear-gradient(135deg,#1e3a8a,#38bdf8)' },
-    { icon: '🤖', title: 'Asistente IA Normativo',      tag: 'Gemini + RAG',          desc: 'Chat con la norma en lenguaje natural. Respuestas citadas 24/7.', g: 'linear-gradient(135deg,#831843,#f472b6)' },
+    { icon: '🤖', title: 'Asistente IA Normativo',      tag: 'IA + RAG',              desc: 'Chat con la norma en lenguaje natural. Respuestas citadas 24/7.', g: 'linear-gradient(135deg,#831843,#f472b6)' },
     { icon: '💊', title: 'PROA',                           tag: 'Plan Profesional+',      desc: 'Res. 2471/2022 · Plan RAM 2025–2030. Checklist PROA, consumo DDD/100 camas-día, registro de intervenciones e informe mensual para el comité de infecciones.', g: 'linear-gradient(135deg,#064e3b,#10b981)' },
   ];
   return (

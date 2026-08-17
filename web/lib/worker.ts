@@ -114,6 +114,50 @@ export async function analizarIncidente(
   return res.json() as Promise<AnalisisIncidenteResponse>;
 }
 
+// ── Agente Pilar — riesgos ISO 31000 desde no-conformidades de auditoría ────
+export interface AgentePilarNC {
+  areaName: string;
+  question: string;
+  answer:   string;
+}
+
+export interface AgentePilarRiesgo {
+  nombre:       string;
+  categoria:    string;
+  probabilidad: number;
+  impacto:      number;
+  tratamiento:  string;
+  descripcion:  string;
+}
+
+export interface AgentePilarResponse {
+  ok:           true;
+  estructurado: boolean;
+  riesgos?:     AgentePilarRiesgo[];
+  textoCrudo?:  string;
+}
+
+/**
+ * Pide al Worker (Cloudflare Workers AI) que analice las no-conformidades de
+ * una auditoría completada y las agrupe en riesgos ISO 31000. Requiere el ID
+ * token de Firebase del usuario — función interna del dashboard.
+ */
+export async function analizarAuditoriaConAgente(
+  payload: { segmento: string; segmentoLabel: string; nonConformities: AgentePilarNC[] },
+  idToken: string,
+): Promise<AgentePilarResponse> {
+  const res = await fetch(`${WORKER_URL}/api/agente-pilar`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Error ${res.status}`);
+  }
+  return res.json() as Promise<AgentePilarResponse>;
+}
+
 export async function askWorker(
   question: string,
   context:  WorkerContext,
