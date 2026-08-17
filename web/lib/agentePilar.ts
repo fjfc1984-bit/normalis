@@ -18,7 +18,7 @@
 // auditoría recién completada, enviadas tal cual al modelo.
 
 import {
-  collection, addDoc, doc, getDoc, setDoc, updateDoc, query, where,
+  collection, addDoc, doc, getDocs, setDoc, updateDoc, query, where,
   getCountFromServer, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -62,17 +62,39 @@ export async function ejecutarAgentePilar(
       console.error('[AgentePilar] No se pudo actualizar el estado de la auditoría:', err),
     );
 
-  // Guarda de idempotencia: si esta auditoría ya fue procesada exitosamente,
-  // no se reprocesa. Sin esto, revisitar una auditoría ya completada y
-  // volver a recorrer el checklist (los mismos datos, precargados) hasta el
-  // final dispara handleSave() de nuevo y duplicaría riesgos y CAPAs cada
-  // vez. El botón de reintento manual en Cumplimiento Integrado solo se
-  // muestra para auditorías en 'pendiente'/'error', así que nunca llama
-  // esta función sobre una ya 'completada' — el chequeo es seguro en ambos
-  // casos de uso (disparo automático y reintento manual).
+  // Guarda de idempotencia: si esta auditoría ya generó riesgos vía Agente
+  // Pilar, no se reprocesa. No se puede confiar en agenteStatus para esto:
+  // markComplete() lo resetea a 'pendiente' en CADA guardado, incluso si el
+  // usuario simplemente revisita una auditoría ya completada y vuelve a
+  // recorrer el checklist (con las mismas respuestas precargadas) hasta el
+  // final — eso dispara handleSave() de nuevo. Por eso la verdad de
+  // referencia es la existencia real de riesgos con origen 'agente_pilar'
+  // para este segmento, no el campo de estado (que es solo para mostrar
+  // progreso en la UI). El botón de reintento manual en Cumplimiento
+  // Integrado solo aparece para auditorías sin ese origen registrado, así
+  // que esta guarda nunca bloquea un reintento legítimo.
   try {
-    const existing = await getDoc(auditRef);
-    if (existing.exists() && existing.data()?.agenteStatus === 'completado') {
+    const previos = await getDocs(
+      query(collection(db, 'riesgos', uid, 'items'), where('segmento', '==', segmento)),
+    );
+    const riesgosPrevios = previos.docs.filter(d => d.data()?.origen === 'agente_pilar');
+    if (riesgosPrevios.length > 0) {
+      // Auto-reparación: el trabajo ya existe, pero agenteStatus puede estar
+      // desincronizado (un 'procesando' huérfano por una pestaña cerrada a
+      // mitad de camino, o un 'pendiente' reseteado por un reenvío del
+      // mismo formulario) — se corrige el estado en vez de reprocesar o de
+      // dejarlo mostrando "Procesando…" para siempre.
+      const capasPrevias = riesgosPrevios.filter(d => !!d.data()?.capaId).length;
+      await marcar({
+        agenteStatus: 'completado',
+        agenteProcessedAt: new Date().toISOString(),
+        agenteResumen: {
+          riesgosCreados: riesgosPrevios.length,
+          capasCreadadas: capasPrevias,
+          ncsProcessadas: ncs.length,
+          errores: null,
+        } as AgenteResumen,
+      });
       return;
     }
   } catch (err) {
@@ -81,7 +103,13 @@ export async function ejecutarAgentePilar(
     // dejar la auditoría atascada por un error transitorio de lectura.
   }
 
-  await marcar({ agenteStatus: 'procesando' });
+  // agenteProcesandoDesde permite detectar en la UI un procesamiento
+  // huérfano — p. ej. si el usuario cierra la pestaña o navega fuera justo
+  // después de completar la auditoría, esta llamada (fire-and-forget) se
+  // interrumpe a mitad de camino y el estado queda en 'procesando' para
+  // siempre, sin timestamp no habría forma de distinguir "procesando de
+  // verdad ahora mismo" de "atascado hace 20 minutos".
+  await marcar({ agenteStatus: 'procesando', agenteProcesandoDesde: new Date().toISOString() });
 
   // Sin no conformidades no hay nada que analizar — se marca como
   // completado de inmediato en vez de dejarlo "procesando" para siempre.

@@ -44,6 +44,7 @@ interface SavedAudit {
     errores:         string[] | null;
   };
   agenteProcessedAt?: string;
+  agenteProcesandoDesde?: string;
 }
 
 interface AuditNonConf extends NonConformity {
@@ -200,16 +201,28 @@ export default function CumplimientoPage() {
       collection(db, 'auditorias'),
       where('uid', '==', user.uid),
     );
+    // Una llamada real al Agente Pilar toma ~10-20s. Si sigue en
+    // 'procesando' mucho más que eso, casi seguro es una llamada huérfana
+    // (el usuario cerró la pestaña o navegó fuera justo después de
+    // completar la auditoría, abortando el fetch a mitad de camino) — se
+    // trata como atascada y se ofrece reintento en vez de dejarla mostrando
+    // "Procesando…" para siempre.
+    const UMBRAL_ATASCADA_MS = 3 * 60 * 1000;
+    const estaAtascada = (a: SavedAudit) =>
+      a.agenteStatus === 'procesando' &&
+      !!a.agenteProcesandoDesde &&
+      Date.now() - new Date(a.agenteProcesandoDesde).getTime() > UMBRAL_ATASCADA_MS;
+
     return onSnapshot(q, snap => {
       const all = snap.docs.map(d => d.data() as SavedAudit);
       const procesadas = all.filter(a => a.agenteStatus === 'completado' || a.agenteStatus === 'error');
-      const procesando = all.some(a => a.agenteStatus === 'procesando');
+      const procesando = all.some(a => a.agenteStatus === 'procesando' && !estaAtascada(a));
       // Auditorías completadas cuyo Agente Pilar nunca corrió ('pendiente' —
-      // p. ej. auditorías anteriores a este backend, o una pestaña cerrada
-      // antes de que terminara) o que fallaron ('error'): se ofrece un
-      // reintento manual en vez de dejarlas atascadas para siempre.
+      // p. ej. auditorías anteriores a este backend), que fallaron
+      // ('error'), o que quedaron atascadas en 'procesando': se ofrece un
+      // reintento manual en vez de dejarlas así para siempre.
       const pendientes = all.filter(a =>
-        !!a.completedAt && (a.agenteStatus === 'pendiente' || a.agenteStatus === 'error'),
+        !!a.completedAt && (a.agenteStatus === 'pendiente' || a.agenteStatus === 'error' || estaAtascada(a)),
       );
       setAgenteAudits(procesadas.sort((a, b) =>
         (b.agenteProcessedAt ?? '').localeCompare(a.agenteProcessedAt ?? '')
