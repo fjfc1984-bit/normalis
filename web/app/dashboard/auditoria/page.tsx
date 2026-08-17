@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { SEGMENT_META, areasDB } from '@/data/auditData';
+import { buildFlatQuestions, getNonConformities } from '@/lib/auditScore';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -14,7 +15,7 @@ import {
 interface AuditStatus {
   completedAt: string | null;
   score:       number;
-  nonConformities: { qKey: string; areaName: string; question: string; answer: string }[];
+  answers:     Record<string, string>;
 }
 type StatusMap  = Record<string, AuditStatus>;
 type CapaSegMap = Record<string, number>;   // segmento → cantidad de CAPAs
@@ -51,9 +52,9 @@ export default function AuditoriaPage() {
         if (r.status === 'fulfilled' && r.value.exists()) {
           const d = r.value.data()!;
           newStatus[seg] = {
-            completedAt:     d.completedAt     ?? null,
-            score:           d.score           ?? 0,
-            nonConformities: d.nonConformities ?? [],
+            completedAt: d.completedAt ?? null,
+            score:       d.score       ?? 0,
+            answers:     d.answers     ?? {},
           };
           if (d.completedAt) completedSegs.push(seg);
         }
@@ -81,7 +82,12 @@ export default function AuditoriaPage() {
       const newCapaMap: CapaSegMap = {};
 
       for (const seg of completedSegs) {
-        const ncs = newStatus[seg]?.nonConformities ?? [];
+        // Recalcular NCs desde los answers guardados (cubre auditorías antiguas
+        // que no tenían el campo nonConformities)
+        const st = newStatus[seg];
+        if (!st) continue;
+        const flatQ = buildFlatQuestions(areasDB[seg] ?? []);
+        const ncs = getNonConformities(flatQ, st.answers);
         if (!ncs.length) continue;
 
         // ¿Ya tiene CAPAs para este segmento?
@@ -101,7 +107,7 @@ export default function AuditoriaPage() {
         let creadas = 0;
 
         for (const [areaName, items] of Object.entries(porArea)) {
-          const preguntas = items.map(i => `• ${i.question}`).join('\n');
+          const preguntas = items.map(i => `• ${i.question ?? i.qKey}`).join('\n');
           try {
             await addDoc(collection(db, 'capas'), {
               uid:              user.uid,
