@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { SEGMENT_META, areasDB } from '@/data/auditData';
 import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
   collection, addDoc, doc, getDoc, getDocs,
   query, where, serverTimestamp,
@@ -144,7 +145,22 @@ export default function AuditoriaPage() {
     }
   }, []);
 
-  useEffect(() => { void cargarYSincronizar(); }, [cargarYSincronizar]);
+  // Esperar a que Firebase Auth inicialice antes de cargar datos
+  useEffect(() => {
+    // Si ya hay usuario, ejecutar de inmediato
+    if (auth.currentUser) {
+      void cargarYSincronizar();
+      return;
+    }
+    // Si no, esperar a onAuthStateChanged (primera carga / F5)
+    const unsub = onAuthStateChanged(auth, user => {
+      if (user) {
+        unsub();
+        void cargarYSincronizar();
+      }
+    });
+    return unsub;
+  }, [cargarYSincronizar]);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
