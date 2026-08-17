@@ -19,10 +19,12 @@ import {
 import { SectionHeader, LoadingSpinner, Toast, useToast } from '@/components/ui';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import { inferirMigracion1732 } from '@/lib/migracion1732';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 type Estado = 'cumple' | 'parcial' | 'no_cumple' | 'no_aplica';
+type Origen = 'auto' | 'manual';
 
 interface ItemGap {
   id:          string;
@@ -293,6 +295,13 @@ export default function Gap1732Page() {
   const [capaIds,       setCapaIds]       = useState<Record<string,string>>({});
   const [creatingCapa,  setCreatingCapa]  = useState<string | null>(null);
   const [userNit,       setUserNit]       = useState<string>('');
+  // Migración automática 3100 → 1732: qué ítems fueron auto-sugeridos desde
+  // auditorías reales de la IPS (vs. evaluados manualmente por el usuario),
+  // y por qué — para trazabilidad y para no pisar una evaluación manual.
+  const [origen,         setOrigen]         = useState<Record<string, Origen>>({});
+  const [motivos,        setMotivos]        = useState<Record<string, string>>({});
+  const [migrando,       setMigrando]       = useState(false);
+  const [migracionHecha, setMigracionHecha] = useState(false);
 
   // ── Cargar respuestas guardadas ────────────────────────────────────────────
   useEffect(() => {
@@ -306,8 +315,12 @@ export default function Gap1732Page() {
     getDoc(ref)
       .then(snap => {
         if (snap.exists()) {
-          setResp(snap.data()?.respuestas ?? {});
-          setCapaIds(snap.data()?.capaIds ?? {});
+          const data = snap.data();
+          setResp(data?.respuestas ?? {});
+          setCapaIds(data?.capaIds ?? {});
+          setOrigen(data?.origen1732 ?? {});
+          setMotivos(data?.motivos1732 ?? {});
+          setMigracionHecha(!!data?.migracionHecha);
         }
       })
       .catch(() => {})
@@ -315,13 +328,15 @@ export default function Gap1732Page() {
   }, [user]);
 
   // ── Guardar respuestas ─────────────────────────────────────────────────────
-  const guardar = useCallback(async (newResp: RespGap) => {
+  const guardar = useCallback(async (newResp: RespGap, newOrigen?: Record<string, Origen>) => {
     if (!user) return;
     setSaving(true);
     try {
       await setDoc(doc(db, 'gap1732', user.uid), {
         uid: user.uid,
         respuestas: newResp,
+        // Firestore rechaza `undefined` explícito — solo se incluye si viene.
+        ...(newOrigen ? { origen1732: newOrigen } : {}),
         updatedAt: new Date().toISOString(),
       }, { merge: true });
     } catch (err: unknown) {
@@ -381,14 +396,166 @@ export default function Gap1732Page() {
   };
 
   const setEstado = (id: string, estado: Estado) => {
-    const newResp = { ...resp, [id]: estado };
+    const newResp   = { ...resp, [id]: estado };
+    // Un cambio manual del usuario siempre prevalece sobre una sugerencia
+    // automática — se marca como 'manual' para que la migración no la pise.
+    const newOrigen = { ...origen, [id]: 'manual' as Origen };
     setResp(newResp);
-    guardar(newResp);
+    setOrigen(newOrigen);
+    guardar(newResp, newOrigen);
     // Auto-crear CAPA para ítems no conformes o parciales
     if (estado === 'no_cumple' || estado === 'parcial') {
       const item = ITEMS_GAP.find(i => i.id === id);
       if (item) void autoCrearCapa(item);
     }
+  };
+
+  // ── Migración automática: cruza auditorías reales de la IPS contra el
+  // checklist 1732 y pre-sugiere estado en los ítems donde hay evidencia
+  // verificable. Nunca sobreescribe una evaluación que el usuario ya hizo
+  // manualmente. Puede ejecutarse varias veces (p. ej. tras completar una
+  // nueva auditoría) sin perder evaluaciones manuales previas.
+  const ejecutarMigracion = async () => {
+    if (!user) return;
+    setMigrando(true);
+    try {
+      const resultado = await inferirMigracion1732(user.uid);
+      const newResp    = { ...resp };
+      const newOrigen  = { ...origen };
+      const newMotivos = { ...motivos };
+      let actualizados = 0;
+      const pendientesCapa: ItemGap[] = [];
+
+      for (const [id, sug] of Object.entries(resultado.sugerencias)) {
+        if (origen[id] === 'manual') continue;
+        if (resp[id] === sug.estado && origen[id] === 'auto') continue;
+        newResp[id]    = sug.estado;
+        newOrigen[id]  = 'auto';
+        newMotivos[id] = sug.motivo;
+        actualizados++;
+        if (sug.estado === 'no_cumple' || sug.estado === 'parcial') {
+          const item = ITEMS_GAP.find(i => i.id === id);
+          if (item && !capaIds[item.id]) pendientesCapa.push(item);
+        }
+      }
+
+      setResp(newResp);
+      setOrigen(newOrigen);
+      setMotivos(newMotivos);
+      setMigracionHecha(true);
+
+      await setDoc(doc(db, 'gap1732', user.uid), {
+        uid: user.uid,
+        respuestas: newResp,
+        origen1732: newOrigen,
+        motivos1732: newMotivos,
+        migracionHecha: true,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      // Crea las CAPAs de la corrida acumulando localmente el mapa de
+      // capaIds (evita condiciones de carrera si varios ítems de la misma
+      // migración requieren CAPA — el estado de React no se refresca entre
+      // llamadas dentro del mismo ciclo síncrono).
+      if (pendientesCapa.length > 0) {
+        let capaIdsAcc = { ...capaIds };
+        const countQ = userNit
+          ? query(collection(db, 'capas'), where('nit', '==', userNit))
+          : query(collection(db, 'capas'), where('uid', '==', user.uid));
+        const countSnap = await getCountFromServer(countQ);
+        let nextNum = (countSnap.data().count ?? 0) + 1;
+
+        for (const item of pendientesCapa) {
+          const capaRef = await addDoc(collection(db, 'capas'), {
+            uid:                user.uid,
+            nit:                userNit ?? '',
+            numero:             `CAPA-${String(nextNum).padStart(3, '0')}`,
+            descripcion:        `[Brecha 1732/2026 · Migración automática] ${item.titulo}`,
+            causaRaiz:          `Brecha identificada automáticamente en la migración Res. 3100 → 1732 — ${item.categoria}`,
+            accionCorrectiva:   item.guia,
+            responsable:        '',
+            area:               item.categoria,
+            fechaLimite:        parsePlazo(item.plazo),
+            origen:             'brecha_1732',
+            evidencia:          '',
+            estado:             'abierta',
+            urgencia:           item.urgencia,
+            refGapId:           item.id,
+            fechaCreacion:      serverTimestamp(),
+            fechaActualizacion: null,
+            fechaInicio:        null,
+            fechaCierre:        null,
+          });
+          capaIdsAcc = { ...capaIdsAcc, [item.id]: capaRef.id };
+          nextNum++;
+        }
+        setCapaIds(capaIdsAcc);
+        await setDoc(doc(db, 'gap1732', user.uid), { capaIds: capaIdsAcc }, { merge: true });
+      }
+
+      if (actualizados > 0) {
+        show(`🔄 Migración automática: ${actualizados} ítem(s) actualizado(s) desde ${resultado.auditoriasEncontradas} auditoría(s) real(es) en NormaLis.`, 'success');
+      } else if (resultado.auditoriasEncontradas > 0) {
+        show('Ya están al día — no hay cambios nuevos desde tus auditorías.', 'info');
+      } else {
+        show('Aún no tienes auditorías completadas en NormaLis para migrar automáticamente. Complétalas en el módulo de Auditoría.', 'info');
+      }
+    } catch (err: unknown) {
+      console.error('[Gap1732] ejecutarMigracion:', err);
+      show('Error al ejecutar la migración automática.', 'error');
+    } finally {
+      setMigrando(false);
+    }
+  };
+
+  // ── Exportar informe de migración (evidencia formal) ────────────────────
+  const exportarInforme = () => {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const filas = ITEMS_GAP.map(item => {
+      const estado = resp[item.id];
+      const cfg = estado ? ESTADO_CFG[estado] : null;
+      const src = origen[item.id] === 'auto' ? '🤖 Auto (auditoría real)' : origen[item.id] === 'manual' ? '✋ Manual' : '—';
+      return `<tr>
+        <td>${item.categoria}</td>
+        <td>${item.titulo}</td>
+        <td>${cfg ? cfg.label : 'Sin evaluar'}</td>
+        <td>${src}</td>
+        <td>${item.plazo}</td>
+      </tr>`;
+    }).join('');
+    w.document.write(`<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<title>Informe de Migración Res. 3100 a Res. 1732</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 30px; font-size: 12px; }
+  h1 { color: #0f766e; font-size: 18px; margin-bottom: 4px; }
+  .meta { color: #64748b; margin-bottom: 20px; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #0f766e; color: #fff; padding: 7px 9px; text-align: left; font-size: 10px; }
+  td { padding: 6px 9px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .disclaimer { margin-top: 18px; padding: 10px; background: #fffbeb; border: 1px solid #fde68a;
+                border-radius: 6px; font-size: 10px; color: #92400e; }
+  @media print { body { padding: 15px; } }
+</style>
+</head><body>
+<h1>Informe de Migración — Res. 3100/2019 → Res. 1732/2026</h1>
+<p class="meta">Generado el ${new Date().toLocaleDateString('es-CO', { dateStyle: 'long' })} · Preparación: ${score.pct}% (${labelPct})</p>
+<table>
+  <thead><tr><th>Categoría</th><th>Requisito</th><th>Estado</th><th>Origen</th><th>Plazo</th></tr></thead>
+  <tbody>${filas}</tbody>
+</table>
+<p class="disclaimer">
+  Este informe es una herramienta de autogestión de NormaLis y no constituye una certificación
+  oficial de cumplimiento ante la Secretaría de Salud ni el Ministerio de Salud y Protección Social.
+  Los ítems marcados como "🤖 Auto" fueron sugeridos automáticamente a partir de auditorías internas
+  registradas en la plataforma y deben ser validados por el responsable de calidad de la IPS antes de
+  presentarse como evidencia formal ante la autoridad competente.
+</p>
+</body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 400);
   };
 
   const toggleExpandido = (id: string) =>
@@ -416,6 +583,12 @@ export default function Gap1732Page() {
         actions={
           <div className="flex items-center gap-2">
             {saving && <span className="text-xs text-gray-400 animate-pulse">Guardando...</span>}
+            <button
+              onClick={exportarInforme}
+              className="text-xs px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
+            >
+              🖨️ Informe
+            </button>
             <Link
               href="/dashboard/cumplimiento"
               className="text-xs px-3 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
@@ -439,6 +612,31 @@ export default function Gap1732Page() {
             para adaptar tu IPS. Este análisis te muestra exactamente qué debes implementar y en qué orden.
           </p>
         </div>
+      </div>
+
+      {/* ── Migración automática ────────────────────────────────────────────── */}
+      <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between"
+           style={{ background: 'linear-gradient(135deg,#faf5ff,#eff6ff)', border: '1px solid #ddd6fe' }}>
+        <div className="flex gap-3 items-start">
+          <div className="text-2xl flex-shrink-0">🔄</div>
+          <div>
+            <p className="text-sm font-bold text-violet-900">Migración automática desde tus auditorías</p>
+            <p className="text-xs text-violet-700 mt-0.5 max-w-xl">
+              Cruza las auditorías de habilitación que ya completaste en NormaLis contra este checklist y
+              pre-sugiere el estado de los ítems donde hay evidencia real verificable. Nunca sobreescribe
+              una evaluación que ya hiciste manualmente, y solo marca lo que puede sustentar con datos
+              reales de tu IPS — el resto queda para tu evaluación directa.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={ejecutarMigracion}
+          disabled={migrando}
+          className="text-xs px-4 py-2.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700
+                     transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+        >
+          {migrando ? 'Migrando…' : migracionHecha ? '🔄 Volver a migrar' : '🔄 Migrar automáticamente'}
+        </button>
       </div>
 
       {/* ── Score de preparación ────────────────────────────────────────────── */}
@@ -529,6 +727,13 @@ export default function Gap1732Page() {
                               style={{ background: urgCfg.bg, color: urgCfg.text }}>
                           {urgCfg.label}
                         </span>
+                        {origen[item.id] === 'auto' && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                                style={{ background: '#f5f3ff', color: '#7c3aed', border: '1px solid #ddd6fe' }}
+                                title="Sugerido automáticamente desde tus auditorías reales en NormaLis">
+                            🤖 Auto-detectado
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.descripcion}</p>
 
@@ -538,6 +743,12 @@ export default function Gap1732Page() {
                           <p className="font-bold mb-1">📋 ¿Qué hacer?</p>
                           <p>{item.guia}</p>
                           <p className="mt-2 font-bold">📅 Plazo: <span className="font-normal">{item.plazo}</span></p>
+                          {origen[item.id] === 'auto' && motivos[item.id] && (
+                            <p className="mt-2 pt-2 font-normal" style={{ borderTop: '1px dashed #99f6e4' }}>
+                              <span className="font-bold">🤖 ¿Por qué esta sugerencia?</span> {motivos[item.id]}
+                              {' '}Puedes corregirla manualmente si no refleja tu situación real.
+                            </p>
+                          )}
                         </div>
                       )}
 
