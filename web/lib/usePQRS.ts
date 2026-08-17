@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { logSecurityEvent } from '@/lib/securityLog';
 import type { PQRSItem, PQRSTipo, PQRSEstado } from '@/lib/pqrsTypes';
 
 // ── Estado del hook ───────────────────────────────────────────────────────────
@@ -94,6 +95,7 @@ export function usePQRS(uid: string | null) {
     const ref = doc(db, 'usuarios', uid, 'pqrs', id);
     await updateDoc(ref, { respuesta, respuestaFecha, updatedAt: Timestamp.now() });
     setItems(prev => prev.map(p => p.id === id ? { ...p, respuesta, respuestaFecha } : p));
+    logSecurityEvent('pqrs_respondida', 'pqrs', `id=${id}`);
   }, [uid]);
 
   // Cambiar estado

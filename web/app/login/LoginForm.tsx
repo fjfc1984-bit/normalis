@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth as fbAuth, db as fbDb } from '@/lib/firebase';
+import { logSecurityEvent } from '@/lib/securityLog';
 import Button from '@/components/ui/Button';
 
 type Step = 'idle' | 'loading' | 'error';
@@ -35,10 +36,12 @@ export default function LoginForm() {
 
       switch (rol) {
         case 'admin':
+          logSecurityEvent('login', 'auth');
           router.replace('/admin');
           break;
         case 'cliente':
         case 'piloto':
+          logSecurityEvent('login', 'auth');
           router.replace('/dashboard');
           break;
         case 'pendiente':

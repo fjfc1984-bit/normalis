@@ -13,6 +13,7 @@
 //   indicadores/{id}            — módulo indicadores Res. 256/2016
 //   invitaciones/{code}         — sistema de invitaciones de equipo IPS
 //   normalis_orgs/{orgId}       — sincronización secundaria por NIT
+//   bitacora_seguridad/{id}     — bitácora de seguridad inmutable (solo el Worker escribe)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -403,6 +404,23 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid || isAdmin()
       );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // bitacora_seguridad/{id} — bitácora de seguridad inmutable (ISO 27001 A.12)
+    // Escrita EXCLUSIVAMENTE por el Worker (POST /audit), autenticado como
+    // cron@normalis.co (isAdmin). Ningún usuario, ni siquiera admin, puede
+    // editar o borrar una entrada una vez creada — eso es lo que la hace
+    // confiable como evidencia de auditoría.
+    // ════════════════════════════════════════════════════════════════════════
+    match /bitacora_seguridad/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAdmin();
+      allow update, delete: if false;
     }
 
     // ════════════════════════════════════════════════════════════════════════

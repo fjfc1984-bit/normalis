@@ -16,6 +16,7 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { db, firebaseConfig } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
+import { logSecurityEvent } from '@/lib/securityLog';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { Toast, useToast } from '@/components/ui/Toast';
@@ -131,11 +132,13 @@ function SolicitudesTab({ show }: { show: (m: string, t: 'success'|'error') => v
 
   async function aprobar(id: string, rol: 'cliente' | 'piloto') {
     await updateDoc(doc(db, 'usuarios', id), { rol, activo: true });
+    logSecurityEvent('admin_aprobar_usuario', 'admin', `uid=${id} rol=${rol}`);
     show(`Usuario aprobado como ${rol}`, 'success');
   }
 
   async function rechazar(id: string) {
     await updateDoc(doc(db, 'usuarios', id), { rol: 'rechazado', activo: false });
+    logSecurityEvent('admin_rechazar_usuario', 'admin', `uid=${id}`);
     show('Solicitud rechazada', 'success');
   }
 

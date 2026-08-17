@@ -147,6 +147,9 @@ export default function TerminosPage() {
         <Link href="/politica-privacidad" className="hover:text-gray-600 transition-colors mr-4">
           Política de Privacidad
         </Link>
+        <Link href="/confianza-y-seguridad" className="hover:text-gray-600 transition-colors mr-4">
+          Confianza y Seguridad
+        </Link>
         <Link href="/" className="hover:text-gray-600 transition-colors">
           normalis.co
         </Link>

@@ -44,7 +44,7 @@ export default function PoliticaPrivacidadPage() {
             ← Volver a normalis.co
           </Link>
           <h1 className="text-3xl font-bold mt-4">Política de Tratamiento de Datos Personales</h1>
-          <p className="text-primary-300 mt-2 text-sm">Versión 1.0 · Julio 2026</p>
+          <p className="text-primary-300 mt-2 text-sm">Versión 1.1 · Agosto 2026</p>
           <div className="flex flex-wrap gap-2 mt-4">
             {['Ley 1581/2012','Decreto 1377/2013','Circular SIC 002/2024','CONPES 4144/2025','AI Act EU 2024/1689','ISO/IEC 42001:2023','NIST AI RMF','ISO 31000'].map(f => (
               <span key={f} className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{f}</span>
@@ -141,8 +141,9 @@ export default function PoliticaPrivacidadPage() {
         {/* 5 */}
         <Section id="p5" num={5} title="Datos sensibles">
           <div><Tag>Ley 1581/2012 Art. 5 y 6</Tag></div>
-          <p>NormaLis <strong>no recopila intencionalmente</strong> datos sensibles (datos de pacientes, origen racial, opiniones políticas, datos biométricos, etc.). Los módulos generan información institucional de la IPS, no datos de pacientes individuales.</p>
-          <p>Si por error se ingresaran datos sensibles de pacientes, el usuario es responsable de su tratamiento conforme a la normativa de habilitación (Res. 1995/1999, Ley 23/1981).</p>
+          <p><strong>5.1 Regla general:</strong> NormaLis no recopila intencionalmente datos sensibles de los <strong>usuarios de la plataforma</strong> (origen racial, opiniones políticas, convicciones religiosas, datos biométricos, orientación sexual, afiliación sindical). Los módulos de auditoría, habilitación y cumplimiento generan información institucional de la IPS, no datos de pacientes individuales.</p>
+          <p><strong>5.2 Excepción — módulo de Consentimientos Informados:</strong> Este módulo, por su naturaleza, sí procesa datos de identificación de pacientes (nombre y cédula) y el tipo de procedimiento clínico, con el único fin de dejar constancia del consentimiento informado exigido por la Ley 23/1981 (Art. 15) y la Resolución 13437/1991. Para estos datos específicos, la IPS es la <strong>Responsable del Tratamiento</strong> frente a sus pacientes, y NormaLis actúa como <strong>Encargada del Tratamiento</strong> (Art. 3(d) Ley 1581/2012), procesándolos únicamente por instrucción de la IPS y bajo las medidas de seguridad descritas en la Sección 9. Corresponde a la IPS contar con la autorización del paciente para que NormaLis, como encargada, almacene y procese esta información.</p>
+          <p>Fuera de este módulo específico, si por error se ingresaran datos sensibles de pacientes en otros módulos, el usuario es responsable de su tratamiento conforme a la normativa de habilitación (Res. 1995/1999, Ley 23/1981).</p>
         </Section>
 
         {/* 6 */}
@@ -151,7 +152,9 @@ export default function PoliticaPrivacidadPage() {
           <p>NormaLis <strong>no vende, alquila ni cede</strong> datos personales a terceros con fines comerciales. Los datos pueden compartirse únicamente con:</p>
           <ul className="list-disc list-inside space-y-1">
             <li><strong>Google LLC (Firebase):</strong> autenticación, base de datos Firestore. Opera bajo el GDPR y Marco de Privacidad UE-EE.UU.</li>
-            <li><strong>Cloudflare, Inc.:</strong> infraestructura del Worker (proxy IA), CDN y protección DDoS.</li>
+            <li><strong>Cloudflare, Inc.:</strong> infraestructura del Worker (proxy IA, API de integraciones), CDN y protección DDoS.</li>
+            <li><strong>Vercel Inc.:</strong> hosting y despliegue de la aplicación web.</li>
+            <li><strong>Resend:</strong> envío de correos transaccionales (notificaciones, vencimientos, respuestas de PQRS). No recibe datos de pacientes.</li>
             <li><strong>Proveedor de IA:</strong> consultas del chat se envían al modelo a través de un proxy seguro. No incluyen datos identificativos del usuario.</li>
           </ul>
           <p>Toda transferencia internacional se realiza bajo garantías adecuadas conforme al artículo 26 de la Ley 1581/2012 y, en lo aplicable, el AI Act artículo 25.</p>
@@ -267,10 +270,13 @@ export default function PoliticaPrivacidadPage() {
         <Link href="/terminos" className="hover:text-gray-600 transition-colors mr-4">
           Términos y Condiciones
         </Link>
+        <Link href="/confianza-y-seguridad" className="hover:text-gray-600 transition-colors mr-4">
+          Confianza y Seguridad
+        </Link>
         <Link href="/" className="hover:text-gray-600 transition-colors">
           normalis.co
         </Link>
-        <p className="mt-2 text-xs">Política v1.0 · Julio 2026 · Ley 1581/2012 · Circular SIC 002/2024 · AI Act EU 2024/1689</p>
+        <p className="mt-2 text-xs">Política v1.1 · Agosto 2026 · Ley 1581/2012 · Circular SIC 002/2024 · AI Act EU 2024/1689</p>
       </footer>
     </div>
   );

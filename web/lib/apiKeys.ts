@@ -15,6 +15,7 @@ import {
   query, where, Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 export interface ApiKeyItem {
   id:        string;   // hash SHA-256 de la llave (nunca la llave misma)
@@ -83,6 +84,7 @@ export function useApiKeys(uid: string | null) {
     });
 
     setKeys(prev => [{ id: hash, nombre: nombre.trim() || 'Sin nombre', activo: true, creadoEn }, ...prev]);
+    logSecurityEvent('llave_api_creada', 'integraciones', nombre.trim());
     return rawKey;
   }, [uid]);
 
@@ -90,18 +92,21 @@ export function useApiKeys(uid: string | null) {
     if (!uid) return;
     await updateDoc(doc(db, 'api_keys', id), { activo: false });
     setKeys(prev => prev.map(k => k.id === id ? { ...k, activo: false } : k));
+    logSecurityEvent('llave_api_revocada', 'integraciones');
   }, [uid]);
 
   const reactivar = useCallback(async (id: string): Promise<void> => {
     if (!uid) return;
     await updateDoc(doc(db, 'api_keys', id), { activo: true });
     setKeys(prev => prev.map(k => k.id === id ? { ...k, activo: true } : k));
+    logSecurityEvent('llave_api_reactivada', 'integraciones');
   }, [uid]);
 
   const eliminar = useCallback(async (id: string): Promise<void> => {
     if (!uid) return;
     await deleteDoc(doc(db, 'api_keys', id));
     setKeys(prev => prev.filter(k => k.id !== id));
+    logSecurityEvent('llave_api_eliminada', 'integraciones');
   }, [uid]);
 
   return { keys, loading, error, crear, revocar, reactivar, eliminar };

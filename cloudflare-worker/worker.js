@@ -1,5 +1,5 @@
 /**
- * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.3
+ * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.4
  *
  * Endpoints:
  *   POST /                    → proxy al chat LLM (Cloudflare Workers AI)
@@ -8,6 +8,7 @@
  *   POST /pqrs                 → envío público de PQRS (sin login)
  *   GET  /api/v1/checklist-1732 → checklist público Res. 1732/2026 (para integradores/HCE)
  *   POST /api/v1/incidentes     → reporte de incidentes desde sistemas externos (API key)
+ *   POST /audit                 → registra un evento en la bitácora de seguridad (Firebase ID token)
  *
  * Bindings requeridos:
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
@@ -30,6 +31,20 @@ const INCIDENTE_TIPOS_VALIDOS = [
   'Complicación', 'Accidente de trabajo', 'Otro',
 ];
 const INCIDENTE_SEVERIDADES_VALIDAS = ['critico', 'moderado', 'leve'];
+
+// ── Catálogo cerrado de acciones que se pueden registrar en la bitácora
+// de seguridad (usuarios/{uid} no lo controla — solo el backend). Mantener
+// esta lista es lo que evita que /audit se convierta en un log arbitrario.
+const AUDIT_ACCIONES_VALIDAS = [
+  'login',
+  'admin_aprobar_usuario',
+  'admin_rechazar_usuario',
+  'llave_api_creada',
+  'llave_api_revocada',
+  'llave_api_reactivada',
+  'llave_api_eliminada',
+  'pqrs_respondida',
+];
 
 // ── Checklist público Res. 1732/2026 — mismo contenido que
 // web/app/dashboard/gap-1732/page.tsx (ITEMS_GAP). Se mantiene una copia
@@ -1140,6 +1155,21 @@ function checkApiIncidentesRateLimit(apiKeyHash) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para /audit — por uid autenticado. Ventana generosa porque
+// es tráfico legítimo de la propia app (varias pestañas/usuarios de una IPS).
+const _auditRateMap = new Map();
+function checkAuditRateLimit(uid) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 120;
+  const key = uid || 'unknown';
+  const entry = _auditRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _auditRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
 // SHA-256 de un string → hex. Las llaves API nunca se guardan en texto
 // plano en Firestore, solo su hash — igual que un password.
 async function sha256Hex(text) {
@@ -1578,6 +1608,11 @@ export default {
       return handleApiIncidentes(request, env, cors);
     }
 
+    // ── POST /audit — bitácora de seguridad (Firebase ID token) ──────────────
+    if (request.method === 'POST' && url.pathname === '/audit') {
+      return handleAudit(request, env, cors);
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405,
@@ -1927,6 +1962,83 @@ async function handleApiIncidentes(request, env, cors) {
   } catch (e) {
     await sentryCapture(e, { endpoint: 'POST /api/v1/incidentes', extra: { step: 'create' } }, env);
     return new Response(JSON.stringify({ error: 'No se pudo registrar el incidente' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+}
+
+// ── POST /audit — bitácora de seguridad inmutable ────────────────────────────
+// Autenticado con el Firebase ID token del usuario (NO la llave API pública —
+// esto es tráfico interno de la propia app, no de sistemas externos).
+// El registro se escribe con el token de servicio (cron@normalis.co, rol
+// admin) porque firestore.rules solo permite `create` en bitacora_seguridad
+// a isAdmin() — un usuario normal no puede escribir ni editar su propio
+// historial de auditoría, lo que lo hace resistente a manipulación desde
+// el cliente. `update`/`delete` están bloqueados para todos, incluido admin.
+async function handleAudit(request, env, cors) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const user = await verifyFirebaseToken(idToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  if (!checkAuditRateLimit(user.uid)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { accion, modulo, detalle } = body || {};
+  if (!AUDIT_ACCIONES_VALIDAS.includes(accion)) {
+    return new Response(JSON.stringify({ error: `accion inválida. Valores válidos: ${AUDIT_ACCIONES_VALIDAS.join(', ')}` }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (detalle !== undefined && (typeof detalle !== 'string' || detalle.length > 500)) {
+    return new Response(JSON.stringify({ error: 'detalle debe ser texto (máx 500 caracteres)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = FIREBASE_PROJECT_ID;
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /audit', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // nit del usuario, para permitir lectura por equipo (sameNIT en las rules)
+  let nit = '';
+  try {
+    const userDoc = await firestoreGetDoc(projectId, `usuarios/${user.uid}`, token);
+    nit = userDoc?.fields?.nit?.stringValue || userDoc?.fields?.nit_ips?.stringValue || '';
+  } catch (e) {
+    // no bloquea el registro — solo afecta la lectura por equipo, no la integridad del log
+  }
+
+  const now = new Date();
+  const fields = {
+    uid:       { stringValue: user.uid },
+    email:     { stringValue: user.email || '' },
+    nit:       { stringValue: nit },
+    accion:    { stringValue: accion },
+    modulo:    { stringValue: modulo ? String(modulo).slice(0, 100) : '' },
+    detalle:   { stringValue: detalle ? detalle.trim() : '' },
+    origen:    { stringValue: 'web' },
+    ip:        { stringValue: request.headers.get('CF-Connecting-IP') || '' },
+    timestamp: { timestampValue: now.toISOString() },
+  };
+
+  try {
+    const created = await firestoreCreateDoc(projectId, 'bitacora_seguridad', fields, token);
+    const id = created.name.split('/').pop();
+    return new Response(JSON.stringify({ ok: true, id }), { status: 201, headers: { ...cors, 'Content-Type': 'application/json' } });
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /audit', extra: { step: 'create' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo registrar el evento' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 }
 

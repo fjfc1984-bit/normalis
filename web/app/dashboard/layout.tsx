@@ -66,6 +66,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/talento',         label: 'Talento',        icon: '👥' },
       { href: '/dashboard/firma',           label: 'Firma',          icon: '✍️' },
       { href: '/dashboard/consentimientos', label: 'Consentimientos', icon: '📝' },
+      { href: '/dashboard/seguridad',       label: 'Seguridad',       icon: '🔒', badge: 'NUEVO' },
     ],
   },
   {
