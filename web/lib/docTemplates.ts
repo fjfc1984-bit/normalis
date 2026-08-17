@@ -422,6 +422,304 @@ function hojaVida(cfg: IPSConfig): string {
 </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  7. MANUAL DE GESTIÓN DE MEDICAMENTOS, DISPOSITIVOS MÉDICOS E INSUMOS
+// ══════════════════════════════════════════════════════════════════════════════
+function medicamentos(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>MANUAL DE GESTIÓN DE MEDICAMENTOS, DISPOSITIVOS MÉDICOS E INSUMOS</h2>
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar Medicamentos) · Decreto 780/2016 · Res. 1478/2006')}
+
+<h2>1. OBJETIVO Y ALCANCE</h2>
+<p>Establecer los procesos de selección, adquisición, almacenamiento, conservación, distribución, dispensación y disposición final de medicamentos, dispositivos médicos, insumos y reactivos de diagnóstico en <strong>${escH(nombre)}</strong>, conforme al Estándar de Medicamentos, Dispositivos Médicos, Insumos y Otras Tecnologías en Salud del Manual de Habilitación.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Medicamentos y Dispositivos Médicos</li>
+  <li>Decreto 780 de 2016 — Sistema General de Seguridad Social en Salud (compilación normativa)</li>
+  <li>Resolución 1478 de 2006 — Control de medicamentos de control especial (Fondo Nacional de Estupefacientes)</li>
+  <li>Decreto 4725 de 2005 — Régimen de registros sanitarios de dispositivos médicos</li>
+  <li>Invima — Programas de Farmacovigilancia, Tecnovigilancia y Reactivovigilancia</li>
+</ul>
+
+<h2>3. CICLO DEL MEDICAMENTO Y DISPOSITIVO MÉDICO</h2>
+<table><tr><th>Etapa</th><th>Responsable</th><th>Punto de control</th></tr>
+<tr><td>Selección</td><td>${escH(director)}</td><td>Listado institucional según cartera de servicios</td></tr>
+<tr><td>Adquisición</td><td>Compras</td><td>Proveedor con registro sanitario INVIMA vigente</td></tr>
+<tr><td>Recepción</td><td>Auxiliar de farmacia</td><td>Verificación de lote, vencimiento y condiciones de transporte</td></tr>
+<tr><td>Almacenamiento</td><td>Auxiliar de farmacia</td><td>Condiciones de temperatura, humedad y orden alfabético/FEFO</td></tr>
+<tr><td>Conservación</td><td>Auxiliar de farmacia</td><td>Registro diario de temperatura y humedad</td></tr>
+<tr><td>Distribución/Dispensación</td><td>Personal asistencial</td><td>Verificación de los 5 correctos</td></tr>
+<tr><td>Devolución</td><td>Auxiliar de farmacia</td><td>Registro de motivo y destino</td></tr>
+<tr><td>Disposición final</td><td>Gestor RESPEL</td><td>Medicamentos vencidos o deteriorados</td></tr></table>
+
+<h2>4. MEDICAMENTOS DE CONTROL ESPECIAL</h2>
+<p>El manejo de medicamentos de control especial (estupefacientes, psicotrópicos) requiere resolución de autorización vigente del Fondo Nacional de Estupefacientes o la entidad territorial competente. Se llevará libro de control foliado con existencias, entradas, salidas y saldo, conforme a la Resolución 1478 de 2006.</p>
+
+<h2>5. CADENA DE FRÍO</h2>
+<p>Los biológicos y medicamentos termolábiles se conservan entre 2°C y 8°C, con registro de temperatura mínimo dos veces al día (mañana y tarde) mediante termómetro calibrado o datalogger. Ante ruptura de cadena de frío se activa el plan de contingencia: notificación inmediata, aislamiento del producto afectado y evaluación de viabilidad.</p>
+
+<h2>6. FARMACOVIGILANCIA, TECNOVIGILANCIA Y REACTIVOVIGILANCIA</h2>
+<p>El establecimiento reporta ante el INVIMA:</p>
+<ul>
+  <li><strong>Farmacovigilancia:</strong> sospechas de reacciones adversas a medicamentos (RAM) y problemas relacionados con medicamentos (PRM)</li>
+  <li><strong>Tecnovigilancia:</strong> eventos e incidentes adversos asociados a dispositivos médicos</li>
+  <li><strong>Reactivovigilancia:</strong> fallas de reactivos de diagnóstico in vitro</li>
+</ul>
+
+<h2>7. CARRO DE PARO Y KIT DE DERRAMES</h2>
+<p>El carro de paro se verifica diariamente por el responsable del servicio, con registro de existencias, vencimientos y sellos de seguridad. El kit para manejo de derrames de sustancias químicas o citotóxicas se ubica visiblemente, con señalización, y contiene los elementos de protección y absorción requeridos.</p>
+
+<h2>8. REVISIÓN Y CONTROL DE VERSIONES</h2>
+<table><tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Elaboró</th></tr>
+<tr><td>1.0</td><td>${hoy()}</td><td>Elaboración inicial</td><td>${escH(director)}</td></tr></table>
+
+${signBlock(cfg, 'Responsable de Farmacia')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  8. REGLAMENTO DE HISTORIA CLÍNICA Y REGISTROS ASISTENCIALES
+// ══════════════════════════════════════════════════════════════════════════════
+function historiaClinica(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>REGLAMENTO DE HISTORIA CLÍNICA Y REGISTROS ASISTENCIALES</h2>
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar Historia Clínica) · Res. 1995/1999 · Ley 1581/2012')}
+
+<h2>1. OBJETIVO Y ALCANCE</h2>
+<p>Regular la elaboración, manejo, custodia, conservación y seguridad de la historia clínica y los registros asistenciales de <strong>${escH(nombre)}</strong>, garantizando su unicidad, confidencialidad y disponibilidad.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Historia Clínica y Registros</li>
+  <li>Resolución 1995 de 1999 — Manejo de la Historia Clínica</li>
+  <li>Ley Estatutaria 1581 de 2012 — Protección de datos personales (Habeas Data)</li>
+  <li>Resolución 866 de 2021 y normas complementarias — Historia Clínica Electrónica Interoperable</li>
+  <li>Acuerdo del Archivo General de la Nación — Tablas de Retención Documental en salud</li>
+</ul>
+
+<h2>3. UNICIDAD Y CUSTODIA</h2>
+<p>Cada paciente tiene una única historia clínica en el establecimiento, identificada con nombre completo y número de documento. El acceso físico o electrónico se restringe al personal asistencial autorizado que atiende al paciente. Se lleva registro de préstamo/consulta del expediente físico cuando aplique.</p>
+
+<h2>4. CONTENIDO MÍNIMO</h2>
+<p>La historia clínica incluye, como mínimo: datos de identificación, motivo de consulta, anamnesis, examen físico, impresión diagnóstica, órdenes médicas, evolución, notas de enfermería, resultados de laboratorio/imágenes, consentimientos informados y epicrisis cuando aplique.</p>
+
+<h2>5. CONSENTIMIENTO INFORMADO</h2>
+<p>Todo procedimiento diagnóstico o terapéutico que implique riesgo requiere consentimiento informado documentado y archivado en la historia clínica, con mecanismo de verificación de su correcta aplicación por parte del responsable de calidad.</p>
+
+<h2>6. CONSERVACIÓN Y RETENCIÓN DOCUMENTAL</h2>
+<p>La historia clínica se conserva por el término mínimo establecido en la normatividad vigente sobre retención documental en salud. <em>El establecimiento debe verificar el plazo exacto aplicable (Resolución 1995/1999 y tablas de retención del Archivo General de la Nación vigentes al momento de la consulta), ya que este término ha sido objeto de actualizaciones normativas.</em> Vencido el término, la disposición final se documenta en acta firmada por el Director Técnico.</p>
+
+<h2>7. HISTORIA CLÍNICA ELECTRÓNICA (SI APLICA)</h2>
+<p>Cuando el establecimiento utilice historia clínica electrónica, debe contar con documento de certificación técnica firmado por ingeniero de sistemas con tarjeta profesional vigente, que acredite el cumplimiento de los requisitos de seguridad, trazabilidad, respaldo (backup) y disponibilidad exigidos por el Ministerio de Salud, el Archivo General de la Nación, la SIC y el MinTIC.</p>
+
+<h2>8. CONFIDENCIALIDAD Y PROTECCIÓN DE DATOS</h2>
+<p>La información contenida en la historia clínica es confidencial (Ley 1581/2012). Solo puede ser conocida por el paciente, el equipo de salud tratante, las autoridades judiciales y de salud competentes, y terceros autorizados por el paciente mediante consentimiento expreso.</p>
+
+<h2>9. REVISIÓN Y CONTROL DE VERSIONES</h2>
+<table><tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Elaboró</th></tr>
+<tr><td>1.0</td><td>${hoy()}</td><td>Elaboración inicial</td><td>${escH(director)}</td></tr></table>
+
+${signBlock(cfg, 'Responsable de Historia Clínica')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  9. POLÍTICA Y PROGRAMA DE SEGURIDAD DEL PACIENTE
+// ══════════════════════════════════════════════════════════════════════════════
+function seguridadPaciente(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>POLÍTICA Y PROGRAMA DE SEGURIDAD DEL PACIENTE</h2>
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Est. Procesos Prioritarios, Criterio 2) · Lineamientos MSPS')}
+
+<h2>1. DECLARACIÓN DE POLÍTICA</h2>
+<p><strong>${escH(nombre)}</strong> se compromete a brindar una atención segura, libre del mayor número posible de eventos adversos evitables, mediante la identificación, prevención y gestión de los riesgos asociados a la atención en salud. Esta política es liderada por la Dirección Técnica y aplica a todo el personal asistencial y administrativo.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Procesos Prioritarios, Criterio 2</li>
+  <li>Lineamientos del Ministerio de Salud y Protección Social para la Seguridad del Paciente</li>
+  <li>Observatorio de Calidad de la Atención en Salud</li>
+</ul>
+
+<h2>3. PRÁCTICAS SEGURAS OBLIGATORIAS</h2>
+<table><tr><th>Práctica segura</th><th>Medida de control</th></tr>
+<tr><td>Identificación correcta del paciente</td><td>Mínimo dos datos (nombre completo + documento) antes de cualquier procedimiento</td></tr>
+<tr><td>Comunicación efectiva</td><td>Reporte estructurado en cambios de turno y remisiones</td></tr>
+<tr><td>Seguridad en la administración de medicamentos</td><td>Verificación de los 5 correctos: paciente, medicamento, dosis, vía, hora</td></tr>
+<tr><td>Prevención de infecciones asociadas a la atención</td><td>Higiene de manos, técnica aséptica, aislamiento cuando aplique</td></tr>
+<tr><td>Prevención de caídas</td><td>Escala de riesgo, señalización y barandas cuando aplique</td></tr>
+<tr><td>Consentimiento informado</td><td>Documentado antes de procedimientos de riesgo</td></tr>
+<tr><td>Cirugía/procedimiento seguro</td><td>Lista de chequeo de verificación (paciente, sitio y procedimiento correctos)</td></tr>
+<tr><td>Atención segura a la gestante y el recién nacido</td><td>Protocolos según guías de práctica clínica vigentes</td></tr>
+<tr><td>Prevención de úlceras por presión</td><td>Valoración de riesgo y cambios posturales</td></tr>
+</table>
+
+<h2>4. GESTIÓN DE EVENTOS ADVERSOS</h2>
+<p>Todo evento adverso, incidente o "casi evento" debe reportarse mediante el formato institucional, sin fines punitivos. El análisis se realiza mediante metodología de causa raíz (protocolo de Londres o espina de pescado), documentando el plan de mejora resultante y su seguimiento.</p>
+
+<h2>5. INDICADORES DE SEGURIDAD DEL PACIENTE</h2>
+<table><tr><th>Indicador</th><th>Meta</th><th>Frecuencia</th></tr>
+<tr><td>Eventos adversos reportados y analizados</td><td>100%</td><td>Mensual</td></tr>
+<tr><td>Adherencia a identificación correcta del paciente</td><td>≥95%</td><td>Mensual</td></tr>
+<tr><td>Adherencia a higiene de manos</td><td>≥90%</td><td>Mensual</td></tr>
+<tr><td>Caídas de pacientes</td><td>0</td><td>Mensual</td></tr></table>
+
+<h2>6. COMITÉ DE SEGURIDAD DEL PACIENTE</h2>
+<p>Se reunirá con periodicidad mínima trimestral para el análisis de eventos, seguimiento de indicadores y actualización de esta política. Las actas se conservarán como evidencia para visitas de verificación.</p>
+
+<h2>7. REVISIÓN Y CONTROL DE VERSIONES</h2>
+<table><tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Elaboró</th></tr>
+<tr><td>1.0</td><td>${hoy()}</td><td>Elaboración inicial</td><td>${escH(director)}</td></tr></table>
+
+${signBlock(cfg, 'Líder de Seguridad del Paciente')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  10. PLAN INSTITUCIONAL DE ACCIONES DE FORMACIÓN CONTINUA
+// ══════════════════════════════════════════════════════════════════════════════
+function formacionContinua(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>PLAN INSTITUCIONAL DE ACCIONES DE FORMACIÓN CONTINUA</h2>
+${header(cfg, nombre, `Versión 1.0 · Vigencia ${new Date().getFullYear()}`, 'Res. 1732/2026 (Est. Talento Humano, Criterio 4) · Ley 1164/2007')}
+
+<h2>1. OBJETIVO</h2>
+<p>Mantener actualizadas las competencias del talento humano de <strong>${escH(nombre)}</strong> mediante un plan anual de formación continua, conforme al Criterio 4 del Estándar de Talento Humano de la Resolución 1732 de 2026.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Talento Humano, Criterio 4</li>
+  <li>Ley 1164 de 2007 — Talento Humano en Salud</li>
+  <li>ReTHUS — Registro Único Nacional del Talento Humano en Salud</li>
+</ul>
+
+<h2>3. ANÁLISIS DE NECESIDADES DE FORMACIÓN</h2>
+<p>El análisis de necesidades se realiza a partir de: resultados de auditoría interna, eventos adversos reportados, cambios normativos, resultados de evaluación de desempeño y solicitudes del personal asistencial y administrativo.</p>
+
+<h2>4. PROGRAMACIÓN ANUAL</h2>
+<table><tr><th>Tema</th><th>Dirigido a</th><th>Modalidad</th><th>Intensidad</th><th>Fecha estimada</th></tr>
+<tr><td>Seguridad del paciente y eventos adversos</td><td>Todo el personal asistencial</td><td>Presencial</td><td>4 horas</td><td>_____________</td></tr>
+<tr><td>Bioseguridad y manejo de residuos</td><td>Todo el personal</td><td>Presencial</td><td>2 horas</td><td>_____________</td></tr>
+<tr><td>Reanimación cardiopulmonar básica</td><td>Personal asistencial</td><td>Práctica</td><td>4 horas</td><td>_____________</td></tr>
+<tr><td>Actualización en historia clínica y habeas data</td><td>Todo el personal</td><td>Virtual</td><td>2 horas</td><td>_____________</td></tr>
+<tr><td>Actualización normativa en habilitación</td><td>Coordinación de calidad</td><td>Virtual</td><td>4 horas</td><td>_____________</td></tr></table>
+
+<h2>5. IDENTIFICACIÓN DE FORMADORES</h2>
+<p>Las capacitaciones serán impartidas por personal interno idóneo, entidades certificadas, cajas de compensación, ARL o proveedores externos con experiencia acreditada en el tema.</p>
+
+<h2>6. MECANISMOS DE EVALUACIÓN</h2>
+<p>Cada acción de formación incluye evaluación de conocimientos adquiridos y/o evaluación de satisfacción, con resultados que retroalimentan la programación del año siguiente.</p>
+
+<h2>7. REGISTRO Y EVIDENCIA DE PARTICIPACIÓN</h2>
+<p>Se conservará listado de asistencia firmado, material entregado y certificados cuando aplique, como evidencia disponible para visitas de verificación de habilitación.</p>
+
+<h2>8. VIGENCIA Y ACTUALIZACIÓN</h2>
+<p>Este plan tiene vigencia anual y se actualiza cada año conforme al análisis de necesidades y a los resultados del período anterior.</p>
+
+${signBlock(cfg, 'Responsable de Talento Humano')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  11. PROGRAMA DE GESTIÓN AMBIENTAL Y ACCIÓN CLIMÁTICA (PIGCCS SALUD)
+// ══════════════════════════════════════════════════════════════════════════════
+function gestionAmbiental(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>PROGRAMA DE GESTIÓN AMBIENTAL Y ACCIÓN CLIMÁTICA (PIGCCS SALUD)</h2>
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Est. Procesos Prioritarios, Criterio 30) · Ley 1931/2018')}
+
+<h2>1. OBJETIVO</h2>
+<p>Establecer las acciones de gestión ambiental y adaptación al cambio climático de <strong>${escH(nombre)}</strong>, alineadas con el Plan Institucional de Gestión Ambiental y Cambio Climático en Salud (PIGCCS Salud) del Ministerio de Salud y Protección Social.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Procesos Prioritarios, Criterio 30</li>
+  <li>Ley 1931 de 2018 — Gestión del cambio climático</li>
+  <li>Decreto 351 de 2014 — Gestión de residuos hospitalarios (complementario)</li>
+  <li>Lineamientos PIGCCS Salud del Ministerio de Salud y Protección Social</li>
+</ul>
+
+<h2>3. DIAGNÓSTICO AMBIENTAL</h2>
+<p>El establecimiento identifica sus principales aspectos ambientales: consumo de agua, consumo de energía eléctrica, generación de residuos (peligrosos y no peligrosos), uso de sustancias químicas y emisiones asociadas a la operación.</p>
+
+<h2>4. LÍNEAS DE ACCIÓN</h2>
+<table><tr><th>Línea</th><th>Acciones</th><th>Responsable</th></tr>
+<tr><td>Uso eficiente del agua</td><td>Revisión periódica de fugas, dispositivos ahorradores</td><td>${escH(director)}</td></tr>
+<tr><td>Uso eficiente de energía</td><td>Iluminación LED, apagado de equipos fuera de horario</td><td>________________</td></tr>
+<tr><td>Gestión de residuos</td><td>Articulación con el PGIRH institucional</td><td>________________</td></tr>
+<tr><td>Sustitución de sustancias de alto impacto</td><td>Eliminación progresiva de mercurio y reducción de PVC</td><td>________________</td></tr>
+<tr><td>Movilidad sostenible</td><td>Fomento de transporte no motorizado o compartido</td><td>________________</td></tr>
+<tr><td>Adaptación al cambio climático</td><td>Plan de contingencia ante eventos climáticos extremos</td><td>${escH(director)}</td></tr></table>
+
+<h2>5. METAS E INDICADORES</h2>
+<table><tr><th>Indicador</th><th>Meta</th><th>Frecuencia</th></tr>
+<tr><td>Consumo de agua (m³/mes)</td><td>Reducción anual ≥5%</td><td>Mensual</td></tr>
+<tr><td>Consumo de energía (kWh/mes)</td><td>Reducción anual ≥5%</td><td>Mensual</td></tr>
+<tr><td>Generación de residuos peligrosos (kg/mes)</td><td>Seguimiento y minimización</td><td>Mensual</td></tr></table>
+
+<h2>6. RESPONSABLES Y SEGUIMIENTO</h2>
+<p>El Director Técnico designa un responsable del programa, quien reporta avances anualmente y actualiza el diagnóstico y las metas conforme a los resultados obtenidos.</p>
+
+<h2>7. REVISIÓN Y CONTROL DE VERSIONES</h2>
+<table><tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Elaboró</th></tr>
+<tr><td>1.0</td><td>${hoy()}</td><td>Elaboración inicial</td><td>${escH(director)}</td></tr></table>
+
+${signBlock(cfg, 'Coordinador Ambiental')}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  12. MANUAL DE REFERENCIA Y CONTRARREFERENCIA
+// ══════════════════════════════════════════════════════════════════════════════
+function referenciaContrarreferencia(cfg: IPSConfig): string {
+  const { nombre, director } = cfg;
+  return `
+<h2>MANUAL DE REFERENCIA Y CONTRARREFERENCIA</h2>
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar de Interdependencia) · Res. 3047/2008')}
+
+<h2>1. OBJETIVO Y ALCANCE</h2>
+<p>Establecer el procedimiento para la remisión segura de pacientes cuando <strong>${escH(nombre)}</strong> no cuente con el servicio requerido, y para la contrarreferencia (retorno) del paciente una vez resuelta la atención en la institución receptora.</p>
+
+<h2>2. MARCO NORMATIVO</h2>
+<ul>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar de Interdependencia</li>
+  <li>Resolución 3047 de 2008 — Formatos y mecanismos de referencia y contrarreferencia</li>
+  <li>Ley Estatutaria 1751 de 2015 — Derecho fundamental a la salud</li>
+</ul>
+
+<h2>3. RED DE PRESTADORES Y CONVENIOS</h2>
+<table><tr><th>Servicio no disponible</th><th>IPS de referencia</th><th>Nivel de complejidad</th><th>Convenio vigente</th></tr>
+<tr><td>Urgencias de mayor complejidad</td><td>________________</td><td>II / III</td><td>________________</td></tr>
+<tr><td>Hospitalización</td><td>________________</td><td>II / III</td><td>________________</td></tr>
+<tr><td>Cuidado intensivo (UCI)</td><td>________________</td><td>III</td><td>________________</td></tr>
+<tr><td>Apoyo diagnóstico especializado</td><td>________________</td><td>II</td><td>________________</td></tr></table>
+
+<h2>4. PROCEDIMIENTO DE REFERENCIA</h2>
+<ol>
+  <li>Estabilización inicial del paciente conforme a su condición clínica</li>
+  <li>Comunicación telefónica con la IPS receptora para confirmar disponibilidad</li>
+  <li>Diligenciamiento del formato de referencia: motivo, diagnóstico, resumen de manejo, signos vitales y soporte requerido durante el traslado</li>
+  <li>Coordinación del medio de transporte (asistencial básico o medicalizado según el caso)</li>
+  <li>El paciente viaja acompañado de la epicrisis o resumen de atención y los resultados paraclínicos disponibles</li>
+</ol>
+
+<h2>5. PROCEDIMIENTO DE CONTRARREFERENCIA</h2>
+<p>La IPS receptora remite informe de contrarreferencia con el resultado de la atención, indicaciones de seguimiento y recomendaciones. El establecimiento de origen incorpora este informe a la historia clínica del paciente y da continuidad al plan de manejo.</p>
+
+<h2>6. FORMATO MÍNIMO DE REFERENCIA</h2>
+<p>El formato de referencia incluye como mínimo: identificación del paciente, institución remisora y receptora, motivo de remisión, resumen clínico, diagnóstico, tratamiento instaurado, signos vitales al momento del traslado y nombre del profesional responsable.</p>
+
+<h2>7. SEGUIMIENTO Y TRAZABILIDAD</h2>
+<p>Se llevará registro de todas las referencias realizadas, con fecha, destino y desenlace, para efectos de seguimiento, auditoría e indicadores de oportunidad de la remisión.</p>
+
+<h2>8. REVISIÓN Y CONTROL DE VERSIONES</h2>
+<table><tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Elaboró</th></tr>
+<tr><td>1.0</td><td>${hoy()}</td><td>Elaboración inicial</td><td>${escH(director)}</td></tr></table>
+
+${signBlock(cfg, 'Coordinador de Referencia y Contrarreferencia')}`;
+}
+
 // ── Mapa principal ────────────────────────────────────────────────────────────
 const TEMPLATE_MAP: Record<DocId, (cfg: IPSConfig) => string> = {
   bioseguridad,
@@ -430,6 +728,12 @@ const TEMPLATE_MAP: Record<DocId, (cfg: IPSConfig) => string> = {
   emergencias,
   tecnovigilancia,
   'hoja-vida': hojaVida,
+  medicamentos,
+  'historia-clinica': historiaClinica,
+  'seguridad-paciente': seguridadPaciente,
+  'formacion-continua': formacionContinua,
+  'gestion-ambiental': gestionAmbiental,
+  'referencia-contrarreferencia': referenciaContrarreferencia,
 };
 
 /**

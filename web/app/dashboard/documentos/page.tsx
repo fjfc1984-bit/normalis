@@ -2,7 +2,7 @@
 
 /**
  * web/app/dashboard/documentos/page.tsx
- * Módulo de Documentos Normativos — generación y vista previa de 6 manuales
+ * Módulo de Documentos Normativos — generación y vista previa de manuales
  * Base legal: Res. 1732/2026 · Decreto 351/2014 · Decreto 4725/2005
  */
 
@@ -376,7 +376,7 @@ export default function DocumentosPage() {
 
       <SectionHeader
         title="Documentos Normativos"
-        subtitle="6 manuales personalizados para tu IPS — listos para imprimir y presentar en visita de habilitación"
+        subtitle={`${DOC_CATALOGO.length} manuales personalizados para tu IPS — listos para imprimir y presentar en visita de habilitación`}
         actions={
           <button
             onClick={() => {
