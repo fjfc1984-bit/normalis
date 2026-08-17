@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  collection, query, where, orderBy,
+  collection, query, where,
   onSnapshot, addDoc, deleteDoc, doc,
   serverTimestamp, Timestamp,
 } from 'firebase/firestore';
@@ -52,23 +52,26 @@ export default function VencimientosPage() {
   const [saving, setSaving] = useState(false);
 
   // Suscripción en tiempo real a Firestore
+  // Nota: solo un where('uid','==',...) — sin orderBy en la query, para evitar
+  // depender de un índice compuesto. El orden se aplica client-side abajo.
   useEffect(() => {
     if (!user) return;
 
     const q = query(
       collection(db, 'vencimientos'),
       where('uid', '==', user.uid),
-      orderBy('fecha', 'asc'),
     );
 
     const unsub = onSnapshot(q, snap => {
-      const items = snap.docs.map(d => ({
-        id: d.id,
-        ...d.data(),
-      })) as Vencimiento[];
+      const items = snap.docs
+        .map(d => ({ id: d.id, ...d.data() })) as Vencimiento[];
+      items.sort((a, b) => a.fecha.localeCompare(b.fecha));
       setVencimientos(items);
       setLoading(false);
-    }, () => setLoading(false));
+    }, err => {
+      console.error('[Vencimientos] Error cargando:', err);
+      setLoading(false);
+    });
 
     return () => unsub();
   }, [user]);
