@@ -68,6 +68,12 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/consentimientos', label: 'Consentimientos', icon: '📝' },
     ],
   },
+  {
+    label: 'Desarrolladores',
+    items: [
+      { href: '/dashboard/integraciones', label: 'Integraciones API', icon: '🔌', badge: 'NUEVO' },
+    ],
+  },
 ];
 
 function Sidebar() {

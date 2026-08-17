@@ -50,6 +50,7 @@ export function useIncidentes(uid: string | null) {
             estado:      r.estado      as IncidenteEstado,
             fecha:       r.fecha       ?? '',
             creadoEn:    r.creadoEn    ?? 0,
+            origen:      r.origen      || 'interno',
           };
         }));
       })
@@ -64,6 +65,7 @@ export function useIncidentes(uid: string | null) {
       estado:   'Abierto',
       fecha:    new Date().toLocaleDateString('es-CO'),
       creadoEn: Date.now(),
+      origen:   'interno',
     };
     const ref = await addDoc(collection(db, 'usuarios', uid, 'incidentes'), {
       ...nuevo,

@@ -17,6 +17,11 @@ export type IncidenteSeveridad = 'critico' | 'moderado' | 'leve';
 
 export type IncidenteEstado = 'Abierto' | 'En seguimiento' | 'Cerrado';
 
+// Origen del registro: escrito por el staff desde el dashboard, o
+// reportado por un sistema externo (HCE) vía la API pública de
+// integraciones (POST /api/v1/incidentes).
+export type IncidenteOrigen = 'interno' | 'api_externa';
+
 export interface IncidenteItem {
   id:          string;
   tipo:        IncidenteTipo;
@@ -27,6 +32,7 @@ export interface IncidenteItem {
   estado:      IncidenteEstado;
   fecha:       string;   // Fecha legible es-CO
   creadoEn:    number;   // timestamp ms
+  origen?:     IncidenteOrigen;
 }
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────

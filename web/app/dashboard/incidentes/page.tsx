@@ -190,6 +190,11 @@ function IncidenteCard({
               {sc.label}
             </span>
             <span className="text-xs text-gray-500">{item.tipo}</span>
+            {item.origen === 'api_externa' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-600">
+                🔌 vía API
+              </span>
+            )}
           </div>
           <p className="text-sm text-gray-800">{item.desc}</p>
           {item.accion && (

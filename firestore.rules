@@ -148,9 +148,9 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Al crear: solo verificar uid — el formulario de vencimientos no envía nit
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
@@ -170,9 +170,9 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Al crear: solo verificar uid — mismo criterio que capas/vencimientos
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update, delete: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
@@ -383,6 +383,26 @@ service cloud.firestore {
 
     match /usuarios/{uid}/profesionales/{id} {
       allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // api_keys/{id} — llaves de la API pública de integraciones (HCE, etc.)
+    // El id del documento es el hash SHA-256 de la llave real; el valor en
+    // texto plano nunca se guarda en Firestore, solo se muestra una vez al
+    // crearla desde /dashboard/integraciones. El Worker usa el service
+    // account (isAdmin) para autenticar POST /api/v1/incidentes.
+    // ════════════════════════════════════════════════════════════════════════
+    match /api_keys/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
     }
 
     // ════════════════════════════════════════════════════════════════════════

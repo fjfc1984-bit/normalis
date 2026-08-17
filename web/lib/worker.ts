@@ -4,7 +4,7 @@
  * Mismo endpoint que usa el sitio legacy — sin duplicar lógica de negocio.
  */
 
-const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? 'https://normalis.fjfc1984.workers.dev';
+export const WORKER_URL = process.env.NEXT_PUBLIC_WORKER_URL ?? 'https://normalis.fjfc1984.workers.dev';
 
 export interface WorkerContext {
   modulo:     string;

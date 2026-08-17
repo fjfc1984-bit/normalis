@@ -1,9 +1,13 @@
 /**
- * NormaLis — AI Proxy + Areas API (Cloudflare Worker) v4.2
+ * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.3
  *
  * Endpoints:
- *   POST /         → proxy al chat LLM (Cloudflare Workers AI)
- *   GET  /api/areas → devuelve areasDB + segInfo (requiere Firebase ID token)
+ *   POST /                    → proxy al chat LLM (Cloudflare Workers AI)
+ *   GET  /api/areas           → devuelve areasDB + segInfo (requiere Firebase ID token)
+ *   POST /email                → envío de emails vía Resend (server-side)
+ *   POST /pqrs                 → envío público de PQRS (sin login)
+ *   GET  /api/v1/checklist-1732 → checklist público Res. 1732/2026 (para integradores/HCE)
+ *   POST /api/v1/incidentes     → reporte de incidentes desde sistemas externos (API key)
  *
  * Bindings requeridos:
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
@@ -18,6 +22,37 @@ const ALLOWED_ORIGINS = [
   'https://www.normalis.co',
   'https://fjfc1984-bit.github.io',
   'https://app.normalis.co',
+];
+
+// ── Catálogos válidos para el reporte de incidentes vía API ─────────────────
+const INCIDENTE_TIPOS_VALIDOS = [
+  'Evento adverso', 'Incidente sin daño', 'Casi-evento (near miss)',
+  'Complicación', 'Accidente de trabajo', 'Otro',
+];
+const INCIDENTE_SEVERIDADES_VALIDAS = ['critico', 'moderado', 'leve'];
+
+// ── Checklist público Res. 1732/2026 — mismo contenido que
+// web/app/dashboard/gap-1732/page.tsx (ITEMS_GAP). Se mantiene una copia
+// aquí porque el Worker se despliega como archivo único (sin bundler de
+// imports); si se edita el checklist en el dashboard, replicar el cambio
+// aquí también para no desincronizar la API pública.
+const CHECKLIST_1732 = [
+  { id: 'ihce_01', categoria: 'IHCE — Historia Clínica Electrónica Interoperable', titulo: 'Sistema de HC con capacidad de interoperabilidad', descripcion: 'La Res. 1732/2026 exige que las IPS avancen hacia la Historia Clínica Electrónica Interoperable (IHCE). El sistema debe ser capaz de intercambiar información clínica con otras IPS y con el sistema nacional de salud.', esNuevo: true, urgencia: 'alta', plazo: 'Diciembre 2026 (plan de adecuación progresiva)', guia: 'Evalúa si tu sistema de HC actual tiene API o mecanismo de exportación en formatos estándar (HL7 FHIR, CDA). Si no, inicia gestión con el proveedor de software.' },
+  { id: 'ihce_02', categoria: 'IHCE — Historia Clínica Electrónica Interoperable', titulo: 'Política de seguridad de datos clínicos electrónicos', descripcion: 'La IHCE requiere política documentada de seguridad de la información que incluya autenticación, trazabilidad de accesos y cifrado de datos clínicos.', esNuevo: true, urgencia: 'alta', plazo: 'Junio 2027', guia: 'Documenta quién tiene acceso a la HC electrónica, cómo se registra cada acceso (log de auditoría) y cómo se protegen los datos en tránsito y en reposo (Ley 1581/2012).' },
+  { id: 'ihce_03', categoria: 'IHCE — Historia Clínica Electrónica Interoperable', titulo: 'Firma electrónica válida en documentos clínicos', descripcion: 'Los registros de la IHCE deben tener mecanismo de firma electrónica con validez legal equivalente a la firma manuscrita.', esNuevo: true, urgencia: 'media', plazo: 'Agosto 2027', guia: 'Verifica que tu software de HC genere firmas digitales certificadas o utiliza plataformas como la Firma Electrónica Simple del Gobierno. El módulo de Firma de NormaLis puede apoyar este proceso.' },
+  { id: 'rda_01', categoria: 'RDA — Resumen Digital de Atención', titulo: 'Generación del RDA al alta de cada episodio', descripcion: 'La Res. 1732/2026 establece que toda IPS debe generar un Resumen Digital de Atención (RDA) al momento del alta de cada episodio de atención. Es obligatorio entregarlo al paciente.', esNuevo: true, urgencia: 'alta', plazo: 'Febrero 2027', guia: 'El RDA debe incluir: diagnóstico (CIE-10), tratamiento administrado, medicamentos prescritos, indicaciones de seguimiento y datos de contacto de la IPS. Define el formato y responsable de generarlo.' },
+  { id: 'rda_02', categoria: 'RDA — Resumen Digital de Atención', titulo: 'Registro del RDA en la Historia Clínica', descripcion: 'El RDA generado debe quedar incorporado en la historia clínica del episodio y ser trazable para auditorías posteriores.', esNuevo: true, urgencia: 'media', plazo: 'Agosto 2027', guia: 'Define el procedimiento para archivar el RDA en la HC. Si la HC es en papel, el RDA puede ser una hoja estandarizada firmada. Documenta el proceso en tus protocolos de egreso.' },
+  { id: 'tele_01', categoria: 'Telemedicina — 4 Modalidades Res. 1732/2026', titulo: 'Definición de modalidades de telemedicina habilitadas', descripcion: 'La Res. 1732/2026 define 4 modalidades específicas: Teleconsulta, Telexperticia, Teleconcepto y Telemonitoreo. Si la IPS presta alguna de estas, debe estar registrada en REPS por cada modalidad.', esNuevo: true, urgencia: 'alta', plazo: 'Inmediato si ya presta el servicio', guia: 'Revisa si actualmente prestas algún servicio de telemedicina (aunque sea informal por videollamada). Si es así, debes habilitarlo formalmente en REPS. Cada modalidad requiere registro independiente.' },
+  { id: 'tele_02', categoria: 'Telemedicina — 4 Modalidades Res. 1732/2026', titulo: 'Plataforma tecnológica con cifrado y autenticación', descripcion: 'Las plataformas de telemedicina deben garantizar cifrado extremo a extremo y autenticación de dos factores para proteger la privacidad del paciente (Ley 1581/2012).', esNuevo: true, urgencia: 'alta', plazo: 'Al momento de habilitar el servicio', guia: 'No uses WhatsApp ni videollamadas no cifradas para telemedicina. Plataformas válidas: Zoom for Healthcare, Microsoft Teams (Health Shield), o sistemas propios con cifrado TLS 1.3. Documenta el proveedor.' },
+  { id: 'tele_03', categoria: 'Telemedicina — 4 Modalidades Res. 1732/2026', titulo: 'Consentimiento informado específico para telemedicina', descripcion: 'Cada modalidad de telemedicina requiere consentimiento informado específico que explique las limitaciones del servicio a distancia y los mecanismos de referencia urgente.', esNuevo: false, urgencia: 'media', plazo: 'Al momento de habilitar el servicio', guia: 'Diseña un consentimiento informado que incluya: qué servicio recibirá por telemedicina, las limitaciones del diagnóstico remoto, cómo se le referiría en caso de emergencia y cómo se protegen sus datos. El módulo de Consentimientos de NormaLis puede ayudarte.' },
+  { id: 'tele_04', categoria: 'Telemedicina — 4 Modalidades Res. 1732/2026', titulo: 'Protocolo de referencia urgente en telemedicina', descripcion: 'Toda IPS que preste telemedicina debe tener un protocolo documentado que defina cómo se activa una referencia urgente cuando el médico telemático identifica una emergencia.', esNuevo: true, urgencia: 'alta', plazo: 'Al momento de habilitar el servicio', guia: 'El protocolo debe responder: ¿qué hace el médico si detecta una emergencia? ¿A qué IPS refiere? ¿Quién activa el CRUE? ¿Cómo se le informa al paciente? Documenta el flujograma y socialízalo con el equipo.' },
+  { id: 'pap_01', categoria: 'Plan de Adecuación Progresiva', titulo: '¿La IPS está en municipio con dispersión geográfica o zona PDET?', descripcion: 'Las IPS en territorios especiales (municipios PDET, zonas de dispersión geográfica o difícil acceso) pueden solicitar un Plan de Adecuación Progresiva con plazos extendidos para cumplir la Res. 1732/2026.', esNuevo: true, urgencia: 'media', plazo: 'Solicitar antes de enero 2027', guia: 'Si tu IPS está en uno de estos territorios, solicita el Plan a tu Secretaría de Salud departamental. Presenta: ubicación geográfica, servicios actuales, brechas identificadas y cronograma propuesto de adecuación.' },
+  { id: 'pap_02', categoria: 'Plan de Adecuación Progresiva', titulo: 'Telexperticia sincrónica para UCI en zona de dispersión', descripcion: 'Las UCI ubicadas en municipios con dispersión geográfica deben tener disponible telexperticia sincrónica como mecanismo de apoyo clínico especializado.', esNuevo: true, urgencia: 'alta', plazo: 'Junio 2027', guia: 'Si tienes UCI en zona de dispersión, gestiona un convenio con IPS de mayor complejidad para telexperticia sincrónica (videollamada con especialista en tiempo real). Documenta el convenio y el protocolo de activación.' },
+  { id: 'sgsst_01', categoria: 'SG-SST — Res. 1774/2025', titulo: 'Sistema de Gestión SST implementado y actualizado', descripcion: 'La Res. 1774/2025 actualiza el SG-SST para el sector salud con énfasis en riesgo biológico, químico (citotóxicos, gases anestésicos) y psicosocial.', esNuevo: false, urgencia: 'alta', plazo: 'Inmediato — ya debería estar implementado', guia: 'Verifica que tu SG-SST esté actualizado con la matriz de riesgos específica para servicios de salud: riesgo biológico (OPAS/OMS), exposición a citotóxicos si aplica, carga laboral y riesgo psicosocial del personal de salud.' },
+  { id: 'sgsst_02', categoria: 'SG-SST — Res. 1774/2025', titulo: 'Protocolo de exposición accidental a material biológico', descripcion: 'Protocolo documentado y conocido por todo el personal para manejo de exposición accidental a sangre, fluidos corporales y material cortopunzante.', esNuevo: false, urgencia: 'alta', plazo: 'Inmediato', guia: 'El protocolo debe incluir: lavado inmediato, reporte, evaluación de riesgo (VIH, HBV, HCV), profilaxis post-exposición y seguimiento serológico. Personal nuevo debe recibirlo en la inducción.' },
+  { id: 'cont_01', categoria: 'Requisitos que continúan de Res. 3100/2019', titulo: 'Autoevaluación anual documentada en REPS', descripcion: 'La obligación de autoevaluación anual antes del vencimiento de la inscripción continúa vigente bajo la Res. 1732/2026.', esNuevo: false, urgencia: 'alta', plazo: 'Antes del vencimiento de inscripción', guia: 'Usa el módulo de Auditoría de NormaLis para generar la evidencia de autoevaluación.' },
+  { id: 'cont_02', categoria: 'Requisitos que continúan de Res. 3100/2019', titulo: 'PAMEC implementado con indicadores Res. 256/2016', descripcion: 'El PAMEC sigue siendo obligatorio. Los indicadores de calidad de la Res. 256/2016 siguen vigentes y deben medirse y reportarse.', esNuevo: false, urgencia: 'media', plazo: 'Continuo', guia: 'Usa el módulo de Indicadores de NormaLis para registrar y hacer seguimiento mensual a los indicadores obligatorios (prop_queja, tasa_infeccion, tasa_caida, etc.).' },
+  { id: 'cont_03', categoria: 'Requisitos que continúan de Res. 3100/2019', titulo: 'Historia clínica conservada mínimo 20 años', descripcion: 'La obligación de conservar la historia clínica por mínimo 20 años continúa vigente bajo la Res. 1732/2026. Para HC electrónica, aplican requisitos adicionales de respaldo y trazabilidad.', esNuevo: false, urgencia: 'alta', plazo: 'Continuo', guia: 'Para HC en papel: garantiza almacenamiento seguro. Para HC electrónica: política de backups automáticos, pruebas de recuperación y log de auditoría de accesos. Documenta el procedimiento.' },
 ];
 
 // ── Sentry error reporting (lightweight, no npm needed) ─────────────────────
@@ -1076,6 +1111,61 @@ function checkPqrsRateLimit(ip) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para la API pública de integraciones (v1). Ventana más
+// generosa que los formularios públicos porque son sistemas de terceros
+// haciendo llamadas automatizadas legítimas, no tráfico humano.
+const _apiChecklistRateMap = new Map();
+function checkApiChecklistRateLimit(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 30;     // lectura pública, sin auth
+  const key = ip || 'unknown';
+  const entry = _apiChecklistRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _apiChecklistRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
+const _apiIncidentesRateMap = new Map();
+function checkApiIncidentesRateLimit(apiKeyHash) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 60;     // por llave, no por IP (varias sedes pueden compartir salida)
+  const key = apiKeyHash || 'unknown';
+  const entry = _apiIncidentesRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _apiIncidentesRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
+// SHA-256 de un string → hex. Las llaves API nunca se guardan en texto
+// plano en Firestore, solo su hash — igual que un password.
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Autentica una llamada a la API de integraciones vía header
+// "Authorization: Bearer <llave>". Busca el hash en Firestore
+// (api_keys/{hash}, escrita por el propio usuario desde el dashboard) y
+// verifica que esté activa. Retorna { uid, hash } o lanza un Error.
+async function authenticateApiKey(request, env) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const rawKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  if (!rawKey) throw new Error('Falta el header Authorization: Bearer <llave>');
+
+  const hash = await sha256Hex(rawKey);
+  const token = await getFirestoreToken(env);
+  const doc = await firestoreGetDoc(FIREBASE_PROJECT_ID, `api_keys/${hash}`, token);
+  if (!doc) throw new Error('Llave API inválida');
+  if (doc.fields?.activo?.booleanValue !== true) throw new Error('Llave API revocada');
+
+  return { uid: doc.fields?.uid?.stringValue, hash };
+}
+
 // Verificar Firebase ID token → retorna { uid, email } o null
 async function verifyFirebaseToken(idToken) {
   try {
@@ -1478,6 +1568,16 @@ export default {
       return handlePqrsPublico(request, env, cors);
     }
 
+    // ── GET /api/v1/checklist-1732 — checklist público, sin auth ─────────────
+    if (request.method === 'GET' && url.pathname === '/api/v1/checklist-1732') {
+      return handleApiChecklist1732(request, cors);
+    }
+
+    // ── POST /api/v1/incidentes — reporte de incidentes vía API key ──────────
+    if (request.method === 'POST' && url.pathname === '/api/v1/incidentes') {
+      return handleApiIncidentes(request, env, cors);
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405,
@@ -1732,6 +1832,102 @@ async function handlePqrsPublico(request, env, cors) {
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+
+// ── GET /api/v1/checklist-1732 — checklist público Res. 1732/2026 ────────────
+// Sin autenticación: es contenido normativo, no dato de paciente. Pensado
+// para que un sistema de HCE externo (Hosvital, Greenlane, SAP Salud, etc.)
+// consulte los requisitos vigentes sin necesidad de convenio previo.
+function handleApiChecklist1732(request, cors) {
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
+  if (!checkApiChecklistRateLimit(ip)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta más tarde.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const url = new URL(request.url);
+  const categoria = url.searchParams.get('categoria');
+  const esNuevo   = url.searchParams.get('esNuevo'); // 'true' | 'false' | null
+
+  let items = CHECKLIST_1732;
+  if (categoria) items = items.filter(i => i.categoria.toLowerCase().includes(categoria.toLowerCase()));
+  if (esNuevo === 'true')  items = items.filter(i => i.esNuevo === true);
+  if (esNuevo === 'false') items = items.filter(i => i.esNuevo === false);
+
+  return new Response(JSON.stringify({ count: items.length, items }), {
+    status: 200,
+    headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
+  });
+}
+
+// ── POST /api/v1/incidentes — reporte de incidentes desde sistemas externos ──
+// Autenticado con llave API (Authorization: Bearer <llave>), generada por
+// la propia IPS desde /dashboard/integraciones. Escribe en la misma
+// colección que el módulo interno (usuarios/{uid}/incidentes), marcando
+// origen: 'api_externa' para trazabilidad.
+async function handleApiIncidentes(request, env, cors) {
+  let auth;
+  try {
+    auth = await authenticateApiKey(request, env);
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message || 'No autorizado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  if (!checkApiIncidentesRateLimit(auth.hash)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Máximo 60 por minuto por llave.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { tipo, severidad, desc, accion, responsable } = body || {};
+
+  if (!INCIDENTE_TIPOS_VALIDOS.includes(tipo)) {
+    return new Response(JSON.stringify({ error: `tipo inválido. Valores válidos: ${INCIDENTE_TIPOS_VALIDOS.join(', ')}` }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!INCIDENTE_SEVERIDADES_VALIDAS.includes(severidad)) {
+    return new Response(JSON.stringify({ error: `severidad inválida. Valores válidos: ${INCIDENTE_SEVERIDADES_VALIDAS.join(', ')}` }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!desc || typeof desc !== 'string' || !desc.trim() || desc.length > 3000) {
+    return new Response(JSON.stringify({ error: 'desc requerido (máx 3000 caracteres)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (accion !== undefined && (typeof accion !== 'string' || accion.length > 1000)) {
+    return new Response(JSON.stringify({ error: 'accion debe ser texto (máx 1000 caracteres)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (responsable !== undefined && (typeof responsable !== 'string' || responsable.length > 200)) {
+    return new Response(JSON.stringify({ error: 'responsable debe ser texto (máx 200 caracteres)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = FIREBASE_PROJECT_ID;
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /api/v1/incidentes', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const now = new Date();
+  const fields = {
+    tipo:        { stringValue: tipo },
+    severidad:   { stringValue: severidad },
+    desc:        { stringValue: desc.trim() },
+    accion:      { stringValue: (accion || '').trim() },
+    responsable: { stringValue: (responsable || '').trim() },
+    estado:      { stringValue: 'Abierto' },
+    origen:      { stringValue: 'api_externa' },
+    fecha:       { stringValue: now.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) },
+    creadoEn:    { integerValue: String(now.getTime()) },
+  };
+
+  try {
+    const created = await firestoreCreateDoc(projectId, `usuarios/${auth.uid}/incidentes`, fields, token);
+    const id = created.name.split('/').pop();
+    return new Response(JSON.stringify({ ok: true, id }), { status: 201, headers: { ...cors, 'Content-Type': 'application/json' } });
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /api/v1/incidentes', extra: { step: 'create' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo registrar el incidente' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
 }
 
 // ── Scheduled cron — runs daily at 08:00 COT ─────────────────────────────────
