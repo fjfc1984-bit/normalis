@@ -12,13 +12,14 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import {
-  collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, serverTimestamp, query, orderBy,
+  collection, doc, addDoc, updateDoc, deleteDoc, getDoc,
+  onSnapshot, serverTimestamp, query, orderBy, where, getCountFromServer,
 } from 'firebase/firestore';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, EmptyState,
 } from '@/components/ui';
+import { calcularAlertasRiesgo, type Alerta } from '@/lib/alertasRiesgo';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,8 @@ interface RiesgoItem {
   /** 'auditoria' si fue importado desde Cumplimiento Integrado */
   origen?:       string;
   segmento?:     string;
+  /** CAPA vinculada creada desde este riesgo, si existe */
+  capaId?:       string | null;
 }
 
 interface NuevoRiesgo {
@@ -417,10 +420,14 @@ function RiesgoCard({
   item,
   onDelete,
   onUpdate,
+  onCrearCapa,
+  creandoCapa,
 }: {
-  item:     RiesgoItem;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, t: Tratamiento) => void;
+  item:        RiesgoItem;
+  onDelete:    (id: string) => void;
+  onUpdate:    (id: string, t: Tratamiento) => void;
+  onCrearCapa: (item: RiesgoItem) => void;
+  creandoCapa: boolean;
 }) {
   const nc     = NIVEL_CONFIG[item.nivel];
   const isAlto = item.nivel === 'alto' || item.nivel === 'extremo';
@@ -462,14 +469,26 @@ function RiesgoCard({
           </select>
 
           {isAlto && (
-            <a
-              href="/dashboard/capas/nueva"
-              className="text-xs px-2.5 py-1 bg-orange-100 hover:bg-orange-200
-                         text-orange-700 font-bold rounded-lg transition-colors"
-              title="Crear CAPA para este riesgo"
-            >
-              + CAPA
-            </a>
+            item.capaId ? (
+              <a
+                href="/dashboard/capas"
+                className="text-xs px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100
+                           text-emerald-700 font-bold rounded-lg transition-colors border border-emerald-200"
+                title="Ver la CAPA vinculada a este riesgo"
+              >
+                ✅ CAPA creada → Ver
+              </a>
+            ) : (
+              <button
+                onClick={() => onCrearCapa(item)}
+                disabled={creandoCapa}
+                className="text-xs px-2.5 py-1 bg-orange-100 hover:bg-orange-200
+                           text-orange-700 font-bold rounded-lg transition-colors disabled:opacity-50"
+                title="Crear CAPA para este riesgo"
+              >
+                {creandoCapa ? 'Creando…' : '+ CAPA'}
+              </button>
+            )
           )}
 
           <button
@@ -498,6 +517,16 @@ export default function AnalisisRiesgoPage() {
   const [showModal,   setShowModal]   = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | 'Todos'>('Todos');
+  const [userNit,      setUserNit]      = useState<string>('');
+  const [creandoCapaId, setCreandoCapaId] = useState<string | null>(null);
+
+  // Alertas tempranas: cruce con vencimientos/incidentes reales (ver
+  // web/lib/alertasRiesgo.ts). Se calculan aparte de la suscripción en vivo
+  // de riesgos para no re-consultar vencimientos/incidentes en cada cambio
+  // menor de la matriz — se refrescan al cargar la página y con el botón
+  // "Actualizar alertas".
+  const [alertas,        setAlertas]        = useState<Alerta[]>([]);
+  const [loadingAlertas, setLoadingAlertas]  = useState(false);
 
   // Suscripción Firestore — colección aislada: riesgos/{uid}/items
   useEffect(() => {
@@ -512,6 +541,37 @@ export default function AnalisisRiesgoPage() {
     }, () => setLoading(false));
     return () => unsub();
   }, [user]);
+
+  // NIT del usuario — se usa para numerar CAPAs de forma consistente con
+  // el resto de módulos (auditoría, gap-1732, incidentes).
+  useEffect(() => {
+    if (!user) return;
+    getDoc(doc(db, 'usuarios', user.uid))
+      .then(s => { if (s.exists()) setUserNit(s.data()?.nit ?? ''); })
+      .catch(() => {});
+  }, [user]);
+
+  const refrescarAlertas = useCallback(async () => {
+    if (!user) return;
+    setLoadingAlertas(true);
+    try {
+      const resultado = await calcularAlertasRiesgo(user.uid, riesgos);
+      setAlertas(resultado);
+    } catch (err) {
+      console.error('[AnalisisRiesgo] refrescarAlertas:', err);
+    } finally {
+      setLoadingAlertas(false);
+    }
+  }, [user, riesgos]);
+
+  // Calcula las alertas una vez que los riesgos terminan de cargar por
+  // primera vez — luego el usuario puede refrescarlas manualmente (p. ej.
+  // tras registrar un nuevo vencimiento o incidente en otro módulo).
+  useEffect(() => {
+    if (!user || loading) return;
+    void refrescarAlertas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   // KPIs
   const extremos = riesgos.filter(r => r.nivel === 'extremo').length;
@@ -559,6 +619,49 @@ export default function AnalisisRiesgoPage() {
       show('Error al actualizar.', 'error');
     }
   }, [user, show]);
+
+  // Crea una CAPA vinculada a este riesgo (mismo patrón que gap-1732 e
+  // Incidentes) y la marca en el propio documento del riesgo para no
+  // duplicarla si el usuario vuelve a hacer clic.
+  const crearCapaDesdeRiesgo = useCallback(async (item: RiesgoItem) => {
+    if (!user || item.capaId) return;
+    setCreandoCapaId(item.id);
+    try {
+      const countQ = userNit
+        ? query(collection(db, 'capas'), where('nit', '==', userNit))
+        : query(collection(db, 'capas'), where('uid', '==', user.uid));
+      const countSnap = await getCountFromServer(countQ);
+      const num = String((countSnap.data().count ?? 0) + 1).padStart(3, '0');
+      const limite = new Date();
+      limite.setDate(limite.getDate() + 30);
+      const capaRef = await addDoc(collection(db, 'capas'), {
+        uid:                user.uid,
+        nit:                userNit ?? '',
+        numero:             `CAPA-${num}`,
+        descripcion:        `[Riesgo ISO 31000] ${item.nombre}`,
+        causaRaiz:          item.descripcion || `Riesgo de categoría ${item.categoria} identificado en la matriz — nivel ${item.nivel} (Probabilidad ${item.probabilidad} × Impacto ${item.impacto}).`,
+        accionCorrectiva:   `Tratamiento definido: ${item.tratamiento}. Documentar las acciones concretas para mitigar este riesgo.`,
+        responsable:        item.responsable || '',
+        area:               item.categoria,
+        fechaLimite:        limite.toISOString().slice(0, 10),
+        origen:             'riesgo',
+        evidencia:          '',
+        estado:             'abierta',
+        refRiesgoId:        item.id,
+        fechaCreacion:      serverTimestamp(),
+        fechaActualizacion: null,
+        fechaInicio:        null,
+        fechaCierre:        null,
+      });
+      await updateDoc(doc(db, 'riesgos', user.uid, 'items', item.id), { capaId: capaRef.id });
+      show(`✅ CAPA-${num} creada desde el riesgo.`, 'success');
+    } catch (err) {
+      console.error('[AnalisisRiesgo] crearCapaDesdeRiesgo:', err);
+      show('Error al crear la CAPA.', 'error');
+    } finally {
+      setCreandoCapaId(null);
+    }
+  }, [user, userNit, show]);
 
   // PDF export
   const exportarPDF = useCallback(() => {
@@ -662,6 +765,70 @@ export default function AnalisisRiesgoPage() {
         }
       />
 
+      {/* ── Alertas Tempranas ───────────────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+            🚨 Alertas Tempranas
+            {alertas.length > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">
+                {alertas.length}
+              </span>
+            )}
+          </h3>
+          <button
+            onClick={refrescarAlertas}
+            disabled={loadingAlertas}
+            className="text-xs px-3 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-50
+                       text-gray-600 transition-colors disabled:opacity-50"
+          >
+            {loadingAlertas ? 'Actualizando…' : '🔄 Actualizar alertas'}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mb-3">
+          Cruza tu matriz de riesgo con vencimientos e incidentes reales registrados en NormaLis
+          para anticipar problemas antes de que escalen.
+        </p>
+
+        {loadingAlertas && alertas.length === 0 ? (
+          <p className="text-xs text-gray-400 py-2">Analizando señales de otros módulos…</p>
+        ) : alertas.length === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+            <span>✅</span>
+            <span>Sin alertas por ahora — tu matriz de riesgo está al día con las señales disponibles en la plataforma.</span>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {alertas.map(a => (
+              <div
+                key={a.id}
+                className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${
+                  a.severidad === 'alta'
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-amber-50 border-amber-200'
+                }`}
+              >
+                <span className="text-lg flex-shrink-0">{a.severidad === 'alta' ? '🔴' : '🟡'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold ${a.severidad === 'alta' ? 'text-red-800' : 'text-amber-800'}`}>
+                    {a.titulo}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{a.detalle}</p>
+                  {a.accion && (
+                    <Link
+                      href={a.accion.href}
+                      className="inline-block mt-1.5 text-xs font-bold text-teal-700 hover:text-teal-900"
+                    >
+                      {a.accion.label} →
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard label="Extremo" value={extremos} colorClass="text-red-700"     borderColorClass="border-red-200" />
@@ -728,6 +895,8 @@ export default function AnalisisRiesgoPage() {
               item={item}
               onDelete={handleDelete}
               onUpdate={handleUpdate}
+              onCrearCapa={crearCapaDesdeRiesgo}
+              creandoCapa={creandoCapaId === item.id}
             />
           ))}
           <p className="text-xs text-gray-400 text-center pt-1">

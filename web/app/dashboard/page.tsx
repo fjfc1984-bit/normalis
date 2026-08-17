@@ -137,6 +137,14 @@ const MODULES = [
     from: '#B45309', to: '#FBBF24',
   },
   {
+    href: '/dashboard/analisis-riesgo',
+    title: 'Análisis de Riesgo',
+    desc: 'Matriz ISO 31000 con alertas tempranas automáticas',
+    icon: '⚠️',
+    from: '#DC2626', to: '#FB923C',
+    badge: 'NUEVO',
+  },
+  {
     href: '/dashboard/benchmarking',
     title: 'Benchmarking',
     desc: 'Comparación de indicadores entre IPS de la red',
