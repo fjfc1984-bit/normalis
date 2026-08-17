@@ -17,7 +17,7 @@ import { useAudit } from '@/lib/useAudit';
 import { askWorker } from '@/lib/worker';
 import { auth, db } from '@/lib/firebase';
 import {
-  collection, addDoc, doc, getDoc, getCountFromServer,
+  collection, addDoc, doc, getDoc,
   getDocs, query, where, serverTimestamp,
 } from 'firebase/firestore';
 import type { AuditAnswers, AuditAnswer } from '@/lib/auditTypes';
@@ -181,17 +181,15 @@ export default function AuditoriaSegmentoPage({
     const user = auth.currentUser;
     if (!user || ncs.length === 0) return;
     try {
-      // Anti-duplicado: verificar si ya existen CAPAs para este segmento
-      const existQ = query(
-        collection(db, 'capas'),
-        where('uid', '==', user.uid),
-        where('refSegmento', '==', segmento),
+      // Anti-duplicado: cargar TODAS las CAPAs del uid con un solo query (evita composite index)
+      const allCapasSnap = await getDocs(
+        query(collection(db, 'capas'), where('uid', '==', user.uid))
       );
-      const existSnap = await getDocs(existQ);
-      if (!existSnap.empty) return;   // CAPAs ya creadas para esta auditoría
+      const yaExiste = allCapasSnap.docs.some(d => d.data().refSegmento === segmento);
+      if (yaExiste) return;   // CAPAs ya creadas para esta auditoría
 
       const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
-      const nit = userSnap.data()?.nit ?? '';
+      const nit = (userSnap.data()?.nit as string) ?? '';
       // Agrupar por área
       const porArea = ncs.reduce<Record<string, typeof ncs>>((acc, nc) => {
         const key = nc.areaId || nc.areaName;
@@ -199,10 +197,8 @@ export default function AuditoriaSegmentoPage({
         acc[key].push(nc);
         return acc;
       }, {});
-      // Contar CAPAs existentes para numeración
-      const countQ = query(collection(db, 'capas'), where('uid', '==', user.uid));
-      const countSnap = await getCountFromServer(countQ);
-      let nextNum = (countSnap.data().count ?? 0) + 1;
+      // Numeración basada en cuántas CAPAs ya existen
+      let nextNum = allCapasSnap.size + 1;
       for (const [, items] of Object.entries(porArea)) {
         const area = items[0];
         const preguntas = items.map(i => `• ${i.question}`).join('\n');

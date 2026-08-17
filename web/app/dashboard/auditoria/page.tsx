@@ -6,7 +6,7 @@ import { SEGMENT_META, areasDB } from '@/data/auditData';
 import { auth, db } from '@/lib/firebase';
 import {
   collection, addDoc, doc, getDoc, getDocs,
-  getCountFromServer, query, where, serverTimestamp,
+  query, where, serverTimestamp,
 } from 'firebase/firestore';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
@@ -16,60 +16,9 @@ interface AuditStatus {
   nonConformities: { qKey: string; areaName: string; question: string; answer: string }[];
 }
 type StatusMap  = Record<string, AuditStatus>;
-type CapaSegMap = Record<string, number>;   // segmento → cantidad de CAPAs creadas
+type CapaSegMap = Record<string, number>;   // segmento → cantidad de CAPAs
 
 const SEGMENTOS = Object.keys(areasDB);
-
-// ── Auto-crear CAPAs para un segmento ───────────────────────────────────────
-async function sincronizarCapas(
-  uid: string,
-  nit: string,
-  seg: string,
-  ncs: AuditStatus['nonConformities'],
-  nextNum: number,
-): Promise<number> {
-  if (!ncs.length) return nextNum;
-
-  // Anti-dup: ¿ya hay CAPAs para este segmento?
-  const existSnap = await getDocs(
-    query(collection(db, 'capas'), where('uid', '==', uid), where('refSegmento', '==', seg))
-  );
-  if (!existSnap.empty) return nextNum;
-
-  // Agrupar por área
-  const porArea = ncs.reduce<Record<string, typeof ncs>>((acc, nc) => {
-    if (!acc[nc.areaName]) acc[nc.areaName] = [];
-    acc[nc.areaName].push(nc);
-    return acc;
-  }, {});
-
-  let num = nextNum;
-  const meta = SEGMENT_META[seg];
-  for (const [areaName, items] of Object.entries(porArea)) {
-    const preguntas = items.map(i => `• ${i.question}`).join('\n');
-    await addDoc(collection(db, 'capas'), {
-      uid,
-      nit,
-      numero:           `CAPA-${String(num).padStart(3, '0')}`,
-      descripcion:      `[Auditoría ${meta?.label ?? seg}] No conformidades en ${areaName}`,
-      causaRaiz:        `${items.length} criterio(s) no cumplido(s):\n${preguntas}`,
-      accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable.',
-      responsable:      '',
-      area:             areaName,
-      fechaLimite:      (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().slice(0, 10); })(),
-      origen:           'auditoria',
-      evidencia:        '',
-      estado:           'abierta',
-      refSegmento:      seg,
-      fechaCreacion:    serverTimestamp(),
-      fechaActualizacion: null,
-      fechaInicio:      null,
-      fechaCierre:      null,
-    });
-    num++;
-  }
-  return num;
-}
 
 // ── Componente principal ─────────────────────────────────────────────────────
 export default function AuditoriaPage() {
@@ -86,23 +35,23 @@ export default function AuditoriaPage() {
     try {
       // 1. NIT del usuario
       const userSnap = await getDoc(doc(db, 'usuarios', user.uid));
-      const nit = userSnap.data()?.nit ?? '';
+      const nit = (userSnap.data()?.nit as string) ?? '';
 
-      // 2. Leer todas las auditorías completadas (por ID conocido)
-      const snaps = await Promise.allSettled(
+      // 2. Leer todas las auditorías (por ID conocido — sin composite index)
+      const auditSnaps = await Promise.allSettled(
         SEGMENTOS.map(seg => getDoc(doc(db, 'auditorias', `${user.uid}_${seg}`)))
       );
 
       const newStatus: StatusMap = {};
       const completedSegs: string[] = [];
 
-      snaps.forEach((r, i) => {
+      auditSnaps.forEach((r, i) => {
         const seg = SEGMENTOS[i];
         if (r.status === 'fulfilled' && r.value.exists()) {
           const d = r.value.data()!;
           newStatus[seg] = {
-            completedAt:     d.completedAt    ?? null,
-            score:           d.score          ?? 0,
+            completedAt:     d.completedAt     ?? null,
+            score:           d.score           ?? 0,
             nonConformities: d.nonConformities ?? [],
           };
           if (d.completedAt) completedSegs.push(seg);
@@ -110,35 +59,85 @@ export default function AuditoriaPage() {
       });
       setStatusMap(newStatus);
 
-      // 3. Contar CAPAs actuales para numeración
-      const countSnap = await getCountFromServer(
+      if (completedSegs.length === 0) return;
+
+      // 3. Cargar TODAS las CAPAs del usuario en una sola query (evita composite index)
+      const capasSnap = await getDocs(
         query(collection(db, 'capas'), where('uid', '==', user.uid))
       );
-      let nextNum = (countSnap.data().count ?? 0) + 1;
 
-      // 4. Sincronizar CAPAs para cada servicio completado con NC
+      // Agrupar por refSegmento (client-side)
+      const capasPorSeg: Record<string, number> = {};
+      capasSnap.forEach(d => {
+        const seg = d.data().refSegmento as string | undefined;
+        if (seg) capasPorSeg[seg] = (capasPorSeg[seg] ?? 0) + 1;
+      });
+
+      // Número inicial para nuevas CAPAs
+      let nextNum = capasSnap.size + 1;
+
+      // 4. Crear CAPAs para segmentos completados sin CAPAs aún
       const newCapaMap: CapaSegMap = {};
+
       for (const seg of completedSegs) {
         const ncs = newStatus[seg]?.nonConformities ?? [];
         if (!ncs.length) continue;
 
-        // Contar CAPAs ya existentes para este segmento
-        const existSnap = await getDocs(
-          query(collection(db, 'capas'), where('uid', '==', user.uid), where('refSegmento', '==', seg))
-        );
-        if (!existSnap.empty) {
-          newCapaMap[seg] = existSnap.size;
+        // ¿Ya tiene CAPAs para este segmento?
+        if (capasPorSeg[seg]) {
+          newCapaMap[seg] = capasPorSeg[seg];
           continue;
         }
 
-        // Crear CAPAs nuevas
-        const antes = nextNum;
-        nextNum = await sincronizarCapas(user.uid, nit, seg, ncs, nextNum);
-        newCapaMap[seg] = nextNum - antes;
+        // Agrupar no-conformidades por área
+        const porArea = ncs.reduce<Record<string, typeof ncs>>((acc, nc) => {
+          if (!acc[nc.areaName]) acc[nc.areaName] = [];
+          acc[nc.areaName].push(nc);
+          return acc;
+        }, {});
+
+        const meta = SEGMENT_META[seg];
+        let creadas = 0;
+
+        for (const [areaName, items] of Object.entries(porArea)) {
+          const preguntas = items.map(i => `• ${i.question}`).join('\n');
+          try {
+            await addDoc(collection(db, 'capas'), {
+              uid:              user.uid,
+              nit,
+              numero:           `CAPA-${String(nextNum).padStart(3, '0')}`,
+              descripcion:      `[Auditoría ${meta?.label ?? seg}] No conformidades en ${areaName}`,
+              causaRaiz:        `${items.length} criterio(s) no cumplido(s):\n${preguntas}`,
+              accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable.',
+              responsable:      '',
+              area:             areaName,
+              fechaLimite:      (() => {
+                                  const d = new Date();
+                                  d.setMonth(d.getMonth() + 3);
+                                  return d.toISOString().slice(0, 10);
+                                })(),
+              origen:           'auditoria',
+              evidencia:        '',
+              estado:           'abierta',
+              refSegmento:      seg,
+              fechaCreacion:    serverTimestamp(),
+              fechaActualizacion: null,
+              fechaInicio:      null,
+              fechaCierre:      null,
+            });
+            nextNum++;
+            creadas++;
+          } catch (e) {
+            console.error(`[AutoCAPAs] Error creando CAPA para ${seg}/${areaName}:`, e);
+          }
+        }
+
+        if (creadas > 0) newCapaMap[seg] = creadas;
       }
+
       setCapaSegMap(newCapaMap);
     } catch (e) {
-      console.error('[AuditoriaPage] Error sincronizando CAPAs:', e);
+      console.error('[AuditoriaPage] Error sincronizando:', e);
     } finally {
       setSyncing(false);
       setSyncDone(true);
@@ -173,11 +172,11 @@ export default function AuditoriaPage() {
       {/* Grid de servicios */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {SEGMENTOS.map(seg => {
-          const meta   = SEGMENT_META[seg];
-          const areas  = areasDB[seg];
-          const totalQ = areas.reduce((acc, a) => acc + a.q.length, 0);
-          const st     = statusMap[seg];
-          const capas  = capaSegMap[seg] ?? 0;
+          const meta     = SEGMENT_META[seg];
+          const areas    = areasDB[seg];
+          const totalQ   = areas.reduce((acc, a) => acc + a.q.length, 0);
+          const st       = statusMap[seg];
+          const capas    = capaSegMap[seg] ?? 0;
           const completada = !!st?.completedAt;
 
           return (
@@ -200,7 +199,6 @@ export default function AuditoriaPage() {
                     </p>
                   </div>
                 </div>
-                {/* Score badge o flecha */}
                 {completada ? (
                   <span className="text-sm font-bold px-2.5 py-1 rounded-xl"
                     style={{
@@ -216,7 +214,6 @@ export default function AuditoriaPage() {
 
               <p className="text-xs text-gray-400 line-clamp-1">{meta?.norm}</p>
 
-              {/* Estado de la auditoría */}
               {completada ? (
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50
