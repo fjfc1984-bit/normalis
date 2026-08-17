@@ -18,7 +18,7 @@
 // auditoría recién completada, enviadas tal cual al modelo.
 
 import {
-  collection, addDoc, doc, setDoc, updateDoc, query, where,
+  collection, addDoc, doc, getDoc, setDoc, updateDoc, query, where,
   getCountFromServer, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -62,6 +62,25 @@ export async function ejecutarAgentePilar(
       console.error('[AgentePilar] No se pudo actualizar el estado de la auditoría:', err),
     );
 
+  // Guarda de idempotencia: si esta auditoría ya fue procesada exitosamente,
+  // no se reprocesa. Sin esto, revisitar una auditoría ya completada y
+  // volver a recorrer el checklist (los mismos datos, precargados) hasta el
+  // final dispara handleSave() de nuevo y duplicaría riesgos y CAPAs cada
+  // vez. El botón de reintento manual en Cumplimiento Integrado solo se
+  // muestra para auditorías en 'pendiente'/'error', así que nunca llama
+  // esta función sobre una ya 'completada' — el chequeo es seguro en ambos
+  // casos de uso (disparo automático y reintento manual).
+  try {
+    const existing = await getDoc(auditRef);
+    if (existing.exists() && existing.data()?.agenteStatus === 'completado') {
+      return;
+    }
+  } catch (err) {
+    console.error('[AgentePilar] No se pudo verificar el estado previo de la auditoría:', err);
+    // Si la lectura falla, se continúa — es preferible reprocesar antes que
+    // dejar la auditoría atascada por un error transitorio de lectura.
+  }
+
   await marcar({ agenteStatus: 'procesando' });
 
   // Sin no conformidades no hay nada que analizar — se marca como
@@ -75,11 +94,18 @@ export async function ejecutarAgentePilar(
     return;
   }
 
+  // El Worker acota a las primeras 40 no conformidades para mantener el
+  // prompt acotado (ver cloudflare-worker/worker.js, handleAgentePilar).
+  // Se refleja el mismo límite aquí para que "NC analizadas" en el resumen
+  // sea exacto y no sobreestime lo que la IA realmente vio.
+  const NC_LIMITE = 40;
+  const ncsAnalizadas = ncs.slice(0, NC_LIMITE);
+
   try {
     const payload = {
       segmento,
       segmentoLabel,
-      nonConformities: ncs.map((nc): AgentePilarNC => ({
+      nonConformities: ncsAnalizadas.map((nc): AgentePilarNC => ({
         areaName: nc.areaName,
         question: nc.question,
         answer:   nc.answer === 'no' ? 'No cumple' : 'Cumple parcialmente',
@@ -92,7 +118,7 @@ export async function ejecutarAgentePilar(
         agenteStatus: 'error',
         agenteProcessedAt: new Date().toISOString(),
         agenteResumen: {
-          riesgosCreados: 0, capasCreadadas: 0, ncsProcessadas: ncs.length,
+          riesgosCreados: 0, capasCreadadas: 0, ncsProcessadas: ncsAnalizadas.length,
           errores: ['El análisis de IA no devolvió un formato reconocible. Puedes reintentarlo desde Cumplimiento Integrado.'],
         } as AgenteResumen,
       });
@@ -177,7 +203,7 @@ export async function ejecutarAgentePilar(
       agenteStatus: 'completado',
       agenteProcessedAt: new Date().toISOString(),
       agenteResumen: {
-        riesgosCreados, capasCreadadas, ncsProcessadas: ncs.length,
+        riesgosCreados, capasCreadadas, ncsProcessadas: ncsAnalizadas.length,
         errores: errores.length ? errores : null,
       } as AgenteResumen,
     });
@@ -188,7 +214,7 @@ export async function ejecutarAgentePilar(
       agenteStatus: 'error',
       agenteProcessedAt: new Date().toISOString(),
       agenteResumen: {
-        riesgosCreados: 0, capasCreadadas: 0, ncsProcessadas: ncs.length,
+        riesgosCreados: 0, capasCreadadas: 0, ncsProcessadas: ncsAnalizadas.length,
         errores: [msg],
       } as AgenteResumen,
     });

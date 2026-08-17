@@ -2281,7 +2281,11 @@ ${listaNC}`;
 
   let text;
   try {
-    const aiRes = await env.AI.run(CF_AI_MODEL, { messages, temperature: 0.2, max_tokens: 900 });
+    // max_tokens generoso: hasta 6 riesgos estructurados (nombre, categoria,
+    // probabilidad, impacto, tratamiento, descripcion) pueden acercarse al
+    // límite anterior de 900 y truncar el JSON — mejor pagar unos tokens
+    // extra que descartar un análisis completo por una respuesta cortada.
+    const aiRes = await env.AI.run(CF_AI_MODEL, { messages, temperature: 0.2, max_tokens: 1200 });
     text = aiRes?.response ?? '';
   } catch (e) {
     await sentryCapture(e, { endpoint: 'POST /api/agente-pilar', extra: { step: 'ai' } }, env);

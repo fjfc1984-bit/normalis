@@ -49,6 +49,9 @@ interface SavedAudit {
 interface AuditNonConf extends NonConformity {
   segmento: string;
   segLabel: string;
+  /** true si la auditoría de origen ya fue procesada por el Agente Pilar —
+   *  evita que el usuario duplique el riesgo importándolo también a mano. */
+  agenteProcesado: boolean;
 }
 
 // ── Constantes y helpers ──────────────────────────────────────────────────────
@@ -277,8 +280,9 @@ export default function CumplimientoPage() {
       const areas = areasDB[audit.segmento];
       if (!areas) continue;
       const flatQ = buildFlatQuestions(areas);
+      const agenteProcesado = audit.agenteStatus === 'completado';
       getNonConformities(flatQ, audit.answers).forEach(nc =>
-        result.push({ ...nc, segmento: audit.segmento, segLabel: segLabel(audit.segmento) }),
+        result.push({ ...nc, segmento: audit.segmento, segLabel: segLabel(audit.segmento), agenteProcesado }),
       );
     }
     return result;
@@ -472,6 +476,11 @@ export default function CumplimientoPage() {
               {agentePendientes.map(a => {
                 const meta = SEG_META[a.segmento];
                 const enCurso = reintentando === a.segmento;
+                // Se deshabilitan TODOS los botones mientras cualquier
+                // reintento está en curso — dos reintentos concurrentes
+                // podrían leer el mismo conteo de CAPAs antes de que
+                // cualquiera termine de escribir y numerarlas duplicado.
+                const bloqueado = reintentando !== null;
                 return (
                   <div key={a.segmento} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-amber-200">
                     <span className="text-sm">{meta?.icon ?? '🏥'}</span>
@@ -481,11 +490,11 @@ export default function CumplimientoPage() {
                     </span>
                     <button
                       onClick={() => reintentarAgente(a)}
-                      disabled={enCurso}
+                      disabled={bloqueado}
                       className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600
                                  disabled:opacity-50 text-white transition-colors flex-shrink-0"
                     >
-                      {enCurso ? 'Procesando…' : '🔄 Procesar con Agente Pilar'}
+                      {enCurso ? 'Procesando…' : bloqueado ? 'Espera…' : '🔄 Procesar con Agente Pilar'}
                     </button>
                   </div>
                 );
@@ -659,6 +668,12 @@ export default function CumplimientoPage() {
                     {allNonConfs.length} no conformidad{allNonConfs.length !== 1 ? 'es' : ''} detectada{allNonConfs.length !== 1 ? 's' : ''} —
                     selecciona las que quieres convertir en riesgos
                   </p>
+                  {allNonConfs.some(nc => nc.agenteProcesado) && (
+                    <p className="text-[10px] text-teal-600 mt-1">
+                      🤖 Las marcadas &quot;Ya en Agente Pilar&quot; vienen de una auditoría que la IA ya
+                      analizó — impórtalas solo si crees que falta un riesgo específico, para evitar duplicados.
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {selected.size > 0 && (
@@ -719,6 +734,12 @@ export default function CumplimientoPage() {
                             }`}>
                             {nc.answer === 'no' ? 'No cumple' : 'Cumple parcialmente'}
                           </span>
+                          {nc.agenteProcesado && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-700"
+                                  title="La auditoría de origen ya fue analizada por el Agente Pilar (IA)">
+                              🤖 Ya en Agente Pilar
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-gray-700 line-clamp-2">{nc.question}</p>
                       </div>
