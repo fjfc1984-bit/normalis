@@ -22,17 +22,34 @@ export type IncidenteEstado = 'Abierto' | 'En seguimiento' | 'Cerrado';
 // integraciones (POST /api/v1/incidentes).
 export type IncidenteOrigen = 'interno' | 'api_externa';
 
+// ── Análisis de causa raíz — Protocolo de Londres (Vincent & Taylor-Adams) ──
+export interface FactorContribuyente {
+  categoria: string; // una de las 7 categorías del Protocolo de Londres
+  detalle:   string;
+}
+
+export interface AnalisisLondres {
+  estructurado:           boolean;               // false si la IA no devolvió JSON válido
+  factoresContribuyentes: FactorContribuyente[];
+  causaRaiz:              string;
+  accionRecomendada:      string;
+  textoCrudo?:            string;                 // fallback cuando estructurado = false
+  generadoEn:             number;                  // timestamp ms
+}
+
 export interface IncidenteItem {
-  id:          string;
-  tipo:        IncidenteTipo;
-  severidad:   IncidenteSeveridad;
-  desc:        string;   // Descripción del evento
-  accion:      string;   // Acción inmediata tomada
-  responsable: string;   // Responsable del seguimiento
-  estado:      IncidenteEstado;
-  fecha:       string;   // Fecha legible es-CO
-  creadoEn:    number;   // timestamp ms
-  origen?:     IncidenteOrigen;
+  id:              string;
+  tipo:            IncidenteTipo;
+  severidad:       IncidenteSeveridad;
+  desc:            string;   // Descripción del evento
+  accion:          string;   // Acción inmediata tomada
+  responsable:     string;   // Responsable del seguimiento
+  estado:          IncidenteEstado;
+  fecha:           string;   // Fecha legible es-CO
+  creadoEn:        number;   // timestamp ms
+  origen?:         IncidenteOrigen;
+  analisisLondres?: AnalisisLondres | null;
+  capaId?:         string | null; // CAPA creada desde este análisis, si existe
 }
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────

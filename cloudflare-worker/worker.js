@@ -1,5 +1,5 @@
 /**
- * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.4
+ * NormaLis — AI Proxy + Areas API + API pública de integraciones (Cloudflare Worker) v4.5
  *
  * Endpoints:
  *   POST /                    → proxy al chat LLM (Cloudflare Workers AI)
@@ -9,6 +9,7 @@
  *   GET  /api/v1/checklist-1732 → checklist público Res. 1732/2026 (para integradores/HCE)
  *   POST /api/v1/incidentes     → reporte de incidentes desde sistemas externos (API key)
  *   POST /audit                 → registra un evento en la bitácora de seguridad (Firebase ID token)
+ *   POST /api/analizar-incidente → análisis de causa raíz Protocolo de Londres (Firebase ID token)
  *
  * Bindings requeridos:
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
@@ -45,6 +46,39 @@ const AUDIT_ACCIONES_VALIDAS = [
   'llave_api_eliminada',
   'pqrs_respondida',
 ];
+
+// ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───
+const LONDRES_CATEGORIAS = [
+  'Factores del paciente',
+  'Factores de la tarea y la tecnología',
+  'Factores individuales del profesional',
+  'Factores del equipo de trabajo',
+  'Factores del ambiente de trabajo',
+  'Factores organizacionales y de gerencia',
+  'Contexto institucional',
+];
+
+const SYSTEM_LONDRES_PROMPT = `Eres un experto en seguridad del paciente aplicando el Protocolo de Londres (marco de Vincent y Taylor-Adams) para el análisis de causa raíz de incidentes y eventos adversos en salud, conforme a los lineamientos de seguridad del paciente del Ministerio de Salud de Colombia.
+
+Dado un incidente reportado, identifica los FACTORES CONTRIBUYENTES clasificados en las 7 categorías del Protocolo de Londres, y propón UNA causa raíz principal y UNA acción correctiva concreta.
+
+Las 7 categorías son:
+1. Factores del paciente (complejidad clínica, comunicación, características personales)
+2. Factores de la tarea y la tecnología (protocolos, disponibilidad y diseño de equipos/insumos)
+3. Factores individuales del profesional (conocimiento, competencia, fatiga, estado de salud)
+4. Factores del equipo de trabajo (comunicación, supervisión, estructura del equipo)
+5. Factores del ambiente de trabajo (carga laboral, personal insuficiente, infraestructura, interrupciones)
+6. Factores organizacionales y de gerencia (cultura de seguridad, prioridades, recursos)
+7. Contexto institucional (normativa, financiamiento, presiones externas del sistema de salud)
+
+Reglas estrictas:
+- Responde EXCLUSIVAMENTE con un objeto JSON válido, sin texto adicional antes ni después, sin bloques de markdown (sin \`\`\`).
+- Incluye solo las categorías donde identifiques un factor contribuyente real y sustentado en la información dada — no inventes factores para categorías sin evidencia en el texto.
+- No inventes datos clínicos, nombres o cifras que no estén en la descripción del incidente.
+- Sé conciso: cada "detalle" debe tener máximo 2 frases.
+
+Formato exacto de respuesta (JSON, una sola línea o formateado, sin comentarios):
+{"factoresContribuyentes":[{"categoria":"<una de las 7 categorías exactas>","detalle":"<explicación breve>"}],"causaRaiz":"<causa raíz principal, 1-2 frases>","accionRecomendada":"<acción correctiva concreta y accionable, 1-2 frases>"}`;
 
 // ── Checklist público Res. 1732/2026 — mismo contenido que
 // web/app/dashboard/gap-1732/page.tsx (ITEMS_GAP). Se mantiene una copia
@@ -1170,6 +1204,23 @@ function checkAuditRateLimit(uid) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para el análisis de causa raíz (Protocolo de Londres) — por
+// uid. Ventana más estricta que /audit porque cada llamada consume una
+// inferencia de Workers AI (costo real), y el uso legítimo es analizar
+// incidentes de uno en uno, no en ráfaga.
+const _analisisRateMap = new Map();
+function checkAnalisisRateLimit(uid) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 10;
+  const key = uid || 'unknown';
+  const entry = _analisisRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _analisisRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
 // SHA-256 de un string → hex. Las llaves API nunca se guardan en texto
 // plano en Firestore, solo su hash — igual que un password.
 async function sha256Hex(text) {
@@ -1613,6 +1664,11 @@ export default {
       return handleAudit(request, env, cors);
     }
 
+    // ── POST /api/analizar-incidente — causa raíz Protocolo de Londres (IA) ──
+    if (request.method === 'POST' && url.pathname === '/api/analizar-incidente') {
+      return handleAnalizarIncidente(request, env, cors);
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405,
@@ -2040,6 +2096,87 @@ async function handleAudit(request, env, cors) {
     await sentryCapture(e, { endpoint: 'POST /audit', extra: { step: 'create' } }, env);
     return new Response(JSON.stringify({ error: 'No se pudo registrar el evento' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
+}
+
+// ── POST /api/analizar-incidente — análisis de causa raíz (Protocolo de Londres) ──
+// Autenticado con Firebase ID token (uso interno del dashboard, no la API
+// pública). Es "stateless" a propósito: el Worker solo genera el análisis
+// con Workers AI y lo devuelve — el frontend lo persiste directamente en
+// el documento del incidente (usuarios/{uid}/incidentes/{id}), que ya es
+// escribible por su dueño según firestore.rules. Así no hace falta abrir
+// una ruta de escritura nueva ni tocar reglas para este endpoint.
+async function handleAnalizarIncidente(request, env, cors) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  const user = await verifyFirebaseToken(idToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!checkAnalisisRateLimit(user.uid)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Máximo 10 análisis por minuto.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { tipo, severidad, desc, accion } = body || {};
+  if (!desc || typeof desc !== 'string' || !desc.trim()) {
+    return new Response(JSON.stringify({ error: 'desc requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (desc.length > 3000) {
+    return new Response(JSON.stringify({ error: 'desc demasiado largo (máx 3000 caracteres)' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  if (!env.AI) {
+    return new Response(JSON.stringify({ error: 'Servicio no configurado (binding AI ausente)' }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const userPrompt = `Analiza este incidente:
+Tipo: ${tipo || 'No especificado'}
+Severidad: ${severidad || 'No especificada'}
+Descripción: ${desc.trim()}
+Acción inmediata tomada: ${accion && accion.trim() ? accion.trim() : 'Ninguna registrada'}`;
+
+  const messages = [
+    { role: 'system', content: SYSTEM_LONDRES_PROMPT },
+    { role: 'user', content: userPrompt },
+  ];
+
+  let text;
+  try {
+    const aiRes = await env.AI.run(CF_AI_MODEL, { messages, temperature: 0.2, max_tokens: 800 });
+    text = aiRes?.response ?? '';
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /api/analizar-incidente', extra: { step: 'ai' } }, env);
+    return new Response(JSON.stringify({ error: 'El servicio de IA no está disponible en este momento' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // El modelo puede envolver el JSON en ```json ... ``` a pesar de la
+  // instrucción — se limpia antes de parsear. Si aun así falla, se
+  // devuelve el texto crudo para que el usuario no pierda la respuesta.
+  const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  let parsed = null;
+  try {
+    const candidate = JSON.parse(cleaned);
+    if (Array.isArray(candidate.factoresContribuyentes) && typeof candidate.causaRaiz === 'string') {
+      parsed = {
+        factoresContribuyentes: candidate.factoresContribuyentes
+          .filter(f => f && typeof f.categoria === 'string' && typeof f.detalle === 'string')
+          .slice(0, 7),
+        causaRaiz: candidate.causaRaiz,
+        accionRecomendada: typeof candidate.accionRecomendada === 'string' ? candidate.accionRecomendada : '',
+      };
+    }
+  } catch { /* se maneja abajo con el fallback de texto crudo */ }
+
+  if (parsed) {
+    return new Response(JSON.stringify({ ok: true, estructurado: true, ...parsed }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  return new Response(JSON.stringify({ ok: true, estructurado: false, textoCrudo: text }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
 // ── Scheduled cron — runs daily at 08:00 COT ─────────────────────────────────

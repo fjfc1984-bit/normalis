@@ -78,6 +78,42 @@ export async function submitPqrsPublico(payload: PqrsPublicoPayload): Promise<vo
   }
 }
 
+// ── Análisis de causa raíz — Protocolo de Londres ───────────────────────────
+export interface FactorContribuyentePayload {
+  categoria: string;
+  detalle:   string;
+}
+
+export interface AnalisisIncidenteResponse {
+  ok:                     true;
+  estructurado:           boolean;
+  factoresContribuyentes?: FactorContribuyentePayload[];
+  causaRaiz?:             string;
+  accionRecomendada?:     string;
+  textoCrudo?:            string;
+}
+
+/**
+ * Pide al Worker un análisis de causa raíz (Protocolo de Londres) de un
+ * incidente ya registrado. Requiere el ID token de Firebase del usuario —
+ * es una función interna del dashboard, no la API pública de integraciones.
+ */
+export async function analizarIncidente(
+  payload: { tipo: string; severidad: string; desc: string; accion?: string },
+  idToken: string,
+): Promise<AnalisisIncidenteResponse> {
+  const res = await fetch(`${WORKER_URL}/api/analizar-incidente`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Error ${res.status}`);
+  }
+  return res.json() as Promise<AnalisisIncidenteResponse>;
+}
+
 export async function askWorker(
   question: string,
   context:  WorkerContext,

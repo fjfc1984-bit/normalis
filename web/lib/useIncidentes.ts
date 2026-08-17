@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type {
-  IncidenteItem, IncidenteTipo, IncidenteSeveridad, IncidenteEstado,
+  IncidenteItem, IncidenteTipo, IncidenteSeveridad, IncidenteEstado, AnalisisLondres,
 } from '@/lib/incidenteTypes';
 
 // ── Payload para crear un incidente ──────────────────────────────────────────
@@ -51,6 +51,8 @@ export function useIncidentes(uid: string | null) {
             fecha:       r.fecha       ?? '',
             creadoEn:    r.creadoEn    ?? 0,
             origen:      r.origen      || 'interno',
+            analisisLondres: r.analisisLondres ?? null,
+            capaId:      r.capaId      ?? null,
           };
         }));
       })
@@ -90,5 +92,26 @@ export function useIncidentes(uid: string | null) {
     setItems(prev => prev.filter(i => i.id !== id));
   }, [uid]);
 
-  return { items, loading, error, add, cambiarEstado, remove };
+  // Persiste el análisis de causa raíz (Protocolo de Londres) generado por
+  // IA en el propio documento del incidente — no requiere una colección ni
+  // reglas nuevas, ya que el dueño del incidente ya puede escribirlo.
+  const guardarAnalisis = useCallback(async (id: string, analisis: AnalisisLondres): Promise<void> => {
+    if (!uid) return;
+    await updateDoc(doc(db, 'usuarios', uid, 'incidentes', id), {
+      analisisLondres: analisis, updatedAt: Timestamp.now(),
+    });
+    setItems(prev => prev.map(i => i.id === id ? { ...i, analisisLondres: analisis } : i));
+  }, [uid]);
+
+  // Marca qué CAPA se creó a partir del análisis de este incidente — evita
+  // crear una CAPA duplicada si el usuario vuelve a hacer clic.
+  const vincularCapa = useCallback(async (id: string, capaId: string): Promise<void> => {
+    if (!uid) return;
+    await updateDoc(doc(db, 'usuarios', uid, 'incidentes', id), {
+      capaId, updatedAt: Timestamp.now(),
+    });
+    setItems(prev => prev.map(i => i.id === id ? { ...i, capaId } : i));
+  }, [uid]);
+
+  return { items, loading, error, add, cambiarEstado, remove, guardarAnalisis, vincularCapa };
 }

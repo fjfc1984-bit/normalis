@@ -7,13 +7,20 @@
  */
 
 import { useState, useCallback } from 'react';
+import {
+  collection, query, where, getCountFromServer, addDoc, serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { useIncidentes } from '@/lib/useIncidentes';
+import { analizarIncidente } from '@/lib/worker';
 import {
   INCIDENTE_TIPOS, INCIDENTE_SEVERIDADES, INCIDENTE_ESTADOS,
   SEVERIDAD_COLOR, ESTADO_INC_COLOR,
 } from '@/lib/incidenteTypes';
-import type { IncidenteTipo, IncidenteSeveridad, IncidenteEstado, IncidenteItem } from '@/lib/incidenteTypes';
+import type {
+  IncidenteTipo, IncidenteSeveridad, IncidenteEstado, IncidenteItem, AnalisisLondres,
+} from '@/lib/incidenteTypes';
 import type { NuevoIncidente } from '@/lib/useIncidentes';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
@@ -166,15 +173,92 @@ function NuevoIncidenteModal({
   );
 }
 
+// ── Panel de análisis de causa raíz (Protocolo de Londres) ───────────────────
+function AnalisisLondresPanel({
+  analisis,
+  capaId,
+  creandoCapa,
+  onCrearCapa,
+}: {
+  analisis:    AnalisisLondres;
+  capaId?:     string | null;
+  creandoCapa: boolean;
+  onCrearCapa: () => void;
+}) {
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+      <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+        🤖 Análisis generado por IA — requiere revisión y validación del comité de seguridad del
+        paciente antes de considerarse definitivo. No sustituye el juicio clínico profesional.
+      </p>
+
+      {analisis.estructurado ? (
+        <>
+          {analisis.factoresContribuyentes.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">
+                Factores contribuyentes
+              </p>
+              <ul className="space-y-1.5">
+                {analisis.factoresContribuyentes.map((f, i) => (
+                  <li key={i} className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">{f.categoria}:</span> {f.detalle}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {analisis.causaRaiz && (
+            <div>
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Causa raíz</p>
+              <p className="text-xs text-gray-700">{analisis.causaRaiz}</p>
+            </div>
+          )}
+          {analisis.accionRecomendada && (
+            <div>
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Acción recomendada</p>
+              <p className="text-xs text-gray-700">{analisis.accionRecomendada}</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="text-xs text-gray-600 whitespace-pre-wrap">{analisis.textoCrudo}</p>
+      )}
+
+      <div>
+        {capaId ? (
+          <span className="text-xs font-semibold text-emerald-600">✓ CAPA creada desde este análisis</span>
+        ) : (
+          <button
+            onClick={onCrearCapa}
+            disabled={creandoCapa || (!analisis.causaRaiz && !analisis.textoCrudo)}
+            className="text-xs font-semibold text-teal-600 hover:text-teal-700 disabled:opacity-40 transition-colors"
+          >
+            {creandoCapa ? 'Creando CAPA…' : '+ Crear CAPA desde este análisis'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Tarjeta de incidente ──────────────────────────────────────────────────────
 function IncidenteCard({
   item,
   onEstado,
   onDelete,
+  onAnalizar,
+  analizando,
+  creandoCapa,
+  onCrearCapa,
 }: {
-  item:     IncidenteItem;
-  onEstado: (id: string, e: IncidenteEstado) => void;
-  onDelete: (id: string) => void;
+  item:        IncidenteItem;
+  onEstado:    (id: string, e: IncidenteEstado) => void;
+  onDelete:    (id: string) => void;
+  onAnalizar:  (item: IncidenteItem) => void;
+  analizando:  boolean;
+  creandoCapa: boolean;
+  onCrearCapa: (item: IncidenteItem) => void;
 }) {
   const sc = SEVERIDAD_COLOR[item.severidad];
   const ec = ESTADO_INC_COLOR[item.estado];
@@ -230,6 +314,25 @@ function IncidenteCard({
           </button>
         </div>
       </div>
+
+      {item.analisisLondres ? (
+        <AnalisisLondresPanel
+          analisis={item.analisisLondres}
+          capaId={item.capaId}
+          creandoCapa={creandoCapa}
+          onCrearCapa={() => onCrearCapa(item)}
+        />
+      ) : (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <button
+            onClick={() => onAnalizar(item)}
+            disabled={analizando}
+            className="text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-40 transition-colors"
+          >
+            {analizando ? '🔬 Analizando…' : '🔬 Analizar causa raíz (Protocolo de Londres, IA)'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -238,13 +341,17 @@ function IncidenteCard({
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════
 export default function IncidentesPage() {
-  const { user, loading: authLoading } = useAuth();
-  const { items, loading, add, cambiarEstado, remove } = useIncidentes(user?.uid ?? null);
+  const { user, nit, loading: authLoading } = useAuth();
+  const {
+    items, loading, add, cambiarEstado, remove, guardarAnalisis, vincularCapa,
+  } = useIncidentes(user?.uid ?? null);
   const { toast, show } = useToast();
 
-  const [showModal, setShowModal] = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [filtro,    setFiltro]    = useState<IncidenteEstado | 'Todos'>('Todos');
+  const [showModal,   setShowModal]   = useState(false);
+  const [saving,      setSaving]      = useState(false);
+  const [filtro,      setFiltro]      = useState<IncidenteEstado | 'Todos'>('Todos');
+  const [analizando,  setAnalizando]  = useState<string | null>(null); // id en análisis
+  const [creandoCapa, setCreandoCapa] = useState<string | null>(null); // id creando CAPA
 
   // KPIs
   const criticos  = items.filter(i => i.severidad === 'critico').length;
@@ -285,6 +392,74 @@ export default function IncidentesPage() {
       show('Error al eliminar.', 'error');
     }
   }, [remove, show]);
+
+  // Pide a la IA un análisis de causa raíz (Protocolo de Londres) y lo
+  // persiste en el propio documento del incidente.
+  const handleAnalizar = useCallback(async (item: IncidenteItem) => {
+    if (!user) return;
+    setAnalizando(item.id);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await analizarIncidente(
+        { tipo: item.tipo, severidad: item.severidad, desc: item.desc, accion: item.accion },
+        idToken,
+      );
+      const analisis = {
+        estructurado:           res.estructurado,
+        factoresContribuyentes: res.factoresContribuyentes ?? [],
+        causaRaiz:              res.causaRaiz ?? '',
+        accionRecomendada:      res.accionRecomendada ?? '',
+        textoCrudo:             res.textoCrudo,
+        generadoEn:             Date.now(),
+      };
+      await guardarAnalisis(item.id, analisis);
+      show('Análisis generado — revísalo antes de considerarlo definitivo.', 'success');
+    } catch (e) {
+      show((e as Error).message || 'No se pudo generar el análisis.', 'error');
+    } finally {
+      setAnalizando(null);
+    }
+  }, [user, guardarAnalisis, show]);
+
+  // Crea una CAPA prellenada con la causa raíz y la acción recomendada del
+  // análisis — mismo patrón que la auto-creación de CAPAs desde Brecha 1732.
+  const handleCrearCapa = useCallback(async (item: IncidenteItem) => {
+    if (!user || !item.analisisLondres || item.capaId) return;
+    setCreandoCapa(item.id);
+    try {
+      const countQ = nit
+        ? query(collection(db, 'capas'), where('nit', '==', nit))
+        : query(collection(db, 'capas'), where('uid', '==', user.uid));
+      const countSnap = await getCountFromServer(countQ);
+      const num = String((countSnap.data().count ?? 0) + 1).padStart(3, '0');
+      const fechaLimite = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+      const capaRef = await addDoc(collection(db, 'capas'), {
+        uid:                user.uid,
+        nit:                nit ?? '',
+        numero:             `CAPA-${num}`,
+        descripcion:        `[Incidente] ${item.tipo} — ${item.desc.slice(0, 140)}`,
+        causaRaiz:          item.analisisLondres.causaRaiz || item.analisisLondres.textoCrudo || '',
+        accionCorrectiva:   item.analisisLondres.accionRecomendada || '',
+        responsable:        item.responsable || '',
+        area:               item.tipo,
+        fechaLimite,
+        origen:             'incidente',
+        evidencia:          '',
+        estado:             'abierta',
+        refIncidenteId:     item.id,
+        fechaCreacion:      serverTimestamp(),
+        fechaActualizacion: null,
+        fechaInicio:        null,
+        fechaCierre:        null,
+      });
+      await vincularCapa(item.id, capaRef.id);
+      show(`✅ CAPA-${num} creada desde el análisis.`, 'success');
+    } catch {
+      show('No se pudo crear la CAPA.', 'error');
+    } finally {
+      setCreandoCapa(null);
+    }
+  }, [user, nit, vincularCapa, show]);
 
   const exportarPDF = useCallback(() => {
     const w = window.open('', '_blank');
@@ -441,6 +616,10 @@ export default function IncidentesPage() {
               item={item}
               onEstado={handleEstado}
               onDelete={handleDelete}
+              onAnalizar={handleAnalizar}
+              analizando={analizando === item.id}
+              creandoCapa={creandoCapa === item.id}
+              onCrearCapa={handleCrearCapa}
             />
           ))}
           <p className="text-xs text-gray-400 text-center pt-1">
