@@ -27,6 +27,57 @@ export interface WorkerResponse {
   acciones:  WorkerAccion[];
 }
 
+/**
+ * Envía un email a través del endpoint /email del Worker (Resend server-side).
+ * idToken solo es necesario para tipos que requieren autenticación (ej. pqrs_respuesta).
+ * Lanza si el envío falla — el llamador decide cómo mostrarlo al usuario.
+ */
+export async function sendWorkerEmail(
+  type: string,
+  data: Record<string, unknown>,
+  idToken?: string,
+): Promise<void> {
+  const res = await fetch(`${WORKER_URL}/email`, {
+    method:  'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    },
+    body: JSON.stringify({ type, data }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Email error ${res.status}`);
+  }
+}
+
+// ── PQRS público ─────────────────────────────────────────────────────────────
+export interface PqrsPublicoPayload {
+  uid:       string;
+  tipo:      string;
+  nombre:    string;
+  desc:      string;
+  area?:     string;
+  email?:    string;
+  telefono?: string;
+}
+
+/**
+ * Envía una PQRS desde el formulario público (sin login) al endpoint /pqrs
+ * del Worker, que la escribe en Firestore y notifica a la IPS por email.
+ */
+export async function submitPqrsPublico(payload: PqrsPublicoPayload): Promise<void> {
+  const res = await fetch(`${WORKER_URL}/pqrs`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Error ${res.status}`);
+  }
+}
+
 export async function askWorker(
   question: string,
   context:  WorkerContext,

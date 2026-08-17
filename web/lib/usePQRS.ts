@@ -23,10 +23,12 @@ export interface UsePQRSState {
 
 // ── Payload para crear una nueva PQRS ─────────────────────────────────────────
 export interface NuevaPQRS {
-  tipo:   PQRSTipo;
-  nombre: string;
-  desc:   string;
-  area:   string;
+  tipo:      PQRSTipo;
+  nombre:    string;
+  desc:      string;
+  area:      string;
+  email?:    string;
+  telefono?: string;
 }
 
 // ── Hook principal ────────────────────────────────────────────────────────────
@@ -45,14 +47,19 @@ export function usePQRS(uid: string | null) {
         const data: PQRSItem[] = snap.docs.map(d => {
           const raw = d.data();
           return {
-            id:       d.id,
-            tipo:     raw.tipo     as PQRSTipo,
-            nombre:   raw.nombre   ?? '',
-            desc:     raw.desc     ?? '',
-            area:     raw.area     ?? '',
-            estado:   raw.estado   as PQRSEstado,
-            fecha:    raw.fecha    ?? '',
-            creadoEn: raw.creadoEn ?? 0,
+            id:             d.id,
+            tipo:           raw.tipo     as PQRSTipo,
+            nombre:         raw.nombre   ?? '',
+            desc:           raw.desc     ?? '',
+            area:           raw.area     ?? '',
+            estado:         raw.estado   as PQRSEstado,
+            fecha:          raw.fecha    ?? '',
+            creadoEn:       raw.creadoEn ?? 0,
+            email:          raw.email          || undefined,
+            telefono:       raw.telefono       || undefined,
+            origen:         raw.origen         || 'interno',
+            respuesta:      raw.respuesta      || undefined,
+            respuestaFecha: raw.respuestaFecha || undefined,
           };
         });
         setItems(data);
@@ -61,7 +68,7 @@ export function usePQRS(uid: string | null) {
       .finally(() => setLoading(false));
   }, [uid]);
 
-  // Agregar nueva PQRS
+  // Agregar nueva PQRS (registro manual desde el dashboard)
   const add = useCallback(async (payload: NuevaPQRS): Promise<void> => {
     if (!uid) return;
     const ahora = Date.now();
@@ -70,6 +77,7 @@ export function usePQRS(uid: string | null) {
       estado:   'Pendiente',
       fecha:    new Date().toLocaleDateString('es-CO'),
       creadoEn: ahora,
+      origen:   'interno',
     };
     const col = collection(db, 'usuarios', uid, 'pqrs');
     const ref = await addDoc(col, {
@@ -77,6 +85,15 @@ export function usePQRS(uid: string | null) {
       updatedAt: Timestamp.now(),
     });
     setItems(prev => [{ ...nueva, id: ref.id }, ...prev]);
+  }, [uid]);
+
+  // Registrar la respuesta enviada al solicitante
+  const responder = useCallback(async (id: string, respuesta: string): Promise<void> => {
+    if (!uid) return;
+    const respuestaFecha = new Date().toLocaleDateString('es-CO');
+    const ref = doc(db, 'usuarios', uid, 'pqrs', id);
+    await updateDoc(ref, { respuesta, respuestaFecha, updatedAt: Timestamp.now() });
+    setItems(prev => prev.map(p => p.id === id ? { ...p, respuesta, respuestaFecha } : p));
   }, [uid]);
 
   // Cambiar estado
@@ -94,5 +111,5 @@ export function usePQRS(uid: string | null) {
     setItems(prev => prev.filter(p => p.id !== id));
   }, [uid]);
 
-  return { items, loading, error, add, cambiarEstado, remove };
+  return { items, loading, error, add, cambiarEstado, remove, responder };
 }

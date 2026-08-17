@@ -1061,6 +1061,21 @@ function checkLeadRateLimit(ip) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para el formulario público de PQRS — ventana más larga porque
+// son envíos deliberados de pacientes, no autocompletado ni scraping
+const _pqrsRateMap = new Map();
+function checkPqrsRateLimit(ip) {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000; // 10 minutos
+  const maxPerWindow = 5;           // máx 5 PQRS por IP cada 10 minutos
+  const key = ip || 'unknown';
+  const entry = _pqrsRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _pqrsRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
 // Verificar Firebase ID token → retorna { uid, email } o null
 async function verifyFirebaseToken(idToken) {
   try {
@@ -1217,6 +1232,74 @@ function tplNuevaSolicitudAdmin({ ips_nombre, nit, tipo_ips, ciudad, nombre_cont
   </div></body></html>`;
 }
 
+// ── Plantilla: aviso al staff de la IPS — nueva PQRS recibida ────────────────────
+function tplPqrsNuevaAdmin({ ips_nombre, tipo, nombre, desc, area, email, telefono }) {
+  const contacto = [email, telefono].filter(Boolean).join(' · ') || 'Sin contacto registrado';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:24px 40px}
+  .header h1{color:#fff;margin:0;font-size:20px}
+  .header p{color:#a7f3d0;margin:4px 0 0;font-size:13px}
+  .body{padding:28px 40px;color:#1e293b;line-height:1.6}
+  .row{display:flex;margin:8px 0;gap:12px;border-bottom:1px solid #f1f5f9;padding-bottom:8px}
+  .label{font-weight:700;min-width:110px;color:#64748b;flex-shrink:0}
+  .desc{background:#f8fafc;border-radius:8px;padding:14px 16px;margin-top:12px;font-size:14px;white-space:pre-wrap}
+  .actions{margin-top:24px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #00544B}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header">
+      <h1>📬 Nueva PQRS recibida — ${ips_nombre || 'tu IPS'}</h1>
+      <p>Un paciente envió una solicitud desde el formulario público</p>
+    </div>
+    <div class="body">
+      <div class="row"><span class="label">Tipo:</span><span><strong>${tipo || '—'}</strong></span></div>
+      <div class="row"><span class="label">Nombre:</span><span>${nombre || '—'}</span></div>
+      <div class="row"><span class="label">Área:</span><span>${area || '—'}</span></div>
+      <div class="row"><span class="label">Contacto:</span><span>${contacto}</span></div>
+      <p style="font-weight:700;color:#64748b;font-size:13px;margin-top:16px">Descripción:</p>
+      <div class="desc">${desc || '—'}</div>
+      <div class="actions">
+        <p style="margin:0;font-weight:700;color:#065f46">⚡ Responde desde NormaLis</p>
+        <p style="margin:6px 0 0;font-size:13px">Ve a <a href="https://app.normalis.co/dashboard/pqrs" style="color:#00544B">tu módulo de PQRS</a> para gestionar y responder este caso.</p>
+      </div>
+    </div>
+    <div class="footer">NormaLis — Buzón de PQRS | Este email es automático</div>
+  </div></body></html>`;
+}
+
+// ── Plantilla: respuesta de la IPS al solicitante ────────────────────────────────
+function tplPqrsRespuesta({ ips_nombre, nombre, tipo, desc, respuesta }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#0d9488;padding:24px 40px}
+  .header h1{color:#fff;margin:0;font-size:20px}
+  .header p{color:#ccfbf1;margin:4px 0 0;font-size:13px}
+  .body{padding:28px 40px;color:#1e293b;line-height:1.6;font-size:14px}
+  .original{background:#f8fafc;border-left:3px solid #cbd5e1;padding:12px 16px;margin:16px 0;font-size:13px;color:#64748b;white-space:pre-wrap}
+  .respuesta{background:#f0fdfa;border-left:3px solid #0d9488;padding:14px 16px;margin:12px 0;white-space:pre-wrap}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header">
+      <h1>Respuesta a tu ${(tipo || 'solicitud').toLowerCase()}</h1>
+      <p>${ips_nombre || 'NormaLis'}</p>
+    </div>
+    <div class="body">
+      <p>Hola ${nombre || ''},</p>
+      <p>Gracias por escribirnos. Esta es la respuesta a tu solicitud:</p>
+      <p style="font-weight:700;color:#64748b;font-size:12px;margin-top:16px">Tu mensaje original:</p>
+      <div class="original">${desc || '—'}</div>
+      <p style="font-weight:700;color:#0f766e;font-size:12px;margin-top:16px">Nuestra respuesta:</p>
+      <div class="respuesta">${respuesta || ''}</div>
+      <p style="color:#64748b;font-size:12px;margin-top:20px">Si tienes dudas adicionales, puedes responder directamente a este correo.</p>
+    </div>
+    <div class="footer">${ips_nombre || 'NormaLis'} · Gestionado con NormaLis</div>
+  </div></body></html>`;
+}
+
 // ── /email handler ─────────────────────────────────────────────────────────────
 async function handleEmail(request, env, cors) {
   const resendKey = env.RESEND_API_KEY;
@@ -1231,7 +1314,7 @@ async function handleEmail(request, env, cors) {
   catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
 
   const { type, data } = body || {};
-  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin'];
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin', 'pqrs_respuesta'];
   if (!VALID_TYPES.includes(type)) {
     return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
@@ -1239,7 +1322,7 @@ async function handleEmail(request, env, cors) {
   }
 
   // Emails de admin → requieren Firebase ID token válido
-  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado') {
+  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'pqrs_respuesta') {
     const authHeader = request.headers.get('Authorization') || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!idToken) {
@@ -1309,6 +1392,14 @@ async function handleEmail(request, env, cors) {
       to: ['fjfc1984@gmail.com'],
       subject: `🏥 Nueva solicitud NormaLis — ${data.ips_nombre || data.email}`,
       html: tplNuevaSolicitudAdmin(data),
+    };
+  } else if (type === 'pqrs_respuesta') {
+    if (!data?.to) return new Response(JSON.stringify({ error: 'Campo to requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to],
+      subject: `Respuesta a tu ${(data.tipo || 'solicitud').toLowerCase()} — ${data.ips_nombre || 'NormaLis'}`,
+      html: tplPqrsRespuesta(data),
     };
   }
 
@@ -1380,6 +1471,11 @@ export default {
     // ── POST /email — envío de emails via Resend (server-side) ───────────────
     if (request.method === 'POST' && url.pathname === '/email') {
       return handleEmail(request, env, cors);
+    }
+
+    // ── POST /pqrs — envío público de PQRS (sin login) ────────────────────────
+    if (request.method === 'POST' && url.pathname === '/pqrs') {
+      return handlePqrsPublico(request, env, cors);
     }
 
     if (request.method !== 'POST') {
@@ -1511,6 +1607,131 @@ async function firestoreQuery(projectId, collection, filters, token) {
   });
   if (!res.ok) throw new Error(`Firestore query failed: ${res.status}`);
   return res.json();
+}
+
+// Lee un documento puntual de Firestore por su ruta (ej. 'usuarios/abc123')
+async function firestoreGetDoc(projectId, path, token) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${path}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Firestore get failed: ${res.status}`);
+  return res.json();
+}
+
+// Crea un documento en una colección de Firestore vía REST (con token de servicio)
+async function firestoreCreateDoc(projectId, collectionPath, fields, token) {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionPath}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
+  });
+  if (!res.ok) throw new Error(`Firestore create failed: ${res.status}`);
+  return res.json();
+}
+
+// ── POST /pqrs — envío público de PQRS (sin login) ───────────────────────────────
+// Escribe el caso en Firestore con el token de servicio (cron@normalis.co, rol
+// admin) y notifica a la IPS por email. Evita abrir una regla pública de
+// escritura directa en Firestore: el único camino de entrada es este endpoint,
+// que sí puede rate-limitarse por IP.
+async function handlePqrsPublico(request, env, cors) {
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { uid, tipo, nombre, desc, area, email, telefono } = body || {};
+  const TIPOS_VALIDOS = ['Petición', 'Queja', 'Reclamo', 'Sugerencia', 'Felicitación'];
+
+  if (!uid || typeof uid !== 'string') {
+    return new Response(JSON.stringify({ error: 'Solicitud inválida' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!TIPOS_VALIDOS.includes(tipo)) {
+    return new Response(JSON.stringify({ error: 'Tipo de solicitud inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!nombre || typeof nombre !== 'string' || !nombre.trim() || nombre.length > 200) {
+    return new Response(JSON.stringify({ error: 'Nombre requerido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!desc || typeof desc !== 'string' || !desc.trim() || desc.length > 3000) {
+    return new Response(JSON.stringify({ error: 'Descripción requerida' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if ((!email || !String(email).trim()) && (!telefono || !String(telefono).trim())) {
+    return new Response(JSON.stringify({ error: 'Deja un correo o un teléfono de contacto' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
+  if (!checkPqrsRateLimit(ip)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta más tarde.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = 'normalis-5587d';
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /pqrs', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // Verificar que la IPS existe y obtener su correo de contacto (el registrado
+  // al crear la cuenta en NormaLis) + nombre para el email de aviso
+  let adminEmail, ipsNombre;
+  try {
+    const doc = await firestoreGetDoc(projectId, `usuarios/${uid}`, token);
+    if (!doc) {
+      return new Response(JSON.stringify({ error: 'Enlace inválido' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+    adminEmail = doc.fields?.email?.stringValue;
+    ipsNombre  = doc.fields?.nombre?.stringValue || 'tu IPS';
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /pqrs', extra: { step: 'lookup' } }, env);
+    return new Response(JSON.stringify({ error: 'Enlace inválido' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // Escribir el caso en Firestore
+  const now = new Date();
+  const fields = {
+    tipo:      { stringValue: tipo },
+    nombre:    { stringValue: nombre.trim() },
+    desc:      { stringValue: desc.trim() },
+    area:      { stringValue: area || '' },
+    estado:    { stringValue: 'Pendiente' },
+    origen:    { stringValue: 'publico' },
+    fecha:     { stringValue: now.toLocaleDateString('es-CO') },
+    creadoEn:  { integerValue: String(now.getTime()) },
+    updatedAt: { timestampValue: now.toISOString() },
+  };
+  if (email && String(email).trim())    fields.email    = { stringValue: String(email).trim() };
+  if (telefono && String(telefono).trim()) fields.telefono = { stringValue: String(telefono).trim() };
+
+  try {
+    await firestoreCreateDoc(projectId, `usuarios/${uid}/pqrs`, fields, token);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /pqrs', extra: { step: 'create' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo registrar la solicitud' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // Notificar a la IPS por email (best-effort — no bloquea la respuesta al paciente)
+  const resendKey = env.RESEND_API_KEY;
+  if (resendKey && adminEmail) {
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'NormaLis <hola@normalis.co>',
+          to: [adminEmail],
+          subject: `📬 Nueva PQRS recibida — ${tipo}`,
+          html: tplPqrsNuevaAdmin({ ips_nombre: ipsNombre, tipo, nombre: nombre.trim(), desc: desc.trim(), area, email, telefono }),
+        }),
+      });
+    } catch (e) {
+      await sentryCapture(e, { endpoint: 'POST /pqrs', extra: { step: 'notify' } }, env);
+      // no interrumpe — el caso ya quedó guardado
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
 // ── Scheduled cron — runs daily at 08:00 COT ─────────────────────────────────

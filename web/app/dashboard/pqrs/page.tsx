@@ -9,6 +9,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { usePQRS } from '@/lib/usePQRS';
+import { sendWorkerEmail } from '@/lib/worker';
 import {
   PQRS_TIPOS, PQRS_ESTADOS, PQRS_AREAS,
   TIPO_COLOR, ESTADO_COLOR,
@@ -19,6 +20,83 @@ import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, EmptyState, StatusBadge,
 } from '@/components/ui';
+
+// ── Modal responder PQRS ────────────────────────────────────────────────────────
+function ResponderModal({
+  item,
+  onSend,
+  onClose,
+  sending,
+}: {
+  item:    PQRSItem;
+  onSend:  (respuesta: string) => Promise<void>;
+  onClose: () => void;
+  sending: boolean;
+}) {
+  const [texto, setTexto] = useState(item.respuesta ?? '');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!texto.trim()) return;
+    await onSend(texto.trim());
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div>
+            <h3 className="text-base font-bold text-gray-800">Responder a {item.nombre}</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Se enviará por correo a {item.email}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+            <p className="font-semibold text-gray-600 mb-1">Solicitud original:</p>
+            {item.desc}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
+              Tu respuesta *
+            </label>
+            <textarea
+              value={texto}
+              onChange={e => setTexto(e.target.value)}
+              placeholder="Escribe la respuesta que recibirá el solicitante…"
+              required
+              rows={5}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none
+                         focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button
+              type="submit"
+              disabled={sending || !texto.trim()}
+              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50
+                         text-white text-sm font-bold rounded-xl transition-colors"
+            >
+              {sending ? 'Enviando…' : '✓ Enviar respuesta'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700
+                         text-sm font-semibold rounded-xl transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // ── Modal nueva PQRS ──────────────────────────────────────────────────────────
 function NuevaPQRSModal({
@@ -156,13 +234,16 @@ function PQRSCard({
   item,
   onEstado,
   onDelete,
+  onResponder,
 }: {
-  item:     PQRSItem;
-  onEstado: (id: string, e: PQRSEstado) => void;
-  onDelete: (id: string) => void;
+  item:        PQRSItem;
+  onEstado:    (id: string, e: PQRSEstado) => void;
+  onDelete:    (id: string) => void;
+  onResponder: (item: PQRSItem) => void;
 }) {
   const tc = TIPO_COLOR[item.tipo];
   const ec = ESTADO_COLOR[item.estado];
+  const contacto = [item.email, item.telefono].filter(Boolean).join(' · ');
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 hover:shadow-sm transition-shadow">
@@ -175,12 +256,28 @@ function PQRSCard({
 
       {/* Contenido */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate">{item.nombre}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-gray-800">{item.nombre}</p>
+          {item.origen === 'publico' && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-600">
+              📬 formulario público
+            </span>
+          )}
+        </div>
         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{item.desc}</p>
         <p className="text-xs text-gray-400 mt-1.5">
           {item.area && <span>📍 {item.area} · </span>}
           {item.fecha}
+          {contacto && <span> · ✉️ {contacto}</span>}
         </p>
+        {item.respuesta && (
+          <div className="mt-2 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2">
+            <p className="text-[10px] font-bold text-teal-700 uppercase tracking-wide">
+              Respondido {item.respuestaFecha ? `· ${item.respuestaFecha}` : ''}
+            </p>
+            <p className="text-xs text-teal-800 mt-0.5 line-clamp-2">{item.respuesta}</p>
+          </div>
+        )}
       </div>
 
       {/* Estado + acciones */}
@@ -196,6 +293,18 @@ function PQRSCard({
         >
           {PQRS_ESTADOS.map(s => <option key={s}>{s}</option>)}
         </select>
+        {item.email ? (
+          <button
+            onClick={() => onResponder(item)}
+            className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+          >
+            {item.respuesta ? '✏️ Editar respuesta' : '↩️ Responder'}
+          </button>
+        ) : (
+          <span className="text-[10px] text-gray-300" title="El solicitante no dejó correo">
+            Sin correo
+          </span>
+        )}
         <button
           onClick={() => onDelete(item.id)}
           className="text-xs text-gray-300 hover:text-red-400 transition-colors"
@@ -212,13 +321,15 @@ function PQRSCard({
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════
 export default function PQRSPage() {
-  const { user, loading: authLoading } = useAuth();
-  const { items, loading, add, cambiarEstado, remove } = usePQRS(user?.uid ?? null);
+  const { user, nombre, loading: authLoading } = useAuth();
+  const { items, loading, add, cambiarEstado, remove, responder } = usePQRS(user?.uid ?? null);
   const { toast, show } = useToast();
 
-  const [showModal, setShowModal] = useState(false);
-  const [saving, setSaving]       = useState(false);
-  const [filtro, setFiltro]       = useState<PQRSEstado | 'Todos'>('Todos');
+  const [showModal, setShowModal]       = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [filtro, setFiltro]             = useState<PQRSEstado | 'Todos'>('Todos');
+  const [responderItem, setResponderItem] = useState<PQRSItem | null>(null);
+  const [respondiendo, setRespondiendo] = useState(false);
 
   // KPIs
   const total     = items.length;
@@ -260,6 +371,40 @@ export default function PQRSPage() {
       show('Error al eliminar.', 'error');
     }
   }, [remove, show]);
+
+  const handleResponder = useCallback(async (respuesta: string) => {
+    if (!responderItem || !user) return;
+    setRespondiendo(true);
+    try {
+      await responder(responderItem.id, respuesta);
+      const idToken = await user.getIdToken();
+      await sendWorkerEmail('pqrs_respuesta', {
+        to:         responderItem.email,
+        nombre:     responderItem.nombre,
+        tipo:       responderItem.tipo,
+        desc:       responderItem.desc,
+        respuesta,
+        ips_nombre: nombre,
+      }, idToken);
+      show('Respuesta enviada al solicitante.', 'success');
+      setResponderItem(null);
+    } catch {
+      show('La respuesta se guardó, pero el correo no pudo enviarse. Intenta de nuevo.', 'error');
+    } finally {
+      setRespondiendo(false);
+    }
+  }, [responderItem, user, nombre, responder, show]);
+
+  const handleCopiarEnlace = useCallback(async () => {
+    if (!user) return;
+    const url = `${window.location.origin}/pqrs/${user.uid}?ips=${encodeURIComponent(nombre || '')}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      show('Enlace público copiado — compártelo con tus pacientes.', 'success');
+    } catch {
+      show(url, 'info');
+    }
+  }, [user, nombre, show]);
 
   const exportarPDF = useCallback(() => {
     const w = window.open('', '_blank');
@@ -324,11 +469,29 @@ export default function PQRSPage() {
         />
       )}
 
+      {responderItem && (
+        <ResponderModal
+          item={responderItem}
+          onSend={handleResponder}
+          onClose={() => setResponderItem(null)}
+          sending={respondiendo}
+        />
+      )}
+
       <SectionHeader
         title="PQRS"
         subtitle="Gestión de Peticiones, Quejas, Reclamos, Sugerencias y Felicitaciones · Res. 13437/1991"
         actions={
           <div className="flex gap-2">
+            <button
+              onClick={handleCopiarEnlace}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100
+                         hover:bg-gray-200 text-gray-700
+                         text-sm font-semibold rounded-xl transition-colors"
+              title="Copiar el enlace público para que tus pacientes envíen PQRS directamente"
+            >
+              🔗 Enlace público
+            </button>
             <button
               onClick={exportarPDF}
               disabled={total === 0}
@@ -411,6 +574,7 @@ export default function PQRSPage() {
               item={item}
               onEstado={handleEstado}
               onDelete={handleDelete}
+              onResponder={setResponderItem}
             />
           ))}
           <p className="text-xs text-gray-400 text-center pt-1">

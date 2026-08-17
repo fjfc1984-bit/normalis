@@ -14,15 +14,24 @@ export type PQRSTipo =
 
 export type PQRSEstado = 'Pendiente' | 'En Proceso' | 'Cerrada';
 
+// Origen del registro: escrito por el staff, o enviado por el paciente
+// mismo desde el formulario público (app.normalis.co/pqrs/{uid})
+export type PQRSOrigen = 'interno' | 'publico';
+
 export interface PQRSItem {
-  id:       string;         // Firestore doc ID
-  tipo:     PQRSTipo;
-  nombre:   string;         // Nombre del paciente / solicitante
-  desc:     string;         // Descripción del caso
-  area:     string;         // Área o servicio involucrado (opcional)
-  estado:   PQRSEstado;
-  fecha:    string;         // Fecha legible es-CO
-  creadoEn: number;         // timestamp ms para ordenar
+  id:             string;         // Firestore doc ID
+  tipo:           PQRSTipo;
+  nombre:         string;         // Nombre del paciente / solicitante
+  desc:           string;         // Descripción del caso
+  area:           string;         // Área o servicio involucrado (opcional)
+  estado:         PQRSEstado;
+  fecha:          string;         // Fecha legible es-CO
+  creadoEn:       number;         // timestamp ms para ordenar
+  email?:         string;         // Contacto del solicitante (permite responderle)
+  telefono?:      string;
+  origen?:        PQRSOrigen;
+  respuesta?:     string;         // Respuesta enviada al solicitante
+  respuestaFecha?: string;
 }
 
 // ── Catálogos ─────────────────────────────────────────────────────────────────
