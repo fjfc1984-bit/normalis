@@ -97,7 +97,7 @@ export default function AuditoriaSegmentoPage({
 
   // Persistent state via Firestore (auto-save debounced)
   const { answers, loading: auditLoading, saving, savedAt, setAnswer: persistAnswer,
-          markComplete, resetAudit: resetFirestore } = useAudit(segmento);
+          markComplete, resetAudit: resetFirestore, completed } = useAudit(segmento);
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [view, setView] = useState<View>('checklist');
