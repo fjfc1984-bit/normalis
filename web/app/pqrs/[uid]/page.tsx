@@ -62,6 +62,17 @@ export default function PQRSPublicoPage() {
     }
   }
 
+  function handleNuevaSolicitud() {
+    setTipo('Petición');
+    setNombre('');
+    setDesc('');
+    setArea('');
+    setEmail('');
+    setTelefono('');
+    setError(null);
+    setEnviado(false);
+  }
+
   if (enviado) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -72,6 +83,13 @@ export default function PQRSPublicoPage() {
             Gracias por escribirnos. {ipsNombre} recibió tu {tipo.toLowerCase()} y te contactará
             {email.trim() ? ` a ${email.trim()}` : telefono.trim() ? ` al ${telefono.trim()}` : ''} pronto.
           </p>
+          <button
+            onClick={handleNuevaSolicitud}
+            className="mt-6 px-5 py-2.5 bg-teal-600 hover:bg-teal-700
+                       text-white text-sm font-bold rounded-xl transition-colors"
+          >
+            ← Enviar otra solicitud
+          </button>
         </div>
       </div>
     );
