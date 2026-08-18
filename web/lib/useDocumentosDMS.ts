@@ -41,7 +41,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, orderBy, onSnapshot, addDoc, updateDoc,
-  doc, setDoc, getDocs, serverTimestamp, Timestamp,
+  doc, setDoc, getDocs, serverTimestamp, Timestamp, writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -67,6 +67,8 @@ export interface DocumentoDMS {
   firmaId?:           string;
   contenidoHash?:     string;
   reemplazaVersionId?: string | null;
+  retiradoPor?:       string; // ver retirarVersionesRotasDMS
+  fechaRetiro?:       number;
   socializaciones:    number; // conteo — se completa por separado con listarSocializaciones
 }
 
@@ -95,6 +97,8 @@ function fromSnap(d: any): DocumentoDMS {
     firmaId: r.firmaId,
     contenidoHash: r.contenidoHash,
     reemplazaVersionId: r.reemplazaVersionId ?? null,
+    retiradoPor: r.retiradoPor,
+    fechaRetiro: r.fechaRetiro ? ts(r.fechaRetiro) : undefined,
     socializaciones: 0,
   };
 }
@@ -129,6 +133,38 @@ export const aprobarDocumentoDMS = async (item: DocumentoDMS, aprobadoPorNombre:
   if (item.reemplazaVersionId) {
     await updateDoc(doc(db, 'documentos_dms', item.reemplazaVersionId), { estado: 'obsoleto' });
   }
+};
+
+/** Retira versiones "rotas": borrador/en_revision sin `contenido`
+ * capturado — síntoma del bug de captura de contenido ya corregido (antes
+ * `aprobar()` regeneraba el contenido con los datos de quien aprobaba en
+ * vez de reusar el de quien creó la versión; algunas versiones creadas
+ * mientras ese bug vivía quedaron sin `contenido` guardado).
+ *
+ * Por qué hace falta un botón para esto: `vigentePorDocId` siempre cuenta
+ * la versión no-obsoleta de mayor número como "vigente" — así que una
+ * versión rota sin contenido se queda bloqueando el botón "Nueva versión"
+ * (que solo aparece cuando no hay ninguna vigente sin resolver) para
+ * siempre, porque nunca se puede aprobar (no hay contenido que firmar) ni
+ * se puede editar después de creada. Marcarla "obsoleta" es la única
+ * salida — igual que pasaría automáticamente si una versión nueva la
+ * reemplazara, solo que aquí no hay contenido con qué reemplazarla.
+ *
+ * Nunca toca una versión aprobada ni una que sí tenga contenido: el
+ * llamador (page.tsx) filtra por eso antes de pasar los ids. Queda
+ * registrado quién y cuándo (retiradoPor/fechaRetiro) para no perder
+ * trazabilidad — y el caller además debe loguearlo en la bitácora de
+ * seguridad (logSecurityEvent), igual que aprobar. */
+export const retirarVersionesRotasDMS = async (ids: string[], retiradoPorNombre: string) => {
+  const batch = writeBatch(db);
+  ids.forEach(id => {
+    batch.update(doc(db, 'documentos_dms', id), {
+      estado: 'obsoleto',
+      retiradoPor: retiradoPorNombre,
+      fechaRetiro: serverTimestamp(),
+    });
+  });
+  await batch.commit();
 };
 
 export const listarSocializacionesDMS = async (documentoId: string): Promise<Socializacion[]> => {
@@ -218,6 +254,7 @@ export function useDocumentosDMS(uid: string | null, nit: string | null) {
     crearVersion,
     enviarARevision: enviarARevisionDMS,
     aprobar: aprobarDocumentoDMS,
+    retirarVersionesRotas: retirarVersionesRotasDMS,
     listarSocializaciones: listarSocializacionesDMS,
     marcarSocializado: marcarSocializadoDMS,
   };

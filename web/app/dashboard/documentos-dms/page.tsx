@@ -71,13 +71,19 @@ function AprobarModal({
             </label>
             <input className={INPUT} value={nombre} onChange={e => setNombre(e.target.value)} required />
           </div>
-          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-xs text-teal-700">
-            <p className="font-bold mb-1">✅ Aprobar = firmar electrónicamente esta versión</p>
-            <p>Queda sellada con HMAC del servidor. Si existía una versión aprobada anterior de este documento, pasa automáticamente a obsoleta.</p>
-          </div>
+          {item.contenido ? (
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-xs text-teal-700">
+              <p className="font-bold mb-1">✅ Aprobar = firmar electrónicamente esta versión</p>
+              <p>Queda sellada con HMAC del servidor. Si existía una versión aprobada anterior de este documento, pasa automáticamente a obsoleta.</p>
+            </div>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-600">
+              <p className="font-bold">⚠️ Esta versión no tiene contenido capturado — no debería aprobarse.</p>
+            </div>
+          )}
           <div className="flex justify-end gap-3">
             <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
-            <button type="submit" disabled={saving} className={BTN_P}>{saving ? 'Aprobando…' : '✅ Aprobar versión'}</button>
+            <button type="submit" disabled={saving || !item.contenido} className={BTN_P}>{saving ? 'Aprobando…' : '✅ Aprobar versión'}</button>
           </div>
         </form>
       </div>
@@ -126,7 +132,7 @@ export default function DocumentosDMSPage() {
   const uid = user?.uid ?? null;
   const {
     items, loading, vigentePorDocId, historialPorDocId,
-    crearVersion, enviarARevision, aprobar, marcarSocializado, listarSocializaciones,
+    crearVersion, enviarARevision, aprobar, retirarVersionesRotas, marcarSocializado, listarSocializaciones,
   } = useDocumentosDMS(uid, nit || null);
   const cfg = useIPSConfigLocal(uid);
   const { toast, show } = useToast();
@@ -134,6 +140,7 @@ export default function DocumentosDMSPage() {
 
   const [aprobarModal,   setAprobarModal]   = useState<DocumentoDMS | null>(null);
   const [historialDocId, setHistorialDocId] = useState<FirmaDocId | null>(null);
+  const [retirarModal,   setRetirarModal]   = useState<{ docId: FirmaDocId; rotas: DocumentoDMS[] } | null>(null);
   const [socializaciones, setSocializaciones] = useState<Record<string, Socializacion[]>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -174,6 +181,23 @@ export default function DocumentosDMSPage() {
     setAprobarModal(null);
   }
 
+  /** Marca como "obsoletas" las versiones sin `contenido` capturado que
+   * quedaron atascadas por el bug de captura de contenido (ya corregido) —
+   * ver nota en retirarVersionesRotasDMS. Libera el botón "Nueva versión"
+   * para poder crear una versión correcta. */
+  async function handleRetirarRotas() {
+    if (!retirarModal) return;
+    const { docId, rotas } = retirarModal;
+    setBusyId(`retirar-${docId}`);
+    try {
+      await retirarVersionesRotas(rotas.map(r => r.id), ipsNombre || user?.email || 'Usuario');
+      const cat = FIRMA_CATALOGO.find(c => c.id === docId)!;
+      await logSecurityEvent('documento_version_retirada', 'documentos-dms', `${cat.nombre} — ${rotas.length} versión(es) sin contenido retirada(s)`);
+      show(`Se retiraron ${rotas.length} versión(es) sin contenido — ya puedes crear una nueva`, 'info');
+      setRetirarModal(null);
+    } finally { setBusyId(null); }
+  }
+
   async function handleSocializar(item: DocumentoDMS) {
     if (!uid) return;
     setBusyId(item.id);
@@ -208,6 +232,9 @@ export default function DocumentosDMSPage() {
           const vigente = vigentePorDocId(cat.id);
           const historial = historialPorDocId(cat.id);
           const socios = vigente ? socializaciones[vigente.id] : undefined;
+          // Versiones atascadas sin `contenido` (bug de captura ya corregido) —
+          // nunca incluye aprobadas ni obsoletas, ni versiones con contenido real.
+          const rotas = historial.filter(v => v.estado !== 'aprobado' && v.estado !== 'obsoleto' && !v.contenido);
 
           return (
             <div key={cat.id} className="bg-white border border-gray-200 rounded-xl p-5">
@@ -251,6 +278,15 @@ export default function DocumentosDMSPage() {
                   {vigente?.estado === 'aprobado' && (
                     <button disabled={busyId === vigente.id} onClick={() => { handleSocializar(vigente); }} className={BTN_S}>
                       👥 Marcar como socializado
+                    </button>
+                  )}
+                  {rotas.length > 0 && (
+                    <button
+                      disabled={busyId === `retirar-${cat.id}`}
+                      onClick={() => setRetirarModal({ docId: cat.id, rotas })}
+                      className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors"
+                    >
+                      🗑️ Retirar sin contenido ({rotas.length})
                     </button>
                   )}
                 </div>
@@ -297,6 +333,18 @@ export default function DocumentosDMSPage() {
           docId={historialDocId}
           historial={historialPorDocId(historialDocId)}
           onClose={() => setHistorialDocId(null)}
+        />
+      )}
+
+      {retirarModal && (
+        <ConfirmModal
+          title="Retirar versión(es) sin contenido"
+          description={`Esta operación marca como "obsoleta" ${retirarModal.rotas.length} versión(es) de este documento que quedaron sin el contenido capturado (por una falla ya corregida) y por eso nunca se pueden aprobar. Libera el botón "Nueva versión" para crear una versión correcta. Queda registrado en la bitácora de seguridad y no se puede deshacer desde la app.`}
+          confirmLabel="Retirar"
+          confirmVariant="danger"
+          loading={busyId === `retirar-${retirarModal.docId}`}
+          onConfirm={handleRetirarRotas}
+          onCancel={() => setRetirarModal(null)}
         />
       )}
 

@@ -52,6 +52,7 @@ const AUDIT_ACCIONES_VALIDAS = [
   'documento_firmado',
   'consentimiento_firmado',
   'documento_version_aprobada',
+  'documento_version_retirada',
 ];
 
 // ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───
