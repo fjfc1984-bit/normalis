@@ -26,7 +26,7 @@ function NitWarningBanner() {
 // Grupos de navegación
 const NAV_GROUPS: Array<{
   label: string;
-  items: Array<{ href: string; label: string; icon: string; badge?: string }>;
+  items: Array<{ href: string; label: string; icon: string; badge?: string; adminOnly?: boolean }>;
 }> = [
   {
     label: 'Principal',
@@ -67,6 +67,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/talento',         label: 'Talento',        icon: '👥' },
       { href: '/dashboard/firma',           label: 'Firma',          icon: '✍️' },
       { href: '/dashboard/documentos-dms',  label: 'Gestor Documental', icon: '📚', badge: 'NUEVO' },
+      { href: '/dashboard/aprobaciones',    label: 'Cola de Aprobación', icon: '✅', badge: 'NUEVO', adminOnly: true },
       { href: '/dashboard/consentimientos', label: 'Consentimientos', icon: '📝' },
       { href: '/dashboard/seguridad',       label: 'Seguridad',       icon: '🔒', badge: 'NUEVO' },
     ],
@@ -138,7 +139,7 @@ function Sidebar() {
               {group.label}
             </p>
             <div className="space-y-0.5">
-              {group.items.map(item => {
+              {group.items.filter(item => !item.adminOnly || rol === 'admin').map(item => {
                 const active = pathname === item.href;
                 return (
                   <Link

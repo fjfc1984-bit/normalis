@@ -146,7 +146,12 @@ export default function DocumentosDMSPage() {
     if (!uid) return;
     setBusyId(docId);
     try {
-      await crearVersion(docId, uid, nit || '', ipsNombre || '');
+      // El contenido EXACTO se captura aquí, mientras la propia IPS está
+      // logueada y sus datos (nombre/nit/director/registro médico) son
+      // los correctos — aprobar() más adelante NUNCA lo regenera, solo
+      // lo re-usa (ver nota en useDocumentosDMS.ts).
+      const contenido = contenidoParaFirmar(docId, cfg);
+      await crearVersion(docId, uid, nit || '', ipsNombre || '', contenido);
       show('📝 Nueva versión creada como borrador', 'success');
     } finally { setBusyId(null); }
   }
@@ -161,8 +166,9 @@ export default function DocumentosDMSPage() {
 
   async function handleAprobar(aprobadoPorNombre: string) {
     if (!aprobarModal) return;
-    const contenido = contenidoParaFirmar(aprobarModal.docId, cfg);
-    await aprobar(aprobarModal, contenido, aprobadoPorNombre);
+    // No se regenera contenido aquí — aprobar() usa el que ya quedó
+    // guardado en el documento desde que se creó la versión.
+    await aprobar(aprobarModal, aprobadoPorNombre);
     await logSecurityEvent('documento_version_aprobada', 'documentos-dms', `${aprobarModal.nombre} v${aprobarModal.version}`);
     show(`✅ Versión ${aprobarModal.version} de ${aprobarModal.nombre} aprobada`, 'success');
     setAprobarModal(null);
