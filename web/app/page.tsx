@@ -458,13 +458,13 @@ function Modulos() {
     { icon: '📅', title: 'Control de Vencimientos',     tag: 'Alertas automáticas',   desc: 'Alertas antes de que venzan tarjetas profesionales, vacunas y contratos.', g: 'linear-gradient(135deg,#78350f,#f59e0b)' },
     { icon: '🦺', title: 'SG-SST',                      tag: 'Res. 1774/2025',        desc: 'Autoevaluación en 3 fases. PDF para presentar ante la ARL.', g: 'linear-gradient(135deg,#7f1d1d,#f97316)' },
     { icon: '🔔', title: 'Simulacros',                  tag: 'Drills de emergencia',  desc: 'Checklist digital con registro, fotos y evidencias firmadas.', g: 'linear-gradient(135deg,#134e4a,#14b8a6)' },
-    { icon: '📄', title: 'Generador de Documentos',     tag: 'Firma digital',         desc: 'Manual de Bioseguridad, Plan de Residuos, Protocolos — en minutos.', g: 'linear-gradient(135deg,#1e3a8a,#3b82f6)' },
+    { icon: '📄', title: 'Generador de Documentos',     tag: 'Firma electrónica',     desc: 'Manual de Bioseguridad, Plan de Residuos, Protocolos — en minutos.', g: 'linear-gradient(135deg,#1e3a8a,#3b82f6)' },
     { icon: '📬', title: 'PQRS Integrado',              tag: 'Gestión de quejas',     desc: 'Registra, clasifica y gestiona PQR. Reportes al instante.', g: 'linear-gradient(135deg,#14532d,#22c55e)' },
     { icon: '🛡️', title: 'Incidentes y Eventos',       tag: 'Seguridad paciente',    desc: 'Registro con severidad, seguimiento y plan de acción documentado.', g: 'linear-gradient(135deg,#7f1d1d,#f87171)' },
     { icon: '📋', title: 'Bitácora de Auditoría',       tag: 'Trazabilidad total',    desc: 'Registro automático de todas las acciones: auditorías, CAPAs, documentos.', g: 'linear-gradient(135deg,#1e293b,#64748b)' },
     { icon: '👥', title: 'Talento Humano',              tag: 'Gestión de personal',   desc: 'Hojas de vida, contratos y tarjetas profesionales centralizadas.', g: 'linear-gradient(135deg,#0c4a6e,#22d3ee)' },
-    { icon: '✍️', title: 'Firma y Versiones',           tag: 'Control documental',    desc: 'Firma digital, control de versiones y quién aprobó cada cambio.', g: 'linear-gradient(135deg,#3730a3,#818cf8)' },
-    { icon: '📝', title: 'Consentimientos',             tag: 'Habeas Data',           desc: 'Plantillas por especialidad, historial firmado y trazabilidad completa.', g: 'linear-gradient(135deg,#4c1d95,#a78bfa)' },
+    { icon: '✍️', title: 'Firma y Versiones',           tag: '🆕 Sello HMAC',         desc: 'Firma electrónica con sello criptográfico del servidor (Ley 527/1999, Art. 7) y verificación de integridad del contenido firmado.', g: 'linear-gradient(135deg,#3730a3,#818cf8)' },
+    { icon: '📝', title: 'Consentimientos',             tag: '🆕 Firma dibujada',     desc: 'Firma del paciente y del médico a mano en pantalla, sellada criptográficamente. Plantillas por especialidad y trazabilidad completa.', g: 'linear-gradient(135deg,#4c1d95,#a78bfa)' },
     { icon: '🔄', title: 'ISO 7101 / JCI Crosswalk',   tag: 'Crosswalk normativo',   desc: 'Cruza los 7 estándares colombianos con ISO 7101:2023 y JCI 8ª edición.', g: 'linear-gradient(135deg,#1e3a8a,#38bdf8)' },
     { icon: '🤖', title: 'Asistente IA Normativo',      tag: 'IA + RAG',              desc: 'Chat con la norma en lenguaje natural. Respuestas citadas 24/7.', g: 'linear-gradient(135deg,#831843,#f472b6)' },
     { icon: '💊', title: 'PROA',                           tag: 'Plan Profesional+',      desc: 'Res. 2471/2022 · Plan RAM 2025–2030. Checklist PROA, consumo DDD/100 camas-día, registro de intervenciones e informe mensual para el comité de infecciones.', g: 'linear-gradient(135deg,#064e3b,#10b981)' },
@@ -693,7 +693,7 @@ function FAQ() {
     { q: '¿NormaLis incluye el módulo PROA?', a: 'Sí. El módulo PROA (Res. 2471/2022 · Plan RAM 2025–2030 · Res. 1732/2026 Estándar 5) está incluido en el Plan Profesional y superior. Cubre checklist de madurez del programa, registro de intervenciones, consumo en DDD/100 camas-día por antimicrobiano trazador e informe mensual para el comité de infecciones.' },
     { q: '¿Qué pasa cuando cambia la normativa?', a: 'NormaLis se actualiza automáticamente. Todos los planes incluyen actualizaciones normativas sin costo adicional.' },
     { q: '¿Puedo empezar hoy mismo?', a: 'Sí. Con código de activación el acceso es inmediato. Sin código, un asesor te contacta en menos de 24 horas.' },
-    { q: '¿Mis datos están seguros?', a: 'Sí. Google Cloud (Firebase), cifrado en tránsito y en reposo. Ley 1581/2012 (Habeas Data). Sus datos nunca se comparten con terceros.' },
+    { q: '¿Mis datos están seguros?', a: 'Sí. Google Cloud (Firebase), cifrado en tránsito y en reposo. Ley 1581/2012 (Habeas Data). Cuentas administrativas con verificación en dos pasos (MFA/TOTP) y firmas selladas criptográficamente. Sus datos nunca se comparten con terceros. Detalle completo en Confianza y Seguridad.' },
   ];
   return (
     <section className="py-20 px-5 bg-white" id="faq">

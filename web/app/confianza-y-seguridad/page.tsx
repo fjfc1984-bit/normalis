@@ -90,6 +90,19 @@ export default function ConfianzaSeguridadPage() {
               responsable y proceso interno de respuesta a incidentes — ver la sección de{' '}
               <a href="#contacto" className="underline">contacto de seguridad</a> más abajo.
             </Check>
+            <Check>
+              <strong>Autenticación multifactor (MFA/TOTP) para cuentas administrativas:</strong> las
+              cuentas con rol administrador deben enrolar un segundo factor (aplicación autenticadora,
+              código TOTP) antes de poder iniciar sesión.
+            </Check>
+            <Check>
+              <strong>Firma electrónica con sello criptográfico:</strong> los módulos de Firma y
+              Consentimientos sellan cada firma con un HMAC-SHA256 generado del lado del servidor
+              (clave nunca expuesta al navegador), conforme al Art. 7 de la Ley 527/1999. Incluye
+              verificación de integridad para detectar si el contenido cambió después de firmarse.
+              No equivale a la "firma digital" certificada del Decreto 2364/2012 (PKI de una Entidad
+              de Certificación Digital acreditada) — ver la nota legal en cada módulo.
+            </Check>
           </ul>
         </section>
 
@@ -103,11 +116,10 @@ export default function ConfianzaSeguridadPage() {
               continuidad interno).
             </Roadmap>
             <Roadmap>
-              <strong>Autenticación multifactor (MFA)</strong> para cuentas administrativas.
-            </Roadmap>
-            <Roadmap>
-              <strong>Firma electrónica criptográfica</strong> para el módulo de Consentimientos y
-              Firma (hoy es un registro de estado, no una firma con validez probatoria reforzada).
+              <strong>Firma digital certificada (PKI)</strong> vía Entidad de Certificación Digital
+              acreditada (Decreto 2364/2012) — para IPS que requieran equivalencia plena a la firma
+              manuscrita bajo el Art. 28 de la Ley 527/1999. Hoy NormaLis ofrece firma electrónica
+              (Art. 7), no esta certificación.
             </Roadmap>
             <Roadmap>
               <strong>Escaneo automatizado de dependencias y vulnerabilidades</strong> en el proceso
