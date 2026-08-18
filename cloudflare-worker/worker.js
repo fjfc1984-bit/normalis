@@ -11,6 +11,8 @@
  *   POST /audit                 → registra un evento en la bitácora de seguridad (Firebase ID token)
  *   POST /api/analizar-incidente → análisis de causa raíz Protocolo de Londres (Firebase ID token)
  *   POST /api/agente-pilar       → riesgos ISO 31000 desde no-conformidades de auditoría (Firebase ID token, IA)
+ *   POST /firmar                 → sella una firma electrónica con HMAC del servidor (Firebase ID token)
+ *   GET  /firmar/verificar        → confirma integridad de una firma (Firebase ID token)
  *
  * Bindings requeridos:
  *   [ai]  → habilitar en wrangler.toml (Cloudflare Workers AI, sin key externa)
@@ -47,6 +49,8 @@ const AUDIT_ACCIONES_VALIDAS = [
   'llave_api_eliminada',
   'pqrs_respondida',
   'mfa_enrolado',
+  'documento_firmado',
+  'consentimiento_firmado',
 ];
 
 // ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───
@@ -1722,6 +1726,16 @@ export default {
       return handleAgentePilar(request, env, cors);
     }
 
+    // ── POST /firmar — sella una firma electrónica (Firebase ID token) ───────
+    if (request.method === 'POST' && url.pathname === '/firmar') {
+      return handleFirmar(request, env, cors);
+    }
+
+    // ── GET /firmar/verificar — confirma la integridad de una firma ──────────
+    if (request.method === 'GET' && url.pathname === '/firmar/verificar') {
+      return handleVerificarFirma(request, env, cors);
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Método no permitido' }), {
         status: 405,
@@ -2072,6 +2086,217 @@ async function handleApiIncidentes(request, env, cors) {
     await sentryCapture(e, { endpoint: 'POST /api/v1/incidentes', extra: { step: 'create' } }, env);
     return new Response(JSON.stringify({ error: 'No se pudo registrar el incidente' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
+}
+
+// ── Firma electrónica (Art. 7 Ley 527/1999, Decreto 1074/2015) ──────────────
+const TIPO_FIRMA_VALIDOS = ['documento', 'consentimiento_paciente', 'consentimiento_medico'];
+
+// Rate limiting para /firmar — por uid. Firmar es una acción deliberada y
+// poco frecuente (no una ráfaga), ventana generosa pero acotada.
+const _firmaRateMap = new Map();
+function checkFirmaRateLimit(uid) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  const maxPerWindow = 20;
+  const key = uid || 'unknown';
+  const entry = _firmaRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _firmaRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
+// HMAC-SHA256 de un string con la clave secreta del Worker → hex. El
+// cliente nunca ve FIRMA_SIGNING_SECRET, así que no puede fabricar un HMAC
+// válido — es lo que hace que una firma electrónica de NormaLis no se
+// pueda falsificar con solo tener acceso de escritura a Firestore.
+async function hmacSha256Hex(text, secret) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function firmaCanonico({ tipo, refId, contenidoHash, uid, cedula, firmaImgHash, timestamp }) {
+  return [tipo, refId, contenidoHash, uid, cedula || '', firmaImgHash || '', timestamp].join('|');
+}
+
+// ── POST /firmar — sella una firma electrónica ───────────────────────────────
+// El navegador nunca calcula el HMAC: envía el hash SHA-256 del contenido
+// exacto que el usuario autenticado aprobó, y este endpoint lo sella con
+// FIRMA_SIGNING_SECRET (que el cliente nunca ve) antes de escribir un
+// registro INMUTABLE en `firmas` — mismo patrón que /audit. Ni un usuario
+// con acceso de escritura a Firestore ni un fallo del cliente pueden
+// fabricar una firma válida sin conocer el secreto del servidor.
+async function handleFirmar(request, env, cors) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  const user = await verifyFirebaseToken(idToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!checkFirmaRateLimit(user.uid)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!env.FIRMA_SIGNING_SECRET) {
+    return new Response(JSON.stringify({ error: 'La firma electrónica no está configurada en el servidor.' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { tipo, refId, contenidoHash, firmante, cedula, firmaImgHash } = body || {};
+  if (!TIPO_FIRMA_VALIDOS.includes(tipo)) {
+    return new Response(JSON.stringify({ error: `tipo inválido. Valores válidos: ${TIPO_FIRMA_VALIDOS.join(', ')}` }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (typeof refId !== 'string' || !refId || refId.length > 200) {
+    return new Response(JSON.stringify({ error: 'refId inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (typeof contenidoHash !== 'string' || !/^[0-9a-f]{64}$/.test(contenidoHash)) {
+    return new Response(JSON.stringify({ error: 'contenidoHash debe ser un SHA-256 hex válido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (typeof firmante !== 'string' || !firmante.trim() || firmante.length > 200) {
+    return new Response(JSON.stringify({ error: 'firmante inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (cedula !== undefined && cedula !== null && (typeof cedula !== 'string' || cedula.length > 30)) {
+    return new Response(JSON.stringify({ error: 'cedula inválida' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (firmaImgHash !== undefined && firmaImgHash !== null && (typeof firmaImgHash !== 'string' || !/^[0-9a-f]{64}$/.test(firmaImgHash))) {
+    return new Response(JSON.stringify({ error: 'firmaImgHash debe ser un SHA-256 hex válido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = FIREBASE_PROJECT_ID;
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /firmar', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let nit = '';
+  try {
+    const userDoc = await firestoreGetDoc(projectId, `usuarios/${user.uid}`, token);
+    nit = userDoc?.fields?.nit?.stringValue || userDoc?.fields?.nit_ips?.stringValue || '';
+  } catch (e) { /* no bloquea el sellado — solo afecta lectura por equipo */ }
+
+  const timestamp = new Date().toISOString();
+  const canonico = firmaCanonico({ tipo, refId, contenidoHash, uid: user.uid, cedula, firmaImgHash, timestamp });
+  const hmac = await hmacSha256Hex(canonico, env.FIRMA_SIGNING_SECRET);
+
+  const fields = {
+    uid:           { stringValue: user.uid },
+    email:         { stringValue: user.email || '' },
+    nit:           { stringValue: nit },
+    tipo:          { stringValue: tipo },
+    refId:         { stringValue: refId },
+    contenidoHash: { stringValue: contenidoHash },
+    firmante:      { stringValue: firmante.trim() },
+    cedula:        { stringValue: cedula ? String(cedula).trim() : '' },
+    firmaImgHash:  { stringValue: firmaImgHash || '' },
+    hmac:          { stringValue: hmac },
+    ip:            { stringValue: request.headers.get('CF-Connecting-IP') || '' },
+    userAgent:     { stringValue: (request.headers.get('User-Agent') || '').slice(0, 300) },
+    timestamp:     { timestampValue: timestamp },
+  };
+
+  try {
+    const created = await firestoreCreateDoc(projectId, 'firmas', fields, token);
+    const id = created.name.split('/').pop();
+    return new Response(JSON.stringify({ id, contenidoHash, hmac, timestamp }), { status: 201, headers: { ...cors, 'Content-Type': 'application/json' } });
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /firmar', extra: { step: 'create' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo registrar la firma' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+}
+
+// ── GET /firmar/verificar — confirma la integridad de una firma existente ────
+// Recalcula el HMAC con el secreto del servidor a partir de los datos
+// guardados en `firmas/{id}` y lo compara contra el hmac almacenado
+// (detecta si el registro fue alterado por fuera de este Worker), y compara
+// el hash de contenido guardado contra el hash del contenido ACTUAL que
+// envía el cliente (detecta si el documento cambió después de firmarse).
+async function handleVerificarFirma(request, env, cors) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return new Response(JSON.stringify({ error: 'Token requerido' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  const user = await verifyFirebaseToken(idToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Token inválido o expirado' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!checkFirmaRateLimit(user.uid)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!env.FIRMA_SIGNING_SECRET) {
+    return new Response(JSON.stringify({ error: 'La firma electrónica no está configurada en el servidor.' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get('id');
+  const hashActual = url.searchParams.get('hash') || '';
+  if (!id) {
+    return new Response(JSON.stringify({ error: 'Falta el parámetro id' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = FIREBASE_PROJECT_ID;
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'GET /firmar/verificar', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  let firmaDoc;
+  try {
+    firmaDoc = await firestoreGetDoc(projectId, `firmas/${id}`, token);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'GET /firmar/verificar', extra: { step: 'get' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo leer la firma' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!firmaDoc) {
+    return new Response(JSON.stringify({ error: 'Firma no encontrada' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const f = firmaDoc.fields || {};
+  const storedUid           = f.uid?.stringValue || '';
+  // Solo el propio firmante, el equipo (mismo NIT) o el dueño de la firma pueden verificarla.
+  if (storedUid !== user.uid) {
+    let nit = '';
+    try {
+      const userDoc = await firestoreGetDoc(projectId, `usuarios/${user.uid}`, token);
+      nit = userDoc?.fields?.nit?.stringValue || userDoc?.fields?.nit_ips?.stringValue || '';
+    } catch (e) { /* deniega por defecto si no se puede confirmar */ }
+    if (!nit || nit !== (f.nit?.stringValue || '')) {
+      return new Response(JSON.stringify({ error: 'No autorizado para verificar esta firma' }), { status: 403, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+  }
+
+  const storedHash      = f.contenidoHash?.stringValue || '';
+  const storedHmac       = f.hmac?.stringValue || '';
+  const canonico = firmaCanonico({
+    tipo: f.tipo?.stringValue, refId: f.refId?.stringValue, contenidoHash: storedHash,
+    uid: storedUid, cedula: f.cedula?.stringValue, firmaImgHash: f.firmaImgHash?.stringValue,
+    timestamp: f.timestamp?.timestampValue,
+  });
+  const hmacEsperado = await hmacSha256Hex(canonico, env.FIRMA_SIGNING_SECRET);
+  const valido = hmacEsperado === storedHmac;
+  const contenidoCoincide = !!hashActual && hashActual === storedHash;
+
+  return new Response(JSON.stringify({
+    valido,
+    contenidoCoincide,
+    firmadoPor: f.firmante?.stringValue || '',
+    timestamp:  f.timestamp?.timestampValue || '',
+  }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
 // ── POST /audit — bitácora de seguridad inmutable ────────────────────────────

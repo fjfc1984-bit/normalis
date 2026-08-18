@@ -28,7 +28,9 @@ export type SecurityLogAccion =
   | 'llave_api_reactivada'
   | 'llave_api_eliminada'
   | 'pqrs_respondida'
-  | 'mfa_enrolado';
+  | 'mfa_enrolado'
+  | 'documento_firmado'
+  | 'consentimiento_firmado';
 
 export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   login:                   'Inicio de sesión',
@@ -40,6 +42,8 @@ export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   llave_api_eliminada:     'Llave API eliminada',
   pqrs_respondida:         'PQRS respondida',
   mfa_enrolado:            'Verificación en dos pasos activada',
+  documento_firmado:       'Documento firmado electrónicamente',
+  consentimiento_firmado:  'Consentimiento informado firmado',
 };
 
 export interface SecurityLogItem {

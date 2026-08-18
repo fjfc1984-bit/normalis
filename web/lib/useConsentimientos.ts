@@ -12,6 +12,7 @@ import {
   orderBy, query,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { crearFirma } from '@/lib/firmar';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,23 @@ export interface ConsentimientoItem {
   fecha:         string; // YYYY-MM-DD
   estado:        EstadoCon;
   creadoEn:      number;
+  firmaPacienteImg?: string; // PNG dataURL de la firma dibujada del paciente
+  firmaMedicoImg?:   string;
+  firmaPacienteId?:  string; // puntero al registro inmutable en `firmas`
+  firmaMedicoId?:    string;
+}
+
+/** Texto exacto que se firma — debe coincidir con el mostrado al usuario. */
+export function textoConsentimiento(item: Pick<ConsentimientoItem,
+  'paciente' | 'cedula' | 'medico' | 'procedimiento' | 'fecha'>): string {
+  return [
+    `Yo, ${item.paciente}${item.cedula ? `, identificado/a con cédula ${item.cedula}` : ''}, `
+      + `declaro que he sido informado/a por el/la profesional ${item.medico} sobre el `
+      + `procedimiento: ${item.procedimiento}.`,
+    'He comprendido los beneficios, riesgos y alternativas del procedimiento. Autorizo su '
+      + 'realización y declaro que puedo retirar este consentimiento en cualquier momento.',
+    `Fecha: ${item.fecha}. Base legal: Ley 23/1981 Art. 15 · Res. 13437/1991 · Res. 1732/2026 Est. 6.`,
+  ].join('\n');
 }
 
 export interface NuevoConsentimiento {
@@ -135,6 +153,10 @@ export function useConsentimientos(uid: string | null) {
             fecha:         r.fecha         ?? '',
             estado:        r.estado        ?? 'pendiente',
             creadoEn:      r.creadoEn      ?? 0,
+            firmaPacienteImg: r.firmaPacienteImg ?? undefined,
+            firmaMedicoImg:   r.firmaMedicoImg   ?? undefined,
+            firmaPacienteId:  r.firmaPacienteId  ?? undefined,
+            firmaMedicoId:    r.firmaMedicoId    ?? undefined,
           };
         });
         setItems(data);
@@ -153,7 +175,17 @@ export function useConsentimientos(uid: string | null) {
     setItems(prev => [{ id: ref.id, ...payload }, ...prev]);
   }, [uid]);
 
-  const firmar = useCallback(async (id: string, quien: 'paciente' | 'medico') => {
+  /**
+   * Registra la firma de `quien` sobre el consentimiento `id`. `firmaImgBase64`
+   * es la firma dibujada (canvas) — se sella junto con el texto exacto del
+   * consentimiento vía el Worker (ver web/lib/firmar.ts) antes de guardar
+   * nada en el documento visible.
+   */
+  const firmar = useCallback(async (
+    id: string,
+    quien: 'paciente' | 'medico',
+    firmaImgBase64: string,
+  ) => {
     if (!uid) return;
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -167,11 +199,26 @@ export function useConsentimientos(uid: string | null) {
       next = 'completo';
     }
 
-    await updateDoc(
-      doc(db, 'usuarios', uid, 'consentimientos', id),
-      { estado: next },
-    );
-    setItems(prev => prev.map(p => p.id === id ? { ...p, estado: next } : p));
+    const contenido = textoConsentimiento(item);
+    const prueba = await crearFirma({
+      tipo:      quien === 'paciente' ? 'consentimiento_paciente' : 'consentimiento_medico',
+      refId:     id,
+      contenido,
+      firmante:  quien === 'paciente' ? item.paciente : item.medico,
+      cedula:    quien === 'paciente' ? item.cedula : undefined,
+      firmaImgBase64,
+    });
+
+    const campoImg = quien === 'paciente' ? 'firmaPacienteImg' : 'firmaMedicoImg';
+    const campoId  = quien === 'paciente' ? 'firmaPacienteId'  : 'firmaMedicoId';
+    const updates: Record<string, unknown> = {
+      estado: next,
+      [campoImg]: firmaImgBase64,
+      [campoId]:  prueba.id,
+    };
+
+    await updateDoc(doc(db, 'usuarios', uid, 'consentimientos', id), updates);
+    setItems(prev => prev.map(p => p.id === id ? { ...p, ...updates } as ConsentimientoItem : p));
   }, [uid, items]);
 
   const eliminar = useCallback(async (id: string) => {

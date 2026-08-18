@@ -14,6 +14,7 @@
 //   invitaciones/{code}         — sistema de invitaciones de equipo IPS
 //   normalis_orgs/{orgId}       — sincronización secundaria por NIT
 //   bitacora_seguridad/{id}     — bitácora de seguridad inmutable (solo el Worker escribe)
+//   firmas/{id}                 — pruebas de firma electrónica inmutables (solo el Worker escribe)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -414,6 +415,24 @@ service cloud.firestore {
     // confiable como evidencia de auditoría.
     // ════════════════════════════════════════════════════════════════════════
     match /bitacora_seguridad/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // firmas/{id} — pruebas de firma electrónica inmutables (Ley 527/1999 Art. 7)
+    // Escrita EXCLUSIVAMENTE por el Worker (POST /firmar), autenticado como
+    // cron@normalis.co (isAdmin), con un HMAC sellado con un secreto que el
+    // cliente nunca ve. Igual que bitacora_seguridad: ni un usuario ni un
+    // admin pueden editar o borrar una firma ya creada — de lo contrario no
+    // serviría como evidencia de que el firmante aprobó ese contenido exacto.
+    // ════════════════════════════════════════════════════════════════════════
+    match /firmas/{id} {
       allow read: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
         sameNIT(resource.data.nit) ||

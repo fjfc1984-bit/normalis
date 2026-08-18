@@ -15,6 +15,8 @@ import {
   ESTADO_COLOR,
 } from '@/lib/useConsentimientos';
 import type { NuevoConsentimiento, EstadoCon, ConsentimientoItem } from '@/lib/useConsentimientos';
+import FirmaCanvas from '@/components/FirmaCanvas';
+import { logSecurityEvent } from '@/lib/securityLog';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, EmptyState, ConfirmModal, StatusBadge,
@@ -181,15 +183,21 @@ function DetalleModal({
   onClose,
 }: {
   item:     ConsentimientoItem;
-  onFirmar: (quien: 'paciente' | 'medico') => Promise<void>;
+  onFirmar: (quien: 'paciente' | 'medico', firmaImgBase64: string) => Promise<void>;
   onClose:  () => void;
 }) {
-  const [saving, setSaving] = useState<'paciente' | 'medico' | null>(null);
+  const [saving, setSaving]           = useState<'paciente' | 'medico' | null>(null);
+  const [firmando, setFirmando]       = useState<'paciente' | 'medico' | null>(null);
+  const [firmaImg, setFirmaImg]       = useState<string | null>(null);
 
-  async function firmar(quien: 'paciente' | 'medico') {
-    setSaving(quien);
-    try { await onFirmar(quien); }
-    finally { setSaving(null); }
+  async function confirmarFirma() {
+    if (!firmando || !firmaImg) return;
+    setSaving(firmando);
+    try {
+      await onFirmar(firmando, firmaImg);
+      setFirmando(null);
+      setFirmaImg(null);
+    } finally { setSaving(null); }
   }
 
   const yaFirmoPaciente = item.estado === 'firmado_paciente' || item.estado === 'completo';
@@ -251,37 +259,84 @@ function DetalleModal({
           </div>
 
           {/* Firmas */}
-          {item.estado !== 'completo' && (
+          {item.estado !== 'completo' && !firmando && (
             <div className="space-y-2">
               <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
                 Registrar firmas
               </p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => firmar('paciente')}
+                  onClick={() => setFirmando('paciente')}
                   disabled={!!saving || yaFirmoPaciente}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors
                     ${yaFirmoPaciente
                       ? 'bg-green-100 text-green-700 cursor-default'
                       : 'bg-teal-50 border border-teal-200 text-teal-700 hover:bg-teal-100'}`}
                 >
-                  {saving === 'paciente' ? 'Firmando…'
-                    : yaFirmoPaciente ? '✅ Paciente firmó'
-                    : '✍️ Firma del paciente'}
+                  {yaFirmoPaciente ? '✅ Paciente firmó' : '✍️ Firma del paciente'}
                 </button>
                 <button
-                  onClick={() => firmar('medico')}
+                  onClick={() => setFirmando('medico')}
                   disabled={!!saving || yaFirmoMedico}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors
                     ${yaFirmoMedico
                       ? 'bg-green-100 text-green-700 cursor-default'
                       : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'}`}
                 >
-                  {saving === 'medico' ? 'Firmando…'
-                    : yaFirmoMedico ? '✅ Médico firmó'
-                    : '✍️ Firma del médico'}
+                  {yaFirmoMedico ? '✅ Médico firmó' : '✍️ Firma del médico'}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Captura de firma dibujada */}
+          {firmando && (
+            <div className="space-y-3 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-xs font-bold text-gray-700">
+                Firma de {firmando === 'paciente' ? `${item.paciente} (paciente)` : `${item.medico} (médico)`}
+              </p>
+              {firmando === 'paciente' && !item.cedula && (
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
+                  ⚠️ Este consentimiento no tiene cédula del paciente registrada — se recomienda
+                  completarla para que la firma tenga mayor valor probatorio.
+                </p>
+              )}
+              <FirmaCanvas onChange={setFirmaImg} />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => { setFirmando(null); setFirmaImg(null); }}
+                  className={BTN_S}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarFirma}
+                  disabled={!firmaImg || !!saving}
+                  className={BTN_P}
+                >
+                  {saving ? 'Firmando…' : 'Confirmar firma'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Firmas ya capturadas */}
+          {(item.firmaPacienteImg || item.firmaMedicoImg) && !firmando && (
+            <div className="grid grid-cols-2 gap-3">
+              {item.firmaPacienteImg && (
+                <div className="border border-gray-200 rounded-lg p-2 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.firmaPacienteImg} alt="Firma del paciente" className="mx-auto h-16 object-contain" />
+                  <p className="text-[10px] text-gray-400 mt-1">Firma del paciente</p>
+                </div>
+              )}
+              {item.firmaMedicoImg && (
+                <div className="border border-gray-200 rounded-lg p-2 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.firmaMedicoImg} alt="Firma del médico" className="mx-auto h-16 object-contain" />
+                  <p className="text-[10px] text-gray-400 mt-1">Firma del médico</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -331,9 +386,9 @@ export default function ConsentimientosPage() {
     }
   }, [agregar, show]);
 
-  const handleFirma = useCallback(async (quien: 'paciente' | 'medico') => {
+  const handleFirma = useCallback(async (quien: 'paciente' | 'medico', firmaImgBase64: string) => {
     if (!detalle) return;
-    await firmar(detalle.id, quien);
+    await firmar(detalle.id, quien, firmaImgBase64);
     // Actualizar detalle local
     setDetalle(prev => {
       if (!prev) return prev;
@@ -341,8 +396,10 @@ export default function ConsentimientosPage() {
       if (prev.estado === 'pendiente') next = quien === 'paciente' ? 'firmado_paciente' : 'firmado_medico';
       else if ((prev.estado === 'firmado_paciente' && quien === 'medico') ||
                (prev.estado === 'firmado_medico'   && quien === 'paciente')) next = 'completo';
-      return { ...prev, estado: next };
+      const campoImg = quien === 'paciente' ? 'firmaPacienteImg' : 'firmaMedicoImg';
+      return { ...prev, estado: next, [campoImg]: firmaImgBase64 };
     });
+    logSecurityEvent('consentimiento_firmado', 'consentimientos', `${quien} — ${detalle.procedimiento}`);
     show('Firma registrada', 'success');
   }, [detalle, firmar, show]);
 
@@ -475,7 +532,10 @@ export default function ConsentimientosPage() {
         <p>
           Todo procedimiento requiere consentimiento informado previo (Ley 23/1981 Art. 15).
           Para historia clínica, conservar por mínimo 15 años (Res. 1995/1999).
-          El paciente puede retirarlo en cualquier momento (Res. 13437/1991).
+          El paciente puede retirarlo en cualquier momento (Res. 13437/1991). Cada firma se captura
+          dibujada en pantalla y queda sellada con un hash del texto exacto y un HMAC del servidor
+          (firma electrónica, Art. 7 Ley 527/1999) — no reemplaza la firma manuscrita en papel donde
+          la normatividad territorial la exija expresamente; verifica con tu Secretaría de Salud.
         </p>
       </div>
 

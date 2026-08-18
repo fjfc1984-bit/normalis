@@ -27,6 +27,11 @@ account_id      = "e4ba3dc6b998c992411a8bc56bc02d2b"
 #   Obtener en: Sentry Dashboard -> Projects -> normalis -> Client Keys (DSN)
 #   Formato: https://<key>@o<org>.ingest.sentry.io/<project_id>
 #   Si no se configura, los errores quedan solo en Cloudflare Logs (no bloquea)
+#
+#   npx wrangler secret put FIRMA_SIGNING_SECRET
+#   → Clave para sellar firmas electrónicas (HMAC-SHA256) — NUNCA debe salir
+#     de este Worker. Generar con: openssl rand -hex 32
+#   Si no se configura, POST /firmar responde 503 (no bloquea el resto del sitio)
 # ─────────────────────────────────────────────────────────────
 
 [triggers]
