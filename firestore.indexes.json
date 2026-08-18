@@ -1,19 +1,87 @@
 {
   "indexes": [
     {
-      "collectionGroup": "documentos_dms",
+      "collectionGroup": "capacitaciones",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "nit", "order": "ASCENDING" },
-        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+        {
+          "fieldPath": "uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fecha",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "capacitaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "nit",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fecha",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "personal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "nit",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nombre",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "personal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nombre",
+          "order": "ASCENDING"
+        }
       ]
     },
     {
       "collectionGroup": "documentos_dms",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "fechaCreacion", "order": "DESCENDING" }
+        {
+          "fieldPath": "nit",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fechaCreacion",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "documentos_dms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fechaCreacion",
+          "order": "DESCENDING"
+        }
       ]
     }
   ],
