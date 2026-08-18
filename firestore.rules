@@ -15,6 +15,8 @@
 //   normalis_orgs/{orgId}       — sincronización secundaria por NIT
 //   bitacora_seguridad/{id}     — bitácora de seguridad inmutable (solo el Worker escribe)
 //   firmas/{id}                 — pruebas de firma electrónica inmutables (solo el Worker escribe)
+//   documentos_dms/{id}         — Gestor Documental: versionado + flujo de aprobación
+//   documentos_dms/{id}/socializaciones/{uid} — acuses individuales de socialización
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -440,6 +442,55 @@ service cloud.firestore {
       );
       allow create: if isAdmin();
       allow update, delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // documentos_dms/{id} — Gestor Documental: versionado + flujo de aprobación
+    // Mismo patrón de acceso compartido por NIT que capas/vencimientos/
+    // indicadores. Cualquiera del equipo puede crear una versión en borrador
+    // y moverla a revisión; SOLO admin puede aprobarla, y únicamente si ya
+    // trae un firmaId (la aprobación se sella primero con el mismo HMAC de
+    // /firmar — ver web/lib/useDocumentosDMS.ts). Una vez aprobada, la
+    // versión queda inmutable salvo el tránsito automático a "obsoleto"
+    // cuando la reemplaza una versión más nueva.
+    // ════════════════════════════════════════════════════════════════════════
+    match /documentos_dms/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.estado == 'borrador' &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+
+      allow update: if isAuthenticated() &&
+        (sameNIT(resource.data.nit) || isAdmin()) &&
+        // Una vez aprobada, solo se puede tocar para pasarla a obsoleto
+        // (y eso solo lo hace el propio flujo de aprobación de la versión
+        // siguiente, ejecutado por un admin).
+        (resource.data.estado != 'aprobado' ||
+          (isAdmin() && request.resource.data.estado == 'obsoleto')) &&
+        // Nadie puede auto-aprobar sin admin, ni aprobar sin sello HMAC ya emitido.
+        (request.resource.data.estado != 'aprobado' ||
+          (isAdmin() &&
+           request.resource.data.firmaId is string &&
+           request.resource.data.firmaId != ''));
+
+      allow delete: if false;
+
+      // ── Socializaciones — acuse individual de "leí y entendí" ─────────────
+      match /socializaciones/{uid} {
+        allow read: if isAuthenticated() && (
+          isOwner(uid) ||
+          sameNIT(get(/databases/$(database)/documents/documentos_dms/$(id)).data.nit) ||
+          isAdmin()
+        );
+        allow create: if isOwner(uid);
+        allow update, delete: if false;
+      }
     }
 
     // ════════════════════════════════════════════════════════════════════════

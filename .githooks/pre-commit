@@ -36,10 +36,21 @@ fi
 # ── CAMINO PRINCIPAL: repair-then-validate ────────────────────────
 if [ -f "$REPO_ROOT/normalis-repair.sh" ]; then
 
+  # Snapshot de archivos ya sucios ANTES de correr el reparador — este repo
+  # arrastra ruido preexistente (archivos modificados sin commitear) que no
+  # tiene nada que ver con lo que el reparador toque en esta corrida. Sin
+  # este snapshot, "git diff --name-only" post-reparación siempre reporta
+  # ese ruido viejo como si fuera "recién reparado" y el commit queda
+  # pausado para siempre, incluso cuando el reparador no tocó nada.
+  BEFORE_DIRTY=$(git diff --name-only 2>/dev/null || true)
+
   if bash "$REPO_ROOT/normalis-repair.sh" 2>&1; then
     # El repair + validate pasaron
     # Si el reparador modificó archivos, agregarlos al staging automáticamente
-    REPAIRED=$(git diff --name-only 2>/dev/null || true)
+    AFTER_DIRTY=$(git diff --name-only 2>/dev/null || true)
+    echo "$BEFORE_DIRTY" | sort > /tmp/normalis_before_dirty.txt
+    echo "$AFTER_DIRTY"  | sort > /tmp/normalis_after_dirty.txt
+    REPAIRED=$(comm -13 /tmp/normalis_before_dirty.txt /tmp/normalis_after_dirty.txt 2>/dev/null || true)
     if [ -n "$REPAIRED" ]; then
       echo ""
       echo "  [AUTO-REPAIR] Archivos reparados en disco:"

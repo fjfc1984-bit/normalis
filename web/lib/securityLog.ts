@@ -30,7 +30,8 @@ export type SecurityLogAccion =
   | 'pqrs_respondida'
   | 'mfa_enrolado'
   | 'documento_firmado'
-  | 'consentimiento_firmado';
+  | 'consentimiento_firmado'
+  | 'documento_version_aprobada';
 
 export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   login:                   'Inicio de sesión',
@@ -44,6 +45,7 @@ export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   mfa_enrolado:            'Verificación en dos pasos activada',
   documento_firmado:       'Documento firmado electrónicamente',
   consentimiento_firmado:  'Consentimiento informado firmado',
+  documento_version_aprobada: 'Versión de documento aprobada (DMS)',
 };
 
 export interface SecurityLogItem {

@@ -24,8 +24,13 @@ section(){ echo -e "\n${BLU}━━━ $1 ━━━${NC}"; }
 # ─────────────────────────────────────────────
 section "1. Existencia de archivos críticos"
 # ─────────────────────────────────────────────
+# NOTA: normativa-app-v2.html, admin.html, login.html, registro.html e
+# index.html se eliminaron intencionalmente en el commit 54aa03c ("chore:
+# eliminar archivos HTML obsoletos — migración completa a Next.js"). Las
+# secciones que los validan (4, 6, 7, 8, 9, 10, 13) ya se auto-omiten con
+# guards `if [[ -f ... ]]` cuando el archivo no existe, así que no hace
+# falta tocarlas — solo se retiran de esta lista de "críticos".
 CRITICAL_FILES=(
-  "normativa-app-v2.html"
   "normalis-chat.js"
   "normalis-data-audit.js"
   "normalis-audit-score.js"
@@ -40,10 +45,6 @@ CRITICAL_FILES=(
   "normalis-bitacora.js"
   "normalis-firestore.js"
   "normalis-styles.css"
-  "admin.html"
-  "login.html"
-  "registro.html"
-  "index.html"
   "normalis-pilot.js"
   "normalis-tour.js"
   "normalis-autofix.js"

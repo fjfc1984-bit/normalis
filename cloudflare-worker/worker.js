@@ -51,6 +51,7 @@ const AUDIT_ACCIONES_VALIDAS = [
   'mfa_enrolado',
   'documento_firmado',
   'consentimiento_firmado',
+  'documento_version_aprobada',
 ];
 
 // ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───
@@ -1884,7 +1885,11 @@ async function firestoreCreateDoc(projectId, collectionPath, fields, token) {
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields }),
   });
-  if (!res.ok) throw new Error(`Firestore create failed: ${res.status}`);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error(`[firestoreCreateDoc] ${collectionPath} -> ${res.status}: ${errText}`);
+    throw new Error(`Firestore create failed: ${res.status} ${errText}`);
+  }
   return res.json();
 }
 

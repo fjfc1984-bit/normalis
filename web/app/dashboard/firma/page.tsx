@@ -6,59 +6,17 @@
  * Base legal: Res. 1732/2026 — Procesos Prioritarios Est. 5 y normas referenciadas
  */
 
-import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useFirma, FIRMA_CATALOGO } from '@/lib/useFirma';
 import type { FirmaDoc, FirmaDocId } from '@/lib/useFirma';
-import { generarDocumento } from '@/lib/docTemplates';
-import { DOC_CATALOGO, IPS_CONFIG_DEFAULTS } from '@/lib/docTypes';
-import type { IPSConfig, DocId } from '@/lib/docTypes';
+import { useIPSConfigLocal, contenidoParaFirmar } from '@/lib/docContenido';
 import { logSecurityEvent } from '@/lib/securityLog';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, ConfirmModal,
 } from '@/components/ui';
 
-// ── Config IPS para regenerar el contenido exacto que se firma ────────────────
-// Mismos campos/fuente que web/app/dashboard/documentos/page.tsx (nombre,
-// nit, ciudad de Firestore + director/rm/esp editables guardados en
-// localStorage) — así el hash de firma corresponde al documento real que
-// el usuario ve y descarga en el módulo de Documentos.
-function useIPSConfigLocal(uid: string | null) {
-  const [cfg, setCfg] = useState<IPSConfig>(IPS_CONFIG_DEFAULTS);
-  useEffect(() => {
-    if (!uid) return;
-    getDoc(doc(db, 'usuarios', uid)).then(snap => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      const saved = (() => {
-        try { return JSON.parse(localStorage.getItem('normalis_doc_cfg') ?? '{}'); }
-        catch { return {}; }
-      })();
-      setCfg({
-        nombre:   d.nombre   ?? IPS_CONFIG_DEFAULTS.nombre,
-        nit:      d.nit      ?? IPS_CONFIG_DEFAULTS.nit,
-        ciudad:   d.ciudad   ?? IPS_CONFIG_DEFAULTS.ciudad,
-        director: saved.director ?? d.nombreContacto ?? IPS_CONFIG_DEFAULTS.director,
-        rm:       saved.rm       ?? '',
-        esp:      saved.esp      ?? IPS_CONFIG_DEFAULTS.esp,
-      });
-    });
-  }, [uid]);
-  return cfg;
-}
-
-/** Contenido exacto a firmar: el HTML real del documento cuando existe
- * plantilla en el módulo de Documentos; si no (ids legado sin plantilla),
- * un resumen determinístico como respaldo. */
-function contenidoParaFirmar(id: FirmaDocId, cfg: IPSConfig): string {
-  const tieneTemplate = DOC_CATALOGO.some(d => d.id === id);
-  if (tieneTemplate) return generarDocumento(id as DocId, cfg);
-  const cat = FIRMA_CATALOGO.find(c => c.id === id)!;
-  return `${cat.nombre}|${cat.base}|${cfg.nombre}|${cfg.nit}`;
-}
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 
