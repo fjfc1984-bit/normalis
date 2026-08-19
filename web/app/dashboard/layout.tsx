@@ -52,6 +52,7 @@ const NAV_GROUPS: Array<{
     label: 'Gestión',
     items: [
       { href: '/dashboard/vencimientos',    label: 'Vencimientos',  icon: '📅' },
+      { href: '/dashboard/equipos-biomedicos', label: 'Equipos Biomédicos', icon: '🩺', badge: 'NUEVO' },
       { href: '/dashboard/sg-sst',          label: 'SG-SST',         icon: '🦺' },
       { href: '/dashboard/simulacros',      label: 'Simulacro',      icon: '🔔' },
       { href: '/dashboard/documentos',      label: 'Documentos',     icon: '📄' },

@@ -17,6 +17,8 @@
 //   firmas/{id}                 — pruebas de firma electrónica inmutables (solo el Worker escribe)
 //   documentos_dms/{id}         — Gestor Documental: versionado + flujo de aprobación
 //   documentos_dms/{id}/socializaciones/{uid} — acuses individuales de socialización
+//   equipos_biomedicos/{id}     — CMMS: inventario de equipos (Estándar de Dotación)
+//   equipos_biomedicos/{id}/mantenimientos/{id} — hoja de vida (mantenimientos preventivos/correctivos)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -489,6 +491,47 @@ service cloud.firestore {
           isAdmin()
         );
         allow create: if isOwner(uid);
+        allow update, delete: if false;
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // equipos_biomedicos/{id} — CMMS: inventario de equipos biomédicos
+    // (Res. 1732/2026, Estándar de Dotación). Mismo patrón de acceso
+    // compartido por NIT que capas/vencimientos. La hoja de vida
+    // (mantenimientos) es de solo-creación — un registro de mantenimiento
+    // nunca se edita ni se borra una vez guardado, igual que socializaciones.
+    // ════════════════════════════════════════════════════════════════════════
+    match /equipos_biomedicos/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow delete: if false;
+
+      // ── Hoja de vida — mantenimientos preventivos/correctivos ────────────
+      match /mantenimientos/{mid} {
+        allow read: if isAuthenticated() && (
+          sameNIT(get(/databases/$(database)/documents/equipos_biomedicos/$(id)).data.nit) ||
+          get(/databases/$(database)/documents/equipos_biomedicos/$(id)).data.uid == request.auth.uid ||
+          isAdmin()
+        );
+        allow create: if isAuthenticated() && (
+          sameNIT(get(/databases/$(database)/documents/equipos_biomedicos/$(id)).data.nit) ||
+          get(/databases/$(database)/documents/equipos_biomedicos/$(id)).data.uid == request.auth.uid ||
+          isAdmin()
+        );
         allow update, delete: if false;
       }
     }
