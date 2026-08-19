@@ -43,15 +43,29 @@ function fmtDate(iso: string | null | undefined): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-// ── Modal: nuevo equipo ───────────────────────────────────────────────────
+// ── Modal: nuevo equipo / editar equipo ────────────────────────────────────
 function EquipoFormModal({
-  onSave, onClose,
+  equipo, onSave, onClose,
 }: {
+  equipo?: Equipo;
   onSave: (data: EquipoFormData) => Promise<void>;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<EquipoFormData>(EQUIPO_EMPTY_FORM);
+  const [form, setForm] = useState<EquipoFormData>(
+    equipo
+      ? {
+          nombre: equipo.nombre, marca: equipo.marca, modelo: equipo.modelo, serie: equipo.serie,
+          servicioAsociado: equipo.servicioAsociado, estado: equipo.estado,
+          registroSanitario: equipo.registroSanitario,
+          registroSanitarioVigenciaHasta: equipo.registroSanitarioVigenciaHasta,
+          fechaAdquisicion: equipo.fechaAdquisicion,
+          frecuenciaMantenimientoMeses: equipo.frecuenciaMantenimientoMeses,
+          personalCapacitado: equipo.personalCapacitado,
+        }
+      : EQUIPO_EMPTY_FORM
+  );
   const [saving, setSaving] = useState(false);
+  const esEdicion = !!equipo;
 
   function set<K extends keyof EquipoFormData>(k: K, v: EquipoFormData[K]) {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -68,7 +82,9 @@ function EquipoFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 sticky top-0">
-          <p className="text-sm font-bold text-gray-800">🩺 Nuevo equipo biomédico</p>
+          <p className="text-sm font-bold text-gray-800">
+            {esEdicion ? `✏️ Editar — ${equipo!.nombre}` : '🩺 Nuevo equipo biomédico'}
+          </p>
         </div>
         <form onSubmit={handle} className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -137,7 +153,9 @@ function EquipoFormModal({
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
-            <button type="submit" disabled={saving} className={BTN_P}>{saving ? 'Guardando…' : 'Guardar equipo'}</button>
+            <button type="submit" disabled={saving} className={BTN_P}>
+              {saving ? 'Guardando…' : (esEdicion ? 'Guardar cambios' : 'Guardar equipo')}
+            </button>
           </div>
         </form>
       </div>
@@ -265,11 +283,12 @@ function HojaDeVidaModal({
 
 // ── Tarjeta de equipo ──────────────────────────────────────────────────────
 function EquipoCard({
-  equipo, onRegistrarMantenimiento, onVerHojaDeVida,
+  equipo, onRegistrarMantenimiento, onVerHojaDeVida, onEditar,
 }: {
   equipo: Equipo;
   onRegistrarMantenimiento: (e: Equipo) => void;
   onVerHojaDeVida: (e: Equipo) => void;
+  onEditar: (e: Equipo) => void;
 }) {
   const cfg = EQUIPO_ESTADO_CFG[equipo.estado];
   return (
@@ -299,6 +318,9 @@ function EquipoCard({
         </div>
 
         <div className="flex items-center gap-2">
+          <button onClick={() => onEditar(equipo)} className={BTN_S}>
+            ✏️ Editar
+          </button>
           <button onClick={() => onRegistrarMantenimiento(equipo)} className={BTN_S}>
             🔧 Registrar mantenimiento
           </button>
@@ -320,11 +342,12 @@ export default function EquiposBiomedicosPage() {
   const uid = user?.uid ?? null;
   const {
     equipos, loading, stats,
-    createEquipo, listarMantenimientos, registrarMantenimiento,
+    createEquipo, updateEquipo, listarMantenimientos, registrarMantenimiento,
   } = useEquiposBiomedicos(uid, nit || null);
   const { toast, show } = useToast();
 
   const [showNuevoEquipo, setShowNuevoEquipo] = useState(false);
+  const [editandoEquipo, setEditandoEquipo] = useState<Equipo | null>(null);
   const [mantenimientoEquipo, setMantenimientoEquipo] = useState<Equipo | null>(null);
   const [hojaDeVidaEquipo, setHojaDeVidaEquipo] = useState<Equipo | null>(null);
   const [hojaDeVida, setHojaDeVida] = useState<Mantenimiento[]>([]);
@@ -334,6 +357,13 @@ export default function EquiposBiomedicosPage() {
     await createEquipo(data, uid, nit || '');
     show('🩺 Equipo registrado', 'success');
     setShowNuevoEquipo(false);
+  }
+
+  async function handleActualizarEquipo(data: EquipoFormData) {
+    if (!editandoEquipo) return;
+    await updateEquipo(editandoEquipo.id, data);
+    show('✏️ Equipo actualizado', 'success');
+    setEditandoEquipo(null);
   }
 
   async function handleRegistrarMantenimiento(data: MantenimientoFormData) {
@@ -388,6 +418,7 @@ export default function EquiposBiomedicosPage() {
               equipo={equipo}
               onRegistrarMantenimiento={setMantenimientoEquipo}
               onVerHojaDeVida={handleVerHojaDeVida}
+              onEditar={setEditandoEquipo}
             />
           ))}
         </div>
@@ -407,6 +438,14 @@ export default function EquiposBiomedicosPage() {
 
       {showNuevoEquipo && (
         <EquipoFormModal onSave={handleCrearEquipo} onClose={() => setShowNuevoEquipo(false)} />
+      )}
+
+      {editandoEquipo && (
+        <EquipoFormModal
+          equipo={editandoEquipo}
+          onSave={handleActualizarEquipo}
+          onClose={() => setEditandoEquipo(null)}
+        />
       )}
 
       {mantenimientoEquipo && (
