@@ -19,6 +19,7 @@
 //   documentos_dms/{id}/socializaciones/{uid} — acuses individuales de socialización
 //   equipos_biomedicos/{id}     — CMMS: inventario de equipos (Estándar de Dotación)
 //   equipos_biomedicos/{id}/mantenimientos/{id} — hoja de vida (mantenimientos preventivos/correctivos)
+//   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -534,6 +535,33 @@ service cloud.firestore {
         );
         allow update, delete: if false;
       }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // eventos_vigilancia/{id} — Vigilancia Sanitaria: farmacovigilancia,
+    // tecnovigilancia y reactivovigilancia (Res. 1732/2026, Estándar de
+    // Medicamentos y Dispositivos Médicos, Numeral 6). Mismo patrón de acceso
+    // compartido por NIT. Se permite actualizar (p.ej. marcar como reportado
+    // a INVIMA y agregar el radicado) pero nunca borrar — es un registro de
+    // auditoría regulatoria.
+    // ════════════════════════════════════════════════════════════════════════
+    match /eventos_vigilancia/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow delete: if false;
     }
 
     // ════════════════════════════════════════════════════════════════════════
