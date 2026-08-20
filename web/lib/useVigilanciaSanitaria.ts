@@ -31,9 +31,14 @@ function addDias(fechaISO: string, dias: number): string {
 
 function addComputedFields(raw: Omit<EventoVigilancia, '_fechaLimiteReporte' | '_reporteVencido'>): EventoVigilancia {
   const hoy = hoyISO();
-  const esSerio = raw.severidad === 'serio';
-  const fechaLimite = esSerio && raw.fechaConocimiento
-    ? addDias(raw.fechaConocimiento, TIPO_VIGILANCIA_CFG[raw.tipoVigilancia].plazoSerioDias)
+  const cfg = TIPO_VIGILANCIA_CFG[raw.tipoVigilancia] ?? TIPO_VIGILANCIA_CFG.tecnovigilancia; // guarda contra documentos con tipoVigilancia inválido/legado
+  // Reactivovigilancia no distingue serio/no serio — el mismo plazo de 5 días
+  // aplica a todo evento (Res. 2020007532/2020). Farmaco/tecnovigilancia solo
+  // calculan plazo individual para eventos serios; los no serios se consolidan
+  // en el reporte periódico.
+  const necesitaPlazo = raw.tipoVigilancia === 'reactivovigilancia' || raw.severidad === 'serio';
+  const fechaLimite = necesitaPlazo && raw.fechaConocimiento
+    ? addDias(raw.fechaConocimiento, cfg.plazoSerioDias)
     : null;
   return {
     ...raw,

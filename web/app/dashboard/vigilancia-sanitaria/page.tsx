@@ -65,6 +65,12 @@ function EventoFormModal({
   const [saving, setSaving] = useState(false);
   const esEdicion = !!evento;
   const cfg = TIPO_VIGILANCIA_CFG[form.tipoVigilancia];
+  // Los "hechos" del evento (qué pasó, cuándo, qué tan serio) quedan
+  // bloqueados una vez creado el registro — es un registro de auditoría
+  // regulatoria y reescribirlos borraría la evidencia de un plazo
+  // incumplido. Solo se puede avanzar el seguimiento del caso. Esto está
+  // reforzado también en las reglas de Firestore, no es solo de interfaz.
+  const INPUT_LOCKED = `${INPUT} bg-gray-100 text-gray-500 cursor-not-allowed`;
 
   function set<K extends keyof EventoVigilanciaFormData>(k: K, v: EventoVigilanciaFormData[K]) {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -86,9 +92,17 @@ function EventoFormModal({
           </p>
         </div>
         <form onSubmit={handle} className="px-6 py-5 space-y-4">
+          {esEdicion && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-500">
+              🔒 Los datos del evento (tipo, producto, fechas, descripción, severidad) quedan fijos una vez
+              registrado — es evidencia de auditoría. Aquí solo se actualiza el seguimiento del caso.
+            </div>
+          )}
+
           <div>
             <label className={LABEL}>Tipo de vigilancia *</label>
-            <select className={INPUT} value={form.tipoVigilancia} onChange={e => set('tipoVigilancia', e.target.value as TipoVigilancia)}>
+            <select className={esEdicion ? INPUT_LOCKED : INPUT} value={form.tipoVigilancia} disabled={esEdicion}
+                    onChange={e => set('tipoVigilancia', e.target.value as TipoVigilancia)}>
               {Object.entries(TIPO_VIGILANCIA_CFG).map(([k, c]) => (
                 <option key={k} value={k}>{c.icon} {c.label}</option>
               ))}
@@ -98,38 +112,44 @@ function EventoFormModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className={LABEL}>Producto involucrado *</label>
-              <input className={INPUT} value={form.productoNombre} onChange={e => set('productoNombre', e.target.value)}
+              <input className={esEdicion ? INPUT_LOCKED : INPUT} value={form.productoNombre} disabled={esEdicion}
+                     onChange={e => set('productoNombre', e.target.value)}
                      placeholder={form.tipoVigilancia === 'farmacovigilancia' ? 'Nombre del medicamento' : form.tipoVigilancia === 'reactivovigilancia' ? 'Nombre del reactivo' : 'Nombre del dispositivo médico'}
                      required />
             </div>
             <div>
               <label className={LABEL}>Fecha de ocurrencia</label>
-              <input type="date" className={INPUT} value={form.fechaOcurrencia} onChange={e => set('fechaOcurrencia', e.target.value)} />
+              <input type="date" className={esEdicion ? INPUT_LOCKED : INPUT} value={form.fechaOcurrencia} disabled={esEdicion}
+                     onChange={e => set('fechaOcurrencia', e.target.value)} />
             </div>
             <div>
               <label className={LABEL}>Fecha de conocimiento *</label>
-              <input type="date" className={INPUT} value={form.fechaConocimiento} onChange={e => set('fechaConocimiento', e.target.value)} required />
+              <input type="date" className={esEdicion ? INPUT_LOCKED : INPUT} value={form.fechaConocimiento} disabled={esEdicion}
+                     onChange={e => set('fechaConocimiento', e.target.value)} required />
             </div>
           </div>
 
           <div>
             <label className={LABEL}>Descripción del evento *</label>
-            <textarea rows={3} className={INPUT} value={form.descripcionEvento} onChange={e => set('descripcionEvento', e.target.value)}
+            <textarea rows={3} className={esEdicion ? INPUT_LOCKED : INPUT} value={form.descripcionEvento} disabled={esEdicion}
+                       onChange={e => set('descripcionEvento', e.target.value)}
                        placeholder="Qué ocurrió, cómo se detectó…" required />
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
             <div>
               <label className={LABEL}>Severidad *</label>
-              <select className={INPUT} value={form.severidad} onChange={e => set('severidad', e.target.value as Severidad)}>
+              <select className={esEdicion ? INPUT_LOCKED : INPUT} value={form.severidad} disabled={esEdicion}
+                      onChange={e => set('severidad', e.target.value as Severidad)}>
                 {Object.entries(SEVERIDAD_LABEL).map(([k, label]) => (
                   <option key={k} value={k}>{label}</option>
                 ))}
               </select>
             </div>
             <div className="flex items-end pb-2">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" checked={form.pacienteAfectado} onChange={e => set('pacienteAfectado', e.target.checked)} />
+              <label className={`flex items-center gap-2 text-sm ${esEdicion ? 'text-gray-400' : 'text-gray-700'}`}>
+                <input type="checkbox" checked={form.pacienteAfectado} disabled={esEdicion}
+                       onChange={e => set('pacienteAfectado', e.target.checked)} />
                 Hubo paciente afectado
               </label>
             </div>

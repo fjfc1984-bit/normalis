@@ -540,10 +540,19 @@ service cloud.firestore {
     // ════════════════════════════════════════════════════════════════════════
     // eventos_vigilancia/{id} — Vigilancia Sanitaria: farmacovigilancia,
     // tecnovigilancia y reactivovigilancia (Res. 1732/2026, Estándar de
-    // Medicamentos y Dispositivos Médicos, Numeral 6). Mismo patrón de acceso
-    // compartido por NIT. Se permite actualizar (p.ej. marcar como reportado
-    // a INVIMA y agregar el radicado) pero nunca borrar — es un registro de
-    // auditoría regulatoria.
+    // Medicamentos y Dispositivos Médicos, Numeral 6).
+    //
+    // Al crear: se exige que el nit del evento coincida con el nit del propio
+    // usuario (igual que vencimientos/indicadores/documentos_dms) — evita que
+    // un usuario autenticado inyecte eventos falsos bajo el NIT de otra IPS.
+    //
+    // Al actualizar: los HECHOS del evento (qué pasó, cuándo, qué tan serio)
+    // quedan bloqueados para usuarios normales una vez creado el registro —
+    // solo se puede avanzar el seguimiento del caso (estado del reporte,
+    // fecha/radicado INVIMA, acciones tomadas, responsable). Es un registro
+    // de auditoría regulatoria: reescribir los hechos originales borraría la
+    // evidencia de un plazo incumplido. isAdmin() puede corregir errores de
+    // digitación genuinos si hace falta.
     // ════════════════════════════════════════════════════════════════════════
     match /eventos_vigilancia/{id} {
       allow read: if isAuthenticated() && (
@@ -553,12 +562,22 @@ service cloud.firestore {
       );
 
       allow create: if isAuthenticated() &&
-        request.resource.data.uid == request.auth.uid;
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
 
       allow update: if isAuthenticated() && (
-        resource.data.uid == request.auth.uid ||
-        sameNIT(resource.data.nit) ||
-        isAdmin()
+        isAdmin() || (
+          (resource.data.uid == request.auth.uid || sameNIT(resource.data.nit)) &&
+          request.resource.data.tipoVigilancia    == resource.data.tipoVigilancia &&
+          request.resource.data.productoNombre    == resource.data.productoNombre &&
+          request.resource.data.descripcionEvento == resource.data.descripcionEvento &&
+          request.resource.data.fechaOcurrencia   == resource.data.fechaOcurrencia &&
+          request.resource.data.fechaConocimiento == resource.data.fechaConocimiento &&
+          request.resource.data.severidad         == resource.data.severidad &&
+          request.resource.data.pacienteAfectado  == resource.data.pacienteAfectado &&
+          request.resource.data.uid               == resource.data.uid &&
+          request.resource.data.nit               == resource.data.nit
+        )
       );
 
       allow delete: if false;
