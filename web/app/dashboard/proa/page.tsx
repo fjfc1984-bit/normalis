@@ -5,11 +5,13 @@ import { useAuth } from '@/lib/auth';
 import { useProa } from '@/lib/useProa';
 import {
   checklistParaNivel, NIVEL_COMPLEJIDAD_LABEL, FASES_PROA,
-  SERVICIOS, ANTIMICROBIANOS_TRAZADORES, ANTIMICROBIANOS_RESTRINGIDOS, TIPOS_INTERVENCION,
+  SERVICIOS, ANTIMICROBIANOS_TRAZADORES, ANTIMICROBIANOS_CATALOGO, ANTIMICROBIANOS_RESTRINGIDOS, TIPOS_INTERVENCION,
   TIPO_RESISTENCIA_LABEL, SITIOS_INFECCION, DESENLACE_LABEL, ESTADO_AUTORIZACION_LABEL, ESTADO_ENVIO_LABEL,
   INTERVENCION_EMPTY_FORM, IAAS_EMPTY_FORM, AUTORIZACION_EMPTY_FORM,
+  FRECUENCIA_DOSIS_LABEL, esPrescripcionProlongada,
   type NivelComplejidad, type Intervencion, type ConsumoAMR, type IAASResistente,
   type AutorizacionPrevia, type InformeAnualPROA, type FaseImplementacion, type TipoResistencia,
+  type FrecuenciaDosis,
 } from '@/lib/proaTypes';
 
 type Tab = 'checklist' | 'fases' | 'intervenciones' | 'indicadores' | 'iaas' | 'autorizaciones' | 'reporte';
@@ -312,26 +314,51 @@ export default function PROAPage() {
                   { k: 'fecha', l: 'Fecha', t: 'date' },
                   { k: 'paciente', l: 'Paciente / HC', t: 'text' },
                   { k: 'servicio', l: 'Servicio', t: 'select', opts: SERVICIOS },
-                  { k: 'antimicrobiano', l: 'Antimicrobiano', t: 'select', opts: ANTIMICROBIANOS_TRAZADORES.map(a => a.nombre) },
+                  { k: 'antimicrobiano', l: 'Antimicrobiano', t: 'select', opts: ANTIMICROBIANOS_CATALOGO.map(a => a.nombre) },
                   { k: 'tipo', l: 'Tipo de intervención', t: 'select', opts: TIPOS_INTERVENCION.map(t => t.key), labels: TIPOS_INTERVENCION.map(t => t.label) },
                   { k: 'resultado', l: 'Resultado', t: 'select', opts: ['aceptada', 'rechazada', 'pendiente'], labels: ['Aceptada', 'Rechazada', 'Pendiente'] },
                 ].map(f => (
                   <div key={f.k}>
                     <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">{f.l}</label>
                     {f.t === 'select' ? (
-                      <select value={(formInt as Record<string, string>)[f.k] || ''}
+                      <select value={(formInt as unknown as Record<string, string>)[f.k] || ''}
                               onChange={e => setFormInt(p2 => ({ ...p2, [f.k]: e.target.value }))}
                               className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white text-slate-700">
                         <option value="">Seleccionar</option>
                         {f.opts!.map((o, i) => <option key={o} value={o}>{f.labels ? f.labels[i] : o}</option>)}
                       </select>
                     ) : (
-                      <input type={f.t} value={(formInt as Record<string, string>)[f.k] || ''}
+                      <input type={f.t} value={(formInt as unknown as Record<string, string>)[f.k] || ''}
                              onChange={e => setFormInt(p2 => ({ ...p2, [f.k]: e.target.value }))}
                              className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white text-slate-700" />
                     )}
                   </div>
                 ))}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">Momento de la dosis (frecuencia)</label>
+                  <select value={formInt.frecuenciaDosis}
+                          onChange={e => setFormInt(p2 => ({ ...p2, frecuenciaDosis: e.target.value as FrecuenciaDosis }))}
+                          className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white text-slate-700">
+                    {(Object.keys(FRECUENCIA_DOSIS_LABEL) as FrecuenciaDosis[]).map(k => (
+                      <option key={k} value={k}>{FRECUENCIA_DOSIS_LABEL[k]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">Duración del tratamiento (días)</label>
+                  <input type="number" min={0} step={1} value={formInt.duracionDiasTratamiento ?? ''}
+                         onChange={e => {
+                           const raw = e.target.value;
+                           if (raw === '') { setFormInt(p2 => ({ ...p2, duracionDiasTratamiento: null })); return; }
+                           const n = Number(raw);
+                           if (!Number.isFinite(n) || n < 0) return; // ignora entradas inválidas (ej. "-", NaN)
+                           setFormInt(p2 => ({ ...p2, duracionDiasTratamiento: n }));
+                         }}
+                         className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white text-slate-700" />
+                  {esPrescripcionProlongada(formInt.antimicrobiano, formInt.duracionDiasTratamiento) && (
+                    <p className="text-[10px] font-bold text-amber-600 mt-1">⚠ Prescripción prolongada — sugerir revisión del equipo PROA (umbral administrativo, no clínico).</p>
+                  )}
+                </div>
                 <div className="col-span-2 md:col-span-3">
                   <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">Justificación / Recomendación</label>
                   <textarea value={formInt.justificacion || ''} onChange={e => setFormInt(p2 => ({ ...p2, justificacion: e.target.value }))}
@@ -359,20 +386,35 @@ export default function PROAPage() {
                 <span className="col-span-2">Servicio</span>
                 <span className="col-span-2">Antimicrobiano</span>
                 <span className="col-span-2">Tipo</span>
-                <span className="col-span-3">Resultado</span>
+                <span className="col-span-2">Resultado</span>
+                <span className="col-span-1">Alerta</span>
               </div>
               {p.intervenciones.map((inv, i) => {
                 const tipo = TIPOS_INTERVENCION.find(t => t.key === inv.tipo);
                 const resColor = inv.resultado === 'aceptada' ? '#34d399' : inv.resultado === 'rechazada' ? '#f87171' : '#f59e0b';
+                const prolongada = esPrescripcionProlongada(inv.antimicrobiano, inv.duracionDiasTratamiento);
                 return (
                   <div key={inv.id || i} className="grid grid-cols-12 items-center px-4 py-3 hover:bg-slate-50 transition-colors"
                        style={{ borderBottom: i < p.intervenciones.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
                     <span className="col-span-1 text-xs text-slate-500">{inv.fecha}</span>
                     <span className="col-span-2 text-xs font-semibold text-slate-700 truncate">{inv.paciente}</span>
                     <span className="col-span-2 text-xs text-slate-500 truncate">{inv.servicio}</span>
-                    <span className="col-span-2 text-xs text-slate-700 truncate">{inv.antimicrobiano}</span>
+                    <span className="col-span-2 text-xs text-slate-700 truncate">
+                      {inv.antimicrobiano}
+                      {(inv.frecuenciaDosis || inv.duracionDiasTratamiento) && (
+                        <span className="block text-[10px] text-slate-400">
+                          {inv.frecuenciaDosis ? FRECUENCIA_DOSIS_LABEL[inv.frecuenciaDosis] : ''}
+                          {inv.duracionDiasTratamiento ? ` · ${inv.duracionDiasTratamiento}d` : ''}
+                        </span>
+                      )}
+                    </span>
                     <span className="col-span-2 text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${tipo?.color}20`, color: tipo?.color }}>{tipo?.label}</span>
-                    <span className="col-span-3 text-xs px-2 py-0.5 rounded-full font-bold capitalize" style={{ background: `${resColor}15`, color: resColor }}>{inv.resultado}</span>
+                    <span className="col-span-2 text-xs px-2 py-0.5 rounded-full font-bold capitalize" style={{ background: `${resColor}15`, color: resColor }}>{inv.resultado}</span>
+                    <span className="col-span-1 text-xs">
+                      {prolongada && (
+                        <span title="Prescripción prolongada — revisar (umbral administrativo PROA, no clínico)" className="px-2 py-0.5 rounded-full font-bold" style={{ background: '#fef3c7', color: '#b45309' }}>⚠</span>
+                      )}
+                    </span>
                   </div>
                 );
               })}

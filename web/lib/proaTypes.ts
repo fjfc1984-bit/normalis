@@ -176,6 +176,41 @@ export const ANTIMICROBIANOS_TRAZADORES: AntimicrobianoRef[] = [
 
 export const ANTIMICROBIANOS_RESTRINGIDOS = ANTIMICROBIANOS_TRAZADORES.filter(a => a.restringido).map(a => a.nombre);
 
+// Catálogo AMPLIO de antimicrobianos para el registro de Intervenciones —
+// más allá de los 10 "trazadores" que se usan específicamente para el
+// indicador DDD/DOT (ese listado queda igual, es el que exige el
+// seguimiento de consumo). Aquí se puede registrar cualquier antimicrobiano
+// que efectivamente se prescriba en la institución.
+export const ANTIMICROBIANOS_CATALOGO: AntimicrobianoRef[] = [
+  ...ANTIMICROBIANOS_TRAZADORES,
+  { nombre: 'Ampicilina/Sulbactam', grupo: 'Penicilinas + IBL', watch: false, restringido: false },
+  { nombre: 'Amoxicilina/Clavulanato', grupo: 'Penicilinas + IBL', watch: false, restringido: false },
+  { nombre: 'Ampicilina', grupo: 'Penicilinas', watch: false, restringido: false },
+  { nombre: 'Penicilina cristalina', grupo: 'Penicilinas', watch: false, restringido: false },
+  { nombre: 'Oxacilina', grupo: 'Penicilinas antiestafilocócicas', watch: false, restringido: false },
+  { nombre: 'Cefazolina', grupo: 'Cefalosporinas 1G', watch: false, restringido: false },
+  { nombre: 'Cefuroxima', grupo: 'Cefalosporinas 2G', watch: false, restringido: false },
+  { nombre: 'Cefotaxima', grupo: 'Cefalosporinas 3G', watch: false, restringido: false },
+  { nombre: 'Ceftazidima', grupo: 'Cefalosporinas 3G', watch: false, restringido: false },
+  { nombre: 'Clindamicina', grupo: 'Lincosamidas', watch: false, restringido: false },
+  { nombre: 'Metronidazol', grupo: 'Nitroimidazoles', watch: false, restringido: false },
+  { nombre: 'Azitromicina', grupo: 'Macrólidos', watch: false, restringido: false },
+  { nombre: 'Claritromicina', grupo: 'Macrólidos', watch: false, restringido: false },
+  { nombre: 'Doxiciclina', grupo: 'Tetraciclinas', watch: false, restringido: false },
+  { nombre: 'Trimetoprim/Sulfametoxazol', grupo: 'Sulfonamidas', watch: false, restringido: false },
+  { nombre: 'Gentamicina', grupo: 'Aminoglucósidos', watch: false, restringido: false },
+  { nombre: 'Amikacina', grupo: 'Aminoglucósidos', watch: true, restringido: false },
+  { nombre: 'Levofloxacino', grupo: 'Quinolonas', watch: true, restringido: false },
+  { nombre: 'Moxifloxacino', grupo: 'Quinolonas', watch: true, restringido: false },
+  { nombre: 'Nitrofurantoína', grupo: 'Nitrofuranos', watch: false, restringido: false },
+  { nombre: 'Fosfomicina', grupo: 'Fosfónicos', watch: false, restringido: false },
+  { nombre: 'Daptomicina', grupo: 'Lipopéptidos', watch: true, restringido: true },
+  { nombre: 'Tigeciclina', grupo: 'Glicilciclinas', watch: true, restringido: true },
+  { nombre: 'Anfotericina B', grupo: 'Antifúngicos poliénicos', watch: true, restringido: true },
+  { nombre: 'Voriconazol', grupo: 'Antifúngicos azólicos', watch: true, restringido: true },
+  { nombre: 'Caspofungina', grupo: 'Equinocandinas', watch: true, restringido: true },
+];
+
 export const TIPOS_INTERVENCION = [
   { key: 'suspension', label: 'Suspensión', color: '#f87171' },
   { key: 'desescalada', label: 'Desescalada', color: '#34d399' },
@@ -184,12 +219,49 @@ export const TIPOS_INTERVENCION = [
   { key: 'inicio_dirigido', label: 'Inicio dirigido', color: '#f59e0b' },
 ] as const;
 
+// Momento/frecuencia de la dosis — para dejar registrado el esquema de
+// administración que se está evaluando en la intervención.
+export type FrecuenciaDosis = 'c4h' | 'c6h' | 'c8h' | 'c12h' | 'c24h' | 'dosis_unica' | 'otro';
+
+export const FRECUENCIA_DOSIS_LABEL: Record<FrecuenciaDosis, string> = {
+  c4h: 'Cada 4 horas',
+  c6h: 'Cada 6 horas',
+  c8h: 'Cada 8 horas',
+  c12h: 'Cada 12 horas',
+  c24h: 'Cada 24 horas',
+  dosis_unica: 'Dosis única',
+  otro: 'Otro esquema',
+};
+
+// Umbral de revisión por prescripción prolongada — NO es un límite clínico
+// estricto ni sustituye el juicio del prescriptor o la guía institucional:
+// es un disparador administrativo del programa PROA para que el equipo
+// revise (desescalar/suspender/justificar) un tratamiento que ya superó el
+// tiempo típico de reevaluación. Para antimicrobianos "watch"/restringidos
+// el disparador es más corto (7 días) que para el resto (10 días), en
+// línea con la vigilancia especial que ya aplica el módulo a esos grupos.
+export const UMBRAL_DIAS_REVISION_WATCH = 7;
+export const UMBRAL_DIAS_REVISION_GENERAL = 10;
+
+export function esPrescripcionProlongada(antimicrobiano: string, duracionDias: number | null | undefined): boolean {
+  if (!duracionDias || duracionDias <= 0 || !Number.isFinite(duracionDias)) return false;
+  const ref = ANTIMICROBIANOS_CATALOGO.find(a => a.nombre === antimicrobiano);
+  // Umbral corto (7 días) para cualquier antimicrobiano "watch" (vigilancia
+  // OMS AWaRe) O restringido — son ejes independientes: un antimicrobiano
+  // puede estar restringido sin estar en la categoría watch, y en ese caso
+  // igual amerita revisión temprana del equipo PROA.
+  const umbral = (ref?.watch || ref?.restringido) ? UMBRAL_DIAS_REVISION_WATCH : UMBRAL_DIAS_REVISION_GENERAL;
+  return duracionDias > umbral;
+}
+
 export interface Intervencion {
   id?: string;
   fecha: string;
   paciente: string;
   servicio: string;
   antimicrobiano: string;
+  frecuenciaDosis: FrecuenciaDosis;
+  duracionDiasTratamiento: number | null;
   tipo: 'suspension' | 'desescalada' | 'ajuste_dosis' | 'cambio_via' | 'inicio_dirigido';
   justificacion: string;
   resultado: 'aceptada' | 'rechazada' | 'pendiente';
@@ -197,7 +269,8 @@ export interface Intervencion {
 }
 
 export const INTERVENCION_EMPTY_FORM: Omit<Intervencion, 'id' | 'creadoEn'> = {
-  fecha: '', paciente: '', servicio: '', antimicrobiano: '', tipo: 'desescalada', justificacion: '', resultado: 'pendiente',
+  fecha: '', paciente: '', servicio: '', antimicrobiano: '', frecuenciaDosis: 'c8h', duracionDiasTratamiento: null,
+  tipo: 'desescalada', justificacion: '', resultado: 'pendiente',
 };
 
 // ════════════════════════════════════════════════════════════════════════

@@ -1656,13 +1656,9 @@ function setupNext(step) {
     const nombre = document.getElementById('sf-nombre').value.trim();
     const tipo   = document.getElementById('sf-tipo').value;
     const nit    = document.getElementById('sf-nit').value.trim();
-    // Excepcion temporal de prueba: estos usuarios piloto pueden continuar el onboarding sin NIT.
-    var _nitExentoEmails = ['juanjoverbe@hotmail.com', 'ipj20@hotmail.com'];
-    var _userEmail = (typeof _currentUser !== 'undefined' && _currentUser && _currentUser.email) ? _currentUser.email.toLowerCase() : '';
-    var _nitExento = _nitExentoEmails.indexOf(_userEmail) !== -1;
     if (!nombre) { document.getElementById('sf-nombre').focus(); toast('&#9888; Ingresa el nombre del establecimiento','warning'); return; }
     if (!tipo)   { document.getElementById('sf-tipo').focus();   toast('&#9888; Selecciona el tipo de prestador','warning');      return; }
-    if (!nit && !_nitExento) { document.getElementById('sf-nit').focus();    toast('&#9888; Ingresa el NIT','warning');                       return; }
+    if (!nit)    { document.getElementById('sf-nit').focus();    toast('&#9888; Ingresa el NIT','warning');                       return; }
     gotoSetupStep(2);
   } else if (step === 2) {
     const director = document.getElementById('sf-director').value.trim();
