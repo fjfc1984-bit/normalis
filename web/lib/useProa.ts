@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  collection, addDoc, updateDoc, doc, getDocs, query, where, orderBy, serverTimestamp,
+  collection, addDoc, updateDoc, doc, getDocs, query, where, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type {
@@ -40,24 +40,33 @@ export function useProa(nit: string | null) {
 
   const [loading, setLoading] = useState(true);
 
+  // IMPORTANTE: ninguna de estas queries usa orderBy() en Firestore — un
+  // where('nit','==',...) combinado con orderBy() sobre OTRO campo exige un
+  // índice compuesto que nunca se creó para estas colecciones (se confirmó
+  // en producción: proa_intervenciones ya tenía datos reales que la UI no
+  // cargaba porque la query fallaba en silencio dentro del catch). En vez
+  // de depender de un índice, se trae todo por nit y se ordena en cliente.
   const cargarDatos = useCallback(async () => {
     if (!nit) { setLoading(false); return; }
     setLoading(true);
     try {
       const [snapInt, snapDDD, snapIAAS, snapAuth, snapInf, snapCheck] = await Promise.all([
-        getDocs(query(collection(db, 'proa_intervenciones'), where('nit', '==', nit), orderBy('creadoEn', 'desc'))),
-        getDocs(query(collection(db, 'proa_consumos'), where('nit', '==', nit), orderBy('periodo', 'desc'))),
-        getDocs(query(collection(db, 'proa_iaas'), where('nit', '==', nit), orderBy('creadoEn', 'desc'))),
-        getDocs(query(collection(db, 'proa_autorizaciones'), where('nit', '==', nit), orderBy('creadoEn', 'desc'))),
-        getDocs(query(collection(db, 'proa_informe_anual'), where('nit', '==', nit), orderBy('anio', 'desc'))),
+        getDocs(query(collection(db, 'proa_intervenciones'), where('nit', '==', nit))),
+        getDocs(query(collection(db, 'proa_consumos'), where('nit', '==', nit))),
+        getDocs(query(collection(db, 'proa_iaas'), where('nit', '==', nit))),
+        getDocs(query(collection(db, 'proa_autorizaciones'), where('nit', '==', nit))),
+        getDocs(query(collection(db, 'proa_informe_anual'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_checklist'), where('nit', '==', nit))),
       ]);
 
-      setIntervenciones(snapInt.docs.map(d => ({ id: d.id, ...d.data() } as Intervencion)));
-      setConsumos(snapDDD.docs.map(d => ({ id: d.id, ...d.data() } as ConsumoAMR)));
-      setIaasResistentes(snapIAAS.docs.map(d => ({ id: d.id, ...d.data() } as IAASResistente)));
-      setAutorizaciones(snapAuth.docs.map(d => ({ id: d.id, ...d.data() } as AutorizacionPrevia)));
-      setInformesAnuales(snapInf.docs.map(d => ({ id: d.id, ...d.data() } as InformeAnualPROA)));
+      const tsDesc = (a: { creadoEn?: { seconds?: number } }, b: { creadoEn?: { seconds?: number } }) =>
+        (b.creadoEn?.seconds ?? 0) - (a.creadoEn?.seconds ?? 0);
+
+      setIntervenciones(snapInt.docs.map(d => ({ id: d.id, ...d.data() } as Intervencion)).sort(tsDesc));
+      setConsumos(snapDDD.docs.map(d => ({ id: d.id, ...d.data() } as ConsumoAMR)).sort((a, b) => (b.periodo || '').localeCompare(a.periodo || '')));
+      setIaasResistentes(snapIAAS.docs.map(d => ({ id: d.id, ...d.data() } as IAASResistente)).sort(tsDesc));
+      setAutorizaciones(snapAuth.docs.map(d => ({ id: d.id, ...d.data() } as AutorizacionPrevia)).sort(tsDesc));
+      setInformesAnuales(snapInf.docs.map(d => ({ id: d.id, ...d.data() } as InformeAnualPROA)).sort((a, b) => (b.anio || 0) - (a.anio || 0)));
 
       if (!snapCheck.empty) {
         const data = snapCheck.docs[0].data();
@@ -66,7 +75,11 @@ export function useProa(nit: string | null) {
         setChecklistDocId(snapCheck.docs[0].id);
         setChecklistGuardado(true);
       }
-    } catch { /* offline ok */ }
+    } catch (e) {
+      // No silenciar del todo — un permiso denegado o error real debe verse
+      // en consola aunque la UI no se rompa (antes este catch era mudo).
+      console.error('[useProa] error cargando datos PROA:', e);
+    }
     setLoading(false);
   }, [nit]);
 
