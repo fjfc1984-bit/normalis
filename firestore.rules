@@ -377,6 +377,70 @@ service cloud.firestore {
       );
     }
 
+    // proa_iaas — IAAS por microorganismo resistente (art. 20.6 Res. 2471/2022)
+    // Colección nueva (no hereda datos previos): el nit queda inmutable en
+    // update para que un usuario no pueda reasignar el documento a otra IPS.
+    match /proa_iaas/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update: if isAuthenticated() && (
+        isAdmin() || (
+          resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit &&
+          request.resource.data.nit == resource.data.nit
+        )
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
+    // proa_autorizaciones — registro de autorización previa antibióticos
+    // restringidos (carbapenémicos y colistina, art. 2.3 Res. 2471/2022)
+    match /proa_autorizaciones/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update: if isAuthenticated() && (
+        isAdmin() || (
+          resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit &&
+          request.resource.data.nit == resource.data.nit
+        )
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
+    // proa_informe_anual — informe anual PROA + estado de envío a la
+    // Secretaría de Salud territorial (art. 20.6 + 12.5 Res. 2471/2022)
+    match /proa_informe_anual/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update: if isAuthenticated() && (
+        isAdmin() || (
+          resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit &&
+          request.resource.data.nit == resource.data.nit
+        )
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // Subcollections adicionales de usuarios/{uid}
     // ════════════════════════════════════════════════════════════════════════
