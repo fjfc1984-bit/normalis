@@ -1,7 +1,7 @@
 /**
  * web/lib/docTemplates.ts
  * Plantillas HTML de documentos normativos NormaLis
- * Portado desde normalis-docs.js — Res. 3100/2019, Decreto 351/2014, Decreto 4725/2005
+ * Portado desde normalis-docs.js — Res. 1732/2026 (reemplaza Res. 3100/2019), Decreto 351/2014, Decreto 4725/2005
  *
  * SEGURIDAD: todos los valores dinámicos provienen de Firestore (datos propios de la IPS,
  * no de input directo del usuario en este contexto), escapados via escH() antes de insertarse.
@@ -10,7 +10,7 @@
 import type { IPSConfig, DocId } from './docTypes';
 
 // ── Escape HTML para prevenir XSS en dangerouslySetInnerHTML ─────────────────
-function escH(s: string): string {
+export function escH(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -20,13 +20,17 @@ function escH(s: string): string {
 }
 
 // ── Helpers internos ──────────────────────────────────────────────────────────
-function hoy(): string {
+// Exportados también para web/lib/docContenido.ts, que los reutiliza para
+// generar un esqueleto profesional (mismo look & feel) para cualquier
+// documento del Gestor Documental que no tenga plantilla propia aquí abajo
+// (p. ej. los documentos condicionales por servicio de dmsServiciosCatalogo.ts).
+export function hoy(): string {
   return new Date().toLocaleDateString('es-CO', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 }
 
-function header(cfg: IPSConfig, fullTitle: string, version: string, norma: string): string {
+export function header(cfg: IPSConfig, fullTitle: string, version: string, norma: string): string {
   const { nombre, nit, director, rm, ciudad } = cfg;
   return `
 <div class="doc-header-meta">
@@ -37,7 +41,7 @@ function header(cfg: IPSConfig, fullTitle: string, version: string, norma: strin
 </div>`;
 }
 
-function signBlock(cfg: IPSConfig, cargo2: string): string {
+export function signBlock(cfg: IPSConfig, cargo2: string): string {
   const { nombre, director, rm } = cfg;
   return `
 <div class="sign-block">
@@ -61,15 +65,15 @@ function bioseguridad(cfg: IPSConfig): string {
   const { nombre, director } = cfg;
   return `
 <h2>MANUAL DE BIOSEGURIDAD</h2>
-${header(cfg, nombre, 'Versión 1.0', 'Res. 3100/2019 (Estándar 5) · Decreto 351/2014 · Res. 1138/2022')}
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar 5) · Decreto 351/2014 · Res. 1138/2022')}
 
 <h2>1. OBJETIVO Y ALCANCE</h2>
 <p>El presente Manual de Bioseguridad establece las normas, procedimientos y medidas preventivas para minimizar el riesgo de transmisión de enfermedades infecciosas y garantizar un ambiente seguro para pacientes, talento humano y visitantes de <strong>${escH(nombre)}</strong>.</p>
-<p>Aplica a todo el personal asistencial, administrativo, de apoyo y visitantes del establecimiento, en concordancia con la Resolución 3100 de 2019 (Estándar 5 — Procesos Prioritarios) y el Decreto 351 de 2014.</p>
+<p>Aplica a todo el personal asistencial, administrativo, de apoyo y visitantes del establecimiento, en concordancia con la Resolución 1732 de 2026 (Estándar 5 — Procesos Prioritarios, que reemplaza a la Resolución 3100 de 2019) y el Decreto 351 de 2014.</p>
 
 <h2>2. MARCO NORMATIVO</h2>
 <ul>
-  <li>Resolución 3100 de 2019 — Manual de Habilitación · Estándar 5 (Procesos Prioritarios)</li>
+  <li>Resolución 1732 de 2026 — Manual de Habilitación · Estándar 5 (Procesos Prioritarios) — reemplaza la Resolución 3100 de 2019</li>
   <li>Decreto 351 de 2014 — Gestión de residuos hospitalarios y similares</li>
   <li>Resolución 1138 de 2022 — Actualización estándares de medicamentos y bioseguridad</li>
   <li>Resolución 8430 de 1993 — Normas científicas, técnicas y administrativas para investigación en salud</li>
@@ -106,7 +110,7 @@ ${header(cfg, nombre, 'Versión 1.0', 'Res. 3100/2019 (Estándar 5) · Decreto 3
 <tr><td>Área administrativa</td><td>Bajo</td><td>1 vez al día</td><td>Detergente</td></tr></table>
 
 <h2>5. MANEJO DE RESIDUOS HOSPITALARIOS</h2>
-<p>Clasificación y segregación en la fuente según Decreto 351/2014 y Resolución 1164/2002:</p>
+<p>Clasificación y segregación en la fuente según Decreto 351/2014 y el Manual PGIRASA (Res. 591/2024):</p>
 <table><tr><th>Color</th><th>Tipo de residuo</th><th>Ejemplo</th></tr>
 <tr><td>Rojo</td><td>Infeccioso / Biológico</td><td>Gasas con sangre, guantes usados en procedimientos</td></tr>
 <tr><td>Negro</td><td>Ordinario no reciclable</td><td>Empaques de alimentos, servilletas</td></tr>
@@ -135,13 +139,17 @@ ${signBlock(cfg, 'Responsable de Bioseguridad')}`;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  2. PGIRH — RESIDUOS
+//  2. PGIRASA — RESIDUOS (antes "PGIRH")
 // ══════════════════════════════════════════════════════════════════════════════
 function residuos(cfg: IPSConfig): string {
   const { nombre, nit, director, ciudad } = cfg;
   return `
-<h2>PLAN DE GESTIÓN INTEGRAL DE RESIDUOS HOSPITALARIOS Y SIMILARES</h2>
-${header(cfg, nombre, 'PGIRH Versión 1.0', 'Decreto 351/2014 · Res. 1164/2002 · Ley 1333/2009')}
+<h2>PLAN DE GESTIÓN INTEGRAL DE RESIDUOS GENERADOS EN LA ATENCIÓN EN SALUD Y OTRAS ACTIVIDADES (PGIRASA)</h2>
+${header(cfg, nombre, 'PGIRASA Versión 1.0', 'Res. 591/2024 (Manual PGIRASA) · Decreto 351/2014 · Decreto 780/2016 Tít. 2.8.10 · Ley 1333/2009')}
+
+<div class="doc-header-meta" style="border:1px solid #f59e0b;background:#fffbeb;color:#92400e;text-align:left;padding:10px 14px;">
+  <strong>⚠ Nota regulatoria:</strong> este plan adopta la denominación PGIRASA conforme a la Res. 591/2024, que derogó la Res. 1164/2002 (antiguo "Formato RH1") y el periodo de transición de 18 meses que esta fijó ya venció. Los procedimientos operativos de las secciones 3 a 6 son una base de buena práctica de bioseguridad; valida su contenido exacto (formatos de reporte, plazos y parámetros de segregación) contra el texto completo del Manual PGIRASA vigente o con tu Secretaría de Salud territorial antes de aprobar este documento.
+</div>
 
 <h2>1. IDENTIFICACIÓN DEL GENERADOR</h2>
 <table><tr><th>Campo</th><th>Información</th></tr>
@@ -162,7 +170,7 @@ ${header(cfg, nombre, 'PGIRH Versión 1.0', 'Decreto 351/2014 · Res. 1164/2002 
 <tr><td>Reciclables (gris/verde)</td><td>_______</td><td>Reciclaje municipal</td></tr></table>
 
 <h2>3. PROTOCOLO DE SEGREGACIÓN EN LA FUENTE</h2>
-<p>La separación correcta desde el punto de generación es la medida más importante del PGIRH. El personal debe estar capacitado en la clasificación de residuos:</p>
+<p>La separación correcta desde el punto de generación es la medida más importante del PGIRASA. El personal debe estar capacitado en la clasificación de residuos:</p>
 <ul>
   <li>Los residuos infecciosos NUNCA deben mezclarse con residuos ordinarios</li>
   <li>Los cortopunzantes deben depositarse inmediatamente después de su uso en el contenedor rígido, sin reencapuchar agujas</li>
@@ -195,7 +203,7 @@ ${header(cfg, nombre, 'PGIRH Versión 1.0', 'Decreto 351/2014 · Res. 1164/2002 
 <tr><td>Accidentes con cortopunzantes</td><td>0</td><td>Mensual</td></tr>
 <tr><td>Cumplimiento de rutas internas</td><td>100%</td><td>Mensual</td></tr></table>
 
-${signBlock(cfg, 'Coordinador PGIRH')}`;
+${signBlock(cfg, 'Coordinador PGIRASA')}`;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -205,10 +213,10 @@ function atencion(cfg: IPSConfig): string {
   const { nombre, director, esp } = cfg;
   return `
 <h2>PROTOCOLO DE ATENCIÓN AL PACIENTE</h2>
-${header(cfg, nombre, 'Versión 1.0', 'Res. 3100/2019 (Estándar 5) · Res. 13437/1991 · Res. 256/2016')}
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar 5) · Res. 13437/1991 · Res. 256/2016')}
 
 <h2>1. OBJETIVO</h2>
-<p>Establecer el flujo de atención, los derechos y deberes del paciente, y los procedimientos que garanticen una atención segura, oportuna y humanizada en <strong>${escH(nombre)}</strong>, en cumplimiento del Estándar 5 de Procesos Prioritarios de la Resolución 3100 de 2019.</p>
+<p>Establecer el flujo de atención, los derechos y deberes del paciente, y los procedimientos que garanticen una atención segura, oportuna y humanizada en <strong>${escH(nombre)}</strong>, en cumplimiento del Estándar 5 de Procesos Prioritarios de la Resolución 1732 de 2026 (que reemplaza a la Resolución 3100 de 2019).</p>
 
 <h2>2. FLUJOGRAMA DE ATENCIÓN</h2>
 <table><tr><th>Paso</th><th>Actividad</th><th>Responsable</th><th>Tiempo</th></tr>
@@ -261,7 +269,7 @@ function emergencias(cfg: IPSConfig): string {
   const { nombre, director } = cfg;
   return `
 <h2>PLAN HOSPITALARIO DE EMERGENCIAS</h2>
-${header(cfg, nombre, 'Versión 1.0', 'Res. 3100/2019 (Estándar 5) · Res. 0312/2019')}
+${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Estándar 5) · Res. 0312/2019')}
 
 <h2>1. PROPÓSITO</h2>
 <p>El presente Plan establece las acciones, responsabilidades y procedimientos para responder ante situaciones de emergencia interna o externa que afecten a <strong>${escH(nombre)}</strong>, protegiendo la vida de pacientes, personal y visitantes.</p>
@@ -327,7 +335,7 @@ function tecnovigilancia(cfg: IPSConfig): string {
   const { nombre } = cfg;
   return `
 <h2>MANUAL DE TECNOVIGILANCIA Y DISPOSITIVOS MÉDICOS</h2>
-${header(cfg, nombre, 'Versión 1.0', 'Decreto 4725/2005 · Res. 3100/2019 Estándar 3 · Res. 1138/2022')}
+${header(cfg, nombre, 'Versión 1.0', 'Decreto 4725/2005 · Res. 1732/2026 Estándar 3 · Res. 1138/2022')}
 
 <h2>1. OBJETIVO</h2>
 <p>Establecer el sistema de gestión de dispositivos médicos y tecnología biomédica de <strong>${escH(nombre)}</strong>, garantizando la seguridad, disponibilidad y correcto funcionamiento de los equipos utilizados en la prestación de servicios de salud, conforme al Decreto 4725 de 2005 y el Estándar 3 del Manual de Habilitación.</p>
@@ -363,7 +371,7 @@ ${header(cfg, nombre, 'Versión 1.0', 'Decreto 4725/2005 · Res. 3100/2019 Está
 <p>El reporte se realizará a través del sistema de reporte de INVIMA dentro de los 10 días hábiles de conocido el evento.</p>
 
 <h2>6. DISPOSITIVOS DE USO ÚNICO</h2>
-<p>Queda estrictamente prohibida la reutilización de dispositivos médicos rotulados como de uso único, conforme al Estándar 3 de la Resolución 3100 de 2019 y la Res. 1138 de 2022. El personal debe verificar el rotulado antes de cada procedimiento.</p>
+<p>Queda estrictamente prohibida la reutilización de dispositivos médicos rotulados como de uso único, conforme al Estándar 3 de la Resolución 1732 de 2026 (que reemplaza a la Resolución 3100 de 2019) y la Res. 1138 de 2022. El personal debe verificar el rotulado antes de cada procedimiento.</p>
 
 ${signBlock(cfg, 'Responsable de Equipos')}`;
 }
@@ -377,7 +385,7 @@ function hojaVida(cfg: IPSConfig): string {
 <h2>PLANTILLA — HOJA DE VIDA DE EQUIPO BIOMÉDICO</h2>
 <div class="doc-header-meta">
   ${escH(nombre)}${nit ? ` · NIT ${escH(nit)}` : ''}<br>
-  <em>Conforme a Decreto 4725/2005 · Res. 3100/2019 Estándar 3</em>
+  <em>Conforme a Decreto 4725/2005 · Res. 1732/2026 Estándar 3</em>
 </div>
 
 <h2>1. IDENTIFICACIÓN DEL EQUIPO</h2>
@@ -648,7 +656,7 @@ ${header(cfg, nombre, 'Versión 1.0', 'Res. 1732/2026 (Est. Procesos Prioritario
 <table><tr><th>Línea</th><th>Acciones</th><th>Responsable</th></tr>
 <tr><td>Uso eficiente del agua</td><td>Revisión periódica de fugas, dispositivos ahorradores</td><td>${escH(director)}</td></tr>
 <tr><td>Uso eficiente de energía</td><td>Iluminación LED, apagado de equipos fuera de horario</td><td>________________</td></tr>
-<tr><td>Gestión de residuos</td><td>Articulación con el PGIRH institucional</td><td>________________</td></tr>
+<tr><td>Gestión de residuos</td><td>Articulación con el PGIRASA institucional</td><td>________________</td></tr>
 <tr><td>Sustitución de sustancias de alto impacto</td><td>Eliminación progresiva de mercurio y reducción de PVC</td><td>________________</td></tr>
 <tr><td>Movilidad sostenible</td><td>Fomento de transporte no motorizado o compartido</td><td>________________</td></tr>
 <tr><td>Adaptación al cambio climático</td><td>Plan de contingencia ante eventos climáticos extremos</td><td>${escH(director)}</td></tr></table>

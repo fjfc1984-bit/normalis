@@ -4,16 +4,26 @@
  * web/app/dashboard/documentos-dms/page.tsx
  * Gestor Documental (DMS) — versionado, flujo de aprobación y evidencia de
  * socialización para los documentos institucionales.
- * Base legal: Res. 3100/2019 (control documental, Talento Humano —
+ * Base legal: Res. 1732/2026 (control documental, Talento Humano —
  * socialización) · Ley 527/1999 Art. 7 (firma electrónica de la aprobación).
+ *
+ * "Plus" por servicios/modalidades: además de los documentos base (exigidos
+ * a toda IPS), se muestran documentos adicionales según los servicios que la
+ * propia IPS declare que presta (quirúrgicos, UCI, banco de sangre, etc.) —
+ * ver web/lib/dmsServiciosCatalogo.ts. Deja de ser una lista genérica igual
+ * para cualquier IPS sin importar su portafolio real.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useFirma, FIRMA_CATALOGO } from '@/lib/useFirma';
-import type { FirmaDocId } from '@/lib/useFirma';
+import { FIRMA_CATALOGO } from '@/lib/useFirma';
 import { useDocumentosDMS, type DocumentoDMS, type Socializacion } from '@/lib/useDocumentosDMS';
 import { useIPSConfigLocal, contenidoParaFirmar } from '@/lib/docContenido';
+import { useServiciosIPS } from '@/lib/useServiciosIPS';
+import {
+  DOCUMENTOS_SERVICIO_CATALOGO, SERVICIOS_IPS, SERVICIO_IDS, catalogoDMSCompleto,
+  type ServicioId, type CatalogoDMSEntry,
+} from '@/lib/dmsServiciosCatalogo';
 import { logSecurityEvent } from '@/lib/securityLog';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
@@ -45,7 +55,7 @@ function AprobarModal({
 }) {
   const [nombre, setNombre] = useState(directorDefault);
   const [saving, setSaving] = useState(false);
-  const cat = FIRMA_CATALOGO.find(c => c.id === item.docId)!;
+  const cat = catalogoDMSCompleto().find(c => c.id === item.docId)!;
 
   async function handle(e: React.FormEvent) {
     e.preventDefault();
@@ -94,8 +104,8 @@ function AprobarModal({
 // ── Historial de versiones ────────────────────────────────────────────────────
 function HistorialModal({
   docId, historial, onClose,
-}: { docId: FirmaDocId; historial: DocumentoDMS[]; onClose: () => void }) {
-  const cat = FIRMA_CATALOGO.find(c => c.id === docId)!;
+}: { docId: string; historial: DocumentoDMS[]; onClose: () => void }) {
+  const cat = catalogoDMSCompleto().find(c => c.id === docId)!;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
@@ -125,6 +135,54 @@ function HistorialModal({
   );
 }
 
+// ── Servicios/modalidades que presta la IPS (el "plus" del catálogo) ─────────
+function ServiciosModal({
+  seleccionados, onSave, onClose,
+}: { seleccionados: ServicioId[]; onSave: (s: ServicioId[]) => Promise<void>; onClose: () => void }) {
+  const [sel, setSel] = useState<Set<ServicioId>>(new Set(seleccionados));
+  const [saving, setSaving] = useState(false);
+
+  function toggle(id: ServicioId) {
+    setSel(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try { await onSave(Array.from(sel)); onClose(); } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] overflow-y-auto">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 sticky top-0">
+          <p className="text-sm font-bold text-gray-800">⚙️ Servicios / modalidades que presta tu IPS</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Compartido con todo tu equipo. Selecciona lo que ya tienes habilitado — el Gestor Documental
+            suma automáticamente los documentos específicos de cada servicio marcado.
+          </p>
+        </div>
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {SERVICIO_IDS.map(id => (
+            <label key={id} className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" checked={sel.has(id)} onChange={() => toggle(id)} className="rounded border-gray-300 text-teal-600 focus:ring-teal-400" />
+              <span>{SERVICIOS_IPS[id].icon}</span>
+              <span className="text-gray-700">{SERVICIOS_IPS[id].label}</span>
+            </label>
+          ))}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+          <button onClick={onClose} className={BTN_S}>Cancelar</button>
+          <button onClick={handleSave} disabled={saving} className={BTN_P}>{saving ? 'Guardando…' : 'Guardar servicios'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 
 export default function DocumentosDMSPage() {
@@ -135,21 +193,43 @@ export default function DocumentosDMSPage() {
     crearVersion, enviarARevision, aprobar, retirarVersionesRotas, marcarSocializado, listarSocializaciones,
   } = useDocumentosDMS(uid, nit || null);
   const cfg = useIPSConfigLocal(uid);
+  const { servicios: serviciosIPS, loading: loadingServicios, guardar: guardarServicios } = useServiciosIPS(nit || null);
   const { toast, show } = useToast();
   const isAdmin = rol === 'admin';
 
   const [aprobarModal,   setAprobarModal]   = useState<DocumentoDMS | null>(null);
-  const [historialDocId, setHistorialDocId] = useState<FirmaDocId | null>(null);
-  const [retirarModal,   setRetirarModal]   = useState<{ docId: FirmaDocId; rotas: DocumentoDMS[] } | null>(null);
+  const [historialDocId, setHistorialDocId] = useState<string | null>(null);
+  const [retirarModal,   setRetirarModal]   = useState<{ docId: string; rotas: DocumentoDMS[] } | null>(null);
   const [socializaciones, setSocializaciones] = useState<Record<string, Socializacion[]>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [serviciosModal, setServiciosModal] = useState(false);
+
+  // Catálogo aplicable a esta IPS: los documentos base (toda IPS) + los
+  // condicionales por servicio, solo si ese servicio está seleccionado. Este
+  // es el "plus" — dos IPS con portafolios distintos ven listas distintas.
+  const catalogoBase: CatalogoDMSEntry[] = useMemo(
+    () => FIRMA_CATALOGO.map(c => ({ id: c.id as string, nombre: c.nombre, base: c.base, icono: c.icono })),
+    [],
+  );
+  const catalogoServicios: CatalogoDMSEntry[] = useMemo(
+    () => DOCUMENTOS_SERVICIO_CATALOGO.filter(d => d.servicios.some(s => serviciosIPS.includes(s))),
+    [serviciosIPS],
+  );
+  const catalogoAplicable: CatalogoDMSEntry[] = useMemo(
+    () => [...catalogoBase, ...catalogoServicios],
+    [catalogoBase, catalogoServicios],
+  );
+  // Set de ids del catálogo vigente — usado para no contar en "Sin versión"
+  // documentos de un servicio que la IPS ya no tiene marcado (sus versiones
+  // creadas antes siguen existiendo en Firestore, pero dejaron de aplicar).
+  const catalogoIds = useMemo(() => new Set(catalogoAplicable.map(c => c.id)), [catalogoAplicable]);
 
   async function cargarSocializaciones(item: DocumentoDMS) {
     const list = await listarSocializaciones(item.id);
     setSocializaciones(prev => ({ ...prev, [item.id]: list }));
   }
 
-  async function handleCrearVersion(docId: FirmaDocId) {
+  async function handleCrearVersion(docId: string) {
     if (!uid) return;
     setBusyId(docId);
     try {
@@ -191,7 +271,7 @@ export default function DocumentosDMSPage() {
     setBusyId(`retirar-${docId}`);
     try {
       await retirarVersionesRotas(rotas.map(r => r.id), ipsNombre || user?.email || 'Usuario');
-      const cat = FIRMA_CATALOGO.find(c => c.id === docId)!;
+      const cat = catalogoDMSCompleto().find(c => c.id === docId)!;
       await logSecurityEvent('documento_version_retirada', 'documentos-dms', `${cat.nombre} — ${rotas.length} versión(es) sin contenido retirada(s)`);
       show(`Se retiraron ${rotas.length} versión(es) sin contenido — ya puedes crear una nueva`, 'info');
       setRetirarModal(null);
@@ -208,104 +288,134 @@ export default function DocumentosDMSPage() {
     } finally { setBusyId(null); }
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading || loadingServicios) return <LoadingSpinner />;
 
-  const aprobados = FIRMA_CATALOGO.filter(c => vigentePorDocId(c.id)?.estado === 'aprobado').length;
+  const aprobados = catalogoAplicable.filter(c => vigentePorDocId(c.id)?.estado === 'aprobado').length;
   const enRevision = items.filter(i => i.estado === 'en_revision').length;
+
+  function renderDocCard(cat: CatalogoDMSEntry) {
+    const vigente = vigentePorDocId(cat.id);
+    const historial = historialPorDocId(cat.id);
+    const socios = vigente ? socializaciones[vigente.id] : undefined;
+    // Versiones atascadas sin `contenido` (bug de captura ya corregido) —
+    // nunca incluye aprobadas ni obsoletas, ni versiones con contenido real.
+    const rotas = historial.filter(v => v.estado !== 'aprobado' && v.estado !== 'obsoleto' && !v.contenido);
+
+    return (
+      <div key={cat.id} className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">{cat.icono}</span>
+            <div>
+              <p className="text-sm font-bold text-gray-800">{cat.nombre}</p>
+              <p className="text-xs text-gray-500">{cat.base}</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                {estadoBadge(vigente?.estado ?? 'sin_version')}
+                {vigente && <span className="text-xs text-gray-400">v{vigente.version}</span>}
+                {historial.length > 1 && (
+                  <button onClick={() => setHistorialDocId(cat.id)} className="text-xs text-teal-600 hover:underline">
+                    Ver historial ({historial.length})
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {(!vigente || vigente.estado === 'obsoleto') && (
+              <button disabled={busyId === cat.id} onClick={() => handleCrearVersion(cat.id)} className={BTN_P}>
+                {busyId === cat.id ? 'Creando…' : '📝 Nueva versión'}
+              </button>
+            )}
+            {vigente?.estado === 'borrador' && (
+              <button disabled={busyId === vigente.id} onClick={() => handleEnviarRevision(vigente)} className={BTN_S}>
+                Enviar a revisión
+              </button>
+            )}
+            {vigente?.estado === 'en_revision' && isAdmin && (
+              <button onClick={() => setAprobarModal(vigente)} className={BTN_P}>
+                ✅ Aprobar
+              </button>
+            )}
+            {vigente?.estado === 'en_revision' && !isAdmin && (
+              <span className="text-xs text-gray-400 italic">Esperando aprobación de un admin</span>
+            )}
+            {vigente?.estado === 'aprobado' && (
+              <button disabled={busyId === vigente.id} onClick={() => { handleSocializar(vigente); }} className={BTN_S}>
+                👥 Marcar como socializado
+              </button>
+            )}
+            {rotas.length > 0 && (
+              <button
+                disabled={busyId === `retirar-${cat.id}`}
+                onClick={() => setRetirarModal({ docId: cat.id, rotas })}
+                className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors"
+              >
+                🗑️ Retirar sin contenido ({rotas.length})
+              </button>
+            )}
+          </div>
+        </div>
+
+        {vigente?.estado === 'aprobado' && (
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <p className="text-xs text-gray-400">
+              Aprobado por {vigente.aprobadoPor} · {vigente.fechaAprobacion ? new Date(vigente.fechaAprobacion).toLocaleDateString('es-CO') : ''}
+            </p>
+            <button onClick={() => cargarSocializaciones(vigente)} className="text-xs text-teal-600 hover:underline">
+              {socios ? `${socios.length} persona${socios.length !== 1 ? 's' : ''} socializada${socios.length !== 1 ? 's' : ''}` : 'Ver socialización'}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <SectionHeader
         title="Gestor Documental"
-        subtitle="Versionado real, flujo de aprobación y evidencia de socialización — Res. 3100/2019"
+        subtitle="Versionado real, flujo de aprobación y evidencia de socialización — Res. 1732/2026"
+        actions={
+          <button onClick={() => setServiciosModal(true)} className={BTN_S}>
+            ⚙️ Servicios de tu IPS {serviciosIPS.length > 0 ? `(${serviciosIPS.length})` : ''}
+          </button>
+        }
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="Documentos"     value={FIRMA_CATALOGO.length} icon="📚" />
+        <KpiCard label="Documentos"     value={catalogoAplicable.length} icon="📚" />
         <KpiCard label="Aprobados"      value={aprobados}             icon="✅" />
         <KpiCard label="En revisión"    value={enRevision}            icon="⏳" borderColorClass={enRevision > 0 ? 'border-amber-400' : 'border-gray-200'} colorClass={enRevision > 0 ? 'text-amber-600' : 'text-gray-800'} />
-        <KpiCard label="Sin versión"    value={FIRMA_CATALOGO.length - items.filter(i => i.docId).map(i => i.docId).filter((v, i, a) => a.indexOf(v) === i).length} icon="📄" />
+        <KpiCard label="Sin versión"    value={catalogoAplicable.length - items.filter(i => i.docId && catalogoIds.has(i.docId)).map(i => i.docId).filter((v, i, a) => a.indexOf(v) === i).length} icon="📄" />
       </div>
+
+      {serviciosIPS.length === 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 flex items-center justify-between gap-4 flex-wrap">
+          <p>
+            <strong>💡 Configura los servicios que presta tu IPS</strong> — así el Gestor Documental
+            suma automáticamente los documentos específicos que te aplican (quirófano, UCI, banco de
+            sangre, farmacia, etc.), además de los documentos base.
+          </p>
+          <button onClick={() => setServiciosModal(true)} className={BTN_P}>Configurar servicios</button>
+        </div>
+      )}
 
       <div className="space-y-3">
-        {FIRMA_CATALOGO.map(cat => {
-          const vigente = vigentePorDocId(cat.id);
-          const historial = historialPorDocId(cat.id);
-          const socios = vigente ? socializaciones[vigente.id] : undefined;
-          // Versiones atascadas sin `contenido` (bug de captura ya corregido) —
-          // nunca incluye aprobadas ni obsoletas, ni versiones con contenido real.
-          const rotas = historial.filter(v => v.estado !== 'aprobado' && v.estado !== 'obsoleto' && !v.contenido);
-
-          return (
-            <div key={cat.id} className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-4">
-                  <span className="text-3xl">{cat.icono}</span>
-                  <div>
-                    <p className="text-sm font-bold text-gray-800">{cat.nombre}</p>
-                    <p className="text-xs text-gray-500">{cat.base}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {estadoBadge(vigente?.estado ?? 'sin_version')}
-                      {vigente && <span className="text-xs text-gray-400">v{vigente.version}</span>}
-                      {historial.length > 1 && (
-                        <button onClick={() => setHistorialDocId(cat.id)} className="text-xs text-teal-600 hover:underline">
-                          Ver historial ({historial.length})
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {(!vigente || vigente.estado === 'obsoleto') && (
-                    <button disabled={busyId === cat.id} onClick={() => handleCrearVersion(cat.id)} className={BTN_P}>
-                      {busyId === cat.id ? 'Creando…' : '📝 Nueva versión'}
-                    </button>
-                  )}
-                  {vigente?.estado === 'borrador' && (
-                    <button disabled={busyId === vigente.id} onClick={() => handleEnviarRevision(vigente)} className={BTN_S}>
-                      Enviar a revisión
-                    </button>
-                  )}
-                  {vigente?.estado === 'en_revision' && isAdmin && (
-                    <button onClick={() => setAprobarModal(vigente)} className={BTN_P}>
-                      ✅ Aprobar
-                    </button>
-                  )}
-                  {vigente?.estado === 'en_revision' && !isAdmin && (
-                    <span className="text-xs text-gray-400 italic">Esperando aprobación de un admin</span>
-                  )}
-                  {vigente?.estado === 'aprobado' && (
-                    <button disabled={busyId === vigente.id} onClick={() => { handleSocializar(vigente); }} className={BTN_S}>
-                      👥 Marcar como socializado
-                    </button>
-                  )}
-                  {rotas.length > 0 && (
-                    <button
-                      disabled={busyId === `retirar-${cat.id}`}
-                      onClick={() => setRetirarModal({ docId: cat.id, rotas })}
-                      className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors"
-                    >
-                      🗑️ Retirar sin contenido ({rotas.length})
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {vigente?.estado === 'aprobado' && (
-                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-xs text-gray-400">
-                    Aprobado por {vigente.aprobadoPor} · {vigente.fechaAprobacion ? new Date(vigente.fechaAprobacion).toLocaleDateString('es-CO') : ''}
-                  </p>
-                  <button onClick={() => cargarSocializaciones(vigente)} className="text-xs text-teal-600 hover:underline">
-                    {socios ? `${socios.length} persona${socios.length !== 1 ? 's' : ''} socializada${socios.length !== 1 ? 's' : ''}` : 'Ver socialización'}
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+          Documentos base — todo establecimiento
+        </h2>
+        {catalogoBase.map(renderDocCard)}
       </div>
+
+      {catalogoServicios.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+            Documentos específicos — según los servicios de tu IPS
+          </h2>
+          {catalogoServicios.map(renderDocCard)}
+        </div>
+      )}
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-700">
         <p className="font-bold mb-1">ℹ️ Cómo funciona el control de versiones</p>
@@ -345,6 +455,17 @@ export default function DocumentosDMSPage() {
           loading={busyId === `retirar-${retirarModal.docId}`}
           onConfirm={handleRetirarRotas}
           onCancel={() => setRetirarModal(null)}
+        />
+      )}
+
+      {serviciosModal && (
+        <ServiciosModal
+          seleccionados={serviciosIPS}
+          onSave={async (nuevos) => {
+            await guardarServicios(nuevos);
+            show('✅ Servicios de la IPS actualizados', 'success');
+          }}
+          onClose={() => setServiciosModal(false)}
         />
       )}
 

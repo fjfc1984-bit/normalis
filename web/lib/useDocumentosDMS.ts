@@ -46,14 +46,15 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { crearFirma } from '@/lib/firmar';
-import { FIRMA_CATALOGO } from '@/lib/useFirma';
-import type { FirmaDocId } from '@/lib/useFirma';
+import { catalogoDMSCompleto } from '@/lib/dmsServiciosCatalogo';
 
 export type DmsEstado = 'borrador' | 'en_revision' | 'aprobado' | 'obsoleto';
 
 export interface DocumentoDMS {
   id:                 string;
-  docId:              FirmaDocId;
+  /** Id del catálogo combinado (web/lib/dmsServiciosCatalogo.ts): un doc
+   * base de FIRMA_CATALOGO o uno condicional por servicio (prefijo "srv_"). */
+  docId:              string;
   nombre:             string;
   version:            number;
   estado:             DmsEstado;
@@ -213,13 +214,13 @@ export function useDocumentosDMS(uid: string | null, nit: string | null) {
   }, [uid, nit]);
 
   /** Última versión (la más alta) por cada docId — para saber qué está vigente. */
-  const vigentePorDocId = useCallback((docId: FirmaDocId): DocumentoDMS | null => {
+  const vigentePorDocId = useCallback((docId: string): DocumentoDMS | null => {
     const delTipo = items.filter(i => i.docId === docId && i.estado !== 'obsoleto');
     if (!delTipo.length) return null;
     return delTipo.reduce((a, b) => (b.version > a.version ? b : a));
   }, [items]);
 
-  const historialPorDocId = useCallback((docId: FirmaDocId): DocumentoDMS[] => {
+  const historialPorDocId = useCallback((docId: string): DocumentoDMS[] => {
     return items.filter(i => i.docId === docId).sort((a, b) => b.version - a.version);
   }, [items]);
 
@@ -229,8 +230,8 @@ export function useDocumentosDMS(uid: string | null, nit: string | null) {
    * `contenido` es el HTML exacto de esta versión, generado por quien
    * crea (la propia IPS) — queda guardado tal cual para que `aprobar` lo
    * re-use sin regenerar nada. */
-  const crearVersion = useCallback(async (docId: FirmaDocId, uidCreador: string, nitCreador: string, nombreCreador: string, contenido: string) => {
-    const cat = FIRMA_CATALOGO.find(c => c.id === docId)!;
+  const crearVersion = useCallback(async (docId: string, uidCreador: string, nitCreador: string, nombreCreador: string, contenido: string) => {
+    const cat = catalogoDMSCompleto().find(c => c.id === docId)!;
     const anterior = vigentePorDocId(docId);
     const nuevaVersion = anterior ? anterior.version + 1 : 1;
     const ref = await addDoc(collection(db, 'documentos_dms'), {
