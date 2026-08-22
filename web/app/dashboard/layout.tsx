@@ -15,9 +15,10 @@ function NitWarningBanner() {
          className="text-sm font-medium px-4 py-2 flex items-center gap-2">
       <span>⚠️</span>
       <span>
-        Esta cuenta no tiene NIT configurado — los módulos no pueden guardar datos.
-        Ve a <strong>Firebase Console → Firestore → usuarios → tu documento</strong> y agrega el campo{' '}
-        <code className="px-1 rounded text-xs" style={{ background: 'rgba(0,0,0,.15)' }}>nit</code>.
+        Esta cuenta no tiene NIT configurado — algunos módulos no pueden guardar datos.{' '}
+        <Link href="/dashboard/ajustes" className="underline font-bold">
+          Configúralo en Ajustes
+        </Link>.
       </span>
     </div>
   );
@@ -78,6 +79,12 @@ const NAV_GROUPS: Array<{
     label: 'Desarrolladores',
     items: [
       { href: '/dashboard/integraciones', label: 'Integraciones API', icon: '🔌', badge: 'NUEVO' },
+    ],
+  },
+  {
+    label: 'Cuenta',
+    items: [
+      { href: '/dashboard/ajustes', label: 'Ajustes', icon: '⚙️' },
     ],
   },
 ];
