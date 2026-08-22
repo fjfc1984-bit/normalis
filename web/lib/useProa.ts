@@ -18,7 +18,7 @@ import {
 import { db } from '@/lib/firebase';
 import type {
   Intervencion, ConsumoAMR, IAASResistente, AutorizacionPrevia, InformeAnualPROA,
-  NivelComplejidad,
+  NivelComplejidad, EvaluacionTerritorialPROA,
 } from './proaTypes';
 
 export interface ProaChecklistDoc {
@@ -32,6 +32,7 @@ export function useProa(nit: string | null) {
   const [iaasResistentes, setIaasResistentes] = useState<IAASResistente[]>([]);
   const [autorizaciones, setAutorizaciones] = useState<AutorizacionPrevia[]>([]);
   const [informesAnuales, setInformesAnuales] = useState<InformeAnualPROA[]>([]);
+  const [evaluacionesTerritoriales, setEvaluacionesTerritoriales] = useState<EvaluacionTerritorialPROA[]>([]);
 
   const [checks, setChecks] = useState<Record<string, boolean>>({});
   const [nivelComplejidad, setNivelComplejidad] = useState<NivelComplejidad>('I');
@@ -50,13 +51,14 @@ export function useProa(nit: string | null) {
     if (!nit) { setLoading(false); return; }
     setLoading(true);
     try {
-      const [snapInt, snapDDD, snapIAAS, snapAuth, snapInf, snapCheck] = await Promise.all([
+      const [snapInt, snapDDD, snapIAAS, snapAuth, snapInf, snapCheck, snapEvalTerr] = await Promise.all([
         getDocs(query(collection(db, 'proa_intervenciones'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_consumos'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_iaas'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_autorizaciones'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_informe_anual'), where('nit', '==', nit))),
         getDocs(query(collection(db, 'proa_checklist'), where('nit', '==', nit))),
+        getDocs(query(collection(db, 'proa_evaluacion_territorial'), where('nit', '==', nit))),
       ]);
 
       const tsDesc = (a: { creadoEn?: { seconds?: number } }, b: { creadoEn?: { seconds?: number } }) =>
@@ -67,6 +69,7 @@ export function useProa(nit: string | null) {
       setIaasResistentes(snapIAAS.docs.map(d => ({ id: d.id, ...d.data() } as IAASResistente)).sort(tsDesc));
       setAutorizaciones(snapAuth.docs.map(d => ({ id: d.id, ...d.data() } as AutorizacionPrevia)).sort(tsDesc));
       setInformesAnuales(snapInf.docs.map(d => ({ id: d.id, ...d.data() } as InformeAnualPROA)).sort((a, b) => (b.anio || 0) - (a.anio || 0)));
+      setEvaluacionesTerritoriales(snapEvalTerr.docs.map(d => ({ id: d.id, ...d.data() } as EvaluacionTerritorialPROA)).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')));
 
       if (!snapCheck.empty) {
         const data = snapCheck.docs[0].data();
@@ -137,12 +140,19 @@ export function useProa(nit: string | null) {
     await cargarDatos();
   }, [nit, cargarDatos]);
 
+  const guardarEvaluacionTerritorial = useCallback(async (data: Omit<EvaluacionTerritorialPROA, 'id' | 'creadoEn' | 'nit'>) => {
+    if (!nit) return;
+    await addDoc(collection(db, 'proa_evaluacion_territorial'), { ...data, nit, creadoEn: serverTimestamp() });
+    await cargarDatos();
+  }, [nit, cargarDatos]);
+
   return {
     loading,
-    intervenciones, consumos, iaasResistentes, autorizaciones, informesAnuales,
+    intervenciones, consumos, iaasResistentes, autorizaciones, informesAnuales, evaluacionesTerritoriales,
     checks, toggleCheck, nivelComplejidad, setNivelComplejidad,
     checklistGuardado, guardarChecklist,
     guardarIntervencion, guardarConsumo, guardarIAAS, guardarAutorizacion, actualizarAutorizacion, guardarInformeAnual,
+    guardarEvaluacionTerritorial,
     recargar: cargarDatos,
   };
 }

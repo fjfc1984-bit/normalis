@@ -374,3 +374,201 @@ export const ESTADO_ENVIO_LABEL: Record<InformeAnualPROA['estadoEnvio'], string>
   pendiente: 'Pendiente de enviar',
   enviado: 'Enviado a la Secretaría',
 };
+
+// ════════════════════════════════════════════════════════════════════════
+// Evaluación Territorial PROA — reproducción del instrumento oficial que
+// usan las Secretarías de Salud territoriales para evaluar la implementación
+// del PROA (formato Ministerio de Salud y Protección Social — Subdirección
+// de Enfermedades Transmisibles).
+//
+// FUENTE: a diferencia del checklist de madurez de este módulo (construido
+// a partir de un resumen de la Res. 2471/2022), este instrumento SÍ es una
+// reproducción directa de un formato oficial real diligenciado que aportó
+// el usuario (evaluación de una IPS de nivel III en Barranquilla, Atlántico,
+// del 25/09/2025) — 61 ítems en 3 secciones, con las mismas reglas de
+// puntaje que el archivo original (verificadas contra sus fórmulas).
+//
+// Reglas de puntaje:
+//   - Ítems de cumplimiento general: SI = 1, NO = 0, NO APLICA = 1 (un "No
+//     aplica" NO resta puntos — así lo calcula el formato original).
+//   - Ítems de oficialización de guías (sección "Oficialización", ítems
+//     5.1 a 5.7): ADOPCIÓN = 1, ADAPTACIÓN = 1, NO = 0, NO APLICA = 1.
+//   - Puntaje esperado por sección: Pre implementación = 28, Ejecución = 21,
+//     Evaluación de la ejecución = 12. Total = 61.
+//   - Clasificación: Avanzado 56-61 · Básico 31-55 · Inadecuado ≤30 (bandas
+//     tomadas tal cual del formato original).
+//
+// La numeración de los ítems (1.1, 2.3, etc.) es la numeración oficial del
+// formato — ESTABLE, nunca reordenar/reciclar (mismo motivo que ChecklistItem
+// más arriba: las respuestas guardadas en Firestore quedan indexadas por
+// este id).
+
+export type RespuestaCumplimiento = 'SI' | 'NO' | 'NO_APLICA' | '';
+export type RespuestaOficializacion = 'ADOPCION' | 'ADAPTACION' | 'NO' | 'NO_APLICA' | '';
+
+export const RESPUESTA_CUMPLIMIENTO_LABEL: Record<Exclude<RespuestaCumplimiento, ''>, string> = {
+  SI: 'Sí', NO: 'No', NO_APLICA: 'No aplica',
+};
+
+export const RESPUESTA_OFICIALIZACION_LABEL: Record<Exclude<RespuestaOficializacion, ''>, string> = {
+  ADOPCION: 'Adopción', ADAPTACION: 'Adaptación', NO: 'No', NO_APLICA: 'No aplica',
+};
+
+export interface ItemEvaluacionTerritorial {
+  id: string; // numeración oficial — ESTABLE, ver nota arriba
+  categoria: string;
+  actividad: string;
+  tipo: 'cumplimiento' | 'oficializacion';
+  nota?: string; // ej. "Obligatorio", "Solo ámbito hospitalario"
+}
+
+export interface SeccionEvaluacionTerritorial {
+  id: 'pre_implementacion' | 'ejecucion' | 'evaluacion_ejecucion';
+  titulo: string;
+  puntajeEsperado: number;
+  items: ItemEvaluacionTerritorial[];
+}
+
+export const EVALUACION_TERRITORIAL_PROA: SeccionEvaluacionTerritorial[] = [
+  {
+    id: 'pre_implementacion', titulo: 'Actividades pre implementación', puntajeEsperado: 28,
+    items: [
+      { id: '1.1', categoria: 'Socialización del PROA', actividad: 'Socialización a directores, calidad, Talento Humano, etc.', tipo: 'cumplimiento' },
+      { id: '1.2', categoria: 'Socialización del PROA', actividad: 'Diseño del PROA', tipo: 'cumplimiento' },
+      { id: '1.3', categoria: 'Socialización del PROA', actividad: 'Institucionalización PROA (Acta de conformación / acto administrativo)', tipo: 'cumplimiento' },
+      { id: '1.4', categoria: 'Socialización del PROA', actividad: 'Difusión del PROA', tipo: 'cumplimiento' },
+      { id: '2.1', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Líder del equipo', tipo: 'cumplimiento' },
+      { id: '2.2', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Representante administrativo de la IPS', tipo: 'cumplimiento' },
+      { id: '2.3', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Profesional de Enfermería', tipo: 'cumplimiento' },
+      { id: '2.4', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Profesional de Microbiología (bacteriólogo con entrenamiento en microbiología)', tipo: 'cumplimiento' },
+      { id: '2.5', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Profesional en Química Farmacéutica y/o Regente de Farmacia (I nivel)', tipo: 'cumplimiento' },
+      { id: '2.6', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Representante de médicos', tipo: 'cumplimiento' },
+      { id: '2.7', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Especialista en Infectología', tipo: 'cumplimiento' },
+      { id: '2.8', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Profesional en Epidemiología con entrenamiento en PROA', tipo: 'cumplimiento' },
+      { id: '2.9', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Representantes de las diferentes especialidades clínicas de la institución', tipo: 'cumplimiento' },
+      { id: '2.10', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Líder de Capacitación', tipo: 'cumplimiento' },
+      { id: '2.11', categoria: 'Conformación del equipo institucional del PROA', actividad: 'Otros', tipo: 'cumplimiento' },
+      { id: '3.1', categoria: 'Capacidad técnica para la ejecución del PROA', actividad: 'Lugar para reunión del equipo PROA, con computadores, programas informáticos, acceso a bibliografía y proyector', tipo: 'cumplimiento' },
+      { id: '3.2', categoria: 'Capacidad técnica para la ejecución del PROA', actividad: 'Historia clínica sistematizada — alertas', tipo: 'cumplimiento' },
+      { id: '3.3', categoria: 'Capacidad técnica para la ejecución del PROA', actividad: 'Sistemas de soporte de decisión clínica sistematizada para formulación', tipo: 'cumplimiento' },
+      { id: '3.4', categoria: 'Capacidad técnica para la ejecución del PROA', actividad: 'Equipos con herramienta de análisis de resistencia WHONET', tipo: 'cumplimiento' },
+      { id: '4.1', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Equipos de laboratorio para identificación de microorganismos y perfil de susceptibilidad', tipo: 'cumplimiento', nota: 'Depende del nivel de complejidad' },
+      { id: '4.2', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Antibiogramas ajustados', tipo: 'cumplimiento' },
+      { id: '4.3', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Informe periódico', tipo: 'cumplimiento' },
+      { id: '4.4', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Test rápidos para identificación de microorganismos', tipo: 'cumplimiento' },
+      { id: '4.5', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Galactomannan y otras pruebas para hongos', tipo: 'cumplimiento' },
+      { id: '4.6', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Medición de niveles de antimicrobianos — Vancomicina', tipo: 'cumplimiento' },
+      { id: '4.7', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Medición de niveles de antimicrobianos — Aminoglucósidos', tipo: 'cumplimiento' },
+      { id: '4.8', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Pruebas especiales — Proteína C reactiva', tipo: 'cumplimiento' },
+      { id: '4.9', categoria: 'Capacidad tecnológica para la ejecución del PROA', actividad: 'Pruebas especiales — Procalcitonina', tipo: 'cumplimiento' },
+    ],
+  },
+  {
+    id: 'ejecucion', titulo: 'Ejecución del PROA', puntajeEsperado: 21,
+    items: [
+      { id: '5.1', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'IVU (infección de vías urinarias)', tipo: 'oficializacion' },
+      { id: '5.2', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Neumonía', tipo: 'oficializacion' },
+      { id: '5.3', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Piel y tejidos blandos', tipo: 'oficializacion' },
+      { id: '5.4', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Exacerbación EPOC', tipo: 'oficializacion' },
+      { id: '5.5', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'EDA (enfermedad diarreica aguda)', tipo: 'oficializacion' },
+      { id: '5.6', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Profilaxis pre quirúrgica', tipo: 'oficializacion' },
+      { id: '5.7', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Otras guías', tipo: 'oficializacion' },
+      { id: '5.8', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Desarrollo de algoritmos de tratamiento', tipo: 'cumplimiento' },
+      { id: '5.9', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Implementación de sistemas de soporte de decisión clínica sistematizada para formulación', tipo: 'cumplimiento' },
+      { id: '5.10', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Realización de protocolos para pruebas de identificación de microorganismos', tipo: 'cumplimiento' },
+      { id: '5.11', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Desarrollo de estrategias de preautorización / documentación', tipo: 'cumplimiento' },
+      { id: '5.12', categoria: 'Oficialización — adopción o adaptación de guías de práctica clínica', actividad: 'Desarrollo de estrategias de auditoría prospectiva con retroalimentación / documentación', tipo: 'cumplimiento' },
+      { id: '6.1', categoria: 'Educación', actividad: 'Resistencia a antimicrobianos', tipo: 'cumplimiento' },
+      { id: '6.2', categoria: 'Educación', actividad: 'Diagnóstico y esquema de tratamientos institucionales', tipo: 'cumplimiento' },
+      { id: '6.3', categoria: 'Educación', actividad: 'Diagnóstico y control de las IAAS', tipo: 'cumplimiento' },
+      { id: '6.4', categoria: 'Educación', actividad: 'Solicitud de pruebas de laboratorio', tipo: 'cumplimiento' },
+      { id: '6.5', categoria: 'Educación', actividad: 'Interpretación de pruebas de laboratorio', tipo: 'cumplimiento' },
+      { id: '6.6', categoria: 'Educación', actividad: 'Estrategias de educación', tipo: 'cumplimiento' },
+      { id: '7.1', categoria: 'Implementación', actividad: 'Preautorización con seguimiento', tipo: 'cumplimiento' },
+      { id: '7.2', categoria: 'Implementación', actividad: 'Auditoría prospectiva con retroalimentación (alterna)', tipo: 'cumplimiento' },
+      { id: '7.3', categoria: 'Implementación', actividad: 'Evaluación periódica de consumo', tipo: 'cumplimiento' },
+    ],
+  },
+  {
+    id: 'evaluacion_ejecucion', titulo: 'Evaluación de la ejecución del PROA', puntajeEsperado: 12,
+    items: [
+      { id: '8.1', categoria: 'Indicadores de proceso', actividad: 'Toma de muestras previo al tratamiento', tipo: 'cumplimiento', nota: 'Obligatorio' },
+      { id: '8.2', categoria: 'Indicadores de proceso', actividad: 'Solicitudes de pruebas de microbiología generales, especiales y test rápidos de identificación de microorganismos', tipo: 'cumplimiento' },
+      { id: '8.3', categoria: 'Indicadores de proceso', actividad: 'Adherencia a guías', tipo: 'cumplimiento' },
+      { id: '8.4', categoria: 'Indicadores de proceso', actividad: 'Valoraciones por Infectología, antibióticos grupo 1', tipo: 'cumplimiento' },
+      { id: '8.5', categoria: 'Indicadores de proceso', actividad: 'Valoraciones por Infectología en pacientes de UCI, UCIN y neutropenia febril posquimioterapia', tipo: 'cumplimiento', nota: 'Solo ámbito hospitalario' },
+      { id: '9.1', categoria: 'Indicadores de resultado', actividad: 'DDD / DOT', tipo: 'cumplimiento' },
+      { id: '9.2', categoria: 'Indicadores de resultado', actividad: 'Ajuste de prescripción', tipo: 'cumplimiento', nota: 'Obligatorio' },
+      { id: '9.3', categoria: 'Indicadores de resultado', actividad: 'Ajuste de prescripción en UCI, UCIN y neutropenia febril posquimioterapia', tipo: 'cumplimiento', nota: 'Solo ámbito hospitalario' },
+      { id: '9.4', categoria: 'Indicadores de resultado', actividad: 'Cambios de medicamento por Infectología', tipo: 'cumplimiento' },
+      { id: '9.5', categoria: 'Indicadores de resultado', actividad: 'Profilaxis antibiótica perioperatoria menor a 24 horas', tipo: 'cumplimiento', nota: 'Obligatorio' },
+      { id: '10.1', categoria: 'Indicadores de impacto', actividad: 'IAAS por gérmenes resistentes (BLEE, AmpC, carbapenémicos), incluye extrainstitucionales', tipo: 'cumplimiento', nota: 'Obligatorio' },
+      { id: '10.2', categoria: 'Indicadores de impacto', actividad: 'Perfil institucional de resistencia bacteriana', tipo: 'cumplimiento' },
+    ],
+  },
+];
+
+export function puntosItemEvaluacion(tipo: 'cumplimiento' | 'oficializacion', respuesta: string): number {
+  if (tipo === 'oficializacion') {
+    return respuesta === 'ADOPCION' || respuesta === 'ADAPTACION' || respuesta === 'NO_APLICA' ? 1 : 0;
+  }
+  return respuesta === 'SI' || respuesta === 'NO_APLICA' ? 1 : 0;
+}
+
+export interface RespuestaItemEvaluacion { respuesta: string; evidencia: string; }
+
+export function puntajeSeccionEvaluacion(seccion: SeccionEvaluacionTerritorial, respuestas: Record<string, RespuestaItemEvaluacion>): number {
+  return seccion.items.reduce((sum, it) => sum + puntosItemEvaluacion(it.tipo, respuestas[it.id]?.respuesta || ''), 0);
+}
+
+export function puntajeTotalEvaluacion(respuestas: Record<string, RespuestaItemEvaluacion>): number {
+  return EVALUACION_TERRITORIAL_PROA.reduce((sum, sec) => sum + puntajeSeccionEvaluacion(sec, respuestas), 0);
+}
+
+export const PUNTAJE_MAXIMO_EVALUACION_TERRITORIAL = EVALUACION_TERRITORIAL_PROA.reduce((s, sec) => s + sec.puntajeEsperado, 0); // 61
+
+export type NivelCalificacionPROA = 'avanzado' | 'basico' | 'inadecuado';
+
+// Bandas tomadas tal cual del formato original: Avanzado 56-61, Básico
+// 31-55, Inadecuado ≤30.
+export function nivelCalificacionPROA(puntajeTotal: number): NivelCalificacionPROA {
+  if (puntajeTotal >= 56) return 'avanzado';
+  if (puntajeTotal >= 31) return 'basico';
+  return 'inadecuado';
+}
+
+export const NIVEL_CALIFICACION_CFG: Record<NivelCalificacionPROA, { label: string; color: string; bg: string }> = {
+  avanzado:   { label: 'Avanzado',   color: '#047857', bg: '#d1fae5' },
+  basico:     { label: 'Básico',     color: '#b45309', bg: '#fef3c7' },
+  inadecuado: { label: 'Inadecuado', color: '#b91c1c', bg: '#fee2e2' },
+};
+
+export type AmbitoPROA = 'ambulatorio' | 'hospitalario' | 'ambos' | '';
+export const AMBITO_PROA_LABEL: Record<Exclude<AmbitoPROA, ''>, string> = {
+  ambulatorio: 'Ambulatorio', hospitalario: 'Hospitalario', ambos: 'Ambos',
+};
+
+export type CaracterInstitucion = 'publica' | 'privada' | '';
+export const CARACTER_INSTITUCION_LABEL: Record<Exclude<CaracterInstitucion, ''>, string> = {
+  publica: 'Pública', privada: 'Privada',
+};
+
+export interface EvaluacionTerritorialPROA {
+  id?: string;
+  nit?: string;
+  codigoPrestador: string;
+  ambito: AmbitoPROA;
+  caracterInstitucion: CaracterInstitucion;
+  nivelComplejidad: NivelComplejidad;
+  departamento: string;
+  municipio: string;
+  fecha: string; // ISO "YYYY-MM-DD"
+  responsableDiligenciamiento: string;
+  respuestas: Record<string, RespuestaItemEvaluacion>; // llave = id oficial del ítem, ej. "1.1"
+  creadoEn?: Timestamp;
+}
+
+export const EVALUACION_TERRITORIAL_EMPTY_FORM: Omit<EvaluacionTerritorialPROA, 'id' | 'creadoEn' | 'nit'> = {
+  codigoPrestador: '', ambito: '', caracterInstitucion: '', nivelComplejidad: 'I',
+  departamento: '', municipio: '', fecha: '', responsableDiligenciamiento: '', respuestas: {},
+};

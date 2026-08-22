@@ -9,12 +9,16 @@ import {
   TIPO_RESISTENCIA_LABEL, SITIOS_INFECCION, DESENLACE_LABEL, ESTADO_AUTORIZACION_LABEL, ESTADO_ENVIO_LABEL,
   INTERVENCION_EMPTY_FORM, IAAS_EMPTY_FORM, AUTORIZACION_EMPTY_FORM,
   FRECUENCIA_DOSIS_LABEL, esPrescripcionProlongada,
+  EVALUACION_TERRITORIAL_PROA, EVALUACION_TERRITORIAL_EMPTY_FORM, PUNTAJE_MAXIMO_EVALUACION_TERRITORIAL,
+  RESPUESTA_CUMPLIMIENTO_LABEL, RESPUESTA_OFICIALIZACION_LABEL, AMBITO_PROA_LABEL, CARACTER_INSTITUCION_LABEL,
+  NIVEL_CALIFICACION_CFG, puntajeSeccionEvaluacion, puntajeTotalEvaluacion, nivelCalificacionPROA,
   type NivelComplejidad, type Intervencion, type ConsumoAMR, type IAASResistente,
   type AutorizacionPrevia, type InformeAnualPROA, type FaseImplementacion, type TipoResistencia,
-  type FrecuenciaDosis,
+  type FrecuenciaDosis, type EvaluacionTerritorialPROA, type RespuestaItemEvaluacion,
+  type AmbitoPROA, type CaracterInstitucion,
 } from '@/lib/proaTypes';
 
-type Tab = 'checklist' | 'fases' | 'intervenciones' | 'indicadores' | 'iaas' | 'autorizaciones' | 'reporte';
+type Tab = 'checklist' | 'fases' | 'intervenciones' | 'indicadores' | 'iaas' | 'autorizaciones' | 'evaluacion_territorial' | 'reporte';
 
 const TABS: Array<{ key: Tab; label: string }> = [
   { key: 'checklist', label: '✓ Checklist' },
@@ -23,6 +27,7 @@ const TABS: Array<{ key: Tab; label: string }> = [
   { key: 'indicadores', label: '📊 DDD / DOT' },
   { key: 'iaas', label: '🧬 IAAS resistentes' },
   { key: 'autorizaciones', label: '🔐 Autorización previa' },
+  { key: 'evaluacion_territorial', label: '🏛️ Evaluación Territorial' },
   { key: 'reporte', label: '📄 Informes' },
 ];
 
@@ -70,6 +75,12 @@ export default function PROAPage() {
   });
   const [guardandoInforme, setGuardandoInforme] = useState(false);
 
+  const [formEvalTerr, setFormEvalTerr] = useState<Omit<EvaluacionTerritorialPROA, 'id' | 'creadoEn' | 'nit'>>({
+    ...EVALUACION_TERRITORIAL_EMPTY_FORM, fecha: new Date().toISOString().split('T')[0],
+  });
+  const [guardandoEvalTerr, setGuardandoEvalTerr] = useState(false);
+  const [evalTerrGuardadaOk, setEvalTerrGuardadaOk] = useState(false);
+
   // ── Scores ────────────────────────────────────────────────────
   const checklistNivel = checklistParaNivel(p.nivelComplejidad);
   const totalItems = checklistNivel.reduce((acc, c) => acc + c.items.length, 0);
@@ -81,6 +92,11 @@ export default function PROAPage() {
   const tasaAceptacion = p.intervenciones.length ? Math.round((intAceptadas / p.intervenciones.length) * 100) : 0;
 
   const informeAnioActual = p.informesAnuales.find(inf => inf.anio === anioInforme);
+
+  const puntajeEvalTerrActual = puntajeTotalEvaluacion(formEvalTerr.respuestas);
+  const nivelEvalTerrActual = nivelCalificacionPROA(puntajeEvalTerrActual);
+  const itemsRespondidosEvalTerr = Object.values(formEvalTerr.respuestas).filter(r => r.respuesta).length;
+  const totalItemsEvalTerr = EVALUACION_TERRITORIAL_PROA.reduce((acc, s) => acc + s.items.length, 0);
 
   if (authLoading) return (
     <div className="flex items-center justify-center h-64">
@@ -154,6 +170,32 @@ export default function PROAPage() {
         observaciones: formInforme.observaciones || '',
       }, informeAnioActual?.id);
     } finally { setGuardandoInforme(false); }
+  };
+
+  const guardarEvaluacionTerritorial = async () => {
+    if (guardandoEvalTerr || !formEvalTerr.codigoPrestador.trim() || !formEvalTerr.fecha) return;
+    setGuardandoEvalTerr(true);
+    try {
+      await p.guardarEvaluacionTerritorial({
+        ...formEvalTerr,
+        codigoPrestador: formEvalTerr.codigoPrestador.trim(),
+        responsableDiligenciamiento: formEvalTerr.responsableDiligenciamiento.trim(),
+        nivelComplejidad: p.nivelComplejidad,
+      });
+      setFormEvalTerr({ ...EVALUACION_TERRITORIAL_EMPTY_FORM, fecha: new Date().toISOString().split('T')[0] });
+      setEvalTerrGuardadaOk(true);
+      setTimeout(() => setEvalTerrGuardadaOk(false), 4000);
+    } finally { setGuardandoEvalTerr(false); }
+  };
+
+  const setRespuestaEvalTerr = (itemId: string, campo: 'respuesta' | 'evidencia', valor: string) => {
+    setFormEvalTerr(p2 => ({
+      ...p2,
+      respuestas: {
+        ...p2.respuestas,
+        [itemId]: { respuesta: p2.respuestas[itemId]?.respuesta || '', evidencia: p2.respuestas[itemId]?.evidencia || '', [campo]: valor },
+      },
+    }));
   };
 
   return (
@@ -726,6 +768,172 @@ export default function PROAPage() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── TAB: Evaluación Territorial ── */}
+      {tab === 'evaluacion_territorial' && (
+        <div className="space-y-4">
+          <div className="rounded-2xl p-4" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
+            <p className="text-xs text-amber-800">
+              <strong>Reproducción del instrumento oficial</strong> que usan las Secretarías de Salud territoriales para evaluar la implementación del PROA (Ministerio de Salud y Protección Social — Subdirección de Enfermedades Transmisibles). A diferencia del checklist de madurez de la primera pestaña (basado en un resumen de la Res. 2471/2022), aquí los 61 ítems, categorías y reglas de puntaje reproducen directamente el formato oficial. Cada evaluación guardada queda como un registro histórico independiente — no editable — igual que el diligenciamiento en papel/Excel.
+            </p>
+          </div>
+
+          {/* Metadatos del encabezado */}
+          <div className="rounded-2xl p-5" style={cardBox}>
+            <h3 className="font-bold text-slate-700 mb-4 text-sm">Datos de la evaluación</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Código prestador</label>
+                <input type="text" value={formEvalTerr.codigoPrestador} onChange={e => setFormEvalTerr(p2 => ({ ...p2, codigoPrestador: e.target.value }))}
+                       placeholder="Ej. 0800100328-01" className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Ámbito</label>
+                <select value={formEvalTerr.ambito} onChange={e => setFormEvalTerr(p2 => ({ ...p2, ambito: e.target.value as AmbitoPROA }))}
+                        className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white">
+                  <option value="">Seleccionar</option>
+                  {(Object.keys(AMBITO_PROA_LABEL) as Exclude<AmbitoPROA, ''>[]).map(k => <option key={k} value={k}>{AMBITO_PROA_LABEL[k]}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Carácter de la institución</label>
+                <select value={formEvalTerr.caracterInstitucion} onChange={e => setFormEvalTerr(p2 => ({ ...p2, caracterInstitucion: e.target.value as CaracterInstitucion }))}
+                        className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white">
+                  <option value="">Seleccionar</option>
+                  {(Object.keys(CARACTER_INSTITUCION_LABEL) as Exclude<CaracterInstitucion, ''>[]).map(k => <option key={k} value={k}>{CARACTER_INSTITUCION_LABEL[k]}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Nivel de complejidad</label>
+                <input type="text" disabled value={NIVEL_COMPLEJIDAD_LABEL[p.nivelComplejidad]}
+                       className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-slate-50 text-slate-500" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Departamento</label>
+                <input type="text" value={formEvalTerr.departamento} onChange={e => setFormEvalTerr(p2 => ({ ...p2, departamento: e.target.value }))}
+                       className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Municipio</label>
+                <input type="text" value={formEvalTerr.municipio} onChange={e => setFormEvalTerr(p2 => ({ ...p2, municipio: e.target.value }))}
+                       className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Fecha</label>
+                <input type="date" value={formEvalTerr.fecha} onChange={e => setFormEvalTerr(p2 => ({ ...p2, fecha: e.target.value }))}
+                       className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1">Responsable diligenciamiento</label>
+                <input type="text" value={formEvalTerr.responsableDiligenciamiento} onChange={e => setFormEvalTerr(p2 => ({ ...p2, responsableDiligenciamiento: e.target.value }))}
+                       className="w-full px-3 py-2 rounded-lg text-sm border border-slate-200 bg-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Puntaje en vivo */}
+          <div className="rounded-2xl p-5 flex items-center gap-6 flex-wrap" style={{ background: NIVEL_CALIFICACION_CFG[nivelEvalTerrActual].bg, border: `1px solid ${NIVEL_CALIFICACION_CFG[nivelEvalTerrActual].color}40` }}>
+            <div>
+              <div className="text-3xl font-black" style={{ color: NIVEL_CALIFICACION_CFG[nivelEvalTerrActual].color }}>{puntajeEvalTerrActual}/{PUNTAJE_MAXIMO_EVALUACION_TERRITORIAL}</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">{itemsRespondidosEvalTerr}/{totalItemsEvalTerr} ítems diligenciados</div>
+            </div>
+            <div className="text-sm font-bold px-3 py-1.5 rounded-full" style={{ background: 'white', color: NIVEL_CALIFICACION_CFG[nivelEvalTerrActual].color }}>
+              {NIVEL_CALIFICACION_CFG[nivelEvalTerrActual].label}
+            </div>
+            <div className="text-[11px] text-slate-500 flex-1 min-w-[180px]">Clasificación oficial: Avanzado 56-61 · Básico 31-55 · Inadecuado ≤30.</div>
+          </div>
+
+          {/* Secciones e ítems */}
+          {EVALUACION_TERRITORIAL_PROA.map(seccion => {
+            const puntajeSeccion = puntajeSeccionEvaluacion(seccion, formEvalTerr.respuestas);
+            const categorias = Array.from(new Set(seccion.items.map(it => it.categoria)));
+            return (
+              <div key={seccion.id} className="rounded-2xl overflow-hidden" style={cardBox}>
+                <div className="px-5 py-3 font-bold text-sm flex items-center justify-between" style={headerBox}>
+                  <span>{seccion.titulo}</span>
+                  <span className="text-xs font-normal text-slate-400">{puntajeSeccion}/{seccion.puntajeEsperado}</span>
+                </div>
+                {categorias.map(categoria => (
+                  <div key={categoria} className="border-b border-slate-100 last:border-b-0">
+                    <div className="px-5 py-2 text-xs font-bold text-slate-500 bg-slate-50/50">{categoria}</div>
+                    <div className="divide-y divide-slate-50">
+                      {seccion.items.filter(it => it.categoria === categoria).map(item => {
+                        const resp = formEvalTerr.respuestas[item.id];
+                        return (
+                          <div key={item.id} className="px-5 py-3 grid grid-cols-1 md:grid-cols-12 gap-2 items-center hover:bg-slate-50/60">
+                            <div className="md:col-span-6">
+                              <span className="text-xs text-slate-700">
+                                <span className="font-mono text-[10px] text-slate-400 mr-1">{item.id}</span>
+                                {item.actividad}
+                                {item.nota && (
+                                  <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#e0f2fe', color: '#0369a1' }}>{item.nota}</span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="md:col-span-3">
+                              <select value={resp?.respuesta || ''} onChange={e => setRespuestaEvalTerr(item.id, 'respuesta', e.target.value)}
+                                      className="w-full px-2 py-1.5 rounded-lg text-xs border border-slate-200 bg-white">
+                                <option value="">Sin diligenciar</option>
+                                {item.tipo === 'oficializacion'
+                                  ? (Object.keys(RESPUESTA_OFICIALIZACION_LABEL) as Array<keyof typeof RESPUESTA_OFICIALIZACION_LABEL>).map(k => (
+                                      <option key={k} value={k}>{RESPUESTA_OFICIALIZACION_LABEL[k]}</option>
+                                    ))
+                                  : (Object.keys(RESPUESTA_CUMPLIMIENTO_LABEL) as Array<keyof typeof RESPUESTA_CUMPLIMIENTO_LABEL>).map(k => (
+                                      <option key={k} value={k}>{RESPUESTA_CUMPLIMIENTO_LABEL[k]}</option>
+                                    ))}
+                              </select>
+                            </div>
+                            <div className="md:col-span-3">
+                              <input type="text" value={resp?.evidencia || ''} onChange={e => setRespuestaEvalTerr(item.id, 'evidencia', e.target.value)}
+                                     placeholder="Evidencia (opcional)" className="w-full px-2 py-1.5 rounded-lg text-xs border border-slate-200 bg-white" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+
+          <div className="flex items-center gap-3">
+            <button onClick={guardarEvaluacionTerritorial} disabled={guardandoEvalTerr}
+                    className="text-white text-sm font-bold px-5 py-2 rounded-xl hover:scale-105 transition-all disabled:opacity-60" style={btnPrimary}>
+              {guardandoEvalTerr ? 'Guardando...' : 'Guardar evaluación'}
+            </button>
+            {evalTerrGuardadaOk && <span className="text-xs font-semibold text-emerald-600">✓ Evaluación guardada como nuevo registro histórico</span>}
+          </div>
+
+          {/* Historial */}
+          <div className="rounded-2xl overflow-hidden" style={cardBox}>
+            <div className="px-5 py-3 font-bold text-sm" style={headerBox}>Historial de evaluaciones territoriales</div>
+            {p.evaluacionesTerritoriales.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-slate-400 text-xs">No hay evaluaciones territoriales registradas aún.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {p.evaluacionesTerritoriales.map((ev, i) => {
+                  const puntaje = puntajeTotalEvaluacion(ev.respuestas);
+                  const nivel = nivelCalificacionPROA(puntaje);
+                  return (
+                    <div key={ev.id || i} className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50">
+                      <span className="text-xs text-slate-500 w-24">{ev.fecha}</span>
+                      <span className="text-xs font-semibold text-slate-700 flex-1 truncate">{ev.codigoPrestador}</span>
+                      <span className="text-xs text-slate-400">{ev.municipio}{ev.departamento ? `, ${ev.departamento}` : ''}</span>
+                      <span className="text-sm font-black" style={{ color: NIVEL_CALIFICACION_CFG[nivel].color }}>{puntaje}/{PUNTAJE_MAXIMO_EVALUACION_TERRITORIAL}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: NIVEL_CALIFICACION_CFG[nivel].bg, color: NIVEL_CALIFICACION_CFG[nivel].color }}>
+                        {NIVEL_CALIFICACION_CFG[nivel].label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

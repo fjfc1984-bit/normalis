@@ -441,6 +441,32 @@ service cloud.firestore {
       );
     }
 
+    // proa_evaluacion_territorial — reproducción del instrumento oficial de
+    // evaluación PROA que usan las Secretarías de Salud territoriales (61
+    // ítems / 3 secciones). La UI de NormaLis solo crea registros nuevos
+    // (cada evaluación es una foto histórica, como el diligenciamiento en
+    // papel/Excel — no se edita); se sigue el mismo patrón de allow update
+    // que las demás colecciones proa_* (isAdmin() o nit-pinned) para dejar
+    // una vía de corrección administrativa sin exponerla en la UI normal.
+    match /proa_evaluacion_territorial/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+      allow update: if isAuthenticated() && (
+        isAdmin() || (
+          resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit &&
+          request.resource.data.nit == resource.data.nit
+        )
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ||
+        isAdmin()
+      );
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // Subcollections adicionales de usuarios/{uid}
     // ════════════════════════════════════════════════════════════════════════
