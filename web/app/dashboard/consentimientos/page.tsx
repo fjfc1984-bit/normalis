@@ -11,6 +11,8 @@ import { useAuth } from '@/lib/auth';
 import {
   useConsentimientos,
   ESPECIALIDADES_CON,
+  OTRO_PROCEDIMIENTO,
+  OTRO_PROCEDIMIENTO_LABEL,
   ESTADO_LABEL,
   ESTADO_COLOR,
 } from '@/lib/useConsentimientos';
@@ -40,17 +42,37 @@ function NuevoConModal({
 }) {
   const [especialidad,   setEspecialidad]   = useState(Object.keys(ESPECIALIDADES_CON)[0]);
   const [procedimiento,  setProcedimiento]  = useState('');
+  // Texto libre cuando se elige "Otro (especificar procedimiento)" — el
+  // draft se conserva aparte para que navegar entre especialidad/catálogo
+  // y volver a "Otro" no borre lo ya escrito (mismo patrón que
+  // equipos-biomedicos: ver handleServicioSelect/handleNombreSelect allí).
+  const [procedimientoOtro,      setProcedimientoOtro]      = useState('');
+  const [procedimientoOtroDraft, setProcedimientoOtroDraft] = useState('');
   const [paciente,       setPaciente]       = useState('');
   const [cedula,         setCedula]         = useState('');
   const [medico,         setMedico]         = useState('');
   const [fecha,          setFecha]          = useState(new Date().toISOString().slice(0, 10));
 
   const procedimientos = ESPECIALIDADES_CON[especialidad] ?? [];
+  const esOtroProcedimiento = procedimiento === OTRO_PROCEDIMIENTO;
+  // Valor final que se guarda: el texto libre si se escogió "Otro", si no
+  // el valor seleccionado del catálogo tal cual.
+  const procedimientoEfectivo = esOtroProcedimiento ? procedimientoOtro.trim() : procedimiento;
+
+  function handleProcedimientoSelect(value: string) {
+    setProcedimiento(value);
+    if (value === OTRO_PROCEDIMIENTO) setProcedimientoOtro(procedimientoOtroDraft);
+  }
+
+  function handleProcedimientoOtroInput(value: string) {
+    setProcedimientoOtro(value);
+    setProcedimientoOtroDraft(value);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!procedimiento || !paciente.trim() || !medico.trim()) return;
-    await onSave({ procedimiento, especialidad, paciente: paciente.trim(), cedula: cedula.trim(), medico: medico.trim(), fecha });
+    if (!procedimientoEfectivo || !paciente.trim() || !medico.trim()) return;
+    await onSave({ procedimiento: procedimientoEfectivo, especialidad, paciente: paciente.trim(), cedula: cedula.trim(), medico: medico.trim(), fecha });
     onClose();
   }
 
@@ -85,14 +107,23 @@ function NuevoConModal({
               <select
                 className={INPUT}
                 value={procedimiento}
-                onChange={e => setProcedimiento(e.target.value)}
+                onChange={e => handleProcedimientoSelect(e.target.value)}
                 required
               >
                 <option value="">— Selecciona —</option>
                 {procedimientos.map(p => (
-                  <option key={p} value={p}>{p}</option>
+                  <option key={p} value={p}>{p === OTRO_PROCEDIMIENTO ? OTRO_PROCEDIMIENTO_LABEL : p}</option>
                 ))}
               </select>
+              {esOtroProcedimiento && (
+                <input
+                  className={`${INPUT} mt-2`}
+                  value={procedimientoOtro}
+                  onChange={e => handleProcedimientoOtroInput(e.target.value)}
+                  placeholder="Nombre del procedimiento"
+                  required
+                />
+              )}
             </div>
           </div>
 
@@ -143,14 +174,14 @@ function NuevoConModal({
           </div>
 
           {/* Texto del consentimiento */}
-          {procedimiento && (
+          {procedimientoEfectivo && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs text-gray-600 leading-relaxed">
               <p className="font-bold text-gray-700 mb-2">Vista previa del consentimiento</p>
               <p>
                 Yo, <strong>{paciente || '[Paciente]'}</strong>, identificado/a con cédula{' '}
                 <strong>{cedula || '[cédula]'}</strong>, declaro que he sido informado/a por el/la
                 profesional <strong>{medico || '[Médico]'}</strong> sobre el procedimiento:{' '}
-                <strong>{procedimiento}</strong>.
+                <strong>{procedimientoEfectivo}</strong>.
               </p>
               <p className="mt-2">
                 He comprendido los beneficios, riesgos y alternativas del procedimiento. Autorizo
@@ -165,7 +196,7 @@ function NuevoConModal({
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
-            <button type="submit" disabled={saving || !procedimiento} className={BTN_P}>
+            <button type="submit" disabled={saving || !procedimientoEfectivo} className={BTN_P}>
               {saving ? 'Guardando…' : 'Crear consentimiento'}
             </button>
           </div>

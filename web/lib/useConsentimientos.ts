@@ -13,6 +13,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { crearFirma } from '@/lib/firmar';
+import { ESPECIALIDADES_CON, OTRO_PROCEDIMIENTO, OTRO_PROCEDIMIENTO_LABEL } from '@/lib/consentimientoCatalogo';
+
+export { ESPECIALIDADES_CON, OTRO_PROCEDIMIENTO, OTRO_PROCEDIMIENTO_LABEL };
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -59,58 +62,6 @@ export interface NuevoConsentimiento {
   medico:        string;
   fecha:         string;
 }
-
-// ── Catálogos de procedimientos por especialidad ───────────────────────────────
-
-export const ESPECIALIDADES_CON: Record<string, string[]> = {
-  'Medicina General': [
-    'Consulta médica general',
-    'Procedimiento ambulatorio menor',
-    'Toma de muestras de laboratorio',
-    'Aplicación de vacunas',
-    'Cirugía menor ambulatoria',
-  ],
-  'Odontología': [
-    'Extracción dental',
-    'Tratamiento de conductos (endodoncia)',
-    'Cirugía oral menor',
-    'Blanqueamiento dental',
-    'Implante dental',
-  ],
-  'Ginecología y Obstetricia': [
-    'Citología cérvico-vaginal',
-    'Inserción de DIU',
-    'Colposcopia',
-    'Parto vaginal',
-    'Cesárea',
-  ],
-  'Cirugía': [
-    'Cirugía ambulatoria bajo sedación',
-    'Cirugía laparoscópica',
-    'Procedimiento con anestesia general',
-    'Biopsia de tejido',
-    'Drenaje quirúrgico',
-  ],
-  'Psicología': [
-    'Evaluación psicológica',
-    'Psicoterapia individual',
-    'Pruebas psicométricas',
-    'Intervención en crisis',
-  ],
-  'Fisioterapia': [
-    'Terapia física y rehabilitación',
-    'Electroterapia',
-    'Aplicación de calor/frío terapéutico',
-  ],
-  'Imágenes Diagnósticas': [
-    'Radiografía',
-    'Ecografía',
-    'Tomografía',
-    'Resonancia magnética',
-    'Endoscopia diagnóstica',
-  ],
-  'Otro': ['Procedimiento específico'],
-};
 
 // ── Estado de consentimiento ──────────────────────────────────────────────────
 
