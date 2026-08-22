@@ -29,6 +29,9 @@ import {
   RESPONSABLE_PERFIL_LABEL,
 } from '@/lib/equipoTypes';
 import {
+  SERVICIOS_SALUD_3100, TODOS_LOS_SERVICIOS_SALUD, EQUIPOS_TIPICOS_POR_SERVICIO, OTRO_VALOR,
+} from '@/lib/equiposCatalogo';
+import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, StatusBadge,
 } from '@/components/ui';
@@ -67,8 +70,63 @@ function EquipoFormModal({
   const [saving, setSaving] = useState(false);
   const esEdicion = !!equipo;
 
+  // ── Servicio / equipo: catálogo con opción "Otro (especificar)" ──
+  // Si el equipo ya existente tiene un servicio/nombre que no está en el
+  // catálogo (dato antiguo, capturado como texto libre antes de este
+  // cambio), arrancamos en modo "Otro" con ese valor precargado, en vez de
+  // perderlo silenciosamente.
+  const [servicioOtro, setServicioOtro] = useState(
+    () => !!form.servicioAsociado && !TODOS_LOS_SERVICIOS_SALUD.includes(form.servicioAsociado)
+  );
+  const equiposDelServicio = EQUIPOS_TIPICOS_POR_SERVICIO[form.servicioAsociado] || [];
+  const [nombreOtro, setNombreOtro] = useState(
+    () => !!form.nombre && !equiposDelServicio.includes(form.nombre)
+  );
+  // Borrador del texto libre de "Otro" — se conserva aunque el usuario
+  // navegue el catálogo y vuelva a "Otro" después, para no perder lo que
+  // ya había escrito (o el valor heredado de un registro antiguo).
+  const [servicioOtroDraft, setServicioOtroDraft] = useState(servicioOtro ? form.servicioAsociado : '');
+  const [nombreOtroDraft, setNombreOtroDraft] = useState(nombreOtro ? form.nombre : '');
+
   function set<K extends keyof EquipoFormData>(k: K, v: EquipoFormData[K]) {
     setForm(prev => ({ ...prev, [k]: v }));
+  }
+
+  function handleServicioSelect(v: string) {
+    if (v === OTRO_VALOR) {
+      setServicioOtro(true);
+      set('servicioAsociado', servicioOtroDraft);
+      return;
+    }
+    setServicioOtro(false);
+    set('servicioAsociado', v);
+    // Si el equipo ya elegido no aplica al nuevo servicio, se limpia para
+    // que el usuario vuelva a elegir del catálogo filtrado — pero solo si
+    // no estaba en modo "Otro" (un nombre personalizado no se descarta).
+    const opts = EQUIPOS_TIPICOS_POR_SERVICIO[v] || [];
+    if (!nombreOtro && form.nombre && !opts.includes(form.nombre)) {
+      set('nombre', '');
+    }
+  }
+
+  function handleNombreSelect(v: string) {
+    if (v === OTRO_VALOR) {
+      setNombreOtro(true);
+      set('nombre', nombreOtroDraft);
+      return;
+    }
+    setNombreOtro(false);
+    set('nombre', v);
+  }
+
+  function handleServicioOtroInput(v: string) {
+    set('servicioAsociado', v);
+    setServicioOtroDraft(v);
+  }
+
+  function handleNombreOtroInput(v: string) {
+    set('nombre', v);
+    setNombreOtroDraft(v);
   }
 
   async function handle(e: React.FormEvent) {
@@ -89,9 +147,42 @@ function EquipoFormModal({
         <form onSubmit={handle} className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
+              <label className={LABEL}>Servicio / área asociada</label>
+              <select className={INPUT} value={servicioOtro ? OTRO_VALOR : form.servicioAsociado}
+                      onChange={e => handleServicioSelect(e.target.value)}>
+                <option value="">— Seleccionar servicio —</option>
+                {SERVICIOS_SALUD_3100.map(g => (
+                  <optgroup key={g.grupo} label={g.grupo}>
+                    {g.servicios.map(s => <option key={s} value={s}>{s}</option>)}
+                  </optgroup>
+                ))}
+                <option value={OTRO_VALOR}>Otro (especificar)</option>
+              </select>
+              {servicioOtro && (
+                <input className={`${INPUT} mt-2`} value={form.servicioAsociado}
+                       onChange={e => handleServicioOtroInput(e.target.value)}
+                       placeholder="Nombre del servicio/área" />
+              )}
+              <p className="text-[11px] text-gray-400 mt-1">
+                Servicios según nomenclatura Res. 3100/2019 (Anexo Técnico No. 1).
+              </p>
+            </div>
+            <div className="col-span-2">
               <label className={LABEL}>Nombre del equipo *</label>
-              <input className={INPUT} value={form.nombre} onChange={e => set('nombre', e.target.value)}
-                     placeholder="Monitor de signos vitales" required />
+              <select className={INPUT} value={nombreOtro ? OTRO_VALOR : form.nombre}
+                      onChange={e => handleNombreSelect(e.target.value)}>
+                <option value="">— Seleccionar equipo —</option>
+                {equiposDelServicio.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                <option value={OTRO_VALOR}>Otro (especificar)</option>
+              </select>
+              {nombreOtro && (
+                <input className={`${INPUT} mt-2`} value={form.nombre}
+                       onChange={e => handleNombreOtroInput(e.target.value)}
+                       placeholder="Monitor de signos vitales" required />
+              )}
+              {!servicioOtro && !form.servicioAsociado && (
+                <p className="text-[11px] text-gray-400 mt-1">Elige primero el servicio para ver el equipo típico de esa área, o usa &quot;Otro&quot;.</p>
+              )}
             </div>
             <div>
               <label className={LABEL}>Marca</label>
@@ -104,11 +195,6 @@ function EquipoFormModal({
             <div>
               <label className={LABEL}>Serie</label>
               <input className={INPUT} value={form.serie} onChange={e => set('serie', e.target.value)} />
-            </div>
-            <div>
-              <label className={LABEL}>Servicio / área asociada</label>
-              <input className={INPUT} value={form.servicioAsociado} onChange={e => set('servicioAsociado', e.target.value)}
-                     placeholder="Urgencias" />
             </div>
           </div>
 
