@@ -20,6 +20,8 @@
 //   equipos_biomedicos/{id}     — CMMS: inventario de equipos (Estándar de Dotación)
 //   equipos_biomedicos/{id}/mantenimientos/{id} — hoja de vida (mantenimientos preventivos/correctivos)
 //   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
+//   iaas_casos/{id}              — Vigilancia IAAS: casos individuales (SIVIGILA 357/352)
+//   iaas_denominadores/{id}      — Vigilancia IAAS: consolidados mensuales (SIVIGILA 359/362)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -171,6 +173,47 @@ service cloud.firestore {
     // Soporta acceso por uid (personal) y por nit (equipo IPS)
     // ════════════════════════════════════════════════════════════════════════
     match /indicadores/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // iaas_casos/{id}, iaas_denominadores/{id} — Vigilancia IAAS (SIVIGILA
+    // eventos 357/359 IAD y 352/362 IAPMQ). Mismo patrón que indicadores/{id}:
+    // acceso compartido por uid (personal) o por nit (equipo IPS).
+    // ════════════════════════════════════════════════════════════════════════
+    match /iaas_casos/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.nit == get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit;
+
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    match /iaas_denominadores/{id} {
       allow read: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
         sameNIT(resource.data.nit) ||
