@@ -1,7 +1,9 @@
 /**
  * pamecTypes.ts
  * Tipos para el módulo PAMEC — Programa de Auditoría para el Mejoramiento
- * de la Calidad de la Atención en Salud (Res. 1446/2006, Res. 256/2016)
+ * de la Calidad de la Atención en Salud.
+ * Base legal: Decreto 1011/2006 Art. 34 (crea la obligación del PAMEC dentro
+ * del SOGCS) · Res. 1446/2006 (guía técnica) · Res. 256/2016 (indicadores).
  */
 
 export type PamecFase = 'autoeval' | 'priorizacion' | 'plan' | 'seguimiento';
@@ -38,11 +40,18 @@ export interface PamecDoc {
 }
 
 // ── Fases PAMEC ────────────────────────────────────────────────────────────
-export const PAMEC_FASES: { id: PamecFase; label: string; desc: string }[] = [
-  { id: 'autoeval',      label: 'Autoevaluación',     desc: 'Identificar procesos y medir indicadores actuales' },
-  { id: 'priorizacion',  label: 'Priorización',        desc: 'Identificar brechas y priorizar oportunidades de mejora' },
-  { id: 'plan',          label: 'Plan de mejora',      desc: 'Definir acciones correctivas con responsables y plazos' },
-  { id: 'seguimiento',   label: 'Seguimiento',         desc: 'Verificar el cumplimiento y medir el impacto' },
+// Las 4 fases del ciclo se alinean con el ciclo PHVA (Planear-Hacer-Verificar-
+// Actuar) que exige el Decreto 1011/2006 para el SOGCS. La guía técnica del
+// Min. Salud (2007) describe el PAMEC con un detalle mayor (autoevaluación,
+// definición del equipo, medición, formulación, ejecución, verificación) —
+// las 4 fases de abajo son una simplificación operativa de ese ciclo; una
+// IPS con auditoría de calidad más madura puede necesitar el detalle
+// completo de la guía oficial, no solo estas 4 etapas.
+export const PAMEC_FASES: { id: PamecFase; label: string; desc: string; phva: string }[] = [
+  { id: 'autoeval',      label: 'Autoevaluación',     desc: 'Identificar procesos y medir indicadores actuales',        phva: 'Planear' },
+  { id: 'priorizacion',  label: 'Priorización',        desc: 'Identificar brechas y priorizar oportunidades de mejora',  phva: 'Planear' },
+  { id: 'plan',          label: 'Plan de mejora',      desc: 'Definir acciones correctivas con responsables y plazos',   phva: 'Hacer' },
+  { id: 'seguimiento',   label: 'Seguimiento',         desc: 'Verificar el cumplimiento y medir el impacto',             phva: 'Verificar / Actuar' },
 ];
 
 // ── Procesos sugeridos (Res. 256/2016) ─────────────────────────────────────

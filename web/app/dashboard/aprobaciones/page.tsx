@@ -15,7 +15,7 @@
  * versión (ver useDocumentosDMS.ts) — esta página NUNCA regenera contenido,
  * solo lo muestra (para que el admin pueda revisarlo) y lo sella tal cual.
  *
- * Base legal: Res. 3100/2019 (control documental) · Ley 527/1999 Art. 7
+ * Base legal: Res. 1732/2026 (control documental, reemplaza Res. 3100/2019) · Ley 527/1999 Art. 7
  * (firma electrónica de la aprobación).
  */
 
@@ -117,7 +117,7 @@ export default function AprobacionesPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <SectionHeader
         title="Cola de Aprobación"
-        subtitle="Documentos en revisión de todas las IPS — Res. 3100/2019 · Ley 527/1999 Art. 7"
+        subtitle="Documentos en revisión de todas las IPS — Res. 1732/2026 (reemplaza Res. 3100/2019) · Ley 527/1999 Art. 7"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

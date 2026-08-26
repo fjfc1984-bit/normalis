@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useIndicadores } from '@/lib/useIndicadores';
-import { INDICADOR_GRUPOS } from '@/lib/indicadorTypes';
+import { INDICADOR_GRUPOS, INDICADORES_NOTA_COBERTURA } from '@/lib/indicadorTypes';
 import type { IndicadorEstado, IndicadorDef } from '@/lib/indicadorTypes';
 import {
   KpiCard, Toast, useToast, StatusBadge,
@@ -336,7 +336,7 @@ table{width:100%;border-collapse:collapse}th{background:#0d9488;color:#fff;paddi
 
       <SectionHeader
         title="Indicadores de Calidad"
-        subtitle="Resolución 256/2016 — 14 trazadores SOGCS / SISPRO"
+        subtitle="Resolución 256/2016 (mod. Res. 3539/2019) — 14 trazadores curados SOGCS / SISPRO"
         actions={
           <button
             onClick={exportarPDF}
@@ -347,6 +347,11 @@ table{width:100%;border-collapse:collapse}th{background:#0d9488;color:#fff;paddi
           </button>
         }
       />
+
+      {/* Aviso de cobertura del catálogo — vacío legal declarado */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 text-xs text-amber-800">
+        ⚠️ {INDICADORES_NOTA_COBERTURA}
+      </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

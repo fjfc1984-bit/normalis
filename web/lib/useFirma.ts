@@ -2,7 +2,7 @@
  * web/lib/useFirma.ts
  * Hook Firestore para Firma y Versiones de documentos institucionales
  * Colección: usuarios/{uid}/firmaDocs/{docId}
- * Base legal: Res. 3100/2019 — Procesos Prioritarios y cada estándar documental
+ * Base legal: Res. 1732/2026 (reemplaza Res. 3100/2019) — Procesos Prioritarios y cada estándar documental
  *
  * La prueba de firma vive en la colección inmutable `firmas` (ver
  * web/lib/firmar.ts) — este documento en firmaDocs es solo un espejo de

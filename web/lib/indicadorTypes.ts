@@ -1,6 +1,14 @@
 // web/lib/indicadorTypes.ts
 // Tipos TypeScript para el módulo de Indicadores de Calidad
-// Base legal: Resolución 256/2016 — SOGCS / SISPRO
+// Base legal: Resolución 256/2016, modificada por la Resolución 3539/2019 — SOGCS / SISPRO
+//
+// VACÍO LEGAL / COBERTURA: el catálogo de este módulo (INDICADORES_CATALOGO,
+// abajo) cubre 14 indicadores trazadores curados como punto de partida —
+// NO es el listado oficial completo de indicadores de calidad IPS-específicos
+// del Anexo Técnico de la Res. 256/2016 (que agrupa indicadores en efectividad,
+// seguridad y experiencia de la atención con un universo mayor a 14). Cada IPS
+// debe validar contra el Anexo Técnico vigente y su reporte a SISPRO cuáles
+// indicadores le aplican según su portafolio de servicios y nivel de complejidad.
 
 import type { Timestamp } from 'firebase/firestore';
 
@@ -75,7 +83,7 @@ export const INDICADORES_CATALOGO: IndicadorDef[] = [
     nombre: 'Tasa de infecciones asociadas a la atención en salud (IAAS)',
     formula: '(N° infecciones IAAS / Total egresos) × 1000',
     tipo: 'resultado', unidad: 'por 1 000 egresos', meta: '≤ 10', metaDir: 'lte', metaNum: 10,
-    grupo: 'Seguridad del Paciente', normativa: 'Res. 256/2016 · Res. 3100/2019 § 3.17',
+    grupo: 'Seguridad del Paciente', normativa: 'Res. 256/2016 · Res. 1732/2026 § 3.17 (reemplaza Res. 3100/2019)',
     periodicidad: 'mensual',
     descripcion: 'Monitorea infecciones nosocomiales como proxy de higiene y protocolos de esterilización.',
   },
@@ -193,6 +201,13 @@ export const INDICADORES_CATALOGO: IndicadorDef[] = [
 export const INDICADOR_GRUPOS: string[] = [
   ...new Set(INDICADORES_CATALOGO.map(i => i.grupo)),
 ];
+
+// Mensaje de cobertura mostrado en la UI — ver nota "VACÍO LEGAL" arriba.
+export const INDICADORES_NOTA_COBERTURA =
+  'Este catálogo incluye 14 indicadores trazadores como punto de partida. ' +
+  'No sustituye el Anexo Técnico completo de la Res. 256/2016 (mod. Res. 3539/2019) — ' +
+  'valida con tu equipo de calidad qué indicadores adicionales aplican según los servicios ' +
+  'habilitados de tu IPS.';
 
 // ── Calcular estado de un indicador ─────────────────────
 export function calcularEstado(

@@ -3,7 +3,7 @@
 /**
  * web/app/dashboard/pqrs/page.tsx
  * Módulo PQRS — Peticiones, Quejas, Reclamos, Sugerencias y Felicitaciones
- * Base legal: Res. 13437/1991 · Res. 3100/2019 Est. 5
+ * Base legal: Res. 13437/1991 · Res. 1732/2026 Est. 5 (reemplaza Res. 3100/2019)
  */
 
 import { useState, useCallback } from 'react';
@@ -11,10 +11,10 @@ import { useAuth } from '@/lib/auth';
 import { usePQRS } from '@/lib/usePQRS';
 import { sendWorkerEmail } from '@/lib/worker';
 import {
-  PQRS_TIPOS, PQRS_ESTADOS, PQRS_AREAS,
-  TIPO_COLOR, ESTADO_COLOR,
+  PQRS_TIPOS, PQRS_ESTADOS, PQRS_AREAS, PQRS_PRIORIDADES, PQRS_SLA,
+  TIPO_COLOR, ESTADO_COLOR, PRIORIDAD_COLOR, calcularVencimientoPQRS,
 } from '@/lib/pqrsTypes';
-import type { PQRSTipo, PQRSEstado, PQRSItem } from '@/lib/pqrsTypes';
+import type { PQRSTipo, PQRSEstado, PQRSPrioridad, PQRSItem } from '@/lib/pqrsTypes';
 import type { NuevaPQRS } from '@/lib/usePQRS';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
@@ -108,10 +108,11 @@ function NuevaPQRSModal({
   onClose: () => void;
   saving:  boolean;
 }) {
-  const [tipo,   setTipo]   = useState<PQRSTipo>('Petición');
-  const [nombre, setNombre] = useState('');
-  const [desc,   setDesc]   = useState('');
-  const [area,   setArea]   = useState('');
+  const [tipo,      setTipo]      = useState<PQRSTipo>('Petición');
+  const [nombre,    setNombre]    = useState('');
+  const [desc,      setDesc]      = useState('');
+  const [area,      setArea]      = useState('');
+  const [prioridad, setPrioridad] = useState<PQRSPrioridad>('General');
 
   const INPUT = `w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
                  focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white`;
@@ -119,7 +120,7 @@ function NuevaPQRSModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nombre.trim() || !desc.trim()) return;
-    await onSave({ tipo, nombre: nombre.trim(), desc: desc.trim(), area });
+    await onSave({ tipo, nombre: nombre.trim(), desc: desc.trim(), area, prioridad });
     onClose();
   }
 
@@ -163,6 +164,36 @@ function NuevaPQRSModal({
                 );
               })}
             </div>
+          </div>
+
+          {/* Prioridad / SLA */}
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
+              Prioridad (define el plazo de respuesta)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {PQRS_PRIORIDADES.map(p => {
+                const c = PRIORIDAD_COLOR[p];
+                const sla = PQRS_SLA[p];
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPrioridad(p)}
+                    title={sla.descripcion}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all
+                      ${prioridad === p
+                        ? `${c.bg} ${c.text} border-current`
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                  >
+                    {p} · {sla.horas ? `${sla.horas}h` : `${sla.diasHabiles}d hábiles`}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">
+              Plazos según Circular Externa 2023151000000010-5 de 2023 (SuperSalud).
+            </p>
           </div>
 
           {/* Nombre */}
@@ -245,13 +276,36 @@ function PQRSCard({
   const ec = ESTADO_COLOR[item.estado];
   const contacto = [item.email, item.telefono].filter(Boolean).join(' · ');
 
+  const prioridad = item.prioridad ?? 'General';
+  const pc = PRIORIDAD_COLOR[prioridad];
+  const vencimiento = calcularVencimientoPQRS(item.creadoEn, prioridad);
+  const vencida = item.estado !== 'Cerrada' && Date.now() > vencimiento;
+  const horasRestantes = Math.round((vencimiento - Date.now()) / (1000 * 60 * 60));
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 hover:shadow-sm transition-shadow">
       {/* Tipo pill */}
-      <div className="flex-shrink-0 pt-0.5">
+      <div className="flex-shrink-0 pt-0.5 flex flex-col gap-1 items-start">
         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${tc.bg} ${tc.text}`}>
           {item.tipo}
         </span>
+        <span
+          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${pc.bg} ${pc.text}`}
+          title={PQRS_SLA[prioridad].descripcion}
+        >
+          {prioridad}
+        </span>
+        {item.estado !== 'Cerrada' && (
+          vencida ? (
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white">
+              ⏱ Vencida
+            </span>
+          ) : (
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
+              ⏱ {horasRestantes < 48 ? `${horasRestantes}h restantes` : `${Math.round(horasRestantes / 24)}d restantes`}
+            </span>
+          )
+        )}
       </div>
 
       {/* Contenido */}
@@ -336,6 +390,9 @@ export default function PQRSPage() {
   const pendientes = items.filter(p => p.estado === 'Pendiente').length;
   const enProceso  = items.filter(p => p.estado === 'En Proceso').length;
   const cerradas   = items.filter(p => p.estado === 'Cerrada').length;
+  const vencidas   = items.filter(p =>
+    p.estado !== 'Cerrada' && Date.now() > calcularVencimientoPQRS(p.creadoEn, p.prioridad ?? 'General')
+  ).length;
 
   // Lista filtrada
   const filtradas = filtro === 'Todos'
@@ -409,16 +466,22 @@ export default function PQRSPage() {
   const exportarPDF = useCallback(() => {
     const w = window.open('', '_blank');
     if (!w) return;
-    const filas = items.map(p =>
-      `<tr>
+    const filas = items.map(p => {
+      const prioridad = p.prioridad ?? 'General';
+      const venceMs = calcularVencimientoPQRS(p.creadoEn, prioridad);
+      const vencida = p.estado !== 'Cerrada' && Date.now() > venceMs;
+      const venceTxt = new Date(venceMs).toLocaleDateString('es-CO', { dateStyle: 'medium' });
+      return `<tr>
         <td>${p.tipo}</td>
+        <td>${prioridad}</td>
         <td>${p.nombre}</td>
         <td>${p.desc}</td>
         <td>${p.area || '—'}</td>
         <td>${p.estado}</td>
         <td>${p.fecha}</td>
-      </tr>`
-    ).join('');
+        <td style="${vencida ? 'color:#b91c1c;font-weight:700;' : ''}">${venceTxt}${vencida ? ' (vencida)' : ''}</td>
+      </tr>`;
+    }).join('');
     w.document.write(`<!DOCTYPE html><html lang="es"><head>
 <meta charset="UTF-8">
 <title>Informe PQRS</title>
@@ -445,15 +508,21 @@ export default function PQRSPage() {
   <div class="kpi"><div class="kpi-v">${pendientes}</div><div class="kpi-l">Pendientes</div></div>
   <div class="kpi"><div class="kpi-v">${enProceso}</div><div class="kpi-l">En Proceso</div></div>
   <div class="kpi"><div class="kpi-v">${cerradas}</div><div class="kpi-l">Cerradas</div></div>
+  <div class="kpi"><div class="kpi-v">${vencidas}</div><div class="kpi-l">Vencidas (SLA)</div></div>
 </div>
 <table>
-  <thead><tr><th>Tipo</th><th>Solicitante</th><th>Descripción</th><th>Área</th><th>Estado</th><th>Fecha</th></tr></thead>
+  <thead><tr><th>Tipo</th><th>Prioridad</th><th>Solicitante</th><th>Descripción</th><th>Área</th><th>Estado</th><th>Fecha</th><th>Vence</th></tr></thead>
   <tbody>${filas}</tbody>
 </table>
+<p style="margin-top:16px;font-size:10px;color:#94a3b8;">
+  Plazos de respuesta según Circular Externa 2023151000000010-5 de 2023 (SuperSalud).
+  El plazo "General" (15 días hábiles) excluye fines de semana pero no festivos colombianos —
+  validar contra el calendario oficial si el caso está cerca del límite.
+</p>
 </body></html>`);
     w.document.close();
     setTimeout(() => w.print(), 400);
-  }, [items, total, pendientes, enProceso, cerradas]);
+  }, [items, total, pendientes, enProceso, cerradas, vencidas]);
 
   if (authLoading || loading) return <LoadingSpinner fullHeight />;
 
@@ -514,11 +583,12 @@ export default function PQRSPage() {
       />
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <KpiCard label="Total PQRS"   value={total}      colorClass="text-gray-800" />
         <KpiCard label="Pendientes"   value={pendientes} colorClass="text-amber-700"   borderColorClass="border-amber-200" />
         <KpiCard label="En Proceso"   value={enProceso}  colorClass="text-blue-700"    borderColorClass="border-blue-200" />
         <KpiCard label="Cerradas"     value={cerradas}   colorClass="text-emerald-700" borderColorClass="border-emerald-200" />
+        <KpiCard label="Vencidas (SLA)" value={vencidas} colorClass="text-red-700"     borderColorClass="border-red-200" />
       </div>
 
       {/* Filtros por estado */}
@@ -586,7 +656,13 @@ export default function PQRSPage() {
 
       {/* Nota legal */}
       <p className="text-xs text-gray-400 text-center">
-        Resolución 13437/1991 — Derechos del Paciente · Resolución 1732/2026 Est. 5 · NormaLis
+        Resolución 13437/1991 — Derechos del Paciente · Resolución 1732/2026 Est. 5 ·
+        Plazos SLA: Circular Externa 2023151000000010-5 de 2023 (SuperSalud) · NormaLis
+      </p>
+      <p className="text-[10px] text-gray-300 text-center -mt-4">
+        Vacío legal: no está confirmado si esta IPS tiene obligación de reportar estos casos
+        en los formatos mensuales GT005/GT006 de SuperSalud — validar con la Secretaría de Salud
+        o la propia SuperSalud según el tipo de prestador.
       </p>
     </div>
   );

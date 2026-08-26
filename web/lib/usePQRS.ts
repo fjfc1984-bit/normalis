@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logSecurityEvent } from '@/lib/securityLog';
-import type { PQRSItem, PQRSTipo, PQRSEstado } from '@/lib/pqrsTypes';
+import type { PQRSItem, PQRSTipo, PQRSEstado, PQRSPrioridad } from '@/lib/pqrsTypes';
 
 // ── Estado del hook ───────────────────────────────────────────────────────────
 export interface UsePQRSState {
@@ -24,12 +24,13 @@ export interface UsePQRSState {
 
 // ── Payload para crear una nueva PQRS ─────────────────────────────────────────
 export interface NuevaPQRS {
-  tipo:      PQRSTipo;
-  nombre:    string;
-  desc:      string;
-  area:      string;
-  email?:    string;
-  telefono?: string;
+  tipo:       PQRSTipo;
+  nombre:     string;
+  desc:       string;
+  area:       string;
+  prioridad?: PQRSPrioridad;  // por defecto 'General' si no se especifica
+  email?:     string;
+  telefono?:  string;
 }
 
 // ── Hook principal ────────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export function usePQRS(uid: string | null) {
             desc:           raw.desc     ?? '',
             area:           raw.area     ?? '',
             estado:         raw.estado   as PQRSEstado,
+            prioridad:      (raw.prioridad as PQRSPrioridad) ?? 'General',
             fecha:          raw.fecha    ?? '',
             creadoEn:       raw.creadoEn ?? 0,
             email:          raw.email          || undefined,
@@ -75,10 +77,11 @@ export function usePQRS(uid: string | null) {
     const ahora = Date.now();
     const nueva: Omit<PQRSItem, 'id'> = {
       ...payload,
-      estado:   'Pendiente',
-      fecha:    new Date().toLocaleDateString('es-CO'),
-      creadoEn: ahora,
-      origen:   'interno',
+      prioridad: payload.prioridad ?? 'General',
+      estado:    'Pendiente',
+      fecha:     new Date().toLocaleDateString('es-CO'),
+      creadoEn:  ahora,
+      origen:    'interno',
     };
     const col = collection(db, 'usuarios', uid, 'pqrs');
     const ref = await addDoc(col, {

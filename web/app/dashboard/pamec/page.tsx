@@ -36,6 +36,7 @@ function FaseStepper({ current, onChange }: { current: PamecFase; onChange: (f: 
           <button
             key={f.id}
             onClick={() => onChange(f.id)}
+            title={`Ciclo PHVA: ${f.phva}`}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border
               ${isCurrent ? 'bg-primary-600 text-white border-primary-600' :
                 isDone    ? 'bg-green-50 text-green-700 border-green-200' :
@@ -43,6 +44,9 @@ function FaseStepper({ current, onChange }: { current: PamecFase; onChange: (f: 
           >
             <span className="text-base">{isDone ? '✓' : i + 1}</span>
             {f.label}
+            <span className={`text-[10px] font-normal opacity-70 ${isCurrent ? 'text-white' : 'text-gray-400'}`}>
+              ({f.phva})
+            </span>
           </button>
         );
       })}
@@ -96,7 +100,14 @@ function PAMECContent() {
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">PAMEC</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Programa de Auditoría para el Mejoramiento de la Calidad · Res. 1446/2006 · Res. 256/2016
+          Programa de Auditoría para el Mejoramiento de la Calidad ·
+          Decreto 1011/2006 Art. 34 · Res. 1446/2006 · Res. 256/2016
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Las 4 fases siguen el ciclo PHVA (Planear-Hacer-Verificar-Actuar). Para el detalle
+          completo de la metodología oficial (equipo de mejora, medición inicial, ejecución),
+          consulta la guía técnica del Ministerio de Salud — esta herramienta cubre el flujo
+          operativo mínimo, no reemplaza la guía completa.
         </p>
       </div>
 
