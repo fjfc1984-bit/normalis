@@ -354,8 +354,9 @@ export default function IAASPage() {
       await addCaso(payload, user.uid, nit ?? '');
       show('Caso registrado.', 'success');
       setShowCasoModal(false);
-    } catch {
-      show('Error al guardar el caso.', 'error');
+    } catch (e) {
+      console.error('[iaas] Error al guardar caso:', e);
+      show(`Error al guardar el caso${e instanceof Error ? `: ${e.message}` : ''}.`, 'error');
     } finally {
       setSaving(false);
     }
@@ -368,8 +369,9 @@ export default function IAASPage() {
       await addDenominador(payload, user.uid, nit ?? '');
       show('Consolidado registrado.', 'success');
       setShowDenomModal(false);
-    } catch {
-      show('Error al guardar el consolidado.', 'error');
+    } catch (e) {
+      console.error('[iaas] Error al guardar consolidado:', e);
+      show(`Error al guardar el consolidado${e instanceof Error ? `: ${e.message}` : ''}.`, 'error');
     } finally {
       setSaving(false);
     }

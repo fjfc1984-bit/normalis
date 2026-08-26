@@ -55,6 +55,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/vencimientos',    label: 'Vencimientos',  icon: '📅' },
       { href: '/dashboard/equipos-biomedicos', label: 'Equipos Biomédicos', icon: '🩺' },
       { href: '/dashboard/vigilancia-sanitaria', label: 'Vigilancia Sanitaria', icon: '⚠️', badge: 'NUEVO' },
+      { href: '/dashboard/iaas', label: 'Vigilancia IAAS', icon: '🦠', badge: 'NUEVO' },
       { href: '/dashboard/sg-sst',          label: 'SG-SST',         icon: '🦺' },
       { href: '/dashboard/simulacros',      label: 'Simulacro',      icon: '🔔' },
       { href: '/dashboard/documentos',      label: 'Documentos',     icon: '📄' },

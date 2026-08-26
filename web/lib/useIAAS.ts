@@ -34,6 +34,16 @@ export interface NuevoIAASDenominador {
   notificacionNegativa: boolean;
 }
 
+// El SDK de Firestore rechaza (throw síncrono, sin red) cualquier campo con
+// valor `undefined` explícito en addDoc/setDoc — a diferencia de una llave
+// simplemente ausente, que sí es válida. Los campos opcionales de los
+// formularios (pacienteReferencia, observaciones) llegan como `undefined`
+// cuando el usuario los deja vacíos, así que se filtran aquí antes de
+// escribir, en vez de confiar en que cada caller los omita correctamente.
+function sinUndefined<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
+}
+
 // ── Hook genérico de colección (evita duplicar la suscripción 2 veces) ────
 function useIAASColeccion<T extends { id: string; creadoEn: number }>(
   coleccion: string, uid: string | null, nit: string | null,
@@ -105,7 +115,7 @@ export function useIAAS(uid: string | null, nit: string | null) {
 
   async function addCaso(payload: NuevoIAASCaso, uidArg: string, nitArg: string): Promise<void> {
     await addDoc(collection(fbDb, 'iaas_casos'), {
-      ...payload,
+      ...sinUndefined(payload),
       uid: uidArg,
       nit: nitArg ?? '',
       estadoNotificacion: 'pendiente' as IAASEstadoNotificacion,
@@ -126,7 +136,7 @@ export function useIAAS(uid: string | null, nit: string | null) {
 
   async function addDenominador(payload: NuevoIAASDenominador, uidArg: string, nitArg: string): Promise<void> {
     await addDoc(collection(fbDb, 'iaas_denominadores'), {
-      ...payload,
+      ...sinUndefined(payload),
       uid: uidArg,
       nit: nitArg ?? '',
       estadoNotificacion: 'pendiente' as IAASEstadoNotificacion,
