@@ -4,21 +4,28 @@
  * web/app/dashboard/capas/page.tsx
  * Módulo CAPAs — Plan de Mejoramiento / Acciones Correctivas y Preventivas
  * Base legal: Dec. 1011/2006 Art. 34 · Res. 256/2016 · Ciclo PAMEC
+ *
+ * Ciclo de estados: abierta → en_progreso → implementada → cerrada.
+ * Una CAPA nunca cierra directo desde "en progreso": primero se marca
+ * implementada (evidencia + plazo de verificación) y solo se cierra tras
+ * confirmar, con evidencia posterior, que el hallazgo no reincidió.
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useCapas } from '@/lib/useCapas';
-import type { Capa, CapaEstado } from '@/lib/capaTypes';
+import type { Capa, CapaEstado, CapaVeredicto } from '@/lib/capaTypes';
 import { CAPA_ESTADO_CFG, CAPA_ORIGEN_LABELS } from '@/lib/capaTypes';
 import {
-  KpiCard, Toast, useToast, ConfirmModal, EmptyState,
+  KpiCard, Toast, useToast, EmptyState,
   SectionHeader, LoadingSpinner,
 } from '@/components/ui';
+import { ImplementarModal } from './ImplementarModal';
+import { VerificarEficaciaModal } from './VerificarEficaciaModal';
 
 // ── Helpers de fecha ─────────────────────────────────────
-function fmtDate(iso: string | undefined): string {
+function fmtDate(iso: string | undefined | null): string {
   if (!iso) return '—';
   return new Date(iso + 'T00:00:00').toLocaleDateString('es-CO', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -32,13 +39,19 @@ function fmtTimestamp(ts: { seconds: number } | null | undefined): string {
   });
 }
 
+// Fecha de referencia mostrada en la fila: límite original mientras está
+// abierta/en progreso, fecha de verificación mientras está implementada.
+function fechaRefCapa(capa: Capa): string | undefined {
+  return capa.estado === 'implementada' ? (capa.fechaVerificacion ?? undefined) : capa.fechaLimite;
+}
+
 // ── Badge de estado ──────────────────────────────────────
 function EstadoBadge({ capa }: { capa: Capa }) {
   if (capa._vencida) {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold
                        bg-red-100 text-red-700">
-        ⚠ Vencida
+        ⚠ {capa.estado === 'implementada' ? 'Verificación vencida' : 'Vencida'}
       </span>
     );
   }
@@ -55,8 +68,13 @@ function EstadoBadge({ capa }: { capa: Capa }) {
 function DiasChip({ capa }: { capa: Capa }) {
   const d = capa._diasRestantes;
   if (d === null || d === undefined || capa.estado === 'cerrada') return null;
-  const urgent = d < 0 || d <= 3;
-  const label  = d < 0 ? `Venció hace ${Math.abs(d)}d` : d === 0 ? 'Vence hoy' : `${d}d restantes`;
+  const esVerif  = capa.estado === 'implementada';
+  const urgent   = d < 0 || d <= 3;
+  const label    = d < 0
+    ? `${esVerif ? 'Verificación vencida hace' : 'Venció hace'} ${Math.abs(d)}d`
+    : d === 0
+      ? (esVerif ? 'Verificar hoy' : 'Vence hoy')
+      : `${d}d ${esVerif ? 'para verificar' : 'restantes'}`;
   return (
     <span className={`text-xs font-semibold ${urgent ? 'text-red-500' : 'text-amber-600'}`}>
       {d < 0 ? '⚠' : d <= 3 ? '🔴' : '⏱'} {label}
@@ -68,13 +86,16 @@ function DiasChip({ capa }: { capa: Capa }) {
 function CapaRow({
   capa,
   onIniciar,
-  onCerrar,
+  onImplementar,
+  onVerificar,
 }: {
   capa: Capa;
   onIniciar: (id: string) => void;
-  onCerrar: (id: string) => void;
+  onImplementar: (id: string) => void;
+  onVerificar: (id: string) => void;
 }) {
   const origenLabel = CAPA_ORIGEN_LABELS[capa.origen] ?? capa.origen;
+  const esVerif = capa.estado === 'implementada';
 
   return (
     <div className={`bg-white rounded-xl border p-4 transition-shadow hover:shadow-md
@@ -91,6 +112,11 @@ function CapaRow({
                 {origenLabel}
               </span>
             )}
+            {!!capa.reincidencias && (
+              <span className="text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+                ⚠ {capa.reincidencias} reincidencia{capa.reincidencias > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
 
           <p className="text-sm font-bold text-gray-800 mb-1 line-clamp-2">
@@ -105,7 +131,7 @@ function CapaRow({
           <div className="flex flex-wrap gap-3 text-xs text-gray-400">
             {capa.responsable && <span>👤 {capa.responsable}</span>}
             {capa.area         && <span>📍 {capa.area}</span>}
-            <span>📅 Límite: {fmtDate(capa.fechaLimite)}</span>
+            <span>{esVerif ? '🔍 Verificar' : '📅 Límite'}: {fmtDate(fechaRefCapa(capa))}</span>
             <DiasChip capa={capa} />
             <span>Creada: {fmtTimestamp(capa.fechaCreacion as { seconds: number } | null)}</span>
           </div>
@@ -133,12 +159,22 @@ function CapaRow({
           )}
           {capa.estado === 'en_progreso' && (
             <button
-              onClick={() => onCerrar(capa.id)}
-              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700
-                         border border-emerald-200 rounded-lg text-xs font-semibold
+              onClick={() => onImplementar(capa.id)}
+              className="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700
+                         border border-violet-200 rounded-lg text-xs font-semibold
                          transition-colors whitespace-nowrap"
             >
-              ✅ Cerrar
+              ✔️ Marcar Implementada
+            </button>
+          )}
+          {capa.estado === 'implementada' && (
+            <button
+              onClick={() => onVerificar(capa.id)}
+              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700
+                         border border-blue-200 rounded-lg text-xs font-semibold
+                         transition-colors whitespace-nowrap"
+            >
+              🔍 Verificar Eficacia
             </button>
           )}
           {capa.estado === 'cerrada' && (
@@ -153,7 +189,25 @@ function CapaRow({
         </div>
       </div>
 
-      {capa.estado === 'cerrada' && capa.evidencia && (
+      {capa.evidenciaImplementacion && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500">
+            <span className="font-semibold text-violet-700">Evidencia de implementación:</span>{' '}
+            {capa.evidenciaImplementacion}
+          </p>
+        </div>
+      )}
+      {capa.veredictoVerificacion && (
+        <div className={`mt-2 pt-2 ${capa.evidenciaImplementacion ? '' : 'border-t border-gray-100'}`}>
+          <p className="text-xs text-gray-500">
+            <span className={`font-semibold ${capa.veredictoVerificacion === 'eficaz' ? 'text-emerald-700' : 'text-amber-700'}`}>
+              Última verificación ({capa.veredictoVerificacion === 'eficaz' ? '✅ eficaz' : '🔁 reincidencia'}):
+            </span>{' '}
+            {capa.evidenciaVerificacion}
+          </p>
+        </div>
+      )}
+      {!capa.evidenciaImplementacion && capa.estado === 'cerrada' && capa.evidencia && (
         <div className="mt-3 pt-3 border-t border-gray-100">
           <p className="text-xs text-gray-500">
             <span className="font-semibold text-emerald-700">Evidencia de cierre:</span>{' '}
@@ -168,27 +222,30 @@ function CapaRow({
 // ════════════════════════════════════════════════
 //  Página principal
 // ════════════════════════════════════════════════
-type FiltroEstado = 'todas' | 'abierta' | 'en_progreso' | 'cerrada' | 'vencidas';
+type FiltroEstado = 'todas' | 'abierta' | 'en_progreso' | 'implementada' | 'cerrada' | 'vencidas';
 
 const FILTROS: { value: FiltroEstado; label: string }[] = [
-  { value: 'todas',       label: 'Todas'       },
-  { value: 'abierta',     label: 'Abiertas'    },
-  { value: 'en_progreso', label: 'En Progreso' },
-  { value: 'cerrada',     label: 'Cerradas'    },
-  { value: 'vencidas',    label: 'Vencidas'    },
+  { value: 'todas',        label: 'Todas'        },
+  { value: 'abierta',      label: 'Abiertas'     },
+  { value: 'en_progreso',  label: 'En Progreso'  },
+  { value: 'implementada', label: 'Por Verificar' },
+  { value: 'cerrada',      label: 'Cerradas'     },
+  { value: 'vencidas',     label: 'Vencidas'     },
 ];
 
 export default function CapasPage() {
   const { user, nit, loading: authLoading } = useAuth();
-  const { capas, loading, error, stats, iniciarCapa, cerrarCapa } = useCapas(
+  const { capas, loading, error, stats, iniciarCapa, implementarCapa, verificarEficacia } = useCapas(
     user?.uid ?? null,
     nit || null,
   );
 
-  const [filtro,        setFiltro]        = useState<FiltroEstado>('todas');
-  const [busqueda,      setBusqueda]      = useState('');
-  const [cierreId,      setCierreId]      = useState<string | null>(null);
-  const [cierreLoading, setCierreLoading] = useState(false);
+  const [filtro,            setFiltro]            = useState<FiltroEstado>('todas');
+  const [busqueda,          setBusqueda]          = useState('');
+  const [implementarId,     setImplementarId]     = useState<string | null>(null);
+  const [implementarLoading, setImplementarLoading] = useState(false);
+  const [verificarId,       setVerificarId]       = useState<string | null>(null);
+  const [verificarLoading,  setVerificarLoading]  = useState(false);
   const { toast, show: showToast } = useToast();
 
   // Filtrar lista
@@ -208,6 +265,11 @@ export default function CapasPage() {
     return lista;
   }, [capas, filtro, busqueda]);
 
+  const capaEnVerificacion = useMemo(
+    () => capas.find(c => c.id === verificarId) ?? null,
+    [capas, verificarId],
+  );
+
   async function handleIniciar(id: string) {
     try {
       await iniciarCapa(id);
@@ -217,26 +279,49 @@ export default function CapasPage() {
     }
   }
 
-  const handleCerrar = useCallback(async (evidencia?: string) => {
-    if (!cierreId || !evidencia) return;
-    setCierreLoading(true);
+  const handleImplementar = useCallback(async (evidencia: string, dias: number) => {
+    if (!implementarId) return;
+    setImplementarLoading(true);
     try {
-      await cerrarCapa(cierreId, evidencia);
-      showToast('CAPA cerrada exitosamente.');
-      setCierreId(null);
+      await implementarCapa(implementarId, evidencia, dias);
+      showToast('Acción marcada como implementada. Se recordará verificar su eficacia.');
+      setImplementarId(null);
     } catch {
-      showToast('Error al cerrar la CAPA.', 'error');
+      showToast('Error al marcar la CAPA como implementada.', 'error');
     } finally {
-      setCierreLoading(false);
+      setImplementarLoading(false);
     }
-  }, [cierreId, cerrarCapa, showToast]);
+  }, [implementarId, implementarCapa, showToast]);
+
+  const handleVerificar = useCallback(async (evidencia: string, veredicto: CapaVeredicto) => {
+    if (!verificarId) return;
+    setVerificarLoading(true);
+    try {
+      await verificarEficacia(verificarId, evidencia, veredicto);
+      showToast(
+        veredicto === 'eficaz'
+          ? 'CAPA cerrada — eficacia verificada con evidencia posterior.'
+          : 'Reincidencia registrada: la causa raíz no fue eliminada. La CAPA se reabrió.',
+        veredicto === 'eficaz' ? 'success' : 'error',
+      );
+      setVerificarId(null);
+    } catch {
+      showToast('Error al registrar la verificación.', 'error');
+    } finally {
+      setVerificarLoading(false);
+    }
+  }, [verificarId, verificarEficacia, showToast]);
 
   function exportarPDF() {
     const fecha = new Date().toLocaleDateString('es-CO', {
       day: '2-digit', month: 'long', year: 'numeric',
     });
+    const ESTADO_LABEL: Record<string, string> = {
+      abierta: 'ABIERTA', en_progreso: 'EN PROGRESO', implementada: 'POR VERIFICAR', cerrada: 'CERRADA',
+    };
     const filas = capas.map(c => {
-      const estado = c._vencida ? 'VENCIDA' : (c.estado ?? 'abierta').toUpperCase().replace('_', ' ');
+      const estado = c._vencida ? 'VENCIDA' : (ESTADO_LABEL[c.estado] ?? (c.estado ?? 'abierta').toUpperCase().replace('_', ' '));
+      const reinc  = c.reincidencias ? ` (${c.reincidencias} reincidencia${c.reincidencias > 1 ? 's' : ''})` : '';
       const color  = estado === 'CERRADA' ? '#10b981' : estado.includes('VENC') ? '#ef4444' : '#f59e0b';
       return `<tr>
         <td>${c.numero ?? ''}</td>
@@ -244,7 +329,7 @@ export default function CapasPage() {
         <td>${c.accionCorrectiva ?? '—'}</td>
         <td>${c.responsable ?? '—'}</td>
         <td>${c.fechaLimite ?? '—'}</td>
-        <td style="color:${color};font-weight:700">${estado}</td>
+        <td style="color:${color};font-weight:700">${estado}${reinc}</td>
       </tr>`;
     }).join('');
 
@@ -310,11 +395,12 @@ export default function CapasPage() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        <KpiCard label="Total"       value={stats.total}      colorClass="text-gray-800" />
-        <KpiCard label="Abiertas"    value={stats.abiertas}   colorClass="text-amber-600" />
-        <KpiCard label="En Progreso" value={stats.enProgreso} colorClass="text-blue-600" />
-        <KpiCard label="Cerradas"    value={stats.cerradas}   colorClass="text-emerald-600" />
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 mb-6">
+        <KpiCard label="Total"        value={stats.total}        colorClass="text-gray-800" />
+        <KpiCard label="Abiertas"     value={stats.abiertas}     colorClass="text-amber-600" />
+        <KpiCard label="En Progreso"  value={stats.enProgreso}   colorClass="text-blue-600" />
+        <KpiCard label="Por Verificar" value={stats.porVerificar} colorClass="text-violet-600" />
+        <KpiCard label="Cerradas"     value={stats.cerradas}     colorClass="text-emerald-600" />
         <KpiCard
           label="Vencidas"
           value={stats.vencidas}
@@ -383,7 +469,8 @@ export default function CapasPage() {
               key={capa.id}
               capa={capa}
               onIniciar={handleIniciar}
-              onCerrar={id => setCierreId(id)}
+              onImplementar={id => setImplementarId(id)}
+              onVerificar={id => setVerificarId(id)}
             />
           ))}
         </div>
@@ -395,18 +482,20 @@ export default function CapasPage() {
         </p>
       )}
 
-      {cierreId && (
-        <ConfirmModal
-          title="Cerrar CAPA"
-          description="Describe la evidencia que demuestra que la acción correctiva fue implementada."
-          textareaLabel="Evidencia de cierre"
-          textareaPlaceholder="Ej. Se capacitó al personal el 15/07/2026, se adjunta acta de asistencia…"
-          textareaRequired
-          confirmLabel="✅ Confirmar cierre"
-          confirmVariant="success"
-          loading={cierreLoading}
-          onConfirm={handleCerrar}
-          onCancel={() => setCierreId(null)}
+      {implementarId && (
+        <ImplementarModal
+          loading={implementarLoading}
+          onConfirm={handleImplementar}
+          onCancel={() => setImplementarId(null)}
+        />
+      )}
+
+      {verificarId && (
+        <VerificarEficaciaModal
+          descripcion={capaEnVerificacion?.descripcion ?? ''}
+          loading={verificarLoading}
+          onConfirm={handleVerificar}
+          onCancel={() => setVerificarId(null)}
         />
       )}
     </div>

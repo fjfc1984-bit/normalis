@@ -18,7 +18,7 @@ import type { Capa, CapaFormData } from '@/lib/capaTypes';
 import { CAPA_ESTADO_CFG, CAPA_ORIGEN_LABELS } from '@/lib/capaTypes';
 
 // Helpers
-function fmtDate(iso: string | undefined): string {
+function fmtDate(iso: string | undefined | null): string {
   if (!iso) return '—';
   return new Date(iso + 'T00:00:00').toLocaleDateString('es-CO', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -52,6 +52,11 @@ function CapaReadOnly({ capa }: { capa: Capa }) {
             {origenLabel}
           </span>
         )}
+        {!!capa.reincidencias && (
+          <span className="text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+            ⚠ {capa.reincidencias} reincidencia{capa.reincidencias > 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       {/* Campos */}
@@ -74,6 +79,7 @@ function CapaReadOnly({ capa }: { capa: Capa }) {
           { label: 'Fecha Límite', value: fmtDate(capa.fechaLimite) },
           { label: 'Creada',       value: fmtTimestamp(capa.fechaCreacion as { seconds: number } | null) },
           { label: 'Iniciada',     value: fmtTimestamp(capa.fechaInicio   as { seconds: number } | null) },
+          { label: 'Implementada', value: fmtTimestamp(capa.fechaImplementacion as { seconds: number } | null) },
           { label: 'Cerrada',      value: fmtTimestamp(capa.fechaCierre   as { seconds: number } | null) },
         ].map(({ label, value }) => (
           <div key={label} className="bg-gray-50 rounded-lg p-3">
@@ -83,8 +89,52 @@ function CapaReadOnly({ capa }: { capa: Capa }) {
         ))}
       </div>
 
-      {/* Evidencia */}
-      {capa.evidencia && (
+      {/* Evidencia de implementación */}
+      {capa.evidenciaImplementacion && (
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4">
+          <p className="text-xs font-bold text-violet-700 uppercase tracking-wide mb-1">
+            Evidencia de Implementación
+          </p>
+          <p className="text-sm text-violet-800 whitespace-pre-wrap">{capa.evidenciaImplementacion}</p>
+        </div>
+      )}
+
+      {/* Verificación de eficacia (ciclo completo: no se cierra sin esto) */}
+      {capa.veredictoVerificacion && (
+        <div className={`rounded-xl p-4 border ${capa.veredictoVerificacion === 'eficaz'
+          ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+          <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${capa.veredictoVerificacion === 'eficaz' ? 'text-emerald-700' : 'text-amber-700'}`}>
+            Verificación de Eficacia ({capa.veredictoVerificacion === 'eficaz' ? '✅ Eficaz' : '🔁 Reincidencia'})
+          </p>
+          <p className={`text-sm whitespace-pre-wrap ${capa.veredictoVerificacion === 'eficaz' ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {capa.evidenciaVerificacion}
+          </p>
+        </div>
+      )}
+
+      {/* Historial completo de verificaciones (si hubo más de una, ej. reincidencias previas) */}
+      {capa.historialVerificaciones && capa.historialVerificaciones.length > 1 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+            Historial de Verificaciones
+          </p>
+          <ul className="space-y-2">
+            {capa.historialVerificaciones.map((h, i) => (
+              <li key={i} className="text-xs text-gray-600 border-l-2 border-gray-200 pl-3">
+                <span className="font-semibold">
+                  {new Date(h.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {' — '}
+                  {h.veredicto === 'eficaz' ? '✅ Eficaz' : '🔁 Reincidencia'}:
+                </span>{' '}
+                {h.evidencia}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Evidencia legado (CAPAs cerradas antes del ciclo de verificación) */}
+      {!capa.evidenciaImplementacion && !capa.veredictoVerificacion && capa.evidencia && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">
             Evidencia de Cierre

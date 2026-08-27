@@ -3,25 +3,41 @@
 // web/lib/useCapas.ts
 // Hook React para CRUD de CAPAs vía Firestore en tiempo real.
 // Soporta dual-write uid+nit para compatibilidad multi-usuario.
+//
+// Ciclo de estados: abierta → en_progreso → implementada → cerrada
+// (o de vuelta a en_progreso si la verificación de eficacia encuentra
+// reincidencia). Nunca se permite pasar de en_progreso a cerrada sin
+// pasar por el paso de verificación con evidencia posterior.
 
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, orderBy, onSnapshot,
   addDoc, updateDoc, doc, serverTimestamp, getCountFromServer,
+  increment, arrayUnion,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb } from '@/lib/firebase';
-import type { Capa, CapaFormData, CapaEstado } from './capaTypes';
+import type { Capa, CapaFormData, CapaEstado, CapaVeredicto } from './capaTypes';
 
 // ── Helpers ─────────────────────────────────────────────────
+// Fecha de referencia para plazos: mientras está "implementada" se
+// vigila la fecha de verificación de eficacia; en cualquier otro estado
+// abierto se vigila la fecha límite original.
+function fechaRef(c: Omit<Capa, '_vencida' | '_diasRestantes'>): string | undefined {
+  return c.estado === 'implementada' ? (c.fechaVerificacion ?? undefined) : c.fechaLimite;
+}
+
 function computeVencida(c: Omit<Capa, '_vencida' | '_diasRestantes'>): boolean {
-  if (c.estado === 'cerrada' || !c.fechaLimite) return false;
-  return new Date(c.fechaLimite) < new Date();
+  if (c.estado === 'cerrada') return false;
+  const ref = fechaRef(c);
+  return !!ref && new Date(ref) < new Date();
 }
 
 function computeDiasRestantes(c: Omit<Capa, '_vencida' | '_diasRestantes'>): number | null {
-  if (c.estado === 'cerrada' || !c.fechaLimite) return null;
-  return Math.ceil((new Date(c.fechaLimite).getTime() - Date.now()) / 86_400_000);
+  if (c.estado === 'cerrada') return null;
+  const ref = fechaRef(c);
+  if (!ref) return null;
+  return Math.ceil((new Date(ref).getTime() - Date.now()) / 86_400_000);
 }
 
 function addComputedFields(raw: Omit<Capa, '_vencida' | '_diasRestantes'>): Capa {
@@ -41,13 +57,15 @@ export interface UseCapasResult {
   createCapa: (data: CapaFormData, uid: string, nit: string) => Promise<string>;
   updateCapa: (id: string, data: Partial<CapaFormData>) => Promise<void>;
   iniciarCapa: (id: string) => Promise<void>;
-  cerrarCapa: (id: string, evidencia: string) => Promise<void>;
+  implementarCapa: (id: string, evidencia: string, diasVerificacion: number) => Promise<void>;
+  verificarEficacia: (id: string, evidencia: string, veredicto: CapaVeredicto) => Promise<void>;
 }
 
 export interface CapaStats {
   total: number;
   abiertas: number;
   enProgreso: number;
+  porVerificar: number;
   cerradas: number;
   vencidas: number;
 }
@@ -123,11 +141,12 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
 
   // Calcular stats derivadas
   const stats: CapaStats = {
-    total:     capas.length,
-    abiertas:  capas.filter(c => c.estado === 'abierta').length,
-    enProgreso: capas.filter(c => c.estado === 'en_progreso').length,
-    cerradas:  capas.filter(c => c.estado === 'cerrada').length,
-    vencidas:  capas.filter(c => c._vencida).length,
+    total:        capas.length,
+    abiertas:     capas.filter(c => c.estado === 'abierta').length,
+    enProgreso:   capas.filter(c => c.estado === 'en_progreso').length,
+    porVerificar: capas.filter(c => c.estado === 'implementada').length,
+    cerradas:     capas.filter(c => c.estado === 'cerrada').length,
+    vencidas:     capas.filter(c => c._vencida).length,
   };
 
   // ── Crear CAPA ──────────────────────────────────────────
@@ -188,15 +207,62 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
     });
   }, []);
 
-  // ── Cerrar CAPA ─────────────────────────────────────────
-  const cerrarCapa = useCallback(async (id: string, evidencia: string): Promise<void> => {
+  // ── Marcar como implementada (pendiente de verificar eficacia) ──
+  const implementarCapa = useCallback(async (
+    id: string,
+    evidencia: string,
+    diasVerificacion: number,
+  ): Promise<void> => {
+    const dias = Math.max(1, diasVerificacion || 30);
+    const fecha = new Date();
+    fecha.setDate(fecha.getDate() + dias);
+    const fechaVerificacion = fecha.toISOString().split('T')[0];
+
     await updateDoc(doc(fbDb, 'capas', id), {
-      estado: 'cerrada' as CapaEstado,
-      evidencia: evidencia.trim(),
-      fechaCierre: serverTimestamp(),
+      estado: 'implementada' as CapaEstado,
+      evidenciaImplementacion: evidencia.trim(),
+      fechaImplementacion: serverTimestamp(),
+      fechaVerificacion,
       fechaActualizacion: serverTimestamp(),
     });
   }, []);
 
-  return { capas, loading, error, stats, createCapa, updateCapa, iniciarCapa, cerrarCapa };
+  // ── Verificar eficacia (cierra si eficaz, reabre si reincide) ──
+  const verificarEficacia = useCallback(async (
+    id: string,
+    evidencia: string,
+    veredicto: CapaVeredicto,
+  ): Promise<void> => {
+    const entradaHistorial = {
+      fecha: new Date().toISOString(),
+      veredicto,
+      evidencia: evidencia.trim(),
+    };
+
+    if (veredicto === 'eficaz') {
+      await updateDoc(doc(fbDb, 'capas', id), {
+        estado: 'cerrada' as CapaEstado,
+        evidenciaVerificacion: evidencia.trim(),
+        veredictoVerificacion: 'eficaz' as CapaVeredicto,
+        fechaCierre: serverTimestamp(),
+        fechaActualizacion: serverTimestamp(),
+        historialVerificaciones: arrayUnion(entradaHistorial),
+      });
+    } else {
+      await updateDoc(doc(fbDb, 'capas', id), {
+        estado: 'en_progreso' as CapaEstado,
+        evidenciaVerificacion: evidencia.trim(),
+        veredictoVerificacion: 'reincidencia' as CapaVeredicto,
+        fechaVerificacion: null,
+        reincidencias: increment(1),
+        fechaActualizacion: serverTimestamp(),
+        historialVerificaciones: arrayUnion(entradaHistorial),
+      });
+    }
+  }, []);
+
+  return {
+    capas, loading, error, stats,
+    createCapa, updateCapa, iniciarCapa, implementarCapa, verificarEficacia,
+  };
 }
