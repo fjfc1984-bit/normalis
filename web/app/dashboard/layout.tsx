@@ -85,6 +85,7 @@ const NAV_GROUPS: Array<{
   {
     label: 'Cuenta',
     items: [
+      { href: '/dashboard/equipo',  label: 'Equipo IPS', icon: '🧑‍🤝‍🧑', badge: 'NUEVO' },
       { href: '/dashboard/ajustes', label: 'Ajustes', icon: '⚙️' },
     ],
   },
