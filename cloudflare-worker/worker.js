@@ -1348,6 +1348,36 @@ function tplBienvenidaPiloto({ ips_nombre, to_name, email_acceso, password_tempo
   </div></body></html>`;
 }
 
+function tplInvitacionEquipo({ ips_nombre, director_nombre, invite_link }) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+  .header{background:#00544B;padding:32px 40px;text-align:center}
+  .header h1{color:#fff;margin:0;font-size:24px}
+  .body{padding:32px 40px;color:#1e293b;line-height:1.6}
+  .box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;font-size:14px}
+  .btn{display:inline-block;background:#00796B;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:16px}
+  .footer{background:#f8fafc;padding:16px 40px;font-size:12px;color:#94a3b8;text-align:center}
+  </style></head><body>
+  <div class="wrap">
+    <div class="header"><h1>🤝 Te invitaron a un equipo en NormaLis</h1></div>
+    <div class="body">
+      <p><strong>${director_nombre || 'Un compañero'}</strong> te invitó a acceder a los datos de
+      <strong>${ips_nombre || 'su IPS'}</strong> en NormaLis, el software de habilitación y auditoría.</p>
+      <div class="box">
+        Crea tu acceso con tu propio correo y contraseña — vas a ver la misma información
+        (auditorías, PQRS, indicadores y más) que el resto del equipo, sin compartir credenciales.
+      </div>
+      <a href="${invite_link}" class="btn">Aceptar invitación →</a>
+      <p style="margin-top:20px;font-size:12px;color:#94a3b8">
+        Este enlace vence en 7 días y solo puede usarse una vez, con este correo.
+        Si no esperabas esta invitación, puedes ignorar este mensaje.
+      </p>
+    </div>
+    <div class="footer">NormaLis — Cumplimiento normativo inteligente para IPS colombianas<br>© 2026 NormaLis. Todos los derechos reservados.</div>
+  </div></body></html>`;
+}
+
 function tplBienvenidaAprobado({ ips_nombre, nombre_contacto, login_url }) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0}
@@ -1539,15 +1569,15 @@ async function handleEmail(request, env, cors) {
   catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
 
   const { type, data } = body || {};
-  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin', 'pqrs_respuesta'];
+  const VALID_TYPES = ['bienvenida_piloto', 'bienvenida_aprobado', 'lead_admin', 'lead_autoreply', 'nueva_solicitud_admin', 'pqrs_respuesta', 'invitacion_equipo'];
   if (!VALID_TYPES.includes(type)) {
     return new Response(JSON.stringify({ error: 'Tipo de email inválido' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 
-  // Emails de admin → requieren Firebase ID token válido
-  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'pqrs_respuesta') {
+  // Emails de admin / de un usuario autenticado → requieren Firebase ID token válido
+  if (type === 'bienvenida_piloto' || type === 'bienvenida_aprobado' || type === 'pqrs_respuesta' || type === 'invitacion_equipo') {
     const authHeader = request.headers.get('Authorization') || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!idToken) {
@@ -1625,6 +1655,15 @@ async function handleEmail(request, env, cors) {
       to: [data.to],
       subject: `Respuesta a tu ${(data.tipo || 'solicitud').toLowerCase()} — ${data.ips_nombre || 'NormaLis'}`,
       html: tplPqrsRespuesta(data),
+    };
+  } else if (type === 'invitacion_equipo') {
+    if (!data?.to_email || !data?.invite_link)
+      return new Response(JSON.stringify({ error: 'Campos to_email e invite_link requeridos' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    emailPayload = {
+      from: SENDER,
+      to: [data.to_email],
+      subject: `🤝 ${data.director_nombre || 'Un compañero'} te invitó a ${data.ips_nombre || 'su equipo'} en NormaLis`,
+      html: tplInvitacionEquipo(data),
     };
   }
 

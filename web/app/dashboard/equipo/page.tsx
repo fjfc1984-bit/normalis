@@ -152,8 +152,13 @@ export default function EquipoPage() {
   async function handleInvitar(email: string) {
     setSaving(true);
     try {
-      await crearInvitacion(email, nombre);
-      show('Invitación enviada. Copia el enlace y compártelo por WhatsApp o correo.', 'success');
+      const { emailEnviado } = await crearInvitacion(email, nombre);
+      show(
+        emailEnviado
+          ? `Invitación creada y correo enviado a ${email}.`
+          : 'Invitación creada, pero no pudimos enviar el correo automático. Copia el enlace y compártelo tú.',
+        emailEnviado ? 'success' : 'info',
+      );
     } catch (err: unknown) {
       show((err as Error).message ?? 'No se pudo crear la invitación.', 'error');
     } finally {
@@ -226,7 +231,8 @@ export default function EquipoPage() {
           <h3 className="text-sm font-bold text-gray-700 mb-3">Invitar compañero de equipo</h3>
           <InvitarForm onInvitar={handleInvitar} saving={saving} />
           <p className="text-xs text-gray-400 mt-2">
-            El enlace de invitación vence en 7 días y solo puede usarse una vez, con el correo que indiques aquí.
+            Le enviamos un correo automático con el enlace. Vence en 7 días y solo puede usarse una vez,
+            con el correo que indiques aquí — si no le llega, cópialo abajo y compártelo tú.
           </p>
         </div>
       )}

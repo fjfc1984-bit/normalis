@@ -26,6 +26,9 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
+import { sendWorkerEmail } from '@/lib/worker';
+
+const APP_BASE_URL = 'https://app.normalis.co';
 
 export type EstadoInvitacion = 'pendiente' | 'usada' | 'revocada' | 'expirada';
 
@@ -59,7 +62,7 @@ export interface UseEquipoIPSResult {
   invitaciones: Invitacion[];
   loading: boolean;
   error: string | null;
-  crearInvitacion: (email: string, nombreIPS: string) => Promise<string>; // devuelve el código (id del doc)
+  crearInvitacion: (email: string, nombreIPS: string) => Promise<{ codigo: string; emailEnviado: boolean }>;
   revocarInvitacion: (id: string) => Promise<void>;
   cambiarAccesoMiembro: (uid: string, activo: boolean) => Promise<void>;
 }
@@ -140,22 +143,40 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
     return () => unsub?.();
   }, [nitPropio]);
 
-  async function crearInvitacion(email: string, nombreIPS: string): Promise<string> {
+  async function crearInvitacion(email: string, nombreIPS: string): Promise<{ codigo: string; emailEnviado: boolean }> {
     if (!nitPropio) throw new Error('Solo el dueño de la cuenta de la IPS puede invitar compañeros de equipo.');
     const uid = fbAuth.currentUser?.uid;
     if (!uid) throw new Error('Sesión no válida. Vuelve a iniciar sesión e inténtalo de nuevo.');
     const expira = new Date();
     expira.setDate(expira.getDate() + INVITACION_VIGENCIA_DIAS);
+    const correo = email.trim().toLowerCase();
     const ref = await addDoc(collection(fbDb, 'invitaciones'), {
       creadoPor: uid,
       nit: nitPropio,
       nombreIPS: nombreIPS || '',
-      email: email.trim().toLowerCase(),
+      email: correo,
       estado: 'pendiente' as EstadoInvitacion,
       creadoEn: serverTimestamp(),
       expiraEn: Timestamp.fromDate(expira),
     });
-    return ref.id;
+
+    // Notificar al invitado por correo (best-effort — si falla, el enlace
+    // sigue disponible para copiar/compartir manualmente desde la UI).
+    let emailEnviado = false;
+    try {
+      const idToken = await fbAuth.currentUser?.getIdToken();
+      await sendWorkerEmail('invitacion_equipo', {
+        to_email: correo,
+        ips_nombre: nombreIPS || '',
+        director_nombre: fbAuth.currentUser?.displayName || '',
+        invite_link: `${APP_BASE_URL}/invitacion/${ref.id}`,
+      }, idToken);
+      emailEnviado = true;
+    } catch (emailErr) {
+      console.error('No se pudo enviar el correo de invitación:', emailErr);
+    }
+
+    return { codigo: ref.id, emailEnviado };
   }
 
   async function revocarInvitacion(id: string): Promise<void> {
