@@ -161,6 +161,11 @@ export default function InvitacionPage() {
       if (inv.expiraEn && inv.expiraEn.toDate().getTime() < Date.now()) throw new Error('CODIGO_EXPIRADO');
 
       // 3. Vincular la cuenta al equipo de la IPS y marcar la invitación como usada.
+      //    codigoInvitacionUsada queda registrado en el propio doc — lo exige
+      //    la regla de seguridad (firestore.rules, Caso 2) para verificar en
+      //    el servidor que esta activación corresponde a una invitación real,
+      //    pendiente y dirigida al mismo correo, sin volver a confiar
+      //    ciegamente en lo que envía el cliente.
       await updateDoc(doc(fbDb, 'usuarios', uid), {
         nit_ips: inv.nit,
         nombre:  inv.nombreIPS || '',
@@ -168,6 +173,7 @@ export default function InvitacionPage() {
         activo:  true,
         estado:  'activo',
         rol_ips: 'miembro',
+        codigoInvitacionUsada: code,
       });
       await updateDoc(invRef, {
         estado:   'usada',

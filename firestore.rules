@@ -77,14 +77,74 @@ service cloud.firestore {
         request.resource.data.activo == false;
 
       // Actualizar propio perfil; admin puede actualizar cualquiera;
-      // director puede actualizar rol_ips de miembros de su IPS
-      allow update: if isOwner(uid) || isAdmin() ||
-        (isAuthenticated() &&
-         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ==
-         get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips);
+      // director puede actualizar rol_ips de miembros de su IPS.
+      //
+      // SEGURIDAD: el dueño de la cuenta (isOwner) YA NO puede escribir
+      // cualquier campo libremente — antes podía auto-asignarse rol:'admin'
+      // o el NIT de otra IPS real sin ninguna verificación. Ahora solo puede:
+      //   Caso 1) editar campos de perfil normales, y cambiar su propio NIT
+      //           únicamente si aún no tiene uno (primera vez) o si el nuevo
+      //           NIT está autorizado en ips_autorizadas/{nit} (selector de
+      //           "varias IPS" — Feature 2).
+      //   Caso 2) aceptar una invitación de equipo válida y sin usar, dirigida
+      //           a su propio correo (Feature 1 — /invitacion/[code]),
+      //           verificando el documento invitaciones/{code} referenciado.
+      allow update: if isAdmin() ||
+        (
+          isAuthenticated() &&
+          ('nit_ips' in get(/databases/$(database)/documents/usuarios/$(uid)).data) &&
+          get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips != '' &&
+          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ==
+          get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips
+        ) ||
+        (
+          isOwner(uid) &&
+          (
+            (
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['nombre','nombreContacto','cargo','telefono','ciudad','tipoIPS','nit']) &&
+              (
+                request.resource.data.nit == resource.data.nit ||
+                resource.data.nit == '' ||
+                exists(/databases/$(database)/documents/usuarios/$(uid)/ips_autorizadas/$(request.resource.data.nit))
+              )
+            )
+            ||
+            (
+              resource.data.rol == 'pendiente' && resource.data.activo == false &&
+              request.resource.data.rol == 'cliente' &&
+              request.resource.data.activo == true &&
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['rol','activo','estado','nit_ips','rol_ips','nombre','codigoInvitacionUsada']) &&
+              ('codigoInvitacionUsada' in request.resource.data) &&
+              exists(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)) &&
+              get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.estado == 'pendiente' &&
+              get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.email == resource.data.email &&
+              request.resource.data.nit_ips == get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.nit
+            )
+          )
+        );
 
       // Eliminar: solo admin
       allow delete: if isAdmin();
+
+      // ── IPS autorizadas (Feature 2 — un usuario administrando varias IPS) ──
+      // Habilita a este uid a cambiar su NIT activo a uno adicional. Solo lo
+      // otorga el dueño real de ese NIT (su propio `nit` coincide) o un admin
+      // — nunca el propio uid, para que no se autoasigne acceso a otra IPS.
+      match /ips_autorizadas/{nit} {
+        allow read: if isOwner(uid) || isAdmin() ||
+          (isAuthenticated() &&
+           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit);
+        allow create: if isAuthenticated() &&
+          request.resource.data.nit == nit &&
+          (isAdmin() ||
+           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit);
+        allow update: if false;
+        allow delete: if isAdmin() || isOwner(uid) ||
+          (isAuthenticated() &&
+           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit);
+      }
 
       // ── PQRS ──────────────────────────────────────────────────────────────
       // Solo el propietario de la cuenta o un admin puede leer/escribir sus PQRS
