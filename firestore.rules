@@ -320,6 +320,51 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // solicitudes_acceso_ips/{id} — Feature 2: un usuario con cuenta existente
+    // pide acceso a una IPS distinta a la suya (identificada por NIT). El
+    // dueño real de ese NIT (o un admin) la aprueba o rechaza; al aprobar, el
+    // propio dueño crea el documento usuarios/{uid}/ips_autorizadas/{nit}
+    // correspondiente (ver esa regla arriba) — nunca el solicitante, para que
+    // nadie pueda autoconcederse acceso a una IPS ajena.
+    // ════════════════════════════════════════════════════════════════════════
+    match /solicitudes_acceso_ips/{id} {
+      // Leer: el propio solicitante, el dueño del NIT solicitado, o admin
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        isAdmin() ||
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == resource.data.nit
+      );
+
+      // Crear: cualquier usuario autenticado solicita para sí mismo, con su
+      // propio correo real (no puede suplantar a otro) y siempre en pendiente.
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.estado == 'pendiente' &&
+        request.resource.data.nit is string && request.resource.data.nit != '' &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in
+          ['cliente', 'piloto', 'admin'] &&
+        request.resource.data.emailSolicitante ==
+          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email;
+
+      // Actualizar: solo el dueño real del NIT solicitado (o admin) puede
+      // resolver la solicitud, solo desde pendiente, y solo puede tocar el
+      // veredicto — nunca reescribir de quién es o a qué NIT aplica.
+      allow update: if isAuthenticated() &&
+        resource.data.estado == 'pendiente' &&
+        request.resource.data.estado in ['aprobada', 'rechazada'] &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['estado', 'resueltoPor', 'resueltoPorNombre', 'resueltoEn']) &&
+        request.resource.data.resueltoPor == request.auth.uid &&
+        (isAdmin() ||
+         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == resource.data.nit);
+
+      // Eliminar: el propio solicitante puede retirar su solicitud mientras
+      // siga pendiente, o un admin en cualquier momento.
+      allow delete: if isAdmin() ||
+        (isAuthenticated() && resource.data.uid == request.auth.uid && resource.data.estado == 'pendiente');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // pilotos/{nit} — seguimiento del programa piloto
     // ════════════════════════════════════════════════════════════════════════
     match /pilotos/{nit} {
