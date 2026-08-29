@@ -62,7 +62,7 @@ export interface UseEquipoIPSResult {
   invitaciones: Invitacion[];
   loading: boolean;
   error: string | null;
-  crearInvitacion: (email: string, nombreIPS: string) => Promise<{ codigo: string; emailEnviado: boolean }>;
+  crearInvitacion: (email: string, nombreIPS: string) => Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }>;
   revocarInvitacion: (id: string) => Promise<void>;
   cambiarAccesoMiembro: (uid: string, activo: boolean) => Promise<void>;
 }
@@ -143,7 +143,7 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
     return () => unsub?.();
   }, [nitPropio]);
 
-  async function crearInvitacion(email: string, nombreIPS: string): Promise<{ codigo: string; emailEnviado: boolean }> {
+  async function crearInvitacion(email: string, nombreIPS: string): Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }> {
     if (!nitPropio) throw new Error('Solo el dueño de la cuenta de la IPS puede invitar compañeros de equipo.');
     const uid = fbAuth.currentUser?.uid;
     if (!uid) throw new Error('Sesión no válida. Vuelve a iniciar sesión e inténtalo de nuevo.');
@@ -163,6 +163,7 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
     // Notificar al invitado por correo (best-effort — si falla, el enlace
     // sigue disponible para copiar/compartir manualmente desde la UI).
     let emailEnviado = false;
+    let emailError: string | undefined;
     try {
       const idToken = await fbAuth.currentUser?.getIdToken();
       await sendWorkerEmail('invitacion_equipo', {
@@ -173,10 +174,11 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
       }, idToken);
       emailEnviado = true;
     } catch (emailErr) {
+      emailError = (emailErr as Error)?.message || String(emailErr);
       console.error('No se pudo enviar el correo de invitación:', emailErr);
     }
 
-    return { codigo: ref.id, emailEnviado };
+    return { codigo: ref.id, emailEnviado, emailError };
   }
 
   async function revocarInvitacion(id: string): Promise<void> {

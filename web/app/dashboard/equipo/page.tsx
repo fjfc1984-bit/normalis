@@ -152,11 +152,11 @@ export default function EquipoPage() {
   async function handleInvitar(email: string) {
     setSaving(true);
     try {
-      const { emailEnviado } = await crearInvitacion(email, nombre);
+      const { emailEnviado, emailError } = await crearInvitacion(email, nombre);
       show(
         emailEnviado
           ? `Invitación creada y correo enviado a ${email}.`
-          : 'Invitación creada, pero no pudimos enviar el correo automático. Copia el enlace y compártelo tú.',
+          : `Invitación creada, pero no pudimos enviar el correo automático${emailError ? ` (${emailError})` : ''}. Copia el enlace y compártelo tú.`,
         emailEnviado ? 'success' : 'info',
       );
     } catch (err: unknown) {
