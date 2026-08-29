@@ -31,18 +31,48 @@ type Categoria    =
   | 'Asistencial' | 'Normativo' | 'Talento Humano' | 'Dotación'
   | 'Medicamentos' | 'Infraestructura' | 'Tecnología' | 'Financiero';
 
+// Jerarquía de control (NIOSH / ISO 45001) — de más a menos efectiva.
+type TipoControl = 'Eliminación' | 'Sustitución' | 'Control de ingeniería' | 'Control administrativo' | 'EPP';
+
+// Pasivo = actúa siempre, sin depender de que alguien lo ejecute (barrera
+// física, bloqueo automático). Activo = depende de que una persona lo
+// ejecute bien cada vez (protocolo, verificación manual).
+type NaturalezaControl = 'pasivo' | 'activo';
+
+interface ControlRiesgo {
+  id:          string;
+  descripcion: string;
+  tipo:        TipoControl;
+  naturaleza:  NaturalezaControl;
+}
+
 interface RiesgoItem {
   id:            string;
   nombre:        string;
   categoria:     Categoria;
+  /** Probabilidad/impacto INHERENTES — antes de aplicar los controles. */
   probabilidad:  Probabilidad;
   impacto:       Impacto;
+  nivelInherente?:      Nivel;
+  puntuacionInherente?: number;
+  /** Probabilidad/impacto RESIDUALES — después del efecto de los controles.
+   *  Si no hay controles registrados, son iguales a los inherentes. */
+  probabilidadResidual?: Probabilidad;
+  impactoResidual?:      Impacto;
+  /** nivel/puntuación = SIEMPRE los valores RESIDUALES — son los que
+   *  alimentan la matriz de calor, los KPIs, los filtros y las alertas,
+   *  porque reflejan el riesgo real hoy, no el riesgo antes de controles. */
   nivel:         Nivel;
   puntuacion:    number;
+  controles:     ControlRiesgo[];
   tratamiento:   Tratamiento;
   responsable:   string;
   fechaRevision: string;
-  descripcion:   string;
+  causa?:        string;
+  consecuencia?: string;
+  /** Campo legado (pre-causa/consecuencia) — se sigue leyendo como fallback
+   *  de "causa" en registros antiguos que no se han vuelto a editar. */
+  descripcion?:  string;
   /** 'auditoria' si fue importado desde Cumplimiento Integrado */
   origen?:       string;
   segmento?:     string;
@@ -55,10 +85,12 @@ interface NuevoRiesgo {
   categoria:     Categoria;
   probabilidad:  Probabilidad;
   impacto:       Impacto;
+  controles:     ControlRiesgo[];
   tratamiento:   Tratamiento;
   responsable:   string;
   fechaRevision: string;
-  descripcion:   string;
+  causa:         string;
+  consecuencia:  string;
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -100,23 +132,52 @@ const MATRIZ_COLOR: Record<Nivel, string> = {
   extremo: 'bg-red-400     text-white',
 };
 
+// Jerarquía de control (NIOSH / ISO 45001) — orden de más a menos efectiva,
+// con el "peso" de efectividad usado para calcular el riesgo residual.
+const JERARQUIA_CONTROL: TipoControl[] = [
+  'Eliminación', 'Sustitución', 'Control de ingeniería', 'Control administrativo', 'EPP',
+];
+
+const PESO_JERARQUIA: Record<TipoControl, number> = {
+  'Eliminación':            1.0,
+  'Sustitución':             0.8,
+  'Control de ingeniería':   0.6,
+  'Control administrativo':  0.4,
+  'EPP':                     0.2,
+};
+
+// Pasivo = actúa siempre sin depender de la ejecución humana → efectividad
+// plena. Activo = depende de que alguien lo ejecute bien cada vez → se
+// descuenta, porque en la práctica ningún protocolo se sigue al 100%.
+const MULTIPLICADOR_NATURALEZA: Record<NaturalezaControl, number> = {
+  pasivo: 1.0,
+  activo: 0.65,
+};
+
+const NATURALEZA_LABELS: Record<NaturalezaControl, string> = {
+  pasivo: 'Pasivo — actúa siempre, no depende de una persona',
+  activo: 'Activo — depende de que alguien lo ejecute bien',
+};
+
 // Catálogo predefinido — 15 riesgos típicos IPS (ISO 31000 + Res. 1732/2026)
+// Los controles quedan vacíos: son específicos de cada IPS, no genéricos
+// por tipo de riesgo — el auditor los agrega al aplicar la plantilla.
 const CATALOGO: Omit<NuevoRiesgo, 'responsable' | 'fechaRevision'>[] = [
-  { nombre: 'Eventos adversos no reportados',                      categoria: 'Asistencial',   probabilidad: 3, impacto: 4, tratamiento: 'Reducir',    descripcion: 'Eventos adversos ocurridos durante la atención sin notificación al sistema de vigilancia.' },
-  { nombre: 'Incumplimiento Res. 1732/2026 — Talento Humano',      categoria: 'Normativo',     probabilidad: 3, impacto: 4, tratamiento: 'Reducir',    descripcion: 'Personal que no cumple los requisitos del estándar de Talento Humano de habilitación.' },
-  { nombre: 'Vencimiento de habilitación sin renovar',             categoria: 'Normativo',     probabilidad: 2, impacto: 5, tratamiento: 'Evitar',     descripcion: 'Habilitación ante la Secretaría de Salud próxima a vencer sin proceso de renovación iniciado.' },
-  { nombre: 'Personal sin tarjeta profesional vigente',            categoria: 'Talento Humano',probabilidad: 3, impacto: 4, tratamiento: 'Evitar',     descripcion: 'Profesionales prestando servicios con tarjeta profesional vencida o suspendida.' },
-  { nombre: 'Mantenimiento de equipos biomédicos atrasado',        categoria: 'Dotación',      probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    descripcion: 'Equipos sin plan de mantenimiento preventivo al día según Res. 1732/2026 Est. 3.' },
-  { nombre: 'Historia clínica incompleta o inconsistente',         categoria: 'Asistencial',   probabilidad: 4, impacto: 3, tratamiento: 'Reducir',    descripcion: 'Registros clínicos que no cumplen los componentes mínimos exigidos por la normativa.' },
-  { nombre: 'Medicamentos vencidos en stock',                      categoria: 'Medicamentos',  probabilidad: 2, impacto: 4, tratamiento: 'Evitar',     descripcion: 'Presencia de medicamentos o dispositivos vencidos en áreas de dispensación o almacenamiento.' },
-  { nombre: 'Infecciones asociadas a la atención (IAAS)',          categoria: 'Asistencial',   probabilidad: 3, impacto: 5, tratamiento: 'Reducir',    descripcion: 'Riesgo de infecciones nosocomiales por fallas en protocolos de bioseguridad y asepsia.' },
-  { nombre: 'Accidente de trabajo en personal de salud',           categoria: 'Talento Humano',probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    descripcion: 'Accidentes laborales incluyendo lesiones por exposición a material biológico o cortopunzantes.' },
-  { nombre: 'Pérdida de información de historia clínica digital',  categoria: 'Tecnología',    probabilidad: 2, impacto: 5, tratamiento: 'Transferir', descripcion: 'Falla en sistemas de backup o pérdida de datos clínicos digitales — aplica IHCE Res. 1732/2026.' },
-  { nombre: 'Incumplimiento PAMEC sin evidencia documental',       categoria: 'Normativo',     probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    descripcion: 'Actividades del PAMEC ejecutadas sin documentación de soporte para visita de verificación.' },
-  { nombre: 'Caída de paciente en instalaciones',                  categoria: 'Asistencial',   probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    descripcion: 'Caídas de pacientes por falta de barandas, señalización o protocolos de prevención.' },
-  { nombre: 'Falta de señalización de emergencia y evacuación',    categoria: 'Infraestructura',probabilidad: 3, impacto: 3, tratamiento: 'Evitar',    descripcion: 'Rutas de evacuación, extintores y zonas de riesgo sin señalización adecuada — SG-SST.' },
-  { nombre: 'Interrupción de servicios públicos (agua, energía)',  categoria: 'Infraestructura',probabilidad: 2, impacto: 3, tratamiento: 'Aceptar',   descripcion: 'Suspensión de agua o electricidad que afecte la continuidad de la atención en salud.' },
-  { nombre: 'Falla en cadena de frío de biológicos y vacunas',    categoria: 'Medicamentos',  probabilidad: 2, impacto: 4, tratamiento: 'Evitar',     descripcion: 'Ruptura de cadena de frío para vacunas o biológicos termolábiles — pérdida de lote.' },
+  { nombre: 'Eventos adversos no reportados',                      categoria: 'Asistencial',    probabilidad: 3, impacto: 4, tratamiento: 'Reducir',    controles: [], causa: 'Ausencia de cultura de reporte y de un canal claro y sin represalias para notificar eventos adversos al comité de seguridad del paciente.', consecuencia: 'Pérdida de la oportunidad de analizar causas raíz y prevenir recurrencia — riesgo de repetición del evento y de hallazgos en auditoría.' },
+  { nombre: 'Incumplimiento Res. 1732/2026 — Talento Humano',      categoria: 'Normativo',      probabilidad: 3, impacto: 4, tratamiento: 'Reducir',    controles: [], causa: 'Contratación o vinculación de personal sin verificación previa de los requisitos de formación, experiencia y registro exigidos por el estándar de Talento Humano.', consecuencia: 'No conformidad en visita de verificación de la Secretaría de Salud, con riesgo de medida preventiva o cierre del servicio.' },
+  { nombre: 'Vencimiento de habilitación sin renovar',             categoria: 'Normativo',      probabilidad: 2, impacto: 5, tratamiento: 'Evitar',     controles: [], causa: 'Ausencia de un sistema de alertas o seguimiento activo a la fecha de vencimiento de la habilitación ante la Secretaría de Salud.', consecuencia: 'Pérdida de la habilitación del servicio y suspensión inmediata de la prestación — riesgo de cierre operativo.' },
+  { nombre: 'Personal sin tarjeta profesional vigente',            categoria: 'Talento Humano', probabilidad: 3, impacto: 4, tratamiento: 'Evitar',     controles: [], causa: 'Falta de control periódico de vigencia de tarjetas profesionales y registros ante los colegios/consejos profesionales correspondientes.', consecuencia: 'Prestación de servicios por personal no habilitado legalmente — riesgo jurídico y de glosa por parte de las EPS.' },
+  { nombre: 'Mantenimiento de equipos biomédicos atrasado',        categoria: 'Dotación',       probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    controles: [], causa: 'Plan de mantenimiento preventivo sin cumplimiento por falta de presupuesto, proveedor o seguimiento del cronograma.', consecuencia: 'Falla de equipos durante la atención, con riesgo para la seguridad del paciente y hallazgo en el estándar de Dotación.' },
+  { nombre: 'Historia clínica incompleta o inconsistente',         categoria: 'Asistencial',    probabilidad: 4, impacto: 3, tratamiento: 'Reducir',    controles: [], causa: 'Carga asistencial alta, falta de capacitación en diligenciamiento o ausencia de auditoría periódica de historias clínicas.', consecuencia: 'Riesgo legal ante reclamaciones, glosas de EPS y hallazgos en el estándar de Historia Clínica.' },
+  { nombre: 'Medicamentos vencidos en stock',                      categoria: 'Medicamentos',   probabilidad: 2, impacto: 4, tratamiento: 'Evitar',     controles: [], causa: 'Control de inventario deficiente — sin sistema FEFO (primero en expirar, primero en salir) o revisión periódica de fechas de vencimiento.', consecuencia: 'Riesgo de administración de un medicamento vencido a un paciente y hallazgo directo en visita de habilitación.' },
+  { nombre: 'Infecciones asociadas a la atención (IAAS)',          categoria: 'Asistencial',    probabilidad: 3, impacto: 5, tratamiento: 'Reducir',    controles: [], causa: 'Fallas en la adherencia a protocolos de lavado de manos, asepsia y antisepsia, o en la limpieza y desinfección de áreas.', consecuencia: 'Infección nosocomial en el paciente, con impacto directo en morbimortalidad y en los indicadores de calidad de la IPS.' },
+  { nombre: 'Accidente de trabajo en personal de salud',           categoria: 'Talento Humano', probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    controles: [], causa: 'Uso inadecuado o ausencia de elementos de protección personal frente a exposición a material biológico o cortopunzantes.', consecuencia: 'Lesión o enfermedad laboral del trabajador, con costos de ARL, incapacidad y posible investigación del incidente.' },
+  { nombre: 'Pérdida de información de historia clínica digital',  categoria: 'Tecnología',     probabilidad: 2, impacto: 5, tratamiento: 'Transferir', controles: [], causa: 'Ausencia de política de copias de seguridad periódicas y verificadas, o de un proveedor de nube confiable para la Historia Clínica Electrónica.', consecuencia: 'Pérdida irrecuperable de información clínica del paciente — incumplimiento de la IHCE y riesgo legal grave.' },
+  { nombre: 'Incumplimiento PAMEC sin evidencia documental',       categoria: 'Normativo',      probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    controles: [], causa: 'Ejecución de actividades de mejora sin registro sistemático en el ciclo PHVA del PAMEC.', consecuencia: 'Hallazgo en visita de verificación por falta de evidencia documental del programa de auditoría para el mejoramiento.' },
+  { nombre: 'Caída de paciente en instalaciones',                  categoria: 'Asistencial',    probabilidad: 3, impacto: 3, tratamiento: 'Reducir',    controles: [], causa: 'Ausencia de barandas, pisos antideslizantes, señalización de riesgo de caída o protocolo de valoración de riesgo de caída al ingreso.', consecuencia: 'Lesión del paciente durante la atención — evento adverso con posible reclamación y afectación a la seguridad del paciente.' },
+  { nombre: 'Falta de señalización de emergencia y evacuación',    categoria: 'Infraestructura',probabilidad: 3, impacto: 3, tratamiento: 'Evitar',     controles: [], causa: 'Rutas de evacuación, extintores y zonas de riesgo sin señalización visible ni actualizada según el plan de emergencias.', consecuencia: 'Riesgo de lesiones graves en una emergencia real y hallazgo en el estándar de Infraestructura / SG-SST.' },
+  { nombre: 'Interrupción de servicios públicos (agua, energía)',  categoria: 'Infraestructura',probabilidad: 2, impacto: 3, tratamiento: 'Aceptar',    controles: [], causa: 'Dependencia de un único proveedor de servicios públicos sin planta eléctrica de respaldo ni tanque de reserva de agua suficiente.', consecuencia: 'Interrupción de la prestación del servicio de salud durante la falla, afectando la atención de pacientes en curso.' },
+  { nombre: 'Falla en cadena de frío de biológicos y vacunas',     categoria: 'Medicamentos',   probabilidad: 2, impacto: 4, tratamiento: 'Evitar',     controles: [], causa: 'Ausencia de monitoreo continuo de temperatura o de plan de contingencia ante corte eléctrico en el área de cadena de frío.', consecuencia: 'Pérdida del lote de biológicos o vacunas y riesgo de aplicar un producto no efectivo o inseguro al paciente.' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -133,13 +194,54 @@ function todayStr(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+// ── Cálculo de riesgo residual a partir de los controles ────────────────────
+//
+// Cada control reduce una "probabilidad de fallar" combinada — como si
+// fueran barreras independientes en serie. Un control muy efectivo
+// (Eliminación, pasivo) reduce mucho por sí solo; varios controles débiles
+// (EPP, activos) se combinan pero nunca eliminan el riesgo del todo.
+//
+//   efectividad(control) = peso_jerarquía × multiplicador_naturaleza
+//   factor_combinado     = min(0.8, 1 − Π(1 − efectividad_i))
+//
+// El tope de 80% es deliberado: ninguna combinación de controles puede
+// llevar el riesgo residual a cero — siempre queda un remanente, como en
+// cualquier metodología de riesgo seria. Fernando (auditor) puede ajustar
+// estos pesos si su criterio profesional difiere.
+function efectividadControl(c: ControlRiesgo): number {
+  return PESO_JERARQUIA[c.tipo] * MULTIPLICADOR_NATURALEZA[c.naturaleza];
+}
+
+function factorReduccionCombinado(controles: ControlRiesgo[]): number {
+  if (!controles || controles.length === 0) return 0;
+  const probabilidadFalla = controles.reduce(
+    (acc, c) => acc * (1 - efectividadControl(c)),
+    1,
+  );
+  return Math.min(0.8, 1 - probabilidadFalla);
+}
+
+// Los controles reducen más la PROBABILIDAD de que ocurra el evento que su
+// IMPACTO cuando ocurre (la mayoría de controles previenen, no limitan
+// severidad) — por eso el impacto usa solo la mitad del factor.
+function calcResidual(
+  probInherente: Probabilidad,
+  impInherente: Impacto,
+  controles: ControlRiesgo[],
+): { probabilidad: Probabilidad; impacto: Impacto } {
+  const factor = factorReduccionCombinado(controles);
+  const probabilidad = Math.max(1, Math.round(probInherente * (1 - factor))) as Probabilidad;
+  const impacto      = Math.max(1, Math.round(impInherente  * (1 - factor * 0.5))) as Impacto;
+  return { probabilidad, impacto };
+}
+
 // ── Matriz de calor 5×5 ───────────────────────────────────────────────────────
 
 function MatrizCalor({ riesgos }: { riesgos: RiesgoItem[] }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <h3 className="text-sm font-bold text-gray-700 mb-4">
-        Matriz de Riesgo — ISO 31000:2018 (Probabilidad × Impacto)
+        Matriz de Riesgo Residual — ISO 31000:2018 (Probabilidad × Impacto, después de controles)
       </h3>
       <div className="overflow-x-auto">
         <table className="text-xs border-collapse">
@@ -161,7 +263,10 @@ function MatrizCalor({ riesgos }: { riesgos: RiesgoItem[] }) {
                 </td>
                 {([1,2,3,4,5] as Impacto[]).map(i => {
                   const nivel = calcNivel(p, i);
-                  const count = riesgos.filter(r => r.probabilidad === p && r.impacto === i).length;
+                  const count = riesgos.filter(r =>
+                    (r.probabilidadResidual ?? r.probabilidad) === p &&
+                    (r.impactoResidual ?? r.impacto) === i
+                  ).length;
                   return (
                     <td
                       key={i}
@@ -203,7 +308,8 @@ function RiesgoModal({
   const [useTemplate, setUseTemplate] = useState(true);
   const [form, setForm] = useState<NuevoRiesgo>({
     nombre: '', categoria: 'Asistencial', probabilidad: 3, impacto: 3,
-    tratamiento: 'Reducir', responsable: '', fechaRevision: todayStr(), descripcion: '',
+    tratamiento: 'Reducir', responsable: '', fechaRevision: todayStr(),
+    causa: '', consecuencia: '', controles: [],
   });
 
   const INPUT = `w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
@@ -211,12 +317,40 @@ function RiesgoModal({
 
   function applyTemplate(idx: number) {
     const t = CATALOGO[idx];
-    setForm(f => ({ ...f, ...t }));
+    setForm(f => ({ ...f, ...t, controles: [] }));
     setUseTemplate(false);
   }
 
-  const nivel = calcNivel(form.probabilidad, form.impacto);
-  const nc    = NIVEL_CONFIG[nivel];
+  // Nivel INHERENTE (antes de controles) — es lo que capturan los sliders.
+  const nivelInherente = calcNivel(form.probabilidad, form.impacto);
+  const ncInherente     = NIVEL_CONFIG[nivelInherente];
+
+  // Nivel RESIDUAL en vivo — se recalcula con cada control agregado/quitado
+  // para que el auditor vea de inmediato el efecto de sus controles.
+  const residual      = calcResidual(form.probabilidad, form.impacto, form.controles);
+  const nivelResidual = calcNivel(residual.probabilidad, residual.impacto);
+  const ncResidual     = NIVEL_CONFIG[nivelResidual];
+
+  function agregarControl() {
+    setForm(f => ({
+      ...f,
+      controles: [
+        ...f.controles,
+        { id: `c${Date.now()}`, descripcion: '', tipo: 'Control administrativo', naturaleza: 'activo' },
+      ],
+    }));
+  }
+
+  function actualizarControl(id: string, cambios: Partial<ControlRiesgo>) {
+    setForm(f => ({
+      ...f,
+      controles: f.controles.map(c => c.id === id ? { ...c, ...cambios } : c),
+    }));
+  }
+
+  function quitarControl(id: string) {
+    setForm(f => ({ ...f, controles: f.controles.filter(c => c.id !== id) }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -323,11 +457,11 @@ function RiesgoModal({
                 </div>
               </div>
 
-              {/* Sliders probabilidad e impacto */}
+              {/* Sliders probabilidad e impacto — valoración INHERENTE (sin controles) */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
-                    Probabilidad — <span className="normal-case font-normal">{PROB_LABELS[form.probabilidad]}</span>
+                    Probabilidad inherente — <span className="normal-case font-normal">{PROB_LABELS[form.probabilidad]}</span>
                   </label>
                   <input
                     type="range" min={1} max={5} value={form.probabilidad}
@@ -338,7 +472,7 @@ function RiesgoModal({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
-                    Impacto — <span className="normal-case font-normal">{IMP_LABELS[form.impacto]}</span>
+                    Impacto inherente — <span className="normal-case font-normal">{IMP_LABELS[form.impacto]}</span>
                   </label>
                   <input
                     type="range" min={1} max={5} value={form.impacto}
@@ -349,12 +483,104 @@ function RiesgoModal({
                 </div>
               </div>
 
-              {/* Nivel calculado */}
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${nc.bg}`}>
-                <span className={`text-sm font-semibold ${nc.text}`}>Nivel de riesgo:</span>
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${nc.bg} ${nc.text}`}>
-                  {nc.label} — Puntuación: {form.probabilidad * form.impacto} / 25
-                </span>
+              <p className="text-xs text-gray-400 -mt-2">
+                Inherente = el riesgo puro, sin tener en cuenta ningún control existente.
+                Los controles que agregues abajo calculan el riesgo <b>residual</b> (el real, hoy).
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Causa</label>
+                <textarea
+                  value={form.causa}
+                  onChange={e => setForm(f => ({ ...f, causa: e.target.value }))}
+                  rows={2}
+                  className={`${INPUT} resize-none`}
+                  placeholder="¿Qué origina este riesgo?"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Consecuencia</label>
+                <textarea
+                  value={form.consecuencia}
+                  onChange={e => setForm(f => ({ ...f, consecuencia: e.target.value }))}
+                  rows={2}
+                  className={`${INPUT} resize-none`}
+                  placeholder="¿Qué pasa si el riesgo se materializa?"
+                />
+              </div>
+
+              {/* Controles existentes — determinan el riesgo residual */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide">
+                    Controles existentes
+                  </label>
+                  <button
+                    type="button"
+                    onClick={agregarControl}
+                    className="text-xs font-bold text-teal-700 hover:text-teal-900"
+                  >
+                    + Agregar control
+                  </button>
+                </div>
+                {form.controles.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">Sin controles registrados — el riesgo residual es igual al inherente.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {form.controles.map(c => (
+                      <div key={c.id} className="flex flex-wrap gap-2 items-start bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+                        <input
+                          value={c.descripcion}
+                          onChange={e => actualizarControl(c.id, { descripcion: e.target.value })}
+                          placeholder="Ej: Protocolo de lavado de manos"
+                          className="flex-1 min-w-[140px] px-2 py-1.5 border border-gray-300 rounded-lg text-xs
+                                     focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+                        />
+                        <select
+                          value={c.tipo}
+                          onChange={e => actualizarControl(c.id, { tipo: e.target.value as TipoControl })}
+                          className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white"
+                          title="Jerarquía de control"
+                        >
+                          {JERARQUIA_CONTROL.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select
+                          value={c.naturaleza}
+                          onChange={e => actualizarControl(c.id, { naturaleza: e.target.value as NaturalezaControl })}
+                          className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white"
+                          title={NATURALEZA_LABELS[c.naturaleza]}
+                        >
+                          <option value="pasivo">Pasivo</option>
+                          <option value="activo">Activo</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => quitarControl(c.id)}
+                          className="text-gray-300 hover:text-red-400 px-1"
+                          title="Quitar control"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nivel inherente vs. residual, calculado en vivo */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`px-4 py-3 rounded-xl ${ncInherente.bg}`}>
+                  <span className={`block text-[10px] font-bold uppercase tracking-wide ${ncInherente.text} opacity-70`}>Riesgo inherente</span>
+                  <span className={`text-sm font-bold ${ncInherente.text}`}>
+                    {ncInherente.label} · {form.probabilidad * form.impacto}/25
+                  </span>
+                </div>
+                <div className={`px-4 py-3 rounded-xl ${ncResidual.bg}`}>
+                  <span className={`block text-[10px] font-bold uppercase tracking-wide ${ncResidual.text} opacity-70`}>Riesgo residual (con controles)</span>
+                  <span className={`text-sm font-bold ${ncResidual.text}`}>
+                    {ncResidual.label} · {residual.probabilidad * residual.impacto}/25
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -376,17 +602,6 @@ function RiesgoModal({
                     className={INPUT}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Descripción</label>
-                <textarea
-                  value={form.descripcion}
-                  onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
-                  rows={2}
-                  className={`${INPUT} resize-none`}
-                  placeholder="Contexto y causas del riesgo…"
-                />
               </div>
 
               <div className="flex gap-3 pt-1">
@@ -441,7 +656,15 @@ function RiesgoCard({
               {nc.label} · {item.puntuacion}pts
             </span>
             <span className="text-xs text-gray-500">{item.categoria}</span>
-            <span className="text-xs text-gray-400">P:{item.probabilidad} × I:{item.impacto}</span>
+            {item.controles && item.controles.length > 0 ? (
+              <span className="text-xs text-gray-400">
+                P:{item.probabilidad}×I:{item.impacto}={item.probabilidad * item.impacto} inherente
+                {' → '}
+                P:{item.probabilidadResidual ?? item.probabilidad}×I:{item.impactoResidual ?? item.impacto}={item.puntuacion} residual
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400">P:{item.probabilidad} × I:{item.impacto}</span>
+            )}
             {item.origen === 'auditoria' && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">
                 📥 Desde auditoría
@@ -455,8 +678,30 @@ function RiesgoCard({
             )}
           </div>
           <p className="text-sm font-semibold text-gray-800">{item.nombre}</p>
-          {item.descripcion && (
-            <p className="text-xs text-gray-500 line-clamp-2">{item.descripcion}</p>
+          {(item.causa || item.descripcion) && (
+            <p className="text-xs text-gray-500 line-clamp-2">
+              <span className="font-semibold text-gray-600">Causa: </span>
+              {item.causa || item.descripcion}
+            </p>
+          )}
+          {item.consecuencia && (
+            <p className="text-xs text-gray-500 line-clamp-2">
+              <span className="font-semibold text-gray-600">Consecuencia: </span>
+              {item.consecuencia}
+            </p>
+          )}
+          {item.controles && item.controles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {item.controles.map(c => (
+                <span
+                  key={c.id}
+                  title={`${c.descripcion || c.tipo} · ${NATURALEZA_LABELS[c.naturaleza]}`}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium"
+                >
+                  🛡️ {c.tipo} · {c.naturaleza === 'pasivo' ? 'pasivo' : 'activo'}
+                </span>
+              ))}
+            </div>
           )}
           <div className="flex flex-wrap gap-3 text-xs text-gray-400">
             {item.responsable   && <span>👤 {item.responsable}</span>}
@@ -593,10 +838,19 @@ export default function AnalisisRiesgoPage() {
     if (!user) return;
     setSaving(true);
     try {
+      const nivelInherente      = calcNivel(payload.probabilidad, payload.impacto);
+      const puntuacionInherente = payload.probabilidad * payload.impacto;
+      const residual            = calcResidual(payload.probabilidad, payload.impacto, payload.controles);
+
       await addDoc(collection(db, 'riesgos', user.uid, 'items'), {
         ...payload,
-        nivel:      calcNivel(payload.probabilidad, payload.impacto),
-        puntuacion: payload.probabilidad * payload.impacto,
+        nivelInherente,
+        puntuacionInherente,
+        probabilidadResidual: residual.probabilidad,
+        impactoResidual:      residual.impacto,
+        // nivel/puntuación = SIEMPRE residual — alimentan matriz, KPIs, filtros y alertas.
+        nivel:      calcNivel(residual.probabilidad, residual.impacto),
+        puntuacion: residual.probabilidad * residual.impacto,
         creadoEn:   serverTimestamp(),
       });
       show('Riesgo registrado correctamente.', 'success');
@@ -645,8 +899,8 @@ export default function AnalisisRiesgoPage() {
         nit:                userNit ?? '',
         numero:             `CAPA-${num}`,
         descripcion:        `[Riesgo ISO 31000] ${item.nombre}`,
-        causaRaiz:          item.descripcion || `Riesgo de categoría ${item.categoria} identificado en la matriz — nivel ${item.nivel} (Probabilidad ${item.probabilidad} × Impacto ${item.impacto}).`,
-        accionCorrectiva:   `Tratamiento definido: ${item.tratamiento}. Documentar las acciones concretas para mitigar este riesgo.`,
+        causaRaiz:          item.causa || item.descripcion || `Riesgo de categoría ${item.categoria} identificado en la matriz — nivel ${item.nivel} (Probabilidad ${item.probabilidadResidual ?? item.probabilidad} × Impacto ${item.impactoResidual ?? item.impacto}, residual).`,
+        accionCorrectiva:   `Tratamiento definido: ${item.tratamiento}.${item.consecuencia ? ` Consecuencia si no se controla: ${item.consecuencia}` : ''} Documentar las acciones concretas para mitigar este riesgo.`,
         responsable:        item.responsable || '',
         area:               item.categoria,
         fechaLimite:        limite.toISOString().slice(0, 10),
@@ -675,13 +929,17 @@ export default function AnalisisRiesgoPage() {
     if (!w) return;
     const filas = riesgos.map(r => {
       const color = r.nivel === 'extremo' ? '#dc2626' : r.nivel === 'alto' ? '#ea580c' : r.nivel === 'medio' ? '#ca8a04' : '#16a34a';
+      const pRes = r.probabilidadResidual ?? r.probabilidad;
+      const iRes = r.impactoResidual ?? r.impacto;
+      const nControles = r.controles?.length ?? 0;
       return `<tr>
-        <td>${r.nombre}</td>
+        <td>${r.nombre}<br/><span style="color:#94a3b8;font-size:10px">${r.causa || r.descripcion || ''}</span></td>
         <td>${r.categoria}</td>
-        <td style="text-align:center">${r.probabilidad}</td>
-        <td style="text-align:center">${r.impacto}</td>
+        <td style="text-align:center">${r.probabilidad}×${r.impacto}</td>
+        <td style="text-align:center">${pRes}×${iRes}</td>
         <td style="text-align:center;font-weight:bold">${r.puntuacion}</td>
         <td style="font-weight:bold;color:${color}">${NIVEL_CONFIG[r.nivel].label}</td>
+        <td style="text-align:center">${nControles || '—'}</td>
         <td>${r.tratamiento}</td>
         <td>${r.responsable || '—'}</td>
         <td>${r.fechaRevision || '—'}</td>
@@ -714,8 +972,8 @@ export default function AnalisisRiesgoPage() {
 </div>
 <table>
   <thead><tr>
-    <th>Riesgo</th><th>Categoría</th><th>P</th><th>I</th><th>P×I</th>
-    <th>Nivel</th><th>Tratamiento</th><th>Responsable</th><th>Revisión</th>
+    <th>Riesgo / Causa</th><th>Categoría</th><th>P×I inherente</th><th>P×I residual</th><th>Puntaje</th>
+    <th>Nivel</th><th>Controles</th><th>Tratamiento</th><th>Responsable</th><th>Revisión</th>
   </tr></thead>
   <tbody>${filas}</tbody>
 </table>
