@@ -46,6 +46,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth as fbAuth } from '@/lib/firebase';
 import { crearFirma } from '@/lib/firmar';
+import { registrarBitacora } from '@/lib/useBitacora';
 import { catalogoDMSCompleto } from '@/lib/dmsServiciosCatalogo';
 
 export type DmsEstado = 'borrador' | 'en_revision' | 'aprobado' | 'obsoleto';
@@ -108,13 +109,14 @@ function fromSnap(d: any): DocumentoDMS {
 // (se pueden llamar tanto desde useDocumentosDMS como desde
 // useColaAprobacionDMS/la página de admin, sin duplicar lógica).
 
-export const enviarARevisionDMS = async (id: string) => {
-  await updateDoc(doc(db, 'documentos_dms', id), {
+export const enviarARevisionDMS = async (item: DocumentoDMS) => {
+  await updateDoc(doc(db, 'documentos_dms', item.id), {
     estado: 'en_revision',
     modificadoPor: fbAuth.currentUser?.uid ?? null,
     modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
     modificadoEn: serverTimestamp(),
   });
+  registrarBitacora(item.uid, item.nit, 'Documentos', `${item.nombre} v${item.version} enviada a revisión`);
 };
 
 /** Aprobar = firmar electrónicamente el contenido EXACTO capturado al crear
@@ -142,6 +144,7 @@ export const aprobarDocumentoDMS = async (item: DocumentoDMS, aprobadoPorNombre:
   if (item.reemplazaVersionId) {
     await updateDoc(doc(db, 'documentos_dms', item.reemplazaVersionId), { estado: 'obsoleto' });
   }
+  registrarBitacora(item.uid, item.nit, 'Documentos', `${item.nombre} v${item.version} aprobada`, `Aprobado por: ${aprobadoPorNombre}`);
 };
 
 /** Retira versiones "rotas": borrador/en_revision sin `contenido`
@@ -164,10 +167,10 @@ export const aprobarDocumentoDMS = async (item: DocumentoDMS, aprobadoPorNombre:
  * registrado quién y cuándo (retiradoPor/fechaRetiro) para no perder
  * trazabilidad — y el caller además debe loguearlo en la bitácora de
  * seguridad (logSecurityEvent), igual que aprobar. */
-export const retirarVersionesRotasDMS = async (ids: string[], retiradoPorNombre: string) => {
+export const retirarVersionesRotasDMS = async (items: DocumentoDMS[], retiradoPorNombre: string) => {
   const batch = writeBatch(db);
-  ids.forEach(id => {
-    batch.update(doc(db, 'documentos_dms', id), {
+  items.forEach(item => {
+    batch.update(doc(db, 'documentos_dms', item.id), {
       estado: 'obsoleto',
       retiradoPor: retiradoPorNombre,
       fechaRetiro: serverTimestamp(),
@@ -177,6 +180,10 @@ export const retirarVersionesRotasDMS = async (ids: string[], retiradoPorNombre:
     });
   });
   await batch.commit();
+  const primero = items[0];
+  if (primero) {
+    registrarBitacora(primero.uid, primero.nit, 'Documentos', `${primero.nombre} — ${items.length} versión(es) sin contenido retirada(s)`, `Retirado por: ${retiradoPorNombre}`);
+  }
 };
 
 export const listarSocializacionesDMS = async (documentoId: string): Promise<Socializacion[]> => {
@@ -257,6 +264,7 @@ export function useDocumentosDMS(uid: string | null, nit: string | null) {
       contenido,
       reemplazaVersionId: anterior?.id ?? null,
     });
+    registrarBitacora(uidCreador, nitCreador, 'Documentos', `${cat.nombre} v${nuevaVersion} creada (borrador)`);
     return ref.id;
   }, [vigentePorDocId]);
 

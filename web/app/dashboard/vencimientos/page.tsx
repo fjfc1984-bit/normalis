@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
+import { registrarBitacora } from '@/lib/useBitacora';
 import Button from '@/components/ui/Button';
 import { Toast, useToast } from '@/components/ui/Toast';
 
@@ -25,6 +26,7 @@ interface Vencimiento {
   estado:    'vigente' | 'proximo' | 'vencido';
   notas?:    string;
   uid:       string;
+  nit?:      string;
   createdAt: Timestamp | null;
 }
 
@@ -49,7 +51,7 @@ function getEstadoBadge(dias: number) {
 }
 
 export default function VencimientosPage() {
-  const { user }         = useAuth();
+  const { user, nit }    = useAuth();
   const { toast, show } = useToast();
 
   const [vencimientos, setVencimientos] = useState<Vencimiento[]>([]);
@@ -61,15 +63,15 @@ export default function VencimientosPage() {
   const [saving, setSaving] = useState(false);
 
   // Suscripción en tiempo real a Firestore
-  // Nota: solo un where('uid','==',...) — sin orderBy en la query, para evitar
-  // depender de un índice compuesto. El orden se aplica client-side abajo.
+  // Preferir query por NIT (compartido con Equipo IPS) si existe, si no por uid.
+  // Sin orderBy en la query, para evitar depender de un índice compuesto —
+  // el orden se aplica client-side abajo.
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, 'vencimientos'),
-      where('uid', '==', user.uid),
-    );
+    const q = nit
+      ? query(collection(db, 'vencimientos'), where('nit', '==', nit))
+      : query(collection(db, 'vencimientos'), where('uid', '==', user.uid));
 
     const unsub = onSnapshot(q, snap => {
       const items = snap.docs
@@ -83,7 +85,7 @@ export default function VencimientosPage() {
     });
 
     return () => unsub();
-  }, [user]);
+  }, [user, nit]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -95,9 +97,11 @@ export default function VencimientosPage() {
         fecha:     form.fecha,
         notas:     form.notas,
         uid:       user.uid,
+        nit:       nit ?? '',
         estado:    'vigente',
         createdAt: serverTimestamp(),
       });
+      registrarBitacora(user.uid, nit, 'Vencimientos', `Vencimiento registrado — ${form.nombre}`, `Fecha: ${form.fecha}`);
       setForm({ nombre: '', fecha: '', notas: '' });
       setShowForm(false);
       show('Vencimiento registrado', 'success');

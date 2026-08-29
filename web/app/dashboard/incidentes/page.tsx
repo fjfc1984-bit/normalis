@@ -344,7 +344,7 @@ export default function IncidentesPage() {
   const { user, nit, loading: authLoading } = useAuth();
   const {
     items, loading, add, cambiarEstado, remove, guardarAnalisis, vincularCapa,
-  } = useIncidentes(user?.uid ?? null);
+  } = useIncidentes(user?.uid ?? null, nit);
   const { toast, show } = useToast();
 
   const [showModal,   setShowModal]   = useState(false);

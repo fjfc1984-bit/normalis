@@ -11,6 +11,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
+import { registrarBitacora } from '@/lib/useBitacora';
 import {
   INDICADORES_CATALOGO,
   calcularEstado,
@@ -114,6 +115,8 @@ export function useIndicadores(uid: string | null, nit: string | null): UseIndic
 
     const snap = await getDocs(checkQ);
 
+    const nombreIndic = INDICADORES_CATALOGO.find(i => i.id === indicId)?.nombre ?? indicId;
+
     if (!snap.empty) {
       // Actualizar existente
       await updateDoc(doc(fbDb, 'indicadores', snap.docs[0].id), {
@@ -124,6 +127,7 @@ export function useIndicadores(uid: string | null, nit: string | null): UseIndic
         modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
         modificadoEn: serverTimestamp(),
       });
+      registrarBitacora(uid, nit, 'Indicadores', `Medición actualizada — ${nombreIndic} (${periodo})`, `Valor: ${valor}`);
     } else {
       // Crear nuevo
       await addDoc(collection(fbDb, 'indicadores'), {
@@ -136,6 +140,7 @@ export function useIndicadores(uid: string | null, nit: string | null): UseIndic
         fechaCreacion: serverTimestamp(),
         fechaActualizacion: null,
       });
+      registrarBitacora(uid, nit, 'Indicadores', `Medición registrada — ${nombreIndic} (${periodo})`, `Valor: ${valor}`);
     }
   }, []);
 

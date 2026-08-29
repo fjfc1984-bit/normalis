@@ -814,13 +814,13 @@ const ACCIONES_POR_SEMAFORO: Record<string, { titulo: string; pasos: string[] }>
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════════
 export default function SgSstPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, nit, loading: authLoading } = useAuth();
   const {
     data, score, loading, saving, error,
     setItemEstado, setFase, marcarTodos,
     addPlanItem, updatePlanItem, deletePlanItem,
     addVencimiento, deleteVencimiento,
-  } = useSST(user?.uid ?? null);
+  } = useSST(user?.uid ?? null, nit);
 
   const [tab, setTab]           = useState<Tab>('dashboard');
   const [showInfo, setShowInfo] = useState(false);

@@ -375,8 +375,8 @@ function PQRSCard({
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════
 export default function PQRSPage() {
-  const { user, nombre, loading: authLoading } = useAuth();
-  const { items, loading, add, cambiarEstado, remove, responder } = usePQRS(user?.uid ?? null);
+  const { user, nombre, nit, loading: authLoading } = useAuth();
+  const { items, loading, add, cambiarEstado, remove, responder } = usePQRS(user?.uid ?? null, nit);
   const { toast, show } = useToast();
 
   const [showModal, setShowModal]       = useState(false);

@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { doc, getDoc, setDoc, deleteDoc, collection, addDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import { registrarBitacora } from './useBitacora';
 import type { AuditAnswers } from './auditTypes';
 
 export interface NonConformityItem {
@@ -153,6 +154,7 @@ export function useAudit(segmento: string): UseAuditReturn {
           completedAt: now,
           // Sin uid ni datos personales — solo el score anónimo
         });
+        registrarBitacora(user.uid, userData.nit ?? null, 'Auditoría', `Autoevaluación completada — ${segmento}`, `Puntaje: ${score}/${totalQ}`);
       } catch (_) { /* benchmarking no crítico — ignora errores */ }
     } catch (err) {
       console.error('Error marking complete:', err);

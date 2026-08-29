@@ -118,6 +118,7 @@ function NuevoRegistroModal({
 // ── Fila de la tabla ──────────────────────────────────────────────────────────
 function BitacoraRow({ entry, onDelete }: { entry: BitacoraEntry; onDelete: (id: string) => void }) {
   const mc = MODULO_COLOR[entry.modulo] ?? MODULO_COLOR['Otro'];
+  const esAuto = entry.origen === 'auto';
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
       <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{fmtDateTime(entry.ts)}</td>
@@ -129,6 +130,14 @@ function BitacoraRow({ entry, onDelete }: { entry: BitacoraEntry; onDelete: (id:
       </td>
       <td className="px-4 py-3 text-sm text-gray-700">{entry.accion}</td>
       <td className="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate">{entry.detalle || '—'}</td>
+      <td className="px-4 py-3">
+        <span
+          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${esAuto ? 'bg-cyan-50 text-cyan-700' : 'bg-gray-100 text-gray-500'}`}
+          title={esAuto ? 'Registrado automáticamente por el sistema' : 'Agregado manualmente'}
+        >
+          {esAuto ? '⚙️ Auto' : '✍️ Manual'}
+        </span>
+      </td>
       <td className="px-4 py-3 text-center">
         <button
           onClick={() => onDelete(entry.id)}
@@ -146,8 +155,8 @@ function BitacoraRow({ entry, onDelete }: { entry: BitacoraEntry; onDelete: (id:
 //  Página principal
 // ════════════════════════════════════════════════════════════════════════════
 export default function BitacoraPage() {
-  const { user, nombre, loading: authLoading } = useAuth();
-  const { entries, loading, add, remove } = useBitacora(user?.uid ?? null, nombre || 'Usuario');
+  const { user, nit, nombre, loading: authLoading } = useAuth();
+  const { entries, loading, add, remove } = useBitacora(user?.uid ?? null, nit, nombre || 'Usuario');
   const { toast, show } = useToast();
 
   const [showModal, setShowModal] = useState(false);
@@ -209,9 +218,9 @@ export default function BitacoraPage() {
 
   // Exportar CSV
   const exportCSV = useCallback(() => {
-    let csv = 'Fecha,Usuario,Módulo,Acción,Detalle\n';
+    let csv = 'Fecha,Usuario,Módulo,Acción,Detalle,Origen\n';
     entries.forEach(e => {
-      const row = [fmtDateTime(e.ts), e.usuario, e.modulo, e.accion, e.detalle]
+      const row = [fmtDateTime(e.ts), e.usuario, e.modulo, e.accion, e.detalle, e.origen === 'auto' ? 'Automático' : 'Manual']
         .map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
       csv += row + '\n';
     });
@@ -240,6 +249,7 @@ export default function BitacoraPage() {
         <td>${escH(e.modulo)}</td>
         <td>${escH(e.accion)}</td>
         <td>${escH(e.detalle || '—')}</td>
+        <td>${e.origen === 'auto' ? 'Automático' : 'Manual'}</td>
       </tr>`
     ).join('');
     w.document.write(`<!DOCTYPE html><html lang="es"><head>
@@ -259,7 +269,7 @@ export default function BitacoraPage() {
 <h1>📋 Bitácora de Gobernanza</h1>
 <p class="meta">NormaLis · Generado: ${new Date().toLocaleString('es-CO')} · Mostrando últimos ${sample.length} registros</p>
 <table>
-  <thead><tr><th>Fecha y Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Detalle</th></tr></thead>
+  <thead><tr><th>Fecha y Hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Detalle</th><th>Origen</th></tr></thead>
   <tbody>${filas}</tbody>
 </table>
 </body></html>`);
@@ -286,7 +296,7 @@ export default function BitacoraPage() {
 
       <SectionHeader
         title="Bitácora de Gobernanza"
-        subtitle="Registro de auditoría interna — historial completo de acciones en todos los módulos"
+        subtitle="Registro de auditoría interna, compartido con tu Equipo IPS — combina entradas manuales con registros automáticos de otros módulos"
         actions={
           <div className="flex gap-2">
             <button
@@ -393,7 +403,7 @@ export default function BitacoraPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['Fecha y hora', 'Usuario', 'Módulo', 'Acción', 'Detalle', ''].map(h => (
+                  {['Fecha y hora', 'Usuario', 'Módulo', 'Acción', 'Detalle', 'Origen', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                       {h}
                     </th>

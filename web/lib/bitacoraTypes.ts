@@ -15,14 +15,22 @@ export type BitacoraModulo =
   | 'Sistema'
   | 'Otro';
 
+export type BitacoraOrigen = 'manual' | 'auto';
+
 export interface BitacoraEntry {
   id:      string;
+  uid:     string;
+  nit:     string;
   ts:      string;       // ISO string
   usuario: string;
   modulo:  BitacoraModulo;
   accion:  string;
   detalle: string;
   creadoEn: number;      // ms para ordenar
+  /** 'manual' = creado desde el botón "+ Agregar registro"; 'auto' =
+   *  registrado por otro módulo (CAPAs, PQRS, Indicadores, etc.) al ocurrir
+   *  un evento relevante. Ausente en registros antiguos → se trata como manual. */
+  origen?: BitacoraOrigen;
 }
 
 export const BITACORA_MODULOS: BitacoraModulo[] = [

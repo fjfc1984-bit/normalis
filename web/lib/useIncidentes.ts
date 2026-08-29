@@ -11,6 +11,7 @@ import {
   orderBy, query, Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { registrarBitacora } from '@/lib/useBitacora';
 import type {
   IncidenteItem, IncidenteTipo, IncidenteSeveridad, IncidenteEstado, AnalisisLondres,
 } from '@/lib/incidenteTypes';
@@ -25,7 +26,7 @@ export interface NuevoIncidente {
 }
 
 // ── Hook principal ────────────────────────────────────────────────────────────
-export function useIncidentes(uid: string | null) {
+export function useIncidentes(uid: string | null, nit: string | null = null) {
   const [items,   setItems]   = useState<IncidenteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
@@ -74,7 +75,8 @@ export function useIncidentes(uid: string | null) {
       updatedAt: Timestamp.now(),
     });
     setItems(prev => [{ ...nuevo, id: ref.id }, ...prev]);
-  }, [uid]);
+    registrarBitacora(uid, nit, 'Incidentes', `Nuevo incidente registrado — ${payload.tipo} (${payload.severidad})`, payload.desc);
+  }, [uid, nit]);
 
   const cambiarEstado = useCallback(async (
     id: string, estado: IncidenteEstado,
@@ -84,7 +86,10 @@ export function useIncidentes(uid: string | null) {
       estado, updatedAt: Timestamp.now(),
     });
     setItems(prev => prev.map(i => i.id === id ? { ...i, estado } : i));
-  }, [uid]);
+    if (estado === 'Cerrado') {
+      registrarBitacora(uid, nit, 'Incidentes', `Incidente cerrado (id=${id})`);
+    }
+  }, [uid, nit]);
 
   const remove = useCallback(async (id: string): Promise<void> => {
     if (!uid) return;

@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logSecurityEvent } from '@/lib/securityLog';
+import { registrarBitacora } from '@/lib/useBitacora';
 import type { PQRSItem, PQRSTipo, PQRSEstado, PQRSPrioridad } from '@/lib/pqrsTypes';
 
 // ── Estado del hook ───────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ export interface NuevaPQRS {
 }
 
 // ── Hook principal ────────────────────────────────────────────────────────────
-export function usePQRS(uid: string | null) {
+export function usePQRS(uid: string | null, nit: string | null = null) {
   const [items, setItems]   = useState<PQRSItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
@@ -89,7 +90,8 @@ export function usePQRS(uid: string | null) {
       updatedAt: Timestamp.now(),
     });
     setItems(prev => [{ ...nueva, id: ref.id }, ...prev]);
-  }, [uid]);
+    registrarBitacora(uid, nit, 'PQRS', `Nueva PQRS registrada — ${payload.tipo}`, payload.desc?.slice(0, 200));
+  }, [uid, nit]);
 
   // Registrar la respuesta enviada al solicitante
   const responder = useCallback(async (id: string, respuesta: string): Promise<void> => {
@@ -99,7 +101,8 @@ export function usePQRS(uid: string | null) {
     await updateDoc(ref, { respuesta, respuestaFecha, updatedAt: Timestamp.now() });
     setItems(prev => prev.map(p => p.id === id ? { ...p, respuesta, respuestaFecha } : p));
     logSecurityEvent('pqrs_respondida', 'pqrs', `id=${id}`);
-  }, [uid]);
+    registrarBitacora(uid, nit, 'PQRS', `PQRS respondida (id=${id})`);
+  }, [uid, nit]);
 
   // Cambiar estado
   const cambiarEstado = useCallback(async (id: string, estado: PQRSEstado): Promise<void> => {

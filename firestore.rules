@@ -232,6 +232,36 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // bitacora_gobernanza/{id} — Bitácora de Gobernanza, compartida por IPS
+    // (antes era usuarios/{uid}/bitacora — subcolección solo para el dueño;
+    // se migra a colección de nivel superior con el mismo patrón que capas,
+    // para que todo el Equipo IPS vea la misma bitácora). Cada entrada puede
+    // ser manual (creada desde la pantalla) o automática (otros módulos la
+    // registran vía registrarBitacora() — ver web/lib/useBitacora.ts). No se
+    // edita una vez creada, solo se crea o se borra.
+    // ════════════════════════════════════════════════════════════════════════
+    match /bitacora_gobernanza/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      // Al crear: solo verificar uid — nit puede ser vacío si el usuario no lo
+      // tiene configurado (mismo criterio que capas/{id}).
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update: if false;
+
+      allow delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // vencimientos/{id} — módulo de vencimientos personal
     // ════════════════════════════════════════════════════════════════════════
     match /vencimientos/{id} {

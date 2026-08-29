@@ -246,7 +246,7 @@ export default function DocumentosDMSPage() {
   async function handleEnviarRevision(item: DocumentoDMS) {
     setBusyId(item.id);
     try {
-      await enviarARevision(item.id);
+      await enviarARevision(item);
       show('Enviado a revisión', 'info');
     } finally { setBusyId(null); }
   }
@@ -270,7 +270,7 @@ export default function DocumentosDMSPage() {
     const { docId, rotas } = retirarModal;
     setBusyId(`retirar-${docId}`);
     try {
-      await retirarVersionesRotas(rotas.map(r => r.id), ipsNombre || user?.email || 'Usuario');
+      await retirarVersionesRotas(rotas, ipsNombre || user?.email || 'Usuario');
       const cat = catalogoDMSCompleto().find(c => c.id === docId)!;
       await logSecurityEvent('documento_version_retirada', 'documentos-dms', `${cat.nombre} — ${rotas.length} versión(es) sin contenido retirada(s)`);
       show(`Se retiraron ${rotas.length} versión(es) sin contenido — ya puedes crear una nueva`, 'info');

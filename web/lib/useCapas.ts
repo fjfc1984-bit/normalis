@@ -17,6 +17,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
+import { registrarBitacora } from '@/lib/useBitacora';
 import type { Capa, CapaFormData, CapaEstado, CapaVeredicto } from './capaTypes';
 
 // Trazabilidad: quién hizo el último cambio en un registro compartido por
@@ -193,6 +194,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       fechaInicio:      null,
       fechaCierre:      null,
     });
+    registrarBitacora(uid, nit, 'CAPAs', `CAPA-${num} creada`, data.descripcion.trim());
     return ref.id;
   }, []);
 
@@ -220,7 +222,9 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       fechaActualizacion: serverTimestamp(),
       ...selloAuditoria(),
     });
-  }, []);
+    const numero = capas.find(c => c.id === id)?.numero ?? id;
+    registrarBitacora(fbAuth.currentUser?.uid ?? '', nit, 'CAPAs', `${numero} iniciada`);
+  }, [capas, nit]);
 
   // ── Marcar como implementada (pendiente de verificar eficacia) ──
   const implementarCapa = useCallback(async (
@@ -241,7 +245,9 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       fechaActualizacion: serverTimestamp(),
       ...selloAuditoria(),
     });
-  }, []);
+    const numero = capas.find(c => c.id === id)?.numero ?? id;
+    registrarBitacora(fbAuth.currentUser?.uid ?? '', nit, 'CAPAs', `${numero} implementada — pendiente verificar eficacia`, evidencia.trim());
+  }, [capas, nit]);
 
   // ── Verificar eficacia (cierra si eficaz, reabre si reincide) ──
   const verificarEficacia = useCallback(async (
@@ -255,6 +261,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       evidencia: evidencia.trim(),
     };
 
+    const numero = capas.find(c => c.id === id)?.numero ?? id;
     if (veredicto === 'eficaz') {
       await updateDoc(doc(fbDb, 'capas', id), {
         estado: 'cerrada' as CapaEstado,
@@ -265,6 +272,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
         historialVerificaciones: arrayUnion(entradaHistorial),
         ...selloAuditoria(),
       });
+      registrarBitacora(fbAuth.currentUser?.uid ?? '', nit, 'CAPAs', `${numero} cerrada — eficaz`, evidencia.trim());
     } else {
       await updateDoc(doc(fbDb, 'capas', id), {
         estado: 'en_progreso' as CapaEstado,
@@ -276,8 +284,9 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
         historialVerificaciones: arrayUnion(entradaHistorial),
         ...selloAuditoria(),
       });
+      registrarBitacora(fbAuth.currentUser?.uid ?? '', nit, 'CAPAs', `${numero} reabierta — reincidencia`, evidencia.trim());
     }
-  }, []);
+  }, [capas, nit]);
 
   return {
     capas, loading, error, stats,

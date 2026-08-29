@@ -9,6 +9,7 @@ import {
   doc, getDoc, setDoc, serverTimestamp,
 } from 'firebase/firestore';
 import { db as fbDb } from '@/lib/firebase';
+import { registrarBitacora } from '@/lib/useBitacora';
 import type {
   SSTData, SSTFase, SSTItemEstado, SSTPlanItem, SSTVencimiento, SSTScore,
 } from './sstTypes';
@@ -65,7 +66,7 @@ function nanoid() {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
-export function useSST(uid: string | null): UseSST {
+export function useSST(uid: string | null, nit: string | null = null): UseSST {
   const [data,    setData]    = useState<SSTData>(SST_DATA_EMPTY);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
@@ -118,7 +119,8 @@ export function useSST(uid: string | null): UseSST {
   const setFase = useCallback(async (fase: SSTFase) => {
     const next: SSTData = { ...data, fase, autoevaluacion: {} };
     await persist(next);
-  }, [data, persist]);
+    if (uid) registrarBitacora(uid, nit, 'SG-SST', `Avanzó a fase: ${fase}`);
+  }, [data, persist, uid, nit]);
 
   const marcarTodos = useCallback(async (estado: SSTItemEstado) => {
     const estandar = SST_ESTANDARES[data.fase || 'fase1'];
