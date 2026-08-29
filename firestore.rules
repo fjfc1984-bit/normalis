@@ -21,6 +21,8 @@
 //   equipos_biomedicos/{id}/mantenimientos/{id} — hoja de vida (mantenimientos preventivos/correctivos)
 //   infraestructura_areas/{id} — Gestión de Infraestructura Física (Estándar de Infraestructura)
 //   infraestructura_areas/{id}/inspecciones/{id} — hoja de vida (inspecciones periódicas)
+//   medicamentos_lotes/{id}     — Gestión de Medicamentos y Dispositivos: inventario de lotes
+//   medicamentos_verificaciones/{id} — verificaciones periódicas del Servicio Farmacéutico
 //   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
 //   iaas_casos/{id}              — Vigilancia IAAS: casos individuales (SIVIGILA 357/352)
 //   iaas_denominadores/{id}      — Vigilancia IAAS: consolidados mensuales (SIVIGILA 359/362)
@@ -891,6 +893,50 @@ service cloud.firestore {
         );
         allow delete: if false;
       }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // medicamentos_lotes/{id} — Gestión de Medicamentos y Dispositivos:
+    // inventario de lotes con vencimiento (Res. 1732/2026, Estándar de
+    // Medicamentos y Dispositivos Médicos). Mismo patrón compartido por NIT
+    // que capas/vencimientos — sin subcolección, colección plana.
+    // ════════════════════════════════════════════════════════════════════════
+    match /medicamentos_lotes/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // medicamentos_verificaciones/{id} — verificaciones periódicas del
+    // Servicio Farmacéutico. Registro de solo-creación (como bitacora_
+    // gobernanza) salvo el campo capaId, que se actualiza al vincular una
+    // CAPA creada desde los hallazgos de la verificación.
+    // ════════════════════════════════════════════════════════════════════════
+    match /medicamentos_verificaciones/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow delete: if false;
     }
 
     // ════════════════════════════════════════════════════════════════════════
