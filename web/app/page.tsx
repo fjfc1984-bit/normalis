@@ -690,7 +690,7 @@ function Nosotros() {
   const valores = [
     { icon: '📐', title: 'Dominio profundo de la norma',  desc: 'No tercerizamos la interpretación regulatoria: cada módulo se diseña con criterio de auditor, no de quien solo copió un PDF.' },
     { icon: '🔒', title: 'Confianza y seguridad',         desc: 'Datos de cada IPS y sus pacientes protegidos bajo la Ley 1581/2012, con permisos por equipo y trazabilidad de quién hizo qué.' },
-    { icon: '🤝', title: 'Cercanía con el prestador',     desc: 'Construido para equipos pequeños con poco tiempo — no para el departamento de calidad de un hospital de tercer nivel.' },
+    { icon: '🤝', title: 'Cercanía con el prestador',     desc: 'Entendemos la realidad operativa de una IPS colombiana: tiempo limitado, equipos de calidad pequeños, alta exigencia normativa.' },
     { icon: '🔄', title: 'Mejora continua real',          desc: 'Cada bug encontrado se corrige y se documenta; cada norma nueva se incorpora sin esperar un lanzamiento grande.' },
     { icon: '🔎', title: 'Honestidad sobre el alcance',   desc: 'Decimos con claridad qué automatiza la plataforma hoy, qué sigue siendo criterio del auditor, y dónde hay vacíos que debe resolver la Secretaría de Salud territorial.' },
   ];
