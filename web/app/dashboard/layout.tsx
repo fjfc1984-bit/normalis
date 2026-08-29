@@ -45,6 +45,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/infraestructura', label: 'Infraestructura', icon: '🏗️', badge: 'NUEVO' },
       { href: '/dashboard/medicamentos', label: 'Medicamentos y Dispositivos', icon: '💊', badge: 'NUEVO' },
       { href: '/dashboard/historia-clinica', label: 'Historia Clínica', icon: '📄', badge: 'NUEVO' },
+      { href: '/dashboard/interdependencia', label: 'Interdependencia', icon: '🔗', badge: 'NUEVO' },
       { href: '/dashboard/gap-1732',    label: 'Brecha 1732', icon: '🆕' },
       { href: '/dashboard/pamec',        label: 'PAMEC',        icon: '📈' },
       { href: '/dashboard/capas',        label: 'CAPAs',        icon: '✓'  },
