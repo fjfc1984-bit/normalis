@@ -18,7 +18,10 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useEquipoIPS, type Invitacion, type MiembroEquipo } from '@/lib/useEquipoIPS';
+import {
+  useEquipoIPS, type Invitacion, type MiembroEquipo,
+  LIMITE_USUARIOS_POR_PLAN, PLAN_LABEL,
+} from '@/lib/useEquipoIPS';
 import { SectionHeader, LoadingSpinner, Toast, useToast, EmptyState } from '@/components/ui';
 import Button from '@/components/ui/Button';
 
@@ -148,17 +151,23 @@ function MiembroRow({
 }
 
 export default function EquipoPage() {
-  const { nit, nitPropio, nombre, esMiembroEquipo, loading: authLoading } = useAuth();
+  const { nit, nitPropio, nombre, esMiembroEquipo, plan, loading: authLoading } = useAuth();
   const { miembros, invitaciones, loading, crearInvitacion, revocarInvitacion, cambiarAccesoMiembro } = useEquipoIPS(nitPropio, nit);
   const { toast, show } = useToast();
   const [saving, setSaving] = useState(false);
 
   const esDueno = !!nitPropio;
+  const planEfectivo = plan ?? 'basico';
+  const limite = LIMITE_USUARIOS_POR_PLAN[planEfectivo];
+  const pendientesVigentes = invitaciones.filter(
+    i => i.estado === 'pendiente' && !(i.expiraEn && i.expiraEn.toDate().getTime() < Date.now()),
+  ).length;
+  const usados = 1 + miembros.length + pendientesVigentes;
 
   async function handleInvitar(email: string) {
     setSaving(true);
     try {
-      const { emailEnviado, emailError } = await crearInvitacion(email, nombre);
+      const { emailEnviado, emailError } = await crearInvitacion(email, nombre, plan);
       show(
         emailEnviado
           ? `Invitación creada y correo enviado a ${email}.`
@@ -234,8 +243,20 @@ export default function EquipoPage() {
 
       {esDueno && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-sm font-bold text-gray-700 mb-3">Invitar compañero de equipo</h3>
-          <InvitarForm onInvitar={handleInvitar} saving={saving} />
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-700">Invitar compañero de equipo</h3>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-medium">
+              Plan {PLAN_LABEL[planEfectivo]} · {usados}/{limite ?? '∞'} usuarios
+            </span>
+          </div>
+          {limite !== null && usados >= limite ? (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Alcanzaste el límite de tu plan {PLAN_LABEL[planEfectivo]} ({limite} usuario{limite === 1 ? '' : 's'}).
+              Contáctanos para actualizar tu plan y seguir invitando compañeros.
+            </p>
+          ) : (
+            <InvitarForm onInvitar={handleInvitar} saving={saving} />
+          )}
           <p className="text-xs text-gray-400 mt-2">
             Le enviamos un correo automático con el enlace. Vence en 7 días y solo puede usarse una vez,
             con el correo que indiques aquí — si no le llega, cópialo abajo y compártelo tú.

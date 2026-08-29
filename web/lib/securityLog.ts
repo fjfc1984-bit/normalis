@@ -23,6 +23,7 @@ export type SecurityLogAccion =
   | 'login'
   | 'admin_aprobar_usuario'
   | 'admin_rechazar_usuario'
+  | 'admin_cambiar_plan'
   | 'llave_api_creada'
   | 'llave_api_revocada'
   | 'llave_api_reactivada'
@@ -38,6 +39,7 @@ export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   login:                   'Inicio de sesión',
   admin_aprobar_usuario:   'Usuario aprobado',
   admin_rechazar_usuario:  'Usuario rechazado',
+  admin_cambiar_plan:      'Plan de suscripción actualizado',
   llave_api_creada:        'Llave API creada',
   llave_api_revocada:      'Llave API revocada',
   llave_api_reactivada:    'Llave API reactivada',

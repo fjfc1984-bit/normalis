@@ -59,12 +59,34 @@ export interface MiembroEquipo {
 
 const INVITACION_VIGENCIA_DIAS = 7;
 
+// Límite de usuarios de Equipo IPS por plan (dueño incluido). Ver landing
+// page (web/app/page.tsx → Precios()) — fuente de verdad de estos números.
+// NOTA: este límite se aplica solo del lado del cliente (aquí), no en
+// firestore.rules — Firestore no puede hacer conteos agregados en una regla
+// de seguridad sin mantener un contador aparte, y con control manual de
+// planes (sin pasarela de pago todavía) el riesgo de que alguien lo evada
+// escribiendo directo a Firestore es bajo. Si se necesita blindarlo más
+// adelante, la vía es un contador mantenido por Cloud Function.
+export type PlanId = 'basico' | 'profesional' | 'enterprise' | null;
+
+export const LIMITE_USUARIOS_POR_PLAN: Record<'basico' | 'profesional' | 'enterprise', number | null> = {
+  basico: 1,
+  profesional: 5,
+  enterprise: null, // ilimitado
+};
+
+export const PLAN_LABEL: Record<'basico' | 'profesional' | 'enterprise', string> = {
+  basico: 'Básico',
+  profesional: 'Profesional',
+  enterprise: 'Enterprise',
+};
+
 export interface UseEquipoIPSResult {
   miembros: MiembroEquipo[];
   invitaciones: Invitacion[];
   loading: boolean;
   error: string | null;
-  crearInvitacion: (email: string, nombreIPS: string) => Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }>;
+  crearInvitacion: (email: string, nombreIPS: string, plan: PlanId) => Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }>;
   revocarInvitacion: (id: string) => Promise<void>;
   cambiarAccesoMiembro: (uid: string, activo: boolean) => Promise<void>;
 }
@@ -147,10 +169,28 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
     return () => unsub?.();
   }, [nitPropio]);
 
-  async function crearInvitacion(email: string, nombreIPS: string): Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }> {
+  async function crearInvitacion(email: string, nombreIPS: string, plan: PlanId): Promise<{ codigo: string; emailEnviado: boolean; emailError?: string }> {
     if (!nitPropio) throw new Error('Solo el dueño de la cuenta de la IPS puede invitar compañeros de equipo.');
     const uid = fbAuth.currentUser?.uid;
     if (!uid) throw new Error('Sesión no válida. Vuelve a iniciar sesión e inténtalo de nuevo.');
+
+    // Límite de usuarios según el plan (dueño + miembros aceptados +
+    // invitaciones pendientes vigentes cuentan como "usados").
+    const planEfectivo = plan ?? 'basico';
+    const limite = LIMITE_USUARIOS_POR_PLAN[planEfectivo];
+    if (limite !== null) {
+      const pendientesVigentes = invitaciones.filter(
+        i => i.estado === 'pendiente' && !(i.expiraEn && i.expiraEn.toDate().getTime() < Date.now()),
+      ).length;
+      const usados = 1 /* dueño */ + miembros.length + pendientesVigentes;
+      if (usados >= limite) {
+        throw new Error(
+          `Tu plan ${PLAN_LABEL[planEfectivo]} permite hasta ${limite} usuario${limite === 1 ? '' : 's'} y ya tienes ${usados}. ` +
+          `Actualiza tu plan para invitar más compañeros.`,
+        );
+      }
+    }
+
     const expira = new Date();
     expira.setDate(expira.getDate() + INVITACION_VIGENCIA_DIAS);
     const correo = email.trim().toLowerCase();

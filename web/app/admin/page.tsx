@@ -39,6 +39,17 @@ interface Solicitud {
   fechaSolicitud: Timestamp | null;
 }
 
+type PlanId = 'basico' | 'profesional' | 'enterprise';
+
+interface CuentaConPlan {
+  id:     string;
+  nombre: string;
+  email:  string;
+  nit:    string;
+  rol:    RolUsuario;
+  plan?:  PlanId;
+}
+
 interface Piloto {
   id:          string;
   nombre:      string;
@@ -112,6 +123,13 @@ const ROL_BADGE: Record<RolUsuario, string> = {
   piloto:     'bg-blue-100 text-blue-700',
   rechazado:  'bg-red-100 text-red-700',
   admin:      'bg-purple-100 text-purple-700',
+};
+
+// Fuente de verdad: página de precios (web/app/page.tsx → Precios()).
+const PLAN_LABELS: Record<PlanId, string> = {
+  basico:      'Básico (1 usuario)',
+  profesional: 'Profesional (hasta 5 usuarios)',
+  enterprise:  'Enterprise (ilimitado + multi-IPS)',
 };
 
 /* ─── Tab components ────────────────────────────────────────── */
@@ -296,6 +314,68 @@ function PilotosTab({ show }: { show: (m: string, t: 'success'|'error') => void 
                   {p.activo ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlanesTab({ show }: { show: (m: string, t: 'success'|'error') => void }) {
+  const [items, setItems] = useState<CuentaConPlan[]>([]);
+
+  useEffect(() => {
+    // Solo cuentas activas (dueños de IPS) — pendiente/rechazado no aplican.
+    const q = query(collection(db, 'usuarios'), where('rol', 'in', ['cliente', 'piloto']));
+    return onSnapshot(q, snap => {
+      const docs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as CuentaConPlan))
+        // Solo el dueño real de la cuenta (nit propio) tiene plan — los
+        // miembros de equipo (nit_ips) heredan el acceso del dueño.
+        .filter(u => !!u.nit);
+      docs.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      setItems(docs);
+    });
+  }, []);
+
+  async function cambiarPlan(id: string, plan: PlanId) {
+    try {
+      await updateDoc(doc(db, 'usuarios', id), { plan });
+      logSecurityEvent('admin_cambiar_plan', 'admin', `uid=${id} plan=${plan}`);
+      show(`Plan actualizado a ${PLAN_LABELS[plan]}`, 'success');
+    } catch (err: unknown) {
+      show((err as Error).message ?? 'No se pudo actualizar el plan', 'error');
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-gray-400 mb-4">
+        Asigna el plan de cada cuenta (dueño de IPS). Controla cuántos compañeros de equipo puede invitar
+        (Equipo IPS) y si puede administrar más de una IPS (Mis IPS — solo Enterprise / cotización especial).
+        Sin plan asignado, la cuenta queda en el nivel más restrictivo.
+      </p>
+      {items.length === 0 ? (
+        <p className="text-gray-400 py-12 text-center">No hay cuentas activas todavía.</p>
+      ) : (
+        <div className="space-y-3">
+          {items.map(u => (
+            <div key={u.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-800">{u.nombre || u.email}</p>
+                <p className="text-xs text-gray-400">{u.email} · NIT {u.nit}</p>
+              </div>
+              <select
+                value={u.plan || ''}
+                onChange={e => cambiarPlan(u.id, e.target.value as PlanId)}
+                className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="" disabled>Sin plan asignado</option>
+                <option value="basico">{PLAN_LABELS.basico}</option>
+                <option value="profesional">{PLAN_LABELS.profesional}</option>
+                <option value="enterprise">{PLAN_LABELS.enterprise}</option>
+              </select>
             </div>
           ))}
         </div>
@@ -628,7 +708,7 @@ function EnVivoTab() {
 
 /* ─── Main page ─────────────────────────────────────────────── */
 
-const TABS = ['Solicitudes', 'Pilotos', 'CRM', 'Leads', 'Analytics', 'En Vivo'] as const;
+const TABS = ['Solicitudes', 'Pilotos', 'Planes', 'CRM', 'Leads', 'Analytics', 'En Vivo'] as const;
 type Tab = typeof TABS[number];
 
 export default function AdminPage() {
@@ -685,6 +765,7 @@ export default function AdminPage() {
       <main className="max-w-5xl mx-auto p-6">
         {tab === 'Solicitudes' && <SolicitudesTab show={show} />}
         {tab === 'Pilotos'     && <PilotosTab     show={show} />}
+        {tab === 'Planes'      && <PlanesTab      show={show} />}
         {tab === 'CRM'         && <CRMTab         show={show} />}
         {tab === 'Leads'       && <LeadsTab />}
         {tab === 'Analytics'   && <AnalyticsTab />}

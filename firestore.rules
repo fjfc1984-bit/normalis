@@ -57,6 +57,14 @@ service cloud.firestore {
         (myData.nit == nitField || myData.nit_ips == nitField);
     }
 
+    // El campo `plan` (plan de suscripción: 'basico'|'profesional'|'enterprise')
+    // es EXCLUSIVAMENTE asignado por un admin desde el panel — ni el propio
+    // dueño de la cuenta ni un director de equipo (que sí puede editar otros
+    // campos de sus compañeros) puede tocarlo por ninguna vía.
+    function planSinCambios() {
+      return !('plan' in request.resource.data.diff(resource.data).affectedKeys());
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // usuarios/{uid} — perfiles de usuario + subcollections de módulos Next.js
     // ════════════════════════════════════════════════════════════════════════
@@ -71,10 +79,13 @@ service cloud.firestore {
          get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips ==
          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit);
 
-      // Crear: solo registro.html — usuario autenticado crea su propio doc
+      // Crear: solo registro.html — usuario autenticado crea su propio doc.
+      // No puede autoasignarse un plan de pago al registrarse — 'plan' queda
+      // ausente o en 'basico' (el más restrictivo) hasta que un admin lo cambie.
       allow create: if isOwner(uid) &&
         request.resource.data.rol == 'pendiente' &&
-        request.resource.data.activo == false;
+        request.resource.data.activo == false &&
+        (!('plan' in request.resource.data) || request.resource.data.plan == 'basico');
 
       // Actualizar propio perfil; admin puede actualizar cualquiera;
       // director puede actualizar rol_ips de miembros de su IPS.
@@ -91,36 +102,41 @@ service cloud.firestore {
       //           verificando el documento invitaciones/{code} referenciado.
       allow update: if isAdmin() ||
         (
-          isAuthenticated() &&
-          ('nit_ips' in get(/databases/$(database)/documents/usuarios/$(uid)).data) &&
-          get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips != '' &&
-          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ==
-          get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips
-        ) ||
-        (
-          isOwner(uid) &&
+          planSinCambios() &&
           (
             (
-              request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['nombre','nombreContacto','cargo','telefono','ciudad','tipoIPS','nit']) &&
-              (
-                request.resource.data.nit == resource.data.nit ||
-                resource.data.nit == '' ||
-                exists(/databases/$(database)/documents/usuarios/$(uid)/ips_autorizadas/$(request.resource.data.nit))
-              )
-            )
-            ||
+              isAuthenticated() &&
+              ('nit_ips' in get(/databases/$(database)/documents/usuarios/$(uid)).data) &&
+              get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips != '' &&
+              get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit ==
+              get(/databases/$(database)/documents/usuarios/$(uid)).data.nit_ips
+            ) ||
             (
-              resource.data.rol == 'pendiente' && resource.data.activo == false &&
-              request.resource.data.rol == 'cliente' &&
-              request.resource.data.activo == true &&
-              request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['rol','activo','estado','nit_ips','rol_ips','nombre','codigoInvitacionUsada']) &&
-              ('codigoInvitacionUsada' in request.resource.data) &&
-              exists(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)) &&
-              get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.estado == 'pendiente' &&
-              get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.email == resource.data.email &&
-              request.resource.data.nit_ips == get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.nit
+              isOwner(uid) &&
+              (
+                (
+                  request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['nombre','nombreContacto','cargo','telefono','ciudad','tipoIPS','nit']) &&
+                  (
+                    request.resource.data.nit == resource.data.nit ||
+                    resource.data.nit == '' ||
+                    exists(/databases/$(database)/documents/usuarios/$(uid)/ips_autorizadas/$(request.resource.data.nit))
+                  )
+                )
+                ||
+                (
+                  resource.data.rol == 'pendiente' && resource.data.activo == false &&
+                  request.resource.data.rol == 'cliente' &&
+                  request.resource.data.activo == true &&
+                  request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['rol','activo','estado','nit_ips','rol_ips','nombre','codigoInvitacionUsada']) &&
+                  ('codigoInvitacionUsada' in request.resource.data) &&
+                  exists(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)) &&
+                  get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.estado == 'pendiente' &&
+                  get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.email == resource.data.email &&
+                  request.resource.data.nit_ips == get(/databases/$(database)/documents/invitaciones/$(request.resource.data.codigoInvitacionUsada)).data.nit
+                )
+              )
             )
           )
         );
@@ -136,10 +152,18 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isAdmin() ||
           (isAuthenticated() &&
            get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit);
+        // Crear: el dueño real de `nit` (o un admin) otorga el acceso — pero
+        // solo si la cuenta beneficiaria (uid) tiene plan Enterprise. El plan
+        // "Red de IPS" (administrar varias IPS) es exclusivo de Enterprise /
+        // cotización especial, según la página de precios.
         allow create: if isAuthenticated() &&
           request.resource.data.nit == nit &&
           (isAdmin() ||
-           get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit);
+           (
+             get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.nit == nit &&
+             ('plan' in get(/databases/$(database)/documents/usuarios/$(uid)).data) &&
+             get(/databases/$(database)/documents/usuarios/$(uid)).data.plan == 'enterprise'
+           ));
         allow update: if false;
         allow delete: if isAdmin() || isOwner(uid) ||
           (isAuthenticated() &&
@@ -337,6 +361,10 @@ service cloud.firestore {
 
       // Crear: cualquier usuario autenticado solicita para sí mismo, con su
       // propio correo real (no puede suplantar a otro) y siempre en pendiente.
+      // Requiere plan Enterprise propio — el acceso a otra IPS ("Red de IPS")
+      // es exclusivo de Enterprise / cotización especial (ver página de
+      // precios); así el dueño de la IPS solicitada nunca ve una solicitud
+      // que de todos modos no podría aprobar.
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.estado == 'pendiente' &&
@@ -344,7 +372,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol in
           ['cliente', 'piloto', 'admin'] &&
         request.resource.data.emailSolicitante ==
-          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email;
+          get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.email &&
+        (
+          isAdmin() ||
+          (
+            ('plan' in get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data) &&
+            get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.plan == 'enterprise'
+          )
+        );
 
       // Actualizar: solo el dueño real del NIT solicitado (o admin) puede
       // resolver la solicitud, solo desde pendiente, y solo puede tocar el

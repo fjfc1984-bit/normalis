@@ -19,7 +19,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc,
-  doc, getDocs, setDoc, serverTimestamp, Timestamp,
+  doc, getDocs, setDoc, serverTimestamp, Timestamp, writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
@@ -141,6 +141,12 @@ export function useMultiIPS(uid: string | null, nitActivo: string | null, nitPro
   }, [nitActivo]);
 
   // ── Aprobar/rechazar una solicitud entrante (solo dueño del NIT) ───────
+  // Aprobar implica DOS escrituras (marcar la solicitud + crear el acceso
+  // ips_autorizadas). Se hacen en un batch atómico: si el plan del
+  // solicitante cambió entre el envío y esta aprobación (ya no es Enterprise
+  // — ver firestore.rules), la regla de ips_autorizadas rechaza el batch
+  // COMPLETO, en vez de dejar la solicitud marcada "aprobada" sin el acceso
+  // real creado.
   const resolverSolicitud = useCallback(async (
     solicitud: SolicitudAccesoIPS,
     aprobar: boolean,
@@ -149,7 +155,8 @@ export function useMultiIPS(uid: string | null, nitActivo: string | null, nitPro
     const user = fbAuth.currentUser;
     if (!user) throw new Error('Sesión no válida.');
 
-    await updateDoc(doc(fbDb, 'solicitudes_acceso_ips', solicitud.id), {
+    const batch = writeBatch(fbDb);
+    batch.update(doc(fbDb, 'solicitudes_acceso_ips', solicitud.id), {
       estado: (aprobar ? 'aprobada' : 'rechazada') as EstadoSolicitud,
       resueltoPor: user.uid,
       resueltoPorNombre: user.displayName || '',
@@ -157,7 +164,7 @@ export function useMultiIPS(uid: string | null, nitActivo: string | null, nitPro
     });
 
     if (aprobar) {
-      await setDoc(doc(fbDb, 'usuarios', solicitud.uid, 'ips_autorizadas', solicitud.nit), {
+      batch.set(doc(fbDb, 'usuarios', solicitud.uid, 'ips_autorizadas', solicitud.nit), {
         nit: solicitud.nit,
         nombreIPS: nombreIPS || '',
         otorgadoPor: user.uid,
@@ -166,6 +173,8 @@ export function useMultiIPS(uid: string | null, nitActivo: string | null, nitPro
         solicitudId: solicitud.id,
       });
     }
+
+    await batch.commit();
   }, []);
 
   // ── Cambiar el NIT activo a uno ya autorizado ───────────────────────────

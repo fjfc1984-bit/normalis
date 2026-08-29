@@ -38,7 +38,8 @@ function estadoBadge(estado: string): { label: string; cls: string } {
 }
 
 export default function MisIPSPage() {
-  const { user, nit, nitPropio, nombre, loading: authLoading } = useAuth();
+  const { user, nit, nitPropio, nombre, plan, loading: authLoading } = useAuth();
+  const esEnterprise = plan === 'enterprise';
   const {
     autorizadas, misSolicitudes, entrantes, loading,
     solicitarAcceso, resolverSolicitud, cambiarNitActivo, retirarSolicitud, revocarAccesoPropio,
@@ -52,6 +53,10 @@ export default function MisIPSPage() {
 
   async function handleSolicitar(e: React.FormEvent) {
     e.preventDefault();
+    if (!esEnterprise) {
+      show('Administrar varias IPS es una función Enterprise. Contáctanos para una cotización especial.', 'error');
+      return;
+    }
     setEnviando(true);
     try {
       await solicitarAcceso(nitSolicitado, user?.displayName || '');
@@ -163,22 +168,33 @@ export default function MisIPSPage() {
       {/* Solicitar acceso */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h3 className="text-sm font-bold text-gray-700 mb-3">Solicitar acceso a otra IPS</h3>
-        <form onSubmit={handleSolicitar} className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            required
-            placeholder="NIT de la otra IPS (ej. 900123456-7)"
-            value={nitSolicitado}
-            onChange={e => setNitSolicitado(e.target.value)}
-            maxLength={30}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
-                       focus:outline-none focus:ring-2 focus:ring-teal-400"
-          />
-          <Button type="submit" loading={enviando}>Solicitar acceso</Button>
-        </form>
-        <p className="text-xs text-gray-400 mt-2">
-          El dueño de esa cuenta en NormaLis verá tu solicitud aquí mismo y debe aprobarla — no se te da acceso automáticamente.
-        </p>
+        {esEnterprise ? (
+          <>
+            <form onSubmit={handleSolicitar} className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                required
+                placeholder="NIT de la otra IPS (ej. 900123456-7)"
+                value={nitSolicitado}
+                onChange={e => setNitSolicitado(e.target.value)}
+                maxLength={30}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
+                           focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+              <Button type="submit" loading={enviando}>Solicitar acceso</Button>
+            </form>
+            <p className="text-xs text-gray-400 mt-2">
+              El dueño de esa cuenta en NormaLis verá tu solicitud aquí mismo y debe aprobarla — no se te da acceso automáticamente.
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Administrar varias IPS con una sola cuenta es una función del plan Enterprise.{' '}
+            <a href="https://normalis.co/#precios" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+              Ver cotización especial →
+            </a>
+          </p>
+        )}
       </div>
 
       {/* Mis solicitudes */}

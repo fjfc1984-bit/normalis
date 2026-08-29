@@ -21,6 +21,14 @@ import { auth, db } from './firebase';
 
 export type NormalisRole = 'cliente' | 'piloto' | 'admin' | 'pendiente' | 'rechazado' | null;
 
+/**
+ * Plan de suscripción, asignado a mano por un admin desde /admin (tab
+ * "Planes") — ver firestore.rules. Ausente (`null`) si nunca se ha asignado
+ * uno todavía; se trata como el más restrictivo (equivalente a 'basico')
+ * en los límites del lado del cliente, y bloquea Enterprise-only en rules.
+ */
+export type PlanId = 'basico' | 'profesional' | 'enterprise' | null;
+
 export interface AuthState {
   user:    User | null;
   rol:     NormalisRole;
@@ -30,6 +38,8 @@ export interface AuthState {
   nitPropio: string;
   /** true si el acceso a este NIT viene de una invitación de equipo (no es el dueño original de la cuenta). */
   esMiembroEquipo: boolean;
+  /** Plan de suscripción de ESTA cuenta (no del NIT) — ver PlanId. */
+  plan:    PlanId;
   nombre:  string;   // nombre de la IPS
   loading: boolean;
 }
@@ -41,6 +51,7 @@ export function useAuth(): AuthState {
     nit:     '',
     nitPropio: '',
     esMiembroEquipo: false,
+    plan:    null,
     nombre:  '',
     loading: true,
   });
@@ -48,7 +59,7 @@ export function useAuth(): AuthState {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        setState({ user: null, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, nombre: '', loading: false });
+        setState({ user: null, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
         return;
       }
 
@@ -65,14 +76,15 @@ export function useAuth(): AuthState {
             nit:    nitPropio || nitIps,
             nitPropio,
             esMiembroEquipo: !nitPropio && !!nitIps,
+            plan:   (data.plan as PlanId) ?? null,
             nombre: data.nombre ?? '',   // nombre de la IPS
             loading: false,
           });
         } else {
-          setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, nombre: '', loading: false });
+          setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
         }
       } catch {
-        setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, nombre: '', loading: false });
+        setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
       }
     });
 
