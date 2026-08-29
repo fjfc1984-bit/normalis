@@ -44,7 +44,7 @@ import {
   doc, setDoc, getDocs, serverTimestamp, Timestamp, writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth as fbAuth } from '@/lib/firebase';
 import { crearFirma } from '@/lib/firmar';
 import { catalogoDMSCompleto } from '@/lib/dmsServiciosCatalogo';
 
@@ -109,7 +109,12 @@ function fromSnap(d: any): DocumentoDMS {
 // useColaAprobacionDMS/la página de admin, sin duplicar lógica).
 
 export const enviarARevisionDMS = async (id: string) => {
-  await updateDoc(doc(db, 'documentos_dms', id), { estado: 'en_revision' });
+  await updateDoc(doc(db, 'documentos_dms', id), {
+    estado: 'en_revision',
+    modificadoPor: fbAuth.currentUser?.uid ?? null,
+    modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+    modificadoEn: serverTimestamp(),
+  });
 };
 
 /** Aprobar = firmar electrónicamente el contenido EXACTO capturado al crear
@@ -130,6 +135,9 @@ export const aprobarDocumentoDMS = async (item: DocumentoDMS, aprobadoPorNombre:
     contenidoHash: prueba.contenidoHash,
     aprobadoPor: aprobadoPorNombre,
     fechaAprobacion: serverTimestamp(),
+    modificadoPor: fbAuth.currentUser?.uid ?? null,
+    modificadoPorNombre: aprobadoPorNombre,
+    modificadoEn: serverTimestamp(),
   });
   if (item.reemplazaVersionId) {
     await updateDoc(doc(db, 'documentos_dms', item.reemplazaVersionId), { estado: 'obsoleto' });
@@ -163,6 +171,9 @@ export const retirarVersionesRotasDMS = async (ids: string[], retiradoPorNombre:
       estado: 'obsoleto',
       retiradoPor: retiradoPorNombre,
       fechaRetiro: serverTimestamp(),
+      modificadoPor: fbAuth.currentUser?.uid ?? null,
+      modificadoPorNombre: retiradoPorNombre,
+      modificadoEn: serverTimestamp(),
     });
   });
   await batch.commit();

@@ -53,6 +53,8 @@ export interface MiembroEquipo {
   rol: string;
   rolIps: 'director' | 'miembro';
   activo: boolean;
+  accesoModificadoPorNombre?: string;
+  accesoModificadoEn?: Timestamp | null;
 }
 
 const INVITACION_VIGENCIA_DIAS = 7;
@@ -99,6 +101,8 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
           rol:            (data.rol as string) ?? '',
           rolIps,
           activo:         (data.activo as boolean) ?? false,
+          accesoModificadoPorNombre: (data.accesoModificadoPorNombre as string) ?? '',
+          accesoModificadoEn:        (data.accesoModificadoEn as Timestamp) ?? null,
         } as MiembroEquipo;
       });
 
@@ -186,7 +190,12 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
   }
 
   async function cambiarAccesoMiembro(uid: string, activo: boolean): Promise<void> {
-    await updateDoc(doc(fbDb, 'usuarios', uid), { activo });
+    await updateDoc(doc(fbDb, 'usuarios', uid), {
+      activo,
+      accesoModificadoPor: fbAuth.currentUser?.uid ?? null,
+      accesoModificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+      accesoModificadoEn: serverTimestamp(),
+    });
   }
 
   return {

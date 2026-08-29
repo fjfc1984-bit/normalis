@@ -10,7 +10,7 @@ import {
   doc, serverTimestamp, getDocs,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db as fbDb } from '@/lib/firebase';
+import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import {
   INDICADORES_CATALOGO,
   calcularEstado,
@@ -120,6 +120,9 @@ export function useIndicadores(uid: string | null, nit: string | null): UseIndic
         valor,
         observacion: observacion.trim(),
         fechaActualizacion: serverTimestamp(),
+        modificadoPor: fbAuth.currentUser?.uid ?? null,
+        modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+        modificadoEn: serverTimestamp(),
       });
     } else {
       // Crear nuevo

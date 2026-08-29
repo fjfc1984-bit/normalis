@@ -9,9 +9,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc,
-  doc, type Unsubscribe,
+  doc, serverTimestamp, type Unsubscribe,
 } from 'firebase/firestore';
-import { db as fbDb } from '@/lib/firebase';
+import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import {
   calcularVencimientoIAASCaso, calcularVencimientoIAASDenominador,
   type IAASCaso, type IAASDenominador, type IAASTipo, type IAASEstadoNotificacion,
@@ -127,6 +127,9 @@ export function useIAAS(uid: string | null, nit: string | null) {
     await updateDoc(doc(fbDb, 'iaas_casos', id), {
       estadoNotificacion: 'notificado',
       fechaNotificacionReal: new Date().toISOString().slice(0, 10),
+      modificadoPor: fbAuth.currentUser?.uid ?? null,
+      modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+      modificadoEn: serverTimestamp(),
     });
   }
 
@@ -148,6 +151,9 @@ export function useIAAS(uid: string | null, nit: string | null) {
     await updateDoc(doc(fbDb, 'iaas_denominadores', id), {
       estadoNotificacion: 'notificado',
       fechaNotificacionReal: new Date().toISOString().slice(0, 10),
+      modificadoPor: fbAuth.currentUser?.uid ?? null,
+      modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+      modificadoEn: serverTimestamp(),
     });
   }
 

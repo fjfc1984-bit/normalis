@@ -16,8 +16,21 @@ import {
   increment, arrayUnion,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db as fbDb } from '@/lib/firebase';
+import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import type { Capa, CapaFormData, CapaEstado, CapaVeredicto } from './capaTypes';
+
+// Trazabilidad: quién hizo el último cambio en un registro compartido por
+// equipo (Feature 1 — Equipo IPS). No restringe permisos, solo deja rastro
+// de qué compañero tocó qué — usa el usuario realmente autenticado en este
+// momento, no el uid que el hook recibió como prop (puede quedar obsoleto
+// si la sesión cambia sin remount).
+function selloAuditoria() {
+  return {
+    modificadoPor: fbAuth.currentUser?.uid ?? null,
+    modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+    modificadoEn: serverTimestamp(),
+  };
+}
 
 // ── Helpers ─────────────────────────────────────────────────
 // Fecha de referencia para plazos: mientras está "implementada" se
@@ -195,6 +208,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       ...(data.origen           !== undefined && { origen: data.origen }),
       ...(data.evidencia        !== undefined && { evidencia: data.evidencia.trim() }),
       fechaActualizacion: serverTimestamp(),
+      ...selloAuditoria(),
     });
   }, []);
 
@@ -204,6 +218,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       estado: 'en_progreso' as CapaEstado,
       fechaInicio: serverTimestamp(),
       fechaActualizacion: serverTimestamp(),
+      ...selloAuditoria(),
     });
   }, []);
 
@@ -224,6 +239,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
       fechaImplementacion: serverTimestamp(),
       fechaVerificacion,
       fechaActualizacion: serverTimestamp(),
+      ...selloAuditoria(),
     });
   }, []);
 
@@ -247,6 +263,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
         fechaCierre: serverTimestamp(),
         fechaActualizacion: serverTimestamp(),
         historialVerificaciones: arrayUnion(entradaHistorial),
+        ...selloAuditoria(),
       });
     } else {
       await updateDoc(doc(fbDb, 'capas', id), {
@@ -257,6 +274,7 @@ export function useCapas(uid: string | null, nit: string | null): UseCapasResult
         reincidencias: increment(1),
         fechaActualizacion: serverTimestamp(),
         historialVerificaciones: arrayUnion(entradaHistorial),
+        ...selloAuditoria(),
       });
     }
   }, []);

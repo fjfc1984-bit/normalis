@@ -17,7 +17,7 @@ import {
   addDoc, updateDoc, doc, serverTimestamp,
   type Unsubscribe, Timestamp,
 } from 'firebase/firestore';
-import { db as fbDb } from '@/lib/firebase';
+import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import type {
   Equipo, EquipoFormData, EquipoEstado,
   Mantenimiento, MantenimientoFormData,
@@ -173,6 +173,9 @@ export function useEquiposBiomedicos(uid: string | null, nit: string | null): Us
       ...(data.frecuenciaMantenimientoMeses !== undefined && { frecuenciaMantenimientoMeses: data.frecuenciaMantenimientoMeses }),
       ...(data.personalCapacitado !== undefined && { personalCapacitado: data.personalCapacitado.trim() }),
       fechaActualizacion: serverTimestamp(),
+      modificadoPor: fbAuth.currentUser?.uid ?? null,
+      modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+      modificadoEn: serverTimestamp(),
     });
   }, []);
 

@@ -17,7 +17,7 @@ import {
   addDoc, updateDoc, doc, serverTimestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db as fbDb } from '@/lib/firebase';
+import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import type { EventoVigilancia, EventoVigilanciaFormData, TipoVigilancia } from './vigilanciaTypes';
 import { TIPO_VIGILANCIA_CFG } from './vigilanciaTypes';
 
@@ -170,6 +170,9 @@ export function useVigilanciaSanitaria(uid: string | null, nit: string | null): 
       ...(data.fechaReporteInvima !== undefined && { fechaReporteInvima: data.fechaReporteInvima || null }),
       ...(data.radicadoInvima !== undefined && { radicadoInvima: data.radicadoInvima.trim() }),
       fechaActualizacion: serverTimestamp(),
+      modificadoPor: fbAuth.currentUser?.uid ?? null,
+      modificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
+      modificadoEn: serverTimestamp(),
     });
   }, []);
 
