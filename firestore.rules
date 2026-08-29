@@ -19,6 +19,8 @@
 //   documentos_dms/{id}/socializaciones/{uid} — acuses individuales de socialización
 //   equipos_biomedicos/{id}     — CMMS: inventario de equipos (Estándar de Dotación)
 //   equipos_biomedicos/{id}/mantenimientos/{id} — hoja de vida (mantenimientos preventivos/correctivos)
+//   infraestructura_areas/{id} — Gestión de Infraestructura Física (Estándar de Infraestructura)
+//   infraestructura_areas/{id}/inspecciones/{id} — hoja de vida (inspecciones periódicas)
 //   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
 //   iaas_casos/{id}              — Vigilancia IAAS: casos individuales (SIVIGILA 357/352)
 //   iaas_denominadores/{id}      — Vigilancia IAAS: consolidados mensuales (SIVIGILA 359/362)
@@ -837,6 +839,57 @@ service cloud.firestore {
           isAdmin()
         );
         allow update, delete: if false;
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // infraestructura_areas/{id} — Gestión de Infraestructura Física
+    // (Res. 1732/2026, Estándar de Infraestructura). Mismo patrón de acceso
+    // compartido por NIT y de hoja de vida de solo-creación que
+    // equipos_biomedicos/mantenimientos.
+    // ════════════════════════════════════════════════════════════════════════
+    match /infraestructura_areas/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
+      allow delete: if false;
+
+      // ── Hoja de vida — inspecciones periódicas ────────────────────────────
+      match /inspecciones/{iid} {
+        allow read: if isAuthenticated() && (
+          sameNIT(get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.nit) ||
+          get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.uid == request.auth.uid ||
+          isAdmin()
+        );
+        allow create: if isAuthenticated() && (
+          sameNIT(get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.nit) ||
+          get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.uid == request.auth.uid ||
+          isAdmin()
+        );
+        // Excepción: sí se permite update para escribir capaId una vez creada
+        // la CAPA vinculada — el resto de campos de una inspección ya
+        // guardada nunca deberían cambiar, pero Firestore Rules no puede
+        // restringir "solo este campo" sin duplicar toda la validación, así
+        // que se confía en que el cliente (vincularCapaAInspeccion) solo
+        // toca capaId, igual que el patrón ya usado en Análisis de Riesgo.
+        allow update: if isAuthenticated() && (
+          sameNIT(get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.nit) ||
+          get(/databases/$(database)/documents/infraestructura_areas/$(id)).data.uid == request.auth.uid ||
+          isAdmin()
+        );
+        allow delete: if false;
       }
     }
 

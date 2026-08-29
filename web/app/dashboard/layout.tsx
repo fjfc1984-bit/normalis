@@ -42,6 +42,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/auditoria',    label: 'Auditoría',    icon: '🔍' },
       { href: '/dashboard/cumplimiento', label: 'Cumplimiento', icon: '⚡' },
       { href: '/dashboard/analisis-riesgo', label: 'Análisis de Riesgo', icon: '⚠️', badge: 'NUEVO' },
+      { href: '/dashboard/infraestructura', label: 'Infraestructura', icon: '🏗️', badge: 'NUEVO' },
       { href: '/dashboard/gap-1732',    label: 'Brecha 1732', icon: '🆕' },
       { href: '/dashboard/pamec',        label: 'PAMEC',        icon: '📈' },
       { href: '/dashboard/capas',        label: 'CAPAs',        icon: '✓'  },
