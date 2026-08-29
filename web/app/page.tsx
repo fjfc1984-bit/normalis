@@ -699,7 +699,7 @@ function Nosotros() {
     { icon: '🔁', title: 'Cobertura normativa que no se queda vieja', desc: 'Cada actualización de la Res. 1732/2026 — y las que la sucedan — se refleja en la plataforma sin que el cliente pague de más ni mueva un dedo.' },
     { icon: '🧩', title: 'Un solo sistema para todo el ciclo de calidad', desc: 'Auditoría, PAMEC, CAPAs, indicadores, SG-SST, PROA, vigilancia sanitaria y bitácora de gobernanza conectados entre sí — no módulos sueltos que no se hablan.' },
     { icon: '🤖', title: 'IA aplicada al trabajo operativo diario', desc: 'El Agente de Cumplimiento prioriza no conformidades y el Asistente Normativo responde citando la norma, para quitar horas de trabajo manual real.' },
-    { icon: '🧪', title: 'Crecer validando con IPS piloto',  desc: 'Cada función nueva se prueba primero con cuentas piloto reales antes de ofrecerse de forma general.' },
+    { icon: '🧪', title: 'Validación antes de escalar',  desc: 'Cada función nueva se valida con clientes reales antes de lanzarla a todos, para no arriesgar su operación con algo sin probar.' },
   ];
 
   const objetivos = [
