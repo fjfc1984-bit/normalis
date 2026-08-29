@@ -270,7 +270,7 @@ function Navbar({ onDemo }: { onDemo: () => void }) {
     return () => window.removeEventListener('scroll', fn);
   }, []);
   const links = [
-    ['#modulos','Módulos'],['#crosswalk','ISO/JCI'],['#como-funciona','Cómo funciona'],['#precios','Precios'],
+    ['#modulos','Módulos'],['#crosswalk','ISO/JCI'],['#como-funciona','Cómo funciona'],['#precios','Precios'],['#nosotros','Nosotros'],
   ];
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/96 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
@@ -683,6 +683,170 @@ function Precios({ onDemo }: { onDemo: () => void }) {
   );
 }
 
+// ── Quiénes Somos — Misión, Visión, Valores, Estrategia, Objetivos, Procesos ──
+function Nosotros() {
+  const { ref, inView } = useInView(.1);
+
+  const valores = [
+    { icon: '📐', title: 'Dominio profundo de la norma',  desc: 'No tercerizamos la interpretación regulatoria: cada módulo se diseña con criterio de auditor, no de quien solo copió un PDF.' },
+    { icon: '🔒', title: 'Confianza y seguridad',         desc: 'Datos de cada IPS y sus pacientes protegidos bajo la Ley 1581/2012, con permisos por equipo y trazabilidad de quién hizo qué.' },
+    { icon: '🤝', title: 'Cercanía con el prestador',     desc: 'Construido para equipos pequeños con poco tiempo — no para el departamento de calidad de un hospital de tercer nivel.' },
+    { icon: '🔄', title: 'Mejora continua real',          desc: 'Cada bug encontrado se corrige y se documenta; cada norma nueva se incorpora sin esperar un lanzamiento grande.' },
+    { icon: '🔎', title: 'Honestidad sobre el alcance',   desc: 'Decimos con claridad qué automatiza la plataforma hoy, qué sigue siendo criterio del auditor, y dónde hay vacíos que debe resolver la Secretaría de Salud territorial.' },
+  ];
+
+  const estrategia = [
+    { icon: '🔁', title: 'Cobertura normativa que no se queda vieja', desc: 'Cada actualización de la Res. 1732/2026 — y las que la sucedan — se refleja en la plataforma sin que el cliente pague de más ni mueva un dedo.' },
+    { icon: '🧩', title: 'Un solo sistema para todo el ciclo de calidad', desc: 'Auditoría, PAMEC, CAPAs, indicadores, SG-SST, PROA, vigilancia sanitaria y bitácora de gobernanza conectados entre sí — no módulos sueltos que no se hablan.' },
+    { icon: '🤖', title: 'IA aplicada al trabajo operativo diario', desc: 'El Agente de Cumplimiento prioriza no conformidades y el Asistente Normativo responde citando la norma, para quitar horas de trabajo manual real.' },
+    { icon: '🧪', title: 'Crecer validando con IPS piloto',  desc: 'Cada función nueva se prueba primero con cuentas piloto reales antes de ofrecerse de forma general.' },
+  ];
+
+  const objetivos = [
+    'Terminar de llevar todos los módulos compartidos por Equipo IPS al mismo patrón de trazabilidad y bitácora automática.',
+    'Cerrar la fase piloto con las IPS que hoy prueban la plataforma y usar sus hallazgos para afinar el producto antes de una comercialización más amplia.',
+    'Mantener el 100% de los criterios de la Res. 1732/2026 reflejados en la plataforma, sin rezago frente a cada actualización.',
+    'Consolidar el Agente de Cumplimiento con IA como apoyo confiable a la decisión — nunca como reemplazo del criterio del auditor.',
+    'Evaluar el camino hacia estándares internacionales (ISO 7101, JCI) para IPS con ambición de acreditación, no solo de habilitación.',
+  ];
+
+  const procesos = [
+    { icon: '🧭', title: 'Direccionamiento Estratégico',        desc: 'Define misión, visión, objetivos y prioridades de producto de NormaLis, y revisa su cumplimiento.' },
+    { icon: '⚖️', title: 'Gestión Normativa y Regulatoria',     desc: 'Monitorea cambios en la Res. 1732/2026 y normativa relacionada, y coordina su incorporación oportuna.' },
+    { icon: '💻', title: 'Gestión de Producto y Tecnología',     desc: 'Diseña, desarrolla y mantiene los módulos de la plataforma, la seguridad y la infraestructura.' },
+    { icon: '📣', title: 'Gestión Comercial y de Clientes',      desc: 'Atiende prospectos y clientes piloto, gestiona el ciclo de ventas por planes y el acompañamiento post-venta.' },
+    { icon: '✅', title: 'Gestión de Calidad y Mejora Continua', desc: 'Aplica el ciclo PHVA a la propia operación: auditoría interna del producto, incidentes y retroalimentación.' },
+  ];
+
+  return (
+    <section ref={ref} className="py-24 px-5 relative overflow-hidden" id="nosotros"
+             style={{ background: 'linear-gradient(135deg,#0a2540 0%,#061018 100%)' }}>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full pointer-events-none blur-3xl"
+           style={{ background: 'radial-gradient(circle,rgba(0,188,212,.06),transparent)' }} />
+      <div className="max-w-5xl mx-auto relative">
+        <div className="text-center mb-14"
+             style={{ opacity: inView ? 1 : 0, transform: inView ? 'none' : 'translateY(20px)', transition: 'all .6s ease' }}>
+          <span className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-4"
+                style={{ background: 'rgba(0,188,212,.1)', border: '1px solid rgba(0,188,212,.25)', color: '#67e8f9' }}>
+            🏢 Quiénes somos
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
+            La habilitación de su IPS,<br />
+            <span style={{ background: 'linear-gradient(90deg,#26A69A,#00BCD4,#67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              sin fricción
+            </span>
+          </h2>
+          <p className="text-slate-400 text-lg max-w-xl mx-auto">
+            Hacia dónde vamos y qué nos guía para llegar ahí.
+          </p>
+        </div>
+
+        {/* Misión / Visión */}
+        <div className="grid md:grid-cols-2 gap-5 mb-16">
+          <Card3D className="rounded-2xl p-7"
+                  style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)' }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-lg mb-4"
+                 style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)', boxShadow: '0 4px 12px rgba(0,0,0,.15)' }}>🎯</div>
+            <h3 className="font-bold text-white text-lg mb-2">Misión</h3>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,.65)' }}>
+              Darle a cada IPS, clínica, hospital o profesional independiente en Colombia una herramienta que cubra,
+              criterio por criterio, los 7 estándares de la Resolución 1732/2026 — Talento Humano, Infraestructura,
+              Dotación, Medicamentos y Dispositivos, Procesos Prioritarios, Historia Clínica e Interdependencia —
+              para que la evidencia de cumplimiento exista todos los días, no solo se arme la noche antes de la
+              visita de la Secretaría de Salud.
+            </p>
+          </Card3D>
+          <Card3D className="rounded-2xl p-7"
+                  style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)' }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-lg mb-4"
+                 style={{ background: 'linear-gradient(135deg,#5b21b6,#8b5cf6)', boxShadow: '0 4px 12px rgba(0,0,0,.15)' }}>🔭</div>
+            <h3 className="font-bold text-white text-lg mb-2">Visión</h3>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,.65)' }}>
+              Ser, para 2027, la plataforma que las IPS colombianas —empezando por las pequeñas y medianas que hoy
+              dependen de Excel, carpetas físicas o consultores externos— usan por defecto para gestionar su
+              habilitación, reconocida porque nunca se queda desactualizada frente a un cambio normativo y porque
+              automatiza tanto el papeleo como el seguimiento real de la calidad.
+            </p>
+          </Card3D>
+        </div>
+
+        {/* Valores */}
+        <div className="mb-16">
+          <h3 className="text-center text-xs font-bold uppercase tracking-widest mb-8" style={{ color: '#4DB6AC' }}>
+            Nuestros valores
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {valores.map(v => (
+              <div key={v.title} className="rounded-2xl p-5 text-center"
+                   style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)' }}>
+                <div className="text-2xl mb-3">{v.icon}</div>
+                <h4 className="font-bold text-white text-sm mb-1.5">{v.title}</h4>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,.5)' }}>{v.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Estrategia */}
+        <div className="mb-16">
+          <h3 className="text-center text-xs font-bold uppercase tracking-widest mb-8" style={{ color: '#4DB6AC' }}>
+            Nuestra estrategia
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {estrategia.map(e => (
+              <div key={e.title} className="rounded-2xl p-5 flex gap-4"
+                   style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)' }}>
+                <div className="text-2xl flex-shrink-0">{e.icon}</div>
+                <div>
+                  <h4 className="font-bold text-white text-sm mb-1">{e.title}</h4>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,.5)' }}>{e.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Objetivos estratégicos */}
+        <div className="mb-16">
+          <h3 className="text-center text-xs font-bold uppercase tracking-widest mb-8" style={{ color: '#4DB6AC' }}>
+            Objetivos estratégicos
+          </h3>
+          <div className="rounded-2xl p-2 max-w-3xl mx-auto"
+               style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)' }}>
+            {objetivos.map((o, i) => (
+              <div key={o} className="flex items-start gap-3 px-4 py-3.5"
+                   style={{ borderBottom: i < objetivos.length - 1 ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: '#26A69A' }}>✓</span>
+                <span className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,.7)' }}>{o}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Procesos estratégicos */}
+        <div>
+          <h3 className="text-center text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4DB6AC' }}>
+            Procesos estratégicos
+          </h3>
+          <p className="text-center text-xs mb-8 max-w-lg mx-auto" style={{ color: 'rgba(255,255,255,.4)' }}>
+            Los procesos que dirigen y sostienen la operación de NormaLis como empresa.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {procesos.map(p => (
+              <div key={p.title} className="rounded-2xl p-5"
+                   style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)' }}>
+                <div className="text-2xl mb-3">{p.icon}</div>
+                <h4 className="font-bold text-white text-sm mb-1.5">{p.title}</h4>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,.5)' }}>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── FAQ ───────────────────────────────────────────────────────────────────────
 function FAQ() {
   const [open, setOpen] = useState<number|null>(null);
@@ -861,6 +1025,7 @@ export default function LandingPage() {
       <CrosswalkSection />
       <HowItWorks />
       <Precios onDemo={open} />
+      <Nosotros />
       <FAQ />
       <CTAFinal onDemo={open} />
       <Footer />
