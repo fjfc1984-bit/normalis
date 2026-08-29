@@ -20,7 +20,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import {
   useEquipoIPS, type Invitacion, type MiembroEquipo,
-  LIMITE_USUARIOS_POR_PLAN, PLAN_LABEL,
+  LIMITE_INVITADOS_POR_PLAN, PLAN_LABEL,
 } from '@/lib/useEquipoIPS';
 import { SectionHeader, LoadingSpinner, Toast, useToast, EmptyState } from '@/components/ui';
 import Button from '@/components/ui/Button';
@@ -158,11 +158,14 @@ export default function EquipoPage() {
 
   const esDueno = !!nitPropio;
   const planEfectivo = plan ?? 'basico';
-  const limite = LIMITE_USUARIOS_POR_PLAN[planEfectivo];
+  // Límite de INVITADOS (sin contar al dueño) — "hasta 5 usuarios" del plan
+  // Profesional son 5 invitados además del dueño (6 personas en total).
+  const limiteInvitados = LIMITE_INVITADOS_POR_PLAN[planEfectivo];
   const pendientesVigentes = invitaciones.filter(
     i => i.estado === 'pendiente' && !(i.expiraEn && i.expiraEn.toDate().getTime() < Date.now()),
   ).length;
-  const usados = 1 + miembros.length + pendientesVigentes;
+  const invitadosUsados = miembros.length + pendientesVigentes;
+  const totalUsuarios = 1 + invitadosUsados; // dueño + invitados
 
   async function handleInvitar(email: string) {
     setSaving(true);
@@ -246,12 +249,14 @@ export default function EquipoPage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-gray-700">Invitar compañero de equipo</h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 font-medium">
-              Plan {PLAN_LABEL[planEfectivo]} · {usados}/{limite ?? '∞'} usuarios
+              Plan {PLAN_LABEL[planEfectivo]} · {totalUsuarios}/{limiteInvitados === null ? '∞' : limiteInvitados + 1} usuarios
             </span>
           </div>
-          {limite !== null && usados >= limite ? (
+          {limiteInvitados !== null && invitadosUsados >= limiteInvitados ? (
             <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              Alcanzaste el límite de tu plan {PLAN_LABEL[planEfectivo]} ({limite} usuario{limite === 1 ? '' : 's'}).
+              {limiteInvitados === 0
+                ? `Tu plan ${PLAN_LABEL[planEfectivo]} no incluye compañeros de equipo (1 usuario).`
+                : `Alcanzaste el límite de tu plan ${PLAN_LABEL[planEfectivo]} (${limiteInvitados} compañero${limiteInvitados === 1 ? '' : 's'} además de ti).`}{' '}
               Contáctanos para actualizar tu plan y seguir invitando compañeros.
             </p>
           ) : (

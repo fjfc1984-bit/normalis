@@ -126,9 +126,11 @@ const ROL_BADGE: Record<RolUsuario, string> = {
 };
 
 // Fuente de verdad: página de precios (web/app/page.tsx → Precios()).
+// "Hasta 5 usuarios" del plan Profesional = 5 invitados ADEMÁS del dueño
+// (6 personas en total) — confirmado por Fernando.
 const PLAN_LABELS: Record<PlanId, string> = {
-  basico:      'Básico (1 usuario)',
-  profesional: 'Profesional (hasta 5 usuarios)',
+  basico:      'Básico (1 usuario, sin invitados)',
+  profesional: 'Profesional (hasta 5 invitados + el dueño)',
   enterprise:  'Enterprise (ilimitado + multi-IPS)',
 };
 

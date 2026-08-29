@@ -59,8 +59,11 @@ export interface MiembroEquipo {
 
 const INVITACION_VIGENCIA_DIAS = 7;
 
-// Límite de usuarios de Equipo IPS por plan (dueño incluido). Ver landing
-// page (web/app/page.tsx → Precios()) — fuente de verdad de estos números.
+// Límite de COMPAÑEROS INVITADOS (sin contar al dueño) de Equipo IPS por
+// plan. Fernando confirmó: "hasta 5 usuarios" del plan Profesional en la
+// landing (web/app/page.tsx → Precios()) son 5 invitados ADEMÁS del dueño
+// (6 personas en total) — Básico sigue siendo 1 usuario en total, es decir
+// 0 invitados (solo el dueño).
 // NOTA: este límite se aplica solo del lado del cliente (aquí), no en
 // firestore.rules — Firestore no puede hacer conteos agregados en una regla
 // de seguridad sin mantener un contador aparte, y con control manual de
@@ -69,8 +72,8 @@ const INVITACION_VIGENCIA_DIAS = 7;
 // adelante, la vía es un contador mantenido por Cloud Function.
 export type PlanId = 'basico' | 'profesional' | 'enterprise' | null;
 
-export const LIMITE_USUARIOS_POR_PLAN: Record<'basico' | 'profesional' | 'enterprise', number | null> = {
-  basico: 1,
+export const LIMITE_INVITADOS_POR_PLAN: Record<'basico' | 'profesional' | 'enterprise', number | null> = {
+  basico: 0,
   profesional: 5,
   enterprise: null, // ilimitado
 };
@@ -174,19 +177,21 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
     const uid = fbAuth.currentUser?.uid;
     if (!uid) throw new Error('Sesión no válida. Vuelve a iniciar sesión e inténtalo de nuevo.');
 
-    // Límite de usuarios según el plan (dueño + miembros aceptados +
-    // invitaciones pendientes vigentes cuentan como "usados").
+    // Límite de INVITADOS según el plan (sin contar al dueño) — miembros
+    // aceptados + invitaciones pendientes vigentes cuentan como "usados".
     const planEfectivo = plan ?? 'basico';
-    const limite = LIMITE_USUARIOS_POR_PLAN[planEfectivo];
+    const limite = LIMITE_INVITADOS_POR_PLAN[planEfectivo];
     if (limite !== null) {
       const pendientesVigentes = invitaciones.filter(
         i => i.estado === 'pendiente' && !(i.expiraEn && i.expiraEn.toDate().getTime() < Date.now()),
       ).length;
-      const usados = 1 /* dueño */ + miembros.length + pendientesVigentes;
-      if (usados >= limite) {
+      const invitadosUsados = miembros.length + pendientesVigentes;
+      if (invitadosUsados >= limite) {
         throw new Error(
-          `Tu plan ${PLAN_LABEL[planEfectivo]} permite hasta ${limite} usuario${limite === 1 ? '' : 's'} y ya tienes ${usados}. ` +
-          `Actualiza tu plan para invitar más compañeros.`,
+          limite === 0
+            ? `Tu plan ${PLAN_LABEL[planEfectivo]} no permite invitar compañeros de equipo (1 usuario). Actualiza tu plan para invitar.`
+            : `Tu plan ${PLAN_LABEL[planEfectivo]} permite hasta ${limite} compañero${limite === 1 ? '' : 's'} de equipo además de ti, y ya tienes ${invitadosUsados}. ` +
+              `Actualiza tu plan para invitar más.`,
         );
       }
     }
