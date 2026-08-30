@@ -24,6 +24,7 @@
 //   medicamentos_lotes/{id}     — Gestión de Medicamentos y Dispositivos: inventario de lotes
 //   medicamentos_verificaciones/{id} — verificaciones periódicas del Servicio Farmacéutico
 //   historia_clinica_auditorias/{id} — Auditoría de Historia Clínica por muestreo
+//   historia_clinica_ihce/{id}  — estado declarado de integración a la red nacional IHCE (id = nit||uid, 1 doc por IPS)
 //   interdependencia_convenios/{id} — red de prestadores: convenios y vigencias (Estándar de Interdependencia)
 //   interdependencia_verificaciones/{id} — verificaciones periódicas del Estándar de Interdependencia
 //   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
@@ -948,6 +949,29 @@ service cloud.firestore {
     // solo-creación salvo capaId, mismo patrón que medicamentos_verificaciones.
     // ════════════════════════════════════════════════════════════════════════
     match /historia_clinica_auditorias/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+      allow delete: if false;
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // historia_clinica_ihce/{id} — estado declarado de integración a la red
+    // nacional de Interoperabilidad de Historia Clínica Electrónica (IHCE).
+    // Documento singleton: id = nit (o uid si no hay nit) — 1 registro por
+    // IPS, no un log. Se permite update completo (declarar/actualizar
+    // estado), igual que interdependencia_convenios.
+    // ════════════════════════════════════════════════════════════════════════
+    match /historia_clinica_ihce/{id} {
       allow read: if isAuthenticated() && (
         resource.data.uid == request.auth.uid ||
         sameNIT(resource.data.nit) ||

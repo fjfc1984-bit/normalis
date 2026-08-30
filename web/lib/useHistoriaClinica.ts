@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, orderBy, onSnapshot,
-  addDoc, updateDoc, doc, serverTimestamp,
+  addDoc, updateDoc, doc, setDoc, serverTimestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db as fbDb } from '@/lib/firebase';
@@ -16,6 +16,7 @@ import { registrarBitacora } from '@/lib/useBitacora';
 import {
   calcScoreHC, calcEstadoHC,
   type AuditoriaHC, type AuditoriaHCFormData,
+  type EstadoIntegracionIHCE, type IhceFormData,
 } from './historiaClinicaTypes';
 
 export interface HCStats {
@@ -32,11 +33,20 @@ export interface UseHistoriaClinicaResult {
   stats: HCStats;
   registrarAuditoria: (data: AuditoriaHCFormData, uid: string, nit: string | null) => Promise<void>;
   vincularCapa: (auditoriaId: string, capaId: string) => Promise<void>;
+
+  ihce: EstadoIntegracionIHCE | null;
+  loadingIhce: boolean;
+  guardarEstadoIhce: (data: IhceFormData, uid: string, nit: string | null) => Promise<void>;
+  vincularCapaAIhce: (capaId: string) => Promise<void>;
 }
 
 export function useHistoriaClinica(uid: string | null, nit: string | null): UseHistoriaClinicaResult {
   const [auditorias, setAuditorias] = useState<AuditoriaHC[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [ihce, setIhce] = useState<EstadoIntegracionIHCE | null>(null);
+  const [loadingIhce, setLoadingIhce] = useState(true);
+  const ihceDocId = nit || uid || '';
 
   useEffect(() => {
     if (!uid) { setLoading(false); return; }
@@ -76,6 +86,21 @@ export function useHistoriaClinica(uid: string | null, nit: string | null): UseH
     return () => unsub?.();
   }, [uid, nit]);
 
+  // ── Suscripción — estado de integración IHCE (un solo documento por IPS) ──
+  useEffect(() => {
+    if (!uid || !ihceDocId) { setLoadingIhce(false); return; }
+    setLoadingIhce(true);
+    const unsub = onSnapshot(
+      doc(fbDb, 'historia_clinica_ihce', ihceDocId),
+      snap => {
+        setIhce(snap.exists() ? { id: snap.id, ...(snap.data() as Omit<EstadoIntegracionIHCE, 'id'>) } : null);
+        setLoadingIhce(false);
+      },
+      () => setLoadingIhce(false)
+    );
+    return () => unsub();
+  }, [uid, ihceDocId]);
+
   const stats: HCStats = {
     total:    auditorias.length,
     cumple:   auditorias.filter(a => calcEstadoHC(a.score, a.respuestas) === 'cumple').length,
@@ -114,5 +139,36 @@ export function useHistoriaClinica(uid: string | null, nit: string | null): UseH
     await updateDoc(doc(fbDb, 'historia_clinica_auditorias', auditoriaId), { capaId });
   }, []);
 
-  return { auditorias, loading, stats, registrarAuditoria, vincularCapa };
+  // ── Guardar/actualizar el estado de integración IHCE ─────────────────────
+  const guardarEstadoIhce = useCallback(async (
+    data: IhceFormData, uid: string, nit: string | null,
+  ): Promise<void> => {
+    const docId = nit || uid;
+    const esNuevo = !ihce;
+    await setDoc(doc(fbDb, 'historia_clinica_ihce', docId), {
+      uid, nit: nit ?? '',
+      estado: data.estado,
+      sistemaHC: data.sistemaHC.trim(),
+      evidencia: data.evidencia.trim(),
+      responsable: data.responsable.trim(),
+      notas: data.notas.trim(),
+      fechaActualizacion: serverTimestamp(),
+      ...(esNuevo ? { capaId: null, fechaCreacion: serverTimestamp() } : {}),
+    }, { merge: true });
+    registrarBitacora(
+      uid, nit, 'Historia Clínica',
+      `Estado de integración IHCE actualizado — ${data.estado === 'integrado' ? 'Integrado' : data.estado === 'en_proceso' ? 'En proceso' : 'Pendiente'}`,
+      data.sistemaHC.trim() ? `Sistema de HC: ${data.sistemaHC.trim()}` : '',
+    );
+  }, [ihce]);
+
+  const vincularCapaAIhce = useCallback(async (capaId: string): Promise<void> => {
+    if (!ihceDocId) return;
+    await updateDoc(doc(fbDb, 'historia_clinica_ihce', ihceDocId), { capaId });
+  }, [ihceDocId]);
+
+  return {
+    auditorias, loading, stats, registrarAuditoria, vincularCapa,
+    ihce, loadingIhce, guardarEstadoIhce, vincularCapaAIhce,
+  };
 }

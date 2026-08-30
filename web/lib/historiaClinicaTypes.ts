@@ -96,3 +96,68 @@ export function calcEstadoHC(score: number, respuestas: RespuestasHC): EstadoAud
   if (score >= 70) return 'parcial';
   return 'no_cumple';
 }
+
+// ── Interoperabilidad de Historia Clínica Electrónica (IHCE) ────────────────
+//
+// Base legal — línea normativa DISTINTA de la Res. 1732/2026 (que rige el
+// checklist de arriba): Ley 2015/2020 (crea el mandato de interoperabilidad),
+// Res. 866/2021 (estándares técnicos), Res. 1888/2025 (adopta el RDA —
+// Resumen Digital de Atención en Salud — como pieza central), Res. 1799/2026
+// (suma dispensación farmacéutica al RDA) y Circular Externa 0019/2026.
+// Entró en operación plena el 15 de abril de 2026 (IHCE_FECHA_VIGOR abajo),
+// con plataforma nacional propia (vulcano.ihcecol.gov.co).
+//
+// ADVERTENCIA REGULATORIA (verificada por búsqueda web, ago 2026): no hay
+// confirmación, en las fuentes revisadas, de que la Res. 1732/2026 incluya
+// explícitamente la integración IHCE como criterio dentro del Estándar de
+// Historia Clínica del checklist de habilitación — son dos trámites
+// normativos distintos. Confirma con tu Secretaría de Salud territorial si
+// ya lo están verificando en visita.
+//
+// ALCANCE DE NORMALIS: la integración técnica al RDA (conectores, envío de
+// datos) es responsabilidad del sistema de historia clínica de la IPS, no
+// de NormaLis. Esta sección solo lleva el ESTADO declarado de esa
+// integración — igual que el resto del producto es auditoría/gobernanza,
+// no el sistema operacional en sí.
+export type EstadoIHCE = 'pendiente' | 'en_proceso' | 'integrado';
+
+export const ESTADO_IHCE_CFG: Record<EstadoIHCE, { label: string; color: string; bg: string }> = {
+  pendiente:  { label: 'Pendiente',   color: 'text-red-700',     bg: 'bg-red-100'     },
+  en_proceso: { label: 'En proceso',  color: 'text-amber-700',   bg: 'bg-amber-100'    },
+  integrado:  { label: 'Integrado',   color: 'text-emerald-700', bg: 'bg-emerald-100' },
+};
+
+export const IHCE_FECHA_VIGOR = '2026-04-15';
+export const NORMA_IHCE = 'Ley 2015/2020 · Res. 866/2021 · Res. 1888/2025 (RDA) · Res. 1799/2026 · Circular Externa 0019/2026 — IHCE';
+
+export interface EstadoIntegracionIHCE {
+  id:        string; // = nit || uid (un solo registro por IPS)
+  uid:       string;
+  nit:       string;
+  estado:    EstadoIHCE;
+  sistemaHC: string;  // nombre del software de historia clínica que usa la IPS
+  evidencia: string;  // referencia/descripción de la evidencia de integración (acta, correo IHCE, ticket…)
+  responsable: string;
+  notas:     string;
+  capaId:    string | null;
+  fechaActualizacion: Timestamp | null;
+  fechaCreacion: Timestamp | null;
+}
+
+export interface IhceFormData {
+  estado: EstadoIHCE;
+  sistemaHC: string;
+  evidencia: string;
+  responsable: string;
+  notas: string;
+}
+
+export const IHCE_EMPTY_FORM: IhceFormData = {
+  estado: 'pendiente', sistemaHC: '', evidencia: '', responsable: '', notas: '',
+};
+
+export function diasDesdeVigorIhce(): number {
+  const vigor = new Date(IHCE_FECHA_VIGOR + 'T00:00:00');
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  return Math.round((hoy.getTime() - vigor.getTime()) / 86_400_000);
+}

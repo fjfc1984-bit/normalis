@@ -20,7 +20,9 @@ import { useHistoriaClinica } from '@/lib/useHistoriaClinica';
 import {
   CRITERIOS_HC, NORMA_HC, RESPUESTA_LABEL, ESTADO_HC_CFG,
   AUDITORIA_HC_EMPTY_FORM, calcScoreHC, calcEstadoHC,
+  ESTADO_IHCE_CFG, IHCE_EMPTY_FORM, IHCE_FECHA_VIGOR, NORMA_IHCE, diasDesdeVigorIhce,
   type AuditoriaHC, type AuditoriaHCFormData, type RespuestaCriterio,
+  type EstadoIntegracionIHCE, type IhceFormData, type EstadoIHCE,
 } from '@/lib/historiaClinicaTypes';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
@@ -171,21 +173,191 @@ function AuditoriaCard({
   );
 }
 
+// ── Modal: estado de integración IHCE ────────────────────────────────────────
+function IhceFormModal({
+  actual, onSave, onClose,
+}: { actual: EstadoIntegracionIHCE | null; onSave: (data: IhceFormData) => Promise<void>; onClose: () => void }) {
+  const [form, setForm] = useState<IhceFormData>(
+    actual ? {
+      estado: actual.estado, sistemaHC: actual.sistemaHC,
+      evidencia: actual.evidencia, responsable: actual.responsable, notas: actual.notas,
+    } : IHCE_EMPTY_FORM
+  );
+  const [saving, setSaving] = useState(false);
+
+  function set<K extends keyof IhceFormData>(k: K, v: IhceFormData[K]) {
+    setForm(prev => ({ ...prev, [k]: v }));
+  }
+
+  async function handle(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try { await onSave(form); } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <p className="text-sm font-bold text-gray-800">🔌 Estado de integración IHCE</p>
+          <p className="text-xs text-gray-400">{NORMA_IHCE}</p>
+        </div>
+        <form onSubmit={handle} className="px-6 py-5 space-y-4">
+          <div>
+            <label className={LABEL}>Estado</label>
+            <select className={INPUT} value={form.estado} onChange={e => set('estado', e.target.value as EstadoIHCE)}>
+              {Object.entries(ESTADO_IHCE_CFG).map(([k, cfg]) => <option key={k} value={k}>{cfg.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={LABEL}>Sistema de Historia Clínica</label>
+            <input className={INPUT} value={form.sistemaHC} onChange={e => set('sistemaHC', e.target.value)}
+                   placeholder="Nombre del software de HC que usa la IPS" />
+          </div>
+          <div>
+            <label className={LABEL}>Evidencia de integración</label>
+            <input className={INPUT} value={form.evidencia} onChange={e => set('evidencia', e.target.value)}
+                   placeholder="Acta, correo de habilitación IHCE, número de ticket…" />
+          </div>
+          <div>
+            <label className={LABEL}>Responsable</label>
+            <input className={INPUT} value={form.responsable} onChange={e => set('responsable', e.target.value)}
+                   placeholder="Quién gestiona la integración" />
+          </div>
+          <div>
+            <label className={LABEL}>Notas</label>
+            <textarea rows={3} className={INPUT} value={form.notas} onChange={e => set('notas', e.target.value)}
+                       placeholder="Contexto adicional, bloqueos, próximos pasos…" />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
+            <button type="submit" disabled={saving} className={BTN_P}>{saving ? 'Guardando…' : 'Guardar estado'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Tarjeta de estado IHCE ────────────────────────────────────────────────────
+function IhceCard({
+  ihce, onEditar, onCrearCapa, creandoCapa,
+}: { ihce: EstadoIntegracionIHCE | null; onEditar: () => void; onCrearCapa: () => void; creandoCapa: boolean }) {
+  const estado = ihce?.estado ?? 'pendiente';
+  const cfg = ESTADO_IHCE_CFG[estado];
+  const dias = diasDesdeVigorIhce();
+  const necesitaCapa = estado !== 'integrado' && !ihce?.capaId;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 border-l-4 p-4"
+         style={{ borderLeftColor: estado === 'integrado' ? '#34d399' : estado === 'en_proceso' ? '#fbbf24' : '#f87171' }}>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-bold text-gray-800">🔌 Interoperabilidad IHCE</span>
+          <StatusBadge label={cfg.label} bg={cfg.bg} color={cfg.color} />
+        </div>
+        <div className="flex gap-2">
+          {ihce?.capaId ? (
+            <a href="/dashboard/capas" className="text-xs px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg border border-emerald-200">
+              ✅ CAPA creada → Ver
+            </a>
+          ) : necesitaCapa ? (
+            <button onClick={onCrearCapa} disabled={creandoCapa}
+                    className="text-xs px-2.5 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold rounded-lg disabled:opacity-50">
+              {creandoCapa ? 'Creando…' : '+ CAPA'}
+            </button>
+          ) : null}
+          <button onClick={onEditar} className="text-xs px-2.5 py-1 border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded-lg">
+            {ihce ? 'Actualizar' : 'Declarar estado'}
+          </button>
+        </div>
+      </div>
+      {ihce ? (
+        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+          {ihce.sistemaHC && <p>Sistema de HC: <span className="text-gray-700">{ihce.sistemaHC}</span></p>}
+          {ihce.evidencia && <p>Evidencia: <span className="text-gray-700">{ihce.evidencia}</span></p>}
+          {ihce.responsable && <p>👤 {ihce.responsable}</p>}
+          {ihce.notas && <p className="text-gray-600 mt-1">{ihce.notas}</p>}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500 mt-2">Aún no has declarado el estado de integración a la red nacional IHCE.</p>
+      )}
+      <p className="text-[11px] text-gray-400 mt-2">
+        Obligatoria desde el {new Date(IHCE_FECHA_VIGOR + 'T00:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })}
+        {dias > 0 && estado !== 'integrado' && ` — ${dias} días vencida`}. La integración técnica (RDA/conectores) la ejecuta
+        el sistema de historia clínica de la IPS; NormaLis lleva aquí el estado declarado, no la operación técnica.
+      </p>
+    </div>
+  );
+}
+
 // ── Página principal ─────────────────────────────────────────────────────────
 export default function HistoriaClinicaPage() {
   const { user, nit } = useAuth();
   const uid = user?.uid ?? null;
-  const { auditorias, loading, stats, registrarAuditoria, vincularCapa } = useHistoriaClinica(uid, nit || null);
+  const {
+    auditorias, loading, stats, registrarAuditoria, vincularCapa,
+    ihce, loadingIhce, guardarEstadoIhce, vincularCapaAIhce,
+  } = useHistoriaClinica(uid, nit || null);
   const { toast, show } = useToast();
 
   const [showAuditoria, setShowAuditoria] = useState(false);
   const [creandoCapaId, setCreandoCapaId] = useState<string | null>(null);
+  const [showIhce, setShowIhce] = useState(false);
+  const [creandoCapaIhce, setCreandoCapaIhce] = useState(false);
 
   async function handleRegistrar(data: AuditoriaHCFormData) {
     if (!uid) return;
     await registrarAuditoria(data, uid, nit || null);
     show('📄 Auditoría de HC registrada', 'success');
     setShowAuditoria(false);
+  }
+
+  async function handleGuardarIhce(data: IhceFormData) {
+    if (!uid) return;
+    await guardarEstadoIhce(data, uid, nit || null);
+    show('🔌 Estado de integración IHCE actualizado', 'success');
+    setShowIhce(false);
+  }
+
+  async function handleCrearCapaIhce() {
+    if (!uid || ihce?.capaId) return;
+    setCreandoCapaIhce(true);
+    try {
+      const countQ = nit
+        ? query(collection(db, 'capas'), where('nit', '==', nit))
+        : query(collection(db, 'capas'), where('uid', '==', uid));
+      const countSnap = await getCountFromServer(countQ);
+      const num = String((countSnap.data().count ?? 0) + 1).padStart(3, '0');
+      const limite = new Date();
+      limite.setDate(limite.getDate() + 30);
+
+      const capaRef = await addDoc(collection(db, 'capas'), {
+        uid, nit: nit ?? '',
+        numero: `CAPA-${num}`,
+        descripcion: '[Historia Clínica] Integración pendiente a la red nacional IHCE',
+        causaRaiz: ihce?.notas || 'El sistema de historia clínica de la IPS aún no está integrado a la red nacional de Interoperabilidad de Historia Clínica Electrónica (IHCE), obligatoria desde el 15-abr-2026.',
+        accionCorrectiva: 'Gestionar con el proveedor del sistema de historia clínica la integración técnica (RDA/conectores) a la red IHCE de MinSalud y documentar la evidencia.',
+        responsable: ihce?.responsable || '',
+        area: 'Historia Clínica — Interoperabilidad IHCE',
+        fechaLimite: limite.toISOString().slice(0, 10),
+        origen: 'historia_clinica_ihce',
+        evidencia: '',
+        estado: 'abierta',
+        fechaCreacion: serverTimestamp(),
+        fechaActualizacion: null,
+        fechaInicio: null,
+        fechaCierre: null,
+      });
+
+      await vincularCapaAIhce(capaRef.id);
+      show(`✅ CAPA-${num} creada por integración IHCE pendiente.`, 'success');
+    } catch (err) {
+      console.error('[HistoriaClinica] handleCrearCapaIhce:', err);
+      show('Error al crear la CAPA.', 'error');
+    } finally {
+      setCreandoCapaIhce(false);
+    }
   }
 
   async function handleCrearCapa(a: AuditoriaHC) {
@@ -229,7 +401,7 @@ export default function HistoriaClinicaPage() {
     }
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading || loadingIhce) return <LoadingSpinner />;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -246,6 +418,8 @@ export default function HistoriaClinicaPage() {
         <KpiCard label="No cumplen"     value={stats.noCumple} icon="🔴" colorClass={stats.noCumple > 0 ? 'text-red-600' : 'text-gray-800'} borderColorClass={stats.noCumple > 0 ? 'border-red-300' : 'border-gray-200'} />
         <KpiCard label="Score promedio" value={stats.promedioScore} icon="📊" />
       </div>
+
+      <IhceCard ihce={ihce} onEditar={() => setShowIhce(true)} onCrearCapa={handleCrearCapaIhce} creandoCapa={creandoCapaIhce} />
 
       {auditorias.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
@@ -271,6 +445,7 @@ export default function HistoriaClinicaPage() {
       </div>
 
       {showAuditoria && <AuditoriaHCModal onSave={handleRegistrar} onClose={() => setShowAuditoria(false)} />}
+      {showIhce && <IhceFormModal actual={ihce} onSave={handleGuardarIhce} onClose={() => setShowIhce(false)} />}
 
       <Toast toast={toast} />
     </div>
