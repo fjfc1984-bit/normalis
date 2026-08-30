@@ -1197,6 +1197,21 @@ function checkPqrsRateLimit(ip) {
   return entry.count <= maxPerWindow;
 }
 
+// Rate limiting para la encuesta pública PREM/PROM — misma ventana que PQRS
+// (envíos deliberados de pacientes tras una atención, no scraping).
+const _premPromRateMap = new Map();
+function checkPremPromRateLimit(ip) {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000; // 10 minutos
+  const maxPerWindow = 5;           // máx 5 encuestas por IP cada 10 minutos
+  const key = ip || 'unknown';
+  const entry = _premPromRateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count++;
+  _premPromRateMap.set(key, entry);
+  return entry.count <= maxPerWindow;
+}
+
 // Rate limiting para la API pública de integraciones (v1). Ventana más
 // generosa que los formularios públicos porque son sistemas de terceros
 // haciendo llamadas automatizadas legítimas, no tráfico humano.
@@ -1742,6 +1757,11 @@ export default {
       return handlePqrsPublico(request, env, cors);
     }
 
+    // ── POST /prem-prom — envío público de encuesta PREM/PROM (sin login) ────
+    if (request.method === 'POST' && url.pathname === '/prem-prom') {
+      return handlePremPromPublico(request, env, cors);
+    }
+
     // ── GET /api/v1/checklist-1732 — checklist público, sin auth ─────────────
     if (request.method === 'GET' && url.pathname === '/api/v1/checklist-1732') {
       return handleApiChecklist1732(request, cors);
@@ -2032,6 +2052,93 @@ async function handlePqrsPublico(request, env, cors) {
       await sentryCapture(e, { endpoint: 'POST /pqrs', extra: { step: 'notify' } }, env);
       // no interrumpe — el caso ya quedó guardado
     }
+  }
+
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+
+// ── POST /prem-prom — envío público de encuesta PREM/PROM (sin login) ────────────
+// Mismo patrón que /pqrs: escribe con el token de servicio, sin abrir una
+// regla pública de escritura directa en Firestore. Sin datos de contacto ni
+// identificación del paciente — la encuesta es anónima por diseño.
+//
+// IDs de pregunta válidos — deben mantenerse sincronizados manualmente con
+// PREM_PROM_PREGUNTAS en web/lib/premPromTypes.ts (repos/deploys separados,
+// este Worker no puede importar del proyecto Next.js).
+const PREM_PROM_PREGUNTA_IDS = ['trato', 'informacion', 'tiempos', 'instalaciones', 'resultado', 'recomendaria'];
+
+async function handlePremPromPublico(request, env, cors) {
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response(JSON.stringify({ error: 'JSON inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }); }
+
+  const { uid, servicioId, respuestas, comentario } = body || {};
+
+  if (!uid || typeof uid !== 'string') {
+    return new Response(JSON.stringify({ error: 'Solicitud inválida' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!servicioId || typeof servicioId !== 'string' || servicioId.length > 60) {
+    return new Response(JSON.stringify({ error: 'Servicio inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  if (!respuestas || typeof respuestas !== 'object' || Array.isArray(respuestas)) {
+    return new Response(JSON.stringify({ error: 'Respuestas inválidas' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  const entradas = Object.entries(respuestas);
+  if (entradas.length === 0) {
+    return new Response(JSON.stringify({ error: 'Responde al menos una pregunta' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+  for (const [k, v] of entradas) {
+    if (!PREM_PROM_PREGUNTA_IDS.includes(k) || !Number.isInteger(v) || v < 1 || v > 5) {
+      return new Response(JSON.stringify({ error: 'Respuestas inválidas' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+  }
+  if (comentario !== undefined && (typeof comentario !== 'string' || comentario.length > 1000)) {
+    return new Response(JSON.stringify({ error: 'Comentario inválido' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
+  if (!checkPremPromRateLimit(ip)) {
+    return new Response(JSON.stringify({ error: 'Demasiadas solicitudes. Intenta más tarde.' }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const projectId = 'normalis-5587d';
+  let token;
+  try {
+    token = await getFirestoreToken(env);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /prem-prom', extra: { step: 'auth' } }, env);
+    return new Response(JSON.stringify({ error: 'Servicio no disponible' }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  // Verificar que la IPS existe (mismo enlace público que PQRS: /prem-prom/{uid})
+  try {
+    const doc = await firestoreGetDoc(projectId, `usuarios/${uid}`, token);
+    if (!doc) {
+      return new Response(JSON.stringify({ error: 'Enlace inválido' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /prem-prom', extra: { step: 'lookup' } }, env);
+    return new Response(JSON.stringify({ error: 'Enlace inválido' }), { status: 404, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
+
+  const now = new Date();
+  const respuestasFields = {};
+  for (const [k, v] of entradas) respuestasFields[k] = { integerValue: String(v) };
+
+  const fields = {
+    servicioId: { stringValue: servicioId },
+    respuestas: { mapValue: { fields: respuestasFields } },
+    origen:     { stringValue: 'publico' },
+    fecha:      { stringValue: now.toLocaleDateString('es-CO') },
+    creadoEn:   { integerValue: String(now.getTime()) },
+  };
+  if (comentario && String(comentario).trim()) fields.comentario = { stringValue: String(comentario).trim().slice(0, 1000) };
+
+  try {
+    await firestoreCreateDoc(projectId, `usuarios/${uid}/prem_prom`, fields, token);
+  } catch (e) {
+    await sentryCapture(e, { endpoint: 'POST /prem-prom', extra: { step: 'create' } }, env);
+    return new Response(JSON.stringify({ error: 'No se pudo registrar la encuesta' }), { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });

@@ -64,6 +64,7 @@ const NAV_GROUPS: Array<{
       { href: '/dashboard/simulacros',      label: 'Simulacro',      icon: '🔔' },
       { href: '/dashboard/documentos',      label: 'Documentos',     icon: '📄' },
       { href: '/dashboard/pqrs',            label: 'PQRS',           icon: '📬' },
+      { href: '/dashboard/prem-prom',       label: 'PREM/PROM',      icon: '💬', badge: 'NUEVO' },
       { href: '/dashboard/incidentes',      label: 'Incidentes',     icon: '🛡️' },
       { href: '/dashboard/proa',            label: 'PROA',           icon: '💊', badge: 'PRO' },
     ],

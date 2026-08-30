@@ -78,6 +78,32 @@ export async function submitPqrsPublico(payload: PqrsPublicoPayload): Promise<vo
   }
 }
 
+// ── PREM/PROM público ────────────────────────────────────────────────────────
+export interface PremPromPublicoPayload {
+  uid:         string;
+  servicioId:  string;
+  respuestas:  Record<string, 1 | 2 | 3 | 4 | 5>;
+  comentario?: string;
+}
+
+/**
+ * Envía una encuesta PREM/PROM desde el formulario público (sin login, sin
+ * datos de identificación del paciente) al endpoint /prem-prom del Worker,
+ * que la escribe en Firestore con el token de servicio. Mismo patrón que
+ * submitPqrsPublico — evita abrir una regla pública de escritura directa.
+ */
+export async function submitPremPromPublico(payload: PremPromPublicoPayload): Promise<void> {
+  const res = await fetch(`${WORKER_URL}/prem-prom`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? `Error ${res.status}`);
+  }
+}
+
 // ── Análisis de causa raíz — Protocolo de Londres ───────────────────────────
 export interface FactorContribuyentePayload {
   categoria: string;

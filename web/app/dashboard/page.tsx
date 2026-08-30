@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useFechaVisita } from '@/lib/useFechaVisita';
+import { parseLocalDate } from '@/lib/fechaLocal';
 import Link from 'next/link';
 
 // ── Módulos con iconos + gradientes ───────────────────────────────────────────
@@ -77,6 +78,14 @@ const MODULES = [
     desc: 'Peticiones, quejas y reclamos',
     icon: '📬',
     from: '#BE185D', to: '#F472B6',
+  },
+  {
+    href: '/dashboard/prem-prom',
+    title: 'PREM/PROM',
+    desc: 'Experiencia y desenlaces del paciente',
+    icon: '💬',
+    from: '#7C3AED', to: '#C4B5FD',
+    badge: 'NUEVO',
   },
   {
     href: '/dashboard/incidentes',
@@ -248,7 +257,7 @@ function CountdownWidget() {
           </p>
           {fechaVisita && !editing && (
             <p className="text-xs mt-1" style={{ color: '#00695C', opacity: 0.7 }}>
-              {new Date(fechaVisita).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {parseLocalDate(fechaVisita)?.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           )}
         </div>

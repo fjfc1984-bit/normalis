@@ -32,6 +32,16 @@ var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;'
     try { return JSON.parse(localStorage.getItem('normalis_vencimientos_cache') || '[]'); } catch (_) { return []; }
   }
 
+  // Parsea "YYYY-MM-DD" como fecha local (evita el corrimiento de -1 día que
+  // causa `new Date('YYYY-MM-DD')` al interpretarse como medianoche UTC — en
+  // Colombia, UTC-5, eso mostraba/calculaba la fecha del día anterior).
+  function _parseFechaLocal(fechaStr) {
+    if (!fechaStr) return null;
+    const partes = String(fechaStr).split('-').map(Number);
+    if (partes.length !== 3 || partes.some(isNaN)) return new Date(fechaStr);
+    return new Date(partes[0], partes[1] - 1, partes[2]);
+  }
+
   // ── Sincronizar pendientes offline → Firestore ────────────────────────────────
   // Si el usuario creó vencimientos sin conexión (solo en localStorage legacy),
   // se suben a Firestore en cuanto hay red.
@@ -232,9 +242,9 @@ var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;'
 
     const getFecha = d => d.fechaVencimiento || d.fecha || '';
 
-    const vencidos = docs.filter(d => new Date(getFecha(d)) < hoy).length;
-    const proximos = docs.filter(d => { const f = new Date(getFecha(d)); return f >= hoy && f <= en30; }).length;
-    const vigentes = docs.filter(d => new Date(getFecha(d)) > en30).length;
+    const vencidos = docs.filter(d => _parseFechaLocal(getFecha(d)) < hoy).length;
+    const proximos = docs.filter(d => { const f = _parseFechaLocal(getFecha(d)); return f >= hoy && f <= en30; }).length;
+    const vigentes = docs.filter(d => _parseFechaLocal(getFecha(d)) > en30).length;
 
     const setKPI = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setKPI('venc-vencidos', vencidos);
@@ -248,7 +258,7 @@ var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;'
 
     list.innerHTML = docs.map(d => {
       const fechaStr = getFecha(d);
-      const f        = new Date(fechaStr); f.setHours(0, 0, 0, 0);
+      const f        = _parseFechaLocal(fechaStr);
       const dias     = Math.round((f - hoy) / (1000 * 60 * 60 * 24));
       const color    = dias < 0 ? '#ef4444' : dias <= 30 ? '#f59e0b' : '#10b981';
       const label    = dias < 0
@@ -256,7 +266,7 @@ var escH = window.escH || function(s){ return String(s||'').replace(/&/g,'&amp;'
         : dias === 0 ? 'VENCE HOY'
         : 'Vence en ' + dias + ' días';
       const docId    = _esc(d._docId || '');
-      const fechaDisplay = fechaStr ? new Date(fechaStr).toLocaleDateString('es-CO') : '-';
+      const fechaDisplay = fechaStr ? _parseFechaLocal(fechaStr).toLocaleDateString('es-CO') : '-';
 
       return `<div style="border:1px solid ${color}40;border-left:4px solid ${color};border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
         <div>

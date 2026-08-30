@@ -184,6 +184,14 @@ service cloud.firestore {
         allow read, write: if isOwner(uid) || isAdmin();
       }
 
+      // ── PREM/PROM ─────────────────────────────────────────────────────────
+      // Las respuestas del paciente SOLO se crean desde el Worker (token de
+      // servicio, endpoint /prem-prom) — no hay una regla pública de escritura
+      // directa aquí. El dueño de la cuenta o un admin puede leer/moderar.
+      match /prem_prom/{id} {
+        allow read, write: if isOwner(uid) || isAdmin();
+      }
+
       // ── Incidentes y Eventos Adversos ────────────────────────────────────
       match /incidentes/{id} {
         allow read, write: if isOwner(uid) || isAdmin();
