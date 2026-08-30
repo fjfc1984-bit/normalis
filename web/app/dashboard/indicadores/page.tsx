@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useIndicadores } from '@/lib/useIndicadores';
-import { INDICADOR_GRUPOS, INDICADORES_NOTA_COBERTURA } from '@/lib/indicadorTypes';
+import { INDICADOR_GRUPOS, INDICADORES_NOTA_COBERTURA, INDICADORES_NOTA_META } from '@/lib/indicadorTypes';
 import type { IndicadorEstado, IndicadorDef } from '@/lib/indicadorTypes';
 import {
   KpiCard, Toast, useToast, StatusBadge,
@@ -94,6 +94,7 @@ function RegistroModal({ def, onClose, onSave }: RegistroModalProps) {
           <span className="font-semibold">Meta:</span> {def.meta} {def.unidad}
           {' · '}
           <span className="font-semibold">Periodicidad:</span> {def.periodicidad}
+          <p className="text-[11px] text-gray-400 mt-1">Meta editorial ajustable — la norma no fija un umbral oficial.</p>
         </div>
 
         {err && (
@@ -230,6 +231,9 @@ function IndicadorCard({
               <div className="bg-gray-50 rounded-lg px-3 py-2">
                 <p className="text-xs text-gray-600 leading-relaxed">{def.descripcion}</p>
                 <p className="text-xs text-gray-400 mt-1">{def.normativa}</p>
+              </div>
+              <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <p className="text-xs text-amber-700 leading-relaxed">💡 {INDICADORES_NOTA_META}</p>
               </div>
             </div>
           )}

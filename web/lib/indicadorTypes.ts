@@ -9,6 +9,17 @@
 // seguridad y experiencia de la atención con un universo mayor a 14). Cada IPS
 // debe validar contra el Anexo Técnico vigente y su reporte a SISPRO cuáles
 // indicadores le aplican según su portafolio de servicios y nivel de complejidad.
+//
+// VACÍO LEGAL / METAS NUMÉRICAS (ago 2026): se verificó contra las fichas
+// técnicas oficiales de indicadores de la Res. 256/2016 (MinSalud) que la
+// resolución define la fórmula, la fuente del dato y la periodicidad de
+// reporte de cada indicador — pero NO fija un umbral/meta numérico oficial;
+// la meta queda a criterio de cada institución. Por lo tanto los valores de
+// `meta`/`metaNum` en el catálogo de abajo (ej. "≥ 90", "≤ 10") son
+// sugerencias editoriales de NormaLis para dar un punto de partida, no
+// cifras que exija la norma — cada IPS debe ajustarlas a su propio programa
+// de calidad. El campo `normativa` respalda la existencia/fórmula del
+// indicador, no el número de la meta.
 
 import type { Timestamp } from 'firebase/firestore';
 
@@ -208,6 +219,12 @@ export const INDICADORES_NOTA_COBERTURA =
   'No sustituye el Anexo Técnico completo de la Res. 256/2016 (mod. Res. 3539/2019) — ' +
   'valida con tu equipo de calidad qué indicadores adicionales aplican según los servicios ' +
   'habilitados de tu IPS.';
+
+// Mensaje sobre el origen de las metas numéricas — ver nota "VACÍO LEGAL /
+// METAS NUMÉRICAS" arriba. Mostrado junto a cada meta en la UI.
+export const INDICADORES_NOTA_META =
+  'Meta editorial de NormaLis (punto de partida) — la Res. 256/2016 no fija un ' +
+  'umbral numérico oficial para este indicador, solo la fórmula y la periodicidad. Ajústala según tu programa de calidad.';
 
 // ── Calcular estado de un indicador ─────────────────────
 export function calcularEstado(
