@@ -16,6 +16,7 @@ import { useCapas } from '@/lib/useCapas';
 import CapaForm from '../CapaForm';
 import type { Capa, CapaFormData } from '@/lib/capaTypes';
 import { CAPA_ESTADO_CFG, CAPA_ORIGEN_LABELS } from '@/lib/capaTypes';
+import { estaVencidaLocal } from '@/lib/fechaLocal';
 
 // Helpers
 function fmtDate(iso: string | undefined | null): string {
@@ -168,8 +169,10 @@ export default function EditCapaPage({ params }: { params: Promise<{ id: string 
       .then(snap => {
         if (snap.exists()) {
           const data = snap.data() as Omit<Capa, 'id' | '_vencida' | '_diasRestantes'>;
+          // estaVencidaLocal (no `new Date(fechaLimite)` directo) evita el
+          // corrimiento de -1 día por interpretación UTC de "YYYY-MM-DD".
           const vencida = data.estado !== 'cerrada' && !!data.fechaLimite &&
-                          new Date(data.fechaLimite) < new Date();
+                          estaVencidaLocal(data.fechaLimite);
           setCapa({ id: snap.id, ...data, _vencida: vencida, _diasRestantes: null });
         } else {
           setError('CAPA no encontrada.');

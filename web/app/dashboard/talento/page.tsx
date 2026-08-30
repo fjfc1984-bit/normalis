@@ -16,15 +16,17 @@ import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, EmptyState, ConfirmModal,
 } from '@/components/ui';
+import { diasRestantesLocal } from '@/lib/fechaLocal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const VENCE_PRONTO_DAYS = 30;
 
+// diasRestantesLocal (no `new Date(fecha)` directo) evita el corrimiento de
+// -1 día por interpretación UTC de "YYYY-MM-DD".
 function diasParaVencer(fecha: string): number | null {
   if (!fecha) return null;
-  const diff = (new Date(fecha).getTime() - Date.now()) / 86_400_000;
-  return Math.ceil(diff);
+  return diasRestantesLocal(fecha);
 }
 
 function docEstado(vence: string): 'ok' | 'pronto' | 'vencido' | 'sin-fecha' {

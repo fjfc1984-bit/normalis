@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import { registrarBitacora } from '@/lib/useBitacora';
+import { diasRestantesLocal } from '@/lib/fechaLocal';
 import type { Capa, CapaFormData, CapaEstado, CapaVeredicto } from './capaTypes';
 
 // Trazabilidad: quién hizo el último cambio en un registro compartido por
@@ -41,17 +42,22 @@ function fechaRef(c: Omit<Capa, '_vencida' | '_diasRestantes'>): string | undefi
   return c.estado === 'implementada' ? (c.fechaVerificacion ?? undefined) : c.fechaLimite;
 }
 
+// Nota: usa parseLocalDate/diasRestantesLocal (fecha "YYYY-MM-DD" como
+// medianoche local) en vez de `new Date(ref)` directo — ese constructor
+// interpreta la fecha como medianoche UTC y en Colombia (UTC-5) adelantaba
+// el estado "vencida" un día antes de lo real.
 function computeVencida(c: Omit<Capa, '_vencida' | '_diasRestantes'>): boolean {
   if (c.estado === 'cerrada') return false;
   const ref = fechaRef(c);
-  return !!ref && new Date(ref) < new Date();
+  const dias = ref ? diasRestantesLocal(ref) : null;
+  return dias !== null && dias < 0;
 }
 
 function computeDiasRestantes(c: Omit<Capa, '_vencida' | '_diasRestantes'>): number | null {
   if (c.estado === 'cerrada') return null;
   const ref = fechaRef(c);
   if (!ref) return null;
-  return Math.ceil((new Date(ref).getTime() - Date.now()) / 86_400_000);
+  return diasRestantesLocal(ref);
 }
 
 function addComputedFields(raw: Omit<Capa, '_vencida' | '_diasRestantes'>): Capa {

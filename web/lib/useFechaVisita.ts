@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { useAuth } from './auth';
+import { diasRestantesLocal } from './fechaLocal';
 
 export type VisitaUrgency = 'urgente' | 'pronto' | 'ok' | 'vencida' | 'sin_fecha';
 
@@ -76,12 +77,10 @@ export function useFechaVisita(): FechaVisitaState {
   const clearFecha = ()          => persist(null);
 
   // ── Calcular días ─────────────────────────────────────────────────────────
-  let daysLeft: number | null = null;
-  if (fechaVisita) {
-    daysLeft = Math.ceil(
-      (new Date(fechaVisita).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-  }
+  // Usa parseo de fecha local (no `new Date(fechaVisita)` directo) para evitar
+  // el corrimiento de -1 día que causa interpretar "YYYY-MM-DD" como
+  // medianoche UTC — en Colombia (UTC-5) eso adelantaba/atrasaba el conteo.
+  const daysLeft = fechaVisita ? diasRestantesLocal(fechaVisita) : null;
 
   return {
     fechaVisita,
