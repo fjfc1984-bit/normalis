@@ -7,6 +7,17 @@
  * condiciones de habilitación (Res. 3100/2019).
  * Cada pregunta tiene severidad: critica = cierre inmediato,
  * moderada = plan de mejoramiento, menor = recomendación.
+ *
+ * Revisión de citas normativas (ago 2026): se corrigieron 5 citas mal
+ * aplicadas o no verificables (norma real citada para un tema que no trata,
+ * o número de resolución que no se pudo confirmar que exista) — bomberos,
+ * póliza de responsabilidad civil, convenio de referencia/contrarreferencia,
+ * reporte de eventos adversos y certificado de auxiliar de odontología. Las
+ * demás citas (Res. 3100/2019 por estándar, RETHUS, leyes de profesiones de
+ * salud, NTC-ISO 15189, decretos de dispositivos/medicamentos) se verificaron
+ * como correctas para el punto que respaldan. Ante cualquier duda sobre una
+ * cita puntual, confirmar con la Secretaría de Salud territorial — algunos
+ * requisitos (ej. certificado de bomberos) tienen aplicación municipal.
  */
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
@@ -60,13 +71,13 @@ export const AE_DB: AEDatabase = {
       { q: '¿El Certificado de Habilitación está publicado en lugar visible para el usuario?',    sev: 'moderada', norm: 'Res. 3100/2019 Art. 9' },
       { q: '¿El plan de emergencias y evacuación está actualizado, aprobado y visible?',           sev: 'moderada', norm: 'Res. 256/2016' },
       { q: '¿El PGIRH (plan de gestión de residuos hospitalarios) está vigente y aprobado?',      sev: 'moderada', norm: 'Dec. 351/2014' },
-      { q: '¿El establecimiento tiene Certificado de Bomberos vigente?',                           sev: 'moderada', norm: 'NSR-10 · Res. 180294/2008' },
+      { q: '¿El establecimiento tiene Certificado de Bomberos vigente?',                           sev: 'moderada', norm: 'Ley 1575/2012 (Ley General de Bomberos)' },
       { q: '¿El manual de bioseguridad está actualizado y disponible para el personal?',           sev: 'moderada', norm: 'Res. 3100/2019 Est. 5' },
-      { q: '¿El establecimiento tiene póliza de responsabilidad civil vigente?',                   sev: 'menor',    norm: 'Ley 1438/2011 Art. 41' },
+      { q: '¿El establecimiento tiene póliza de responsabilidad civil vigente?',                   sev: 'menor',    norm: 'Buena práctica — sin exigencia normativa específica de habilitación; frecuente como requisito contractual de EPS/aseguradoras' },
     ],
     planta: [
       { q: '¿El establecimiento tiene baños diferenciados para usuarios y personal?',              sev: 'moderada', norm: 'Res. 3100/2019 Est. 2' },
-      { q: '¿Las áreas cuentan con señalización de rutas de evacuación vigente?',                  sev: 'moderada', norm: 'NSR-10 · Res. 180294' },
+      { q: '¿Las áreas cuentan con señalización de rutas de evacuación vigente?',                  sev: 'moderada', norm: 'NSR-10 · Ley 1575/2012' },
       { q: '¿Existe rampa o ascensor para acceso de personas con movilidad reducida?',             sev: 'moderada', norm: 'Ley 361/1997 · RETIE' },
       { q: '¿Las instalaciones eléctricas tienen concepto técnico vigente y tableros señalizados?',sev: 'critica',  norm: 'RETIE · Resolución 90708/2013' },
       { q: '¿El servicio de aseo y limpieza está documentado con frecuencias y productos aprobados?', sev: 'menor', norm: 'Res. 3100/2019 Est. 5' },
@@ -83,7 +94,7 @@ export const AE_DB: AEDatabase = {
       { q: '¿Los equipos tienen hojas de vida con mantenimiento preventivo al día?',               sev: 'moderada', norm: 'Dec. 4725/2005 · Tecnovigilancia' },
       { q: '¿Los medicamentos en stock están dentro de su fecha de vencimiento?',                  sev: 'critica',  norm: 'Decreto 677/1995 · INVIMA' },
       { q: '¿El almacenamiento de medicamentos tiene control de temperatura documentado?',         sev: 'moderada', norm: 'Res. 3100/2019 Est. 3' },
-      { q: '¿Los extintores están vigentes, señalizados y en los puntos requeridos?',              sev: 'moderada', norm: 'NSR-10 · Res. 180294/2008' },
+      { q: '¿Los extintores están vigentes, señalizados y en los puntos requeridos?',              sev: 'moderada', norm: 'NSR-10 · Ley 1575/2012' },
     ],
     registros: [
       { q: '¿Las historias clínicas tienen todos los componentes exigidos por la Res. 1995/1999?', sev: 'critica',  norm: 'Res. 1995/1999 Art. 3' },
@@ -98,7 +109,7 @@ export const AE_DB: AEDatabase = {
     documentacion: [
       { q: '¿El servicio de urgencias tiene habilitación específica vigente (Estándar 5)?',        sev: 'critica',  norm: 'Res. 3100/2019 Est. 5' },
       { q: '¿Existe protocolo de triage documentado con escala de 5 niveles?',                     sev: 'critica',  norm: 'Res. 3100/2019 Est. 6' },
-      { q: '¿Hay convenio activo con IPS de mayor complejidad para referencia de pacientes?',      sev: 'critica',  norm: 'Res. 544/2023 Art. 17' },
+      { q: '¿Hay convenio activo con IPS de mayor complejidad para referencia de pacientes?',      sev: 'critica',  norm: 'Res. 3100/2019 Est. 7' },
       { q: '¿El protocolo de referencia y contrarreferencia está disponible y vigente?',           sev: 'moderada', norm: 'Res. 3100/2019 Est. 7' },
       { q: '¿El plan de contingencia para masivos de víctimas está documentado?',                  sev: 'moderada', norm: 'Res. 256/2016 · Plan hospitalario' },
     ],
@@ -126,7 +137,7 @@ export const AE_DB: AEDatabase = {
       { q: '¿Cada paciente tiene historia clínica de urgencias completa desde el ingreso?',        sev: 'critica',  norm: 'Res. 1995/1999 · Res. 3100/2019' },
       { q: '¿Se registra el nivel de triage asignado y la hora de atención efectiva?',             sev: 'moderada', norm: 'Res. 3100/2019 Est. 6' },
       { q: '¿Las remisiones tienen formato completo con diagnóstico, estado y destino?',           sev: 'moderada', norm: 'Res. 3100/2019 Est. 7' },
-      { q: '¿Los eventos adversos se reportan al sistema de farmacovigilancia?',                   sev: 'moderada', norm: 'Res. 2003/2014 · SIVIGILA' },
+      { q: '¿Los eventos adversos se reportan al sistema de farmacovigilancia?',                   sev: 'moderada', norm: 'Dec. 1011/2006 · Decreto 677/1995' },
     ],
   },
 
@@ -206,7 +217,7 @@ export const AE_DB: AEDatabase = {
     ],
     talento: [
       { q: '¿El odontólogo tiene tarjeta profesional vigente en RETHUS?',                          sev: 'critica',  norm: 'Ley 35/1989 · RETHUS' },
-      { q: '¿El auxiliar de odontología tiene certificado de auxiliar de consultorio odontológico?', sev: 'moderada', norm: 'Ley 711/2001' },
+      { q: '¿El auxiliar de odontología tiene certificado de auxiliar de consultorio odontológico?', sev: 'moderada', norm: 'Decreto 3616/2005' },
       { q: '¿El personal tiene carné de vacunación contra Hepatitis B completo?',                  sev: 'moderada', norm: 'Min. Trabajo' },
     ],
     dotacion: [
