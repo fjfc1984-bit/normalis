@@ -23,6 +23,7 @@ import {
   getDocs, query, where, serverTimestamp,
 } from 'firebase/firestore';
 import type { AuditAnswers, AuditAnswer, NonConformity } from '@/lib/auditTypes';
+import { textoNoConformidadesAuditoria } from '@/lib/criteriosFallidos';
 
 // ─── Reusable answer button ───────────────────────────────────────────────────
 type AnswerKey = AuditAnswer;
@@ -233,7 +234,7 @@ export default function AuditoriaSegmentoPage({
           numero:           `CAPA-${String(nextNum).padStart(3, '0')}`,
           descripcion:      `[Auditoría ${meta?.label ?? segmento}] No conformidades en ${area.areaName}`,
           causaRaiz:        `${items.length} criterio(s) no cumplido(s) detectados en auditoría de habilitación:\n${preguntas}`,
-          accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable del área.',
+          accionCorrectiva: textoNoConformidadesAuditoria(items),
           responsable:      '',
           area:             area.areaName,
           fechaLimite:      (() => { const d = new Date(); d.setMonth(d.getMonth() + 3); return d.toISOString().slice(0,10); })(),

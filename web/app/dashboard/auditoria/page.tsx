@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { SEGMENT_META, areasDB } from '@/data/auditData';
 import { buildFlatQuestions, getNonConformities } from '@/lib/auditScore';
+import { textoNoConformidadesAuditoria } from '@/lib/criteriosFallidos';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -116,7 +117,7 @@ export default function AuditoriaPage() {
               numero:           `CAPA-${String(nextNum).padStart(3, '0')}`,
               descripcion:      `[Auditoría ${meta?.label ?? seg}] No conformidades en ${areaName}`,
               causaRaiz:        `${items.length} criterio(s) no cumplido(s):\n${preguntas}`,
-              accionCorrectiva: 'Revisar y documentar cumplimiento de cada criterio. Capacitar al personal responsable.',
+              accionCorrectiva: textoNoConformidadesAuditoria(items),
               responsable:      '',
               area:             areaName,
               fechaLimite:      (() => {

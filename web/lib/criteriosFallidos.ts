@@ -18,3 +18,21 @@ export function textoCriteriosFallidos(
     .map(c => `${respuestas[c.id] === 'no' ? '✗ No cumple' : '△ Parcial'} — ${c.texto}`)
     .join('\n');
 }
+
+/**
+ * Misma idea que textoCriteriosFallidos, pero para el módulo de Auditoría
+ * (auditoria/page.tsx y auditoria/[segmento]/page.tsx), donde las
+ * no-conformidades ya vienen resueltas como { question, answer } en vez de
+ * un mapa de respuestas por id — no hay necesidad de filtrar, ya están
+ * filtradas por getNonConformities().
+ */
+export function textoNoConformidadesAuditoria(
+  items: { question: string; answer: 'no' | 'parcial' }[],
+): string {
+  if (items.length === 0) {
+    return 'Revisar y documentar la evidencia de los criterios evaluados.';
+  }
+  return items
+    .map(i => `${i.answer === 'no' ? '✗ No cumple' : '△ Parcial'} — ${i.question}`)
+    .join('\n');
+}
