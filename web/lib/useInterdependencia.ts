@@ -15,13 +15,14 @@ import {
 import { db as fbDb } from '@/lib/firebase';
 import { registrarBitacora } from '@/lib/useBitacora';
 import {
-  calcEstadoConvenio, calcScoreVerificacion, calcEstadoVerificacion,
+  calcEstadoConvenio, calcScoreVerificacion, calcEstadoVerificacion, DIAS_ALERTA_CONVENIO_DEFAULT,
   type ConvenioInterdependencia, type ConvenioFormData,
   type VerificacionInterdependencia, type VerificacionFormData,
 } from './interdependenciaTypes';
 
 function addComputedFieldsConvenio(raw: Omit<ConvenioInterdependencia, '_estado'>): ConvenioInterdependencia {
-  return { ...raw, _estado: calcEstadoConvenio(raw.tieneConvenioFormal, raw.vigenciaHasta) };
+  // raw.diasAlerta puede faltar en registros creados antes de este campo — se usa el default.
+  return { ...raw, _estado: calcEstadoConvenio(raw.tieneConvenioFormal, raw.vigenciaHasta, raw.diasAlerta ?? DIAS_ALERTA_CONVENIO_DEFAULT) };
 }
 
 export interface ConveniosStats {
@@ -148,6 +149,7 @@ export function useInterdependencia(uid: string | null, nit: string | null): Use
       tieneConvenioFormal: data.tieneConvenioFormal,
       vigenciaHasta: data.vigenciaHasta || null,
       tiempoRespuestaAcordado: data.tiempoRespuestaAcordado.trim(),
+      diasAlerta: data.diasAlerta || DIAS_ALERTA_CONVENIO_DEFAULT,
       fechaCreacion: serverTimestamp(),
       fechaActualizacion: null,
     });
@@ -164,6 +166,7 @@ export function useInterdependencia(uid: string | null, nit: string | null): Use
       tieneConvenioFormal: data.tieneConvenioFormal,
       vigenciaHasta: data.vigenciaHasta || null,
       tiempoRespuestaAcordado: data.tiempoRespuestaAcordado.trim(),
+      diasAlerta: data.diasAlerta || DIAS_ALERTA_CONVENIO_DEFAULT,
       fechaActualizacion: serverTimestamp(),
     });
   }, []);

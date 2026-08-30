@@ -24,6 +24,7 @@ import {
   type AreaFisica, type AreaFisicaFormData,
   type Inspeccion, type InspeccionFormData, type RespuestaCriterio,
 } from '@/lib/infraestructuraTypes';
+import { textoCriteriosFallidos } from '@/lib/criteriosFallidos';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, StatusBadge,
@@ -387,7 +388,9 @@ export default function InfraestructuraPage() {
         numero: `CAPA-${num}`,
         descripcion: `[Infraestructura] ${area.nombre}`,
         causaRaiz: ultima?.hallazgos || `Hallazgos de infraestructura en ${area.nombre} — inspección con score ${area.ultimaInspeccionScore ?? '—'}/100 (${ESTADO_AREA_CFG[area.estado].label}).`,
-        accionCorrectiva: `Corregir las condiciones físicas identificadas en la inspección y documentar la evidencia. Tipo de área: ${area.tipoArea || 'sin especificar'}.`,
+        accionCorrectiva: ultima
+          ? textoCriteriosFallidos(CRITERIOS_INFRAESTRUCTURA, ultima.respuestas)
+          : `Corregir las condiciones físicas identificadas en la inspección y documentar la evidencia. Tipo de área: ${area.tipoArea || 'sin especificar'}.`,
         responsable: area.responsable || '',
         area: area.tipoArea || 'Infraestructura',
         fechaLimite: limite.toISOString().slice(0, 10),

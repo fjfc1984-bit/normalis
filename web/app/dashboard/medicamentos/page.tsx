@@ -20,6 +20,7 @@ import {
   type LoteMedicamento, type LoteFormData, type TipoMedicamento,
   type VerificacionFarmacia, type VerificacionFormData, type RespuestaCriterio,
 } from '@/lib/medicamentosTypes';
+import { textoCriteriosFallidos } from '@/lib/criteriosFallidos';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, StatusBadge,
@@ -315,7 +316,7 @@ export default function MedicamentosPage() {
         numero: `CAPA-${num}`,
         descripcion: `[Medicamentos y Dispositivos] Verificación del Servicio Farmacéutico ${fmtDate(v.fecha)}`,
         causaRaiz: v.hallazgos || `Verificación del Servicio Farmacéutico con score ${v.score}/100.`,
-        accionCorrectiva: 'Corregir los criterios identificados como "no cumple" o "parcial" y documentar la evidencia.',
+        accionCorrectiva: textoCriteriosFallidos(CRITERIOS_FARMACIA, v.respuestas),
         responsable: v.responsable || '',
         area: 'Servicio Farmacéutico',
         fechaLimite: limite.toISOString().slice(0, 10),

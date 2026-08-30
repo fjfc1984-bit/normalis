@@ -18,7 +18,7 @@
 // texto oficial si necesitas citar el artículo específico en un informe.
 
 import type { Timestamp } from 'firebase/firestore';
-import { areasDB } from '@/data/auditData';
+import { areasDB, SEGMENT_META } from '@/data/auditData';
 
 // ── Criterios — fuente única: auditData.ts ──────────────────────────────────
 
@@ -53,10 +53,19 @@ export const ESTADO_AREA_CFG: Record<EstadoArea, { label: string; color: string;
   sin_inspeccionar:  { label: 'Sin inspeccionar',        color: 'text-gray-500',    bg: 'bg-gray-100'    },
 };
 
-export const TIPOS_AREA = [
-  'Consulta Externa', 'Urgencias', 'Hospitalización', 'Cuidado Intensivo (UCI)',
-  'Sala de Partos / Quirófano', 'Servicio Farmacéutico', 'Central de Esterilización',
-  'Laboratorio Clínico', 'Imagenología', 'Áreas comunes / administrativas', 'Otro',
+// Reutiliza la misma taxonomía de servicios habilitados que ya usa el resto
+// de la app (auditData.ts SEGMENT_META, cada uno con su propia cita
+// normativa — ver dmsServiciosCatalogo.ts para el mismo patrón) en vez de
+// inventar una segunda lista de "tipos de área" aparte. Los últimos 4
+// valores son zonas físicas reales que se inspeccionan bajo el Estándar de
+// Infraestructura pero que no son un "servicio habilitado" con cita propia
+// en SEGMENT_META — se dejan explícitamente así, sin inventarles una cita.
+export const TIPOS_AREA: string[] = [
+  ...Object.entries(SEGMENT_META)
+    .filter(([id]) => id !== 'general')
+    .map(([, meta]) => meta.label)
+    .sort((a, b) => a.localeCompare(b, 'es')),
+  'Servicio Farmacéutico', 'Central de Esterilización', 'Áreas comunes / administrativas', 'Otro',
 ];
 
 export interface AreaFisica {

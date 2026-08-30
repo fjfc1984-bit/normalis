@@ -56,7 +56,13 @@ export const ESTADO_CONVENIO_CFG: Record<EstadoConvenio, { label: string; color:
   sin_convenio_formal:  { label: 'Sin convenio formal',   color: 'text-gray-500',    bg: 'bg-gray-100'     },
 };
 
-export const DIAS_ALERTA_CONVENIO = 60;
+// A diferencia de DIAS_ALERTA_VENCIMIENTO en medicamentosTypes.ts (que sí
+// cita un criterio real del checklist), no hay ningún criterio ni norma que
+// exija una ventana de alerta específica para el vencimiento de convenios.
+// Por eso NO es una constante global fija: cada convenio define su propia
+// ventana de alerta (campo diasAlerta), y este valor es solo el punto de
+// partida sugerido al crear uno — un parámetro operativo, no un plazo legal.
+export const DIAS_ALERTA_CONVENIO_DEFAULT = 60;
 
 export interface ConvenioInterdependencia {
   id:      string;
@@ -68,6 +74,7 @@ export interface ConvenioInterdependencia {
   tieneConvenioFormal: boolean;
   vigenciaHasta: string | null;   // ISO date — vacío si no aplica (sin convenio formal)
   tiempoRespuestaAcordado: string; // texto libre: "60 min pruebas básicas", "24h disponible"…
+  diasAlerta: number;             // ventana de alerta configurable por convenio (ver nota arriba)
   fechaCreacion: Timestamp | null;
   fechaActualizacion: Timestamp | null;
   // computed client-side
@@ -81,21 +88,26 @@ export interface ConvenioFormData {
   tieneConvenioFormal: boolean;
   vigenciaHasta: string;
   tiempoRespuestaAcordado: string;
+  diasAlerta: number;
 }
 
 export const CONVENIO_EMPTY_FORM: ConvenioFormData = {
   prestador: '', tipoServicio: 'Laboratorio Clínico', contacto: '',
   tieneConvenioFormal: true, vigenciaHasta: '', tiempoRespuestaAcordado: '',
+  diasAlerta: DIAS_ALERTA_CONVENIO_DEFAULT,
 };
 
-export function calcEstadoConvenio(tieneConvenioFormal: boolean, vigenciaHasta: string | null): EstadoConvenio {
+export function calcEstadoConvenio(
+  tieneConvenioFormal: boolean, vigenciaHasta: string | null,
+  diasAlerta: number = DIAS_ALERTA_CONVENIO_DEFAULT,
+): EstadoConvenio {
   if (!tieneConvenioFormal) return 'sin_convenio_formal';
   if (!vigenciaHasta) return 'vigente'; // convenio formal sin fecha de vencimiento definida (indefinido)
   const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
   const venc = new Date(vigenciaHasta + 'T00:00:00');
   const dias = Math.round((venc.getTime() - hoy.getTime()) / 86_400_000);
   if (dias < 0) return 'vencido';
-  if (dias <= DIAS_ALERTA_CONVENIO) return 'por_vencer';
+  if (dias <= diasAlerta) return 'por_vencer';
   return 'vigente';
 }
 

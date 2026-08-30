@@ -24,6 +24,7 @@ import {
   type AuditoriaHC, type AuditoriaHCFormData, type RespuestaCriterio,
   type EstadoIntegracionIHCE, type IhceFormData, type EstadoIHCE,
 } from '@/lib/historiaClinicaTypes';
+import { textoCriteriosFallidos } from '@/lib/criteriosFallidos';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, StatusBadge,
@@ -377,7 +378,7 @@ export default function HistoriaClinicaPage() {
         numero: `CAPA-${num}`,
         descripcion: `[Historia Clínica] Auditoría ${fmtDate(a.fecha)} — ${a.servicio || 'muestra general'}`,
         causaRaiz: a.hallazgos || `Auditoría de Historia Clínica con score ${a.score}/100 sobre una muestra de ${a.tamanoMuestra} expedientes.`,
-        accionCorrectiva: 'Corregir los criterios identificados como "no cumple" o "parcial" en la muestra auditada y documentar la evidencia.',
+        accionCorrectiva: textoCriteriosFallidos(CRITERIOS_HC, a.respuestas),
         responsable: a.auditor || '',
         area: 'Historia Clínica',
         fechaLimite: limite.toISOString().slice(0, 10),

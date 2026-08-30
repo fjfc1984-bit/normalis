@@ -16,12 +16,13 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getCountFromServer, serverTimestamp } from 'firebase/firestore';
 import { useInterdependencia } from '@/lib/useInterdependencia';
 import {
-  TIPOS_SERVICIO_INTERDEPENDENCIA, ESTADO_CONVENIO_CFG, CONVENIO_EMPTY_FORM, DIAS_ALERTA_CONVENIO,
+  TIPOS_SERVICIO_INTERDEPENDENCIA, ESTADO_CONVENIO_CFG, CONVENIO_EMPTY_FORM, DIAS_ALERTA_CONVENIO_DEFAULT,
   CRITERIOS_INTERDEPENDENCIA, NORMA_INTERDEPENDENCIA, RESPUESTA_LABEL, ESTADO_VERIFICACION_CFG,
   calcScoreVerificacion, calcEstadoVerificacion,
   type ConvenioInterdependencia, type ConvenioFormData, type TipoServicioInterdependencia,
   type VerificacionInterdependencia, type VerificacionFormData, type RespuestaCriterio,
 } from '@/lib/interdependenciaTypes';
+import { textoCriteriosFallidos } from '@/lib/criteriosFallidos';
 import {
   SectionHeader, LoadingSpinner, Toast, useToast,
   KpiCard, StatusBadge,
@@ -101,6 +102,16 @@ function ConvenioFormModal({ onSave, onClose }: { onSave: (data: ConvenioFormDat
                    onChange={e => set('tiempoRespuestaAcordado', e.target.value)}
                    placeholder="Ej: 60 min pruebas básicas, 24h disponible…" />
           </div>
+          {form.tieneConvenioFormal && (
+            <div>
+              <label className={LABEL}>Alertar vencimiento con (días de anticipación)</label>
+              <input type="number" min={1} className={INPUT} value={form.diasAlerta}
+                     onChange={e => set('diasAlerta', Number(e.target.value) || DIAS_ALERTA_CONVENIO_DEFAULT)} />
+              <p className="text-[11px] text-gray-400 mt-1">
+                No hay un plazo exigido por norma — define tú la anticipación con la que quieres el aviso.
+              </p>
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className={BTN_S}>Cancelar</button>
             <button type="submit" disabled={saving} className={BTN_P}>{saving ? 'Guardando…' : 'Guardar convenio'}</button>
@@ -298,7 +309,7 @@ export default function InterdependenciaPage() {
         numero: `CAPA-${num}`,
         descripcion: `[Interdependencia] Verificación ${fmtDate(v.fecha)}`,
         causaRaiz: v.hallazgos || `Verificación de Interdependencia con score ${v.score}/100.`,
-        accionCorrectiva: 'Corregir los criterios identificados como "no cumple" o "parcial" y documentar la evidencia.',
+        accionCorrectiva: textoCriteriosFallidos(CRITERIOS_INTERDEPENDENCIA, v.respuestas),
         responsable: v.responsable || '',
         area: 'Interdependencia / Red de prestadores',
         fechaLimite: limite.toISOString().slice(0, 10),
@@ -387,8 +398,9 @@ export default function InterdependenciaPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-700">
         <p className="font-bold mb-1">ℹ️ Sobre este módulo</p>
         <p>
-          La alerta de vencimiento usa una ventana de {DIAS_ALERTA_CONVENIO} días. Los {CRITERIOS_INTERDEPENDENCIA.length}{' '}
-          criterios de verificación son los mismos del Estándar de Interdependencia que ya usa el módulo de Auditoría —
+          Cada convenio define su propia ventana de alerta de vencimiento (sugerida en {DIAS_ALERTA_CONVENIO_DEFAULT} días
+          al crearlo) — no hay un plazo exigido por norma para esto. Los {CRITERIOS_INTERDEPENDENCIA.length}{' '}
+          criterios de verificación sí son los mismos del Estándar de Interdependencia que ya usa el módulo de Auditoría —
           no es un checklist genérico aparte. Esta primera versión registra el convenio marco con cada prestador; el
           registro remisión-por-remisión (paciente, desenlace, tiempo de traslado) es la extensión natural siguiente
           si se necesita.
