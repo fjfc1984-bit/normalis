@@ -4,6 +4,16 @@
  * web/app/dashboard/comparador/page.tsx
  * Módulo Comparador Normativo — Cross-Walk Res. 3100/2019 ↔ ISO 7101:2023 ↔ JCI 8ª ed.
  * Muestra la cobertura equivalente que la habilitación colombiana da en estándares internacionales.
+ *
+ * VACÍO LEGAL / NIVEL DE VERIFICACIÓN (ago 2026): las cláusulas de nivel
+ * superior citadas (ISO 7101 §4-§10, y los capítulos JCI como SQE/MMU/IPSG/
+ * PCI/QPS/MOI/ACC/GLD/FMS/COP) corresponden a la estructura pública y
+ * conocida de ambos estándares. Los sub-numerales exactos (ej. "§8.5.3",
+ * "SQE.10-15") y los `score_equivalencia` NO se verificaron letra por letra
+ * contra el texto pagado de ISO 7101:2023 ni de los estándares JCI — son
+ * una estimación de correspondencia, ya declarada como tal en la nota
+ * metodológica visible al usuario. Antes de usar este módulo como base para
+ * una acreditación real, contrastar con una copia vigente de ambas normas.
  */
 
 import { useState } from 'react';
@@ -496,6 +506,9 @@ export default function ComparadorPage() {
           Los porcentajes de equivalencia son estimaciones basadas en el análisis de correspondencia
           entre los criterios de la Res. 1732/2026, ISO 7101:2023 y JCI 8ª edición. No constituyen
           una certificación ni garantizan la aprobación de una auditoría internacional.
+          Los numerales de cláusula específicos citados (ej. "§8.5.3", "SQE.10-15") no fueron
+          verificados letra por letra contra el texto pagado y vigente de cada norma —
+          contrástalos con una copia oficial antes de usarlos para una acreditación real.
           Para acreditación formal, consulta con un organismo certificador acreditado.
         </p>
       </div>
