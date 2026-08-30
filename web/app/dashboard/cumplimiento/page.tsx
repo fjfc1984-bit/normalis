@@ -68,10 +68,13 @@ const SEG_META: Record<string, { label: string; icon: string }> = {
   rehabilitacion:   { label: 'Rehabilitación',     icon: '♿' },
 };
 
-// Crosswalk Res. 1732/2026 → ISO 7101:2023 / JCI 8ª ed.
-// Una IPS con 100% en Res. 1732/2026 cubre ≈84% de ISO 7101 (los estándares ISO incluyen
-// requisitos de gestión organizacional y mejora continua adicionales).
-// JCI 8ª ed. es aún más exigente (alcance internacional) ≈71% de equivalencia.
+// Estimación propia de NormaLis de equivalencia Res. 1732/2026 → ISO 7101:2023 / JCI 8ª ed.
+// NO existe un crosswalk oficial publicado entre la Res. 1732/2026 y estos estándares
+// internacionales — estos dos factores son una aproximación editorial (mismo criterio
+// usado en el módulo Comparador, app/dashboard/comparador/page.tsx), no una cifra
+// certificada. Una IPS con 100% en Res. 1732/2026 cubriría, según esta estimación,
+// ≈84% de ISO 7101 (los estándares ISO incluyen requisitos de gestión organizacional
+// y mejora continua adicionales) y ≈71% de JCI (alcance internacional, más exigente).
 const ISO7101_FACTOR = 0.84;
 const JCI_FACTOR     = 0.71;
 
@@ -848,9 +851,10 @@ export default function CumplimientoPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-700">
         <p className="font-bold mb-1">ℹ️ Metodología de equivalencia internacional</p>
         <p>
-          Los porcentajes ISO 7101:2023 y JCI 8ª Edición son estimaciones calculadas aplicando
-          el crosswalk publicado entre Res. 1732/2026 y los estándares internacionales.
-          Una habilitación plena (100%) equivale a ≈84% de ISO 7101:2023 y ≈71% de JCI,
+          Los porcentajes ISO 7101:2023 y JCI 8ª Edición son una estimación propia de NormaLis
+          de correspondencia entre la Res. 1732/2026 y los estándares internacionales — no
+          existe un crosswalk oficial publicado entre ellos. Según esta estimación, una
+          habilitación plena (100%) equivaldría a ≈84% de ISO 7101:2023 y ≈71% de JCI,
           ya que dichos estándares incluyen requisitos adicionales de mejora continua,
           gobernanza organizacional y contexto internacional.
           Para una certificación ISO 7101 o JCI formal, se requiere auditoría de tercera parte.

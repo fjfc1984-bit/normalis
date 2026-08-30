@@ -31,7 +31,11 @@ type Categoria    =
   | 'Asistencial' | 'Normativo' | 'Talento Humano' | 'Dotación'
   | 'Medicamentos' | 'Infraestructura' | 'Tecnología' | 'Financiero';
 
-// Jerarquía de control (NIOSH / ISO 45001) — de más a menos efectiva.
+// Jerarquía de control (NIOSH / ISO 45001) — de más a menos efectiva. El ORDEN
+// (Eliminación > Sustitución > Ingeniería > Administrativo > EPP) sí viene de
+// esos estándares; los pesos numéricos de efectividad más abajo (PESO_JERARQUIA)
+// NO — NIOSH/ISO 45001 no publican un multiplicador específico, son estimación
+// editorial de NormaLis para poder calcular un riesgo residual comparable.
 type TipoControl = 'Eliminación' | 'Sustitución' | 'Control de ingeniería' | 'Control administrativo' | 'EPP';
 
 // Pasivo = actúa siempre, sin depender de que alguien lo ejecute (barrera
@@ -134,6 +138,9 @@ const MATRIZ_COLOR: Record<Nivel, string> = {
 
 // Jerarquía de control (NIOSH / ISO 45001) — orden de más a menos efectiva,
 // con el "peso" de efectividad usado para calcular el riesgo residual.
+// Los valores numéricos (1.0/0.8/0.6/0.4/0.2) son criterio editorial de
+// NormaLis, no vienen fijados por NIOSH ni ISO 45001 — ver nota junto a
+// TipoControl arriba y el aviso mostrado en la UI junto al riesgo residual.
 const JERARQUIA_CONTROL: TipoControl[] = [
   'Eliminación', 'Sustitución', 'Control de ingeniería', 'Control administrativo', 'EPP',
 ];
@@ -582,6 +589,12 @@ function RiesgoModal({
                   </span>
                 </div>
               </div>
+              <p className="text-[11px] text-gray-400 -mt-1">
+                El orden de la jerarquía de controles (Eliminación → Sustitución → Ingeniería →
+                Administrativo → EPP) es de NIOSH/ISO 45001; los pesos numéricos usados para
+                calcular este residual son un criterio editorial de NormaLis, ajústalos con tu
+                propio criterio profesional si no reflejan tu realidad.
+              </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
