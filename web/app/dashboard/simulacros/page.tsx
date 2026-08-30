@@ -1,78 +1,63 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
+import {
+  AE_PHASES, AE_SERVICIOS, getAEFaseData, calcAEStats,
+} from '@/lib/data/aeData';
+import type { AEServicioId, AESeveridad } from '@/lib/data/aeData';
 
-// ── Criterios del simulacro de visita ──────────────────────────────────────
-const CRITERIOS = [
-  { cat: 'Infraestructura y Dotación', icon: '🏗️', items: [
-    'Las áreas cumplen con metros cuadrados mínimos por servicio habilitado',
-    'Señalización de emergencias, rutas de evacuación y extintores vigentes',
-    'Baños diferenciados para usuarios y personal, con acceso para discapacitados',
-    'Iluminación y ventilación adecuada en todas las áreas',
-    'Equipos biomédicos con mantenimiento preventivo documentado y vigente',
-    'Inventario de dotación actualizado y disponible para verificación',
-  ]},
-  { cat: 'Talento Humano', icon: '👥', items: [
-    'Hojas de vida del personal con soportes completos y actualizados',
-    'Tarjetas profesionales vigentes de todo el personal asistencial (RETHUS)',
-    'Contratos laborales o de prestación de servicios firmados y vigentes',
-    'Certificados de soporte vital (SVB/SVA) vigentes según aplique',
-    'Inducción y reinducción documentada para el personal',
-    'Carné de vacunación del personal asistencial al día',
-  ]},
-  { cat: 'Procesos y Procedimientos', icon: '📋', items: [
-    'Manual de funciones y procedimientos actualizado y socializado',
-    'Protocolos de atención por servicio habilitado disponibles',
-    'Protocolo de bioseguridad y manejo de residuos hospitalarios',
-    'Consentimientos informados por procedimiento disponibles',
-    'Protocolo de referencia y contrarreferencia establecido',
-    'Guías de práctica clínica adoptadas y disponibles',
-  ]},
-  { cat: 'Sistema de Gestión de Calidad', icon: '📊', items: [
-    'PAMEC actualizado con autoevaluación del año en curso',
-    'Indicadores de calidad con metas, resultados y análisis',
-    'Plan de mejoramiento vigente con acciones y responsables',
-    'Actas de comités (COPASO, farmacia, infecciones) al día',
-    'Registro de eventos adversos e incidentes documentado',
-    'Sistema de PQRS activo con seguimiento y cierre documentado',
-  ]},
-  { cat: 'Medicamentos y Dispositivos', icon: '💊', items: [
-    'Botiquín de urgencias completo y con medicamentos vigentes',
-    'Control de temperatura de neveras de medicamentos documentado',
-    'Inventario de medicamentos sin vencidos en stock',
-    'Dispositivos médicos con registro INVIMA vigente',
-    'Programa de gestión de residuos peligrosos activo (PGIRH)',
-  ]},
+// ── Respuestas por servicio ──────────────────────────────────────────────────
+type Respuesta   = 'cumple' | 'nc' | 'na';
+type AnswersMap  = Record<string, Respuesta>;
+type ServiciosMap = Partial<Record<AEServicioId, AnswersMap>>;
+
+const SEV_CFG: Record<AESeveridad, { label: string; badge: string; dot: string }> = {
+  critica:  { label: 'Crítica',  badge: 'bg-red-100 text-red-700',     dot: 'bg-red-500' },
+  moderada: { label: 'Moderada', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+  menor:    { label: 'Menor',    badge: 'bg-gray-100 text-gray-600',   dot: 'bg-gray-400' },
+};
+
+const RESPUESTA_BTNS: { value: Respuesta; label: string; emoji: string; on: string }[] = [
+  { value: 'cumple', label: 'Cumple',    emoji: '✓', on: 'bg-emerald-100 text-emerald-700 border-emerald-300' },
+  { value: 'nc',     label: 'No cumple', emoji: '✗', on: 'bg-red-100 text-red-700 border-red-300' },
+  { value: 'na',     label: 'N/A',       emoji: '—', on: 'bg-gray-100 text-gray-500 border-gray-300' },
 ];
-
-type CheckMap = Record<string, boolean>;
 
 function SimulacroContent() {
   const { nit } = useAuth();
-  const [checks, setChecks] = useState<CheckMap>({});
+  const [servicios, setServicios] = useState<ServiciosMap>({});
+  const [servicioId, setServicioId] = useState<AEServicioId>('general');
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
-  const [open, setOpen]         = useState<Record<number, boolean>>({ 0: true });
+  const [open, setOpen]         = useState<Record<string, boolean>>({ documentacion: true });
 
   useEffect(() => {
     if (!nit) return;
     getDoc(doc(db, 'simulacros', nit)).then(snap => {
-      if (snap.exists()) setChecks((snap.data() as { checks: CheckMap }).checks ?? {});
+      if (snap.exists()) setServicios((snap.data() as { servicios?: ServiciosMap }).servicios ?? {});
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [nit]);
 
-  async function toggle(key: string) {
+  const answers = servicios[servicioId] ?? {};
+  const faseData = useMemo(() => getAEFaseData(servicioId), [servicioId]);
+  const stats = useMemo(() => calcAEStats(faseData, answers), [faseData, answers]);
+
+  async function responder(key: string, valor: Respuesta) {
     if (!nit) return;
-    const updated = { ...checks, [key]: !checks[key] };
-    setChecks(updated);
+    const current = servicios[servicioId] ?? {};
+    const updatedServicio = { ...current, [key]: current[key] === valor ? undefined : valor };
+    // Quitar claves undefined (permite "des-responder" tocando la misma opción)
+    Object.keys(updatedServicio).forEach(k => updatedServicio[k] === undefined && delete updatedServicio[k]);
+    const updated = { ...servicios, [servicioId]: updatedServicio };
+    setServicios(updated);
     setSaving(true);
     try {
-      await setDoc(doc(db, 'simulacros', nit), { checks: updated, nit, updatedAt: new Date().toISOString() }, { merge: true });
+      await setDoc(doc(db, 'simulacros', nit), { servicios: updated, nit, updatedAt: new Date().toISOString() }, { merge: true });
     } finally {
       setSaving(false);
     }
@@ -80,70 +65,88 @@ function SimulacroContent() {
 
   function reset() {
     if (!nit) return;
-    setChecks({});
-    setDoc(doc(db, 'simulacros', nit), { checks: {}, nit, updatedAt: new Date().toISOString() });
+    const updated = { ...servicios, [servicioId]: {} };
+    setServicios(updated);
+    setDoc(doc(db, 'simulacros', nit), { servicios: updated, nit, updatedAt: new Date().toISOString() }, { merge: true });
   }
-
-  // Totales globales
-  const total   = CRITERIOS.reduce((s, c) => s + c.items.length, 0);
-  const checked = Object.values(checks).filter(Boolean).length;
-  const pct     = total > 0 ? Math.round((checked / total) * 100) : 0;
-  const nivel   = pct >= 90 ? { label: 'LISTO PARA VISITA', color: 'text-green-600 bg-green-50 border-green-200' }
-                : pct >= 70 ? { label: 'REQUIERE AJUSTES MENORES', color: 'text-amber-600 bg-amber-50 border-amber-200' }
-                :             { label: 'NECESITA PREPARACION', color: 'text-red-600 bg-red-50 border-red-200' };
 
   if (loading) return <div className="p-8 text-center text-gray-400">Cargando simulacro...</div>;
 
+  const nivelColor =
+    stats.resultado === 'CIERRE INMEDIATO'              ? 'text-red-600 bg-red-50 border-red-200' :
+    stats.resultado === 'PLAN DE MEJORAMIENTO URGENTE'  ? 'text-orange-600 bg-orange-50 border-orange-200' :
+    stats.resultado === 'HABILITADO CON OBSERVACIONES'  ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                                                            'text-amber-600 bg-amber-50 border-amber-200';
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-6 flex justify-between items-start">
+      <div className="mb-4 flex justify-between items-start">
         <div>
           <h2 className="text-2xl font-semibold text-gray-800">Simulacro de Visita</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Lista de verificación pre-visita Secretaría de Salud · Res. 1732/2026
+            Lista de verificación pre-visita del Ente Habilitador · Res. 1732/2026 (reemplaza Res. 3100/2019)
           </p>
         </div>
         <button onClick={reset} className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-          Reiniciar
+          Reiniciar servicio
         </button>
       </div>
 
+      {/* ── Selector de servicio ── */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {(Object.entries(AE_SERVICIOS) as [AEServicioId, { label: string; icon: string }][]).map(([id, s]) => (
+          <button
+            key={id}
+            onClick={() => setServicioId(id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
+              ${servicioId === id
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+          >
+            <span className="mr-1">{s.icon}</span>{s.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── Resumen ── */}
-      <div className={`border rounded-xl px-5 py-4 mb-6 ${nivel.color}`}>
+      <div className={`border rounded-xl px-5 py-4 mb-6 ${nivelColor}`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-bold">{nivel.label}</p>
-            <p className="text-sm mt-0.5">{checked} de {total} criterios verificados</p>
+            <p className="text-lg font-bold">{stats.resultado}</p>
+            <p className="text-sm mt-0.5">{stats.cumple} de {stats.total} criterios evaluados en "Cumple"</p>
+            {stats.criticas.length > 0 && (
+              <p className="text-xs mt-1 font-semibold">⛔ {stats.criticas.length} hallazgo(s) crítico(s) sin resolver</p>
+            )}
           </div>
-          <div className="text-4xl font-black">{pct}%</div>
+          <div className="text-4xl font-black">{stats.score}%</div>
         </div>
         <div className="mt-3 bg-white/60 rounded-full h-2 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${pct >= 90 ? 'bg-green-500' : pct >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
-            style={{ width: `${pct}%` }}
+            className={`h-full rounded-full transition-all duration-500 ${stats.score >= 80 ? 'bg-emerald-500' : stats.score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+            style={{ width: `${stats.score}%` }}
           />
         </div>
       </div>
 
-      {/* ── Categorías ── */}
+      {/* ── Fases ── */}
       <div className="space-y-3">
-        {CRITERIOS.map((cat, ci) => {
-          const catTotal   = cat.items.length;
-          const catChecked = cat.items.filter((_, ii) => checks[`${ci}-${ii}`]).length;
-          const isOpen     = open[ci] ?? false;
+        {AE_PHASES.map(phase => {
+          const items = faseData[phase.id] ?? [];
+          const respondidos = items.filter((_, i) => answers[`${phase.id}_${i}`]).length;
+          const isOpen = open[phase.id] ?? false;
 
           return (
-            <div key={ci} className="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm">
+            <div key={phase.id} className="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm">
               <button
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                onClick={() => setOpen(o => ({ ...o, [ci]: !isOpen }))}
+                onClick={() => setOpen(o => ({ ...o, [phase.id]: !isOpen }))}
               >
                 <span className="font-medium text-sm text-gray-800">
-                  <span className="mr-2">{cat.icon}</span>{cat.cat}
+                  <span className="mr-2">{phase.icon}</span>{phase.label}
                 </span>
                 <span className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className={`font-semibold ${catChecked === catTotal ? 'text-green-600' : 'text-gray-600'}`}>
-                    {catChecked}/{catTotal}
+                  <span className={`font-semibold ${respondidos === items.length ? 'text-emerald-600' : 'text-gray-600'}`}>
+                    {respondidos}/{items.length}
                   </span>
                   <span>{isOpen ? '▲' : '▼'}</span>
                 </span>
@@ -151,25 +154,37 @@ function SimulacroContent() {
 
               {isOpen && (
                 <div className="border-t border-gray-100 divide-y divide-gray-50">
-                  {cat.items.map((item, ii) => {
-                    const key = `${ci}-${ii}`;
-                    const done = !!checks[key];
+                  {items.map((item, i) => {
+                    const key = `${phase.id}_${i}`;
+                    const current = answers[key];
+                    const sevCfg = SEV_CFG[item.sev];
                     return (
-                      <label
-                        key={ii}
-                        className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors
-                          ${done ? 'bg-green-50/50' : 'hover:bg-gray-50'}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={done}
-                          onChange={() => toggle(key)}
-                          className="mt-0.5 accent-green-600 w-4 h-4 shrink-0"
-                        />
-                        <span className={`text-sm leading-snug ${done ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                          {item}
-                        </span>
-                      </label>
+                      <div key={key} className="px-4 py-3">
+                        <div className="flex items-start gap-2 mb-2">
+                          <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${sevCfg.dot}`} />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-700 leading-snug">{item.q}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${sevCfg.badge}`}>
+                                {sevCfg.label}
+                              </span>
+                              <span className="text-[10px] text-gray-400">{item.norm}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5 ml-3.5">
+                          {RESPUESTA_BTNS.map(b => (
+                            <button
+                              key={b.value}
+                              onClick={() => responder(key, b.value)}
+                              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors
+                                ${current === b.value ? b.on : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'}`}
+                            >
+                              {b.emoji} {b.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
