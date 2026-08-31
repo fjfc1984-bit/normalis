@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useFechaVisita } from '@/lib/useFechaVisita';
 import { parseLocalDate } from '@/lib/fechaLocal';
+import { useServiciosIPS } from '@/lib/useServiciosIPS';
+import ServiciosModal from '@/components/ServiciosModal';
 import Link from 'next/link';
 
 // ── Módulos con iconos + gradientes ───────────────────────────────────────────
@@ -379,9 +381,12 @@ function ModuleCard({ m }: { m: typeof MODULES[0] }) {
 
 // ── Página principal ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { nombre, rol } = useAuth();
+  const { nombre, rol, nit } = useAuth();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+
+  const { servicios: serviciosIPS, loading: loadingServicios, guardar: guardarServicios } = useServiciosIPS(nit || null);
+  const [serviciosModal, setServiciosModal] = useState(false);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -433,6 +438,43 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Onboarding — priorizar checklist según servicios declarados */}
+      {!loadingServicios && serviciosIPS.length === 0 && (
+        <div
+          className="mb-5 rounded-xl p-4 flex items-start gap-3 flex-wrap"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,.10), rgba(167,139,250,.05))',
+            border: '1px solid rgba(124,58,237,.28)',
+          }}
+        >
+          <span className="text-lg flex-shrink-0">🤖</span>
+          <div className="flex-1 min-w-[240px]">
+            <p className="font-bold text-sm leading-snug" style={{ color: '#00251A' }}>
+              Cuéntanos qué servicios presta tu IPS
+            </p>
+            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#00695C' }}>
+              Con eso priorizamos tu checklist de Auditoría — en vez de mostrarte los 22 servicios posibles
+              de una, te marcamos primero los que ya tienes habilitados. También suma los documentos
+              específicos de cada servicio en el Gestor Documental.
+            </p>
+          </div>
+          <button
+            onClick={() => setServiciosModal(true)}
+            className="text-xs font-bold px-3 py-2 rounded-lg text-white transition-colors flex-shrink-0"
+            style={{ background: '#7C3AED' }}
+          >
+            Configurar servicios
+          </button>
+        </div>
+      )}
+      {serviciosModal && (
+        <ServiciosModal
+          seleccionados={serviciosIPS}
+          onSave={guardarServicios}
+          onClose={() => setServiciosModal(false)}
+        />
+      )}
 
       {/* Countdown */}
       <div className="mb-7">

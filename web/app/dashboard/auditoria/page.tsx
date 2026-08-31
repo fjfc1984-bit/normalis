@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { SEGMENT_META, areasDB } from '@/data/auditData';
 import { buildFlatQuestions, getNonConformities } from '@/lib/auditScore';
 import { textoNoConformidadesAuditoria } from '@/lib/criteriosFallidos';
+import { useAuth } from '@/lib/auth';
+import { useServiciosIPS } from '@/lib/useServiciosIPS';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -26,10 +28,24 @@ const SEGMENTOS = Object.keys(areasDB);
 
 // ── Componente principal ─────────────────────────────────────────────────────
 export default function AuditoriaPage() {
+  const { nit } = useAuth();
+  const { servicios: serviciosIPS } = useServiciosIPS(nit || null);
+
   const [statusMap,  setStatusMap]  = useState<StatusMap>({});
   const [capaSegMap, setCapaSegMap] = useState<CapaSegMap>({});
   const [syncing,    setSyncing]    = useState(false);
   const [syncDone,   setSyncDone]   = useState(false);
+
+  // Servicios que la IPS declaró (ver ServiciosModal, dashboard home) primero
+  // — sin eso, quedan en el orden natural del catálogo (22 modalidades sin
+  // ningún criterio de relevancia para ESTA IPS en particular).
+  const declaradosSet = useMemo(() => new Set<string>(serviciosIPS), [serviciosIPS]);
+  const segmentosOrdenados = useMemo(() => {
+    if (!serviciosIPS.length) return SEGMENTOS;
+    const recomendados = SEGMENTOS.filter(s => declaradosSet.has(s));
+    const resto = SEGMENTOS.filter(s => !declaradosSet.has(s));
+    return [...recomendados, ...resto];
+  }, [serviciosIPS, declaradosSet]);
 
   const cargarYSincronizar = useCallback(async () => {
     const user = auth.currentUser;
@@ -193,24 +209,37 @@ export default function AuditoriaPage() {
         )}
       </div>
 
+      {serviciosIPS.length > 0 && (
+        <p className="text-xs text-gray-400 mb-3">
+          ✨ Priorizado según los servicios que declaraste en tu IPS — {serviciosIPS.length} recomendado{serviciosIPS.length !== 1 ? 's' : ''} primero.
+        </p>
+      )}
+
       {/* Grid de servicios */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {SEGMENTOS.map(seg => {
+        {segmentosOrdenados.map(seg => {
           const meta     = SEGMENT_META[seg];
           const areas    = areasDB[seg];
           const totalQ   = areas.reduce((acc, a) => acc + a.q.length, 0);
           const st       = statusMap[seg];
           const capas    = capaSegMap[seg] ?? 0;
           const completada = !!st?.completedAt;
+          const recomendado = declaradosSet.has(seg);
 
           return (
             <Link
               key={seg}
               href={`/dashboard/auditoria/${seg}`}
               className="group bg-white rounded-xl border p-5 hover:border-teal-500
-                         hover:shadow-md transition-all duration-200 flex flex-col gap-3"
-              style={{ borderColor: completada ? '#99f6e4' : '#e5e7eb' }}
+                         hover:shadow-md transition-all duration-200 flex flex-col gap-3 relative"
+              style={{ borderColor: completada ? '#99f6e4' : recomendado ? '#c4b5fd' : '#e5e7eb' }}
             >
+              {recomendado && !completada && (
+                <span className="absolute -top-2 left-4 text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                      style={{ background: '#7C3AED' }}>
+                  ✨ Recomendado
+                </span>
+              )}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{meta?.icon ?? '📋'}</span>
