@@ -506,7 +506,7 @@ export default function ComparadorPage() {
           Los porcentajes de equivalencia son estimaciones basadas en el análisis de correspondencia
           entre los criterios de la Res. 1732/2026, ISO 7101:2023 y JCI 8ª edición. No constituyen
           una certificación ni garantizan la aprobación de una auditoría internacional.
-          Los numerales de cláusula específicos citados (ej. "§8.5.3", "SQE.10-15") no fueron
+          Los numerales de cláusula específicos citados (ej. &quot;§8.5.3&quot;, &quot;SQE.10-15&quot;) no fueron
           verificados letra por letra contra el texto pagado y vigente de cada norma —
           contrástalos con una copia oficial antes de usarlos para una acreditación real.
           Para acreditación formal, consulta con un organismo certificador acreditado.

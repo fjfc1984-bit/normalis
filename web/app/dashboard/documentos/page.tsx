@@ -404,7 +404,7 @@ export default function DocumentosPage() {
           <p className="text-sm text-amber-800">
             <strong>Completa los datos de tu establecimiento</strong> para que los documentos
             incluyan el nombre del director técnico, registro médico y especialidad.
-            Haz clic en "Editar datos" arriba.
+            Haz clic en &quot;Editar datos&quot; arriba.
           </p>
         </div>
       )}

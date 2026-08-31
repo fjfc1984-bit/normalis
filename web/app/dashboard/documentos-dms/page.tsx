@@ -424,7 +424,7 @@ export default function DocumentosDMSPage() {
           electrónicamente (mismo sello HMAC del módulo de Firma) y convierte automáticamente en
           obsoleta la versión aprobada anterior — así siempre hay un historial completo de qué
           versión reemplazó a cuál, exigible en visita de habilitación. La socialización es un acuse
-          individual: cada persona del equipo registra su propio "leí y entendí", nadie puede
+          individual: cada persona del equipo registra su propio &quot;leí y entendí&quot;, nadie puede
           marcarlo por otra persona.
         </p>
       </div>

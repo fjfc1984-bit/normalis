@@ -287,9 +287,9 @@ export default function FirmaPage() {
         <p>
           Cada firma queda sellada con un hash del contenido exacto del documento y un HMAC generado
           por el servidor (nunca por el navegador), en un registro que ningún usuario puede editar o
-          borrar — cumple el estándar de "firma electrónica" del Art. 7 de la Ley 527/1999 y el
+          borrar — cumple el estándar de &quot;firma electrónica&quot; del Art. 7 de la Ley 527/1999 y el
           Decreto 1074/2015: identifica al firmante y detecta si el documento cambió después de
-          firmarse. No es una "firma digital" certificada (Art. 28, Decreto 2364/2012, que requiere
+          firmarse. No es una &quot;firma digital&quot; certificada (Art. 28, Decreto 2364/2012, que requiere
           una Entidad de Certificación Digital acreditada como Certicámara o Andes SCD); para
           documentos de alto valor jurídico, complementa con esa vía o con firma manuscrita.
         </p>

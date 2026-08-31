@@ -782,7 +782,7 @@ export default function CumplimientoPage() {
                     <span className="font-bold">
                       {selected.size} no conformidad{selected.size !== 1 ? 'es' : ''} seleccionada{selected.size !== 1 ? 's' : ''}.
                     </span>
-                    {' '}Se crearán como riesgos en ISO 31000 con Probabilidad 3 (No cumple) o 2 (Parcial), Impacto 4 y tratamiento "Reducir".
+                    {' '}Se crearán como riesgos en ISO 31000 con Probabilidad 3 (No cumple) o 2 (Parcial), Impacto 4 y tratamiento &quot;Reducir&quot;.
                     Puedes ajustar desde el módulo de Análisis de Riesgo.
                   </p>
                 </div>

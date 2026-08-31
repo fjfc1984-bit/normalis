@@ -100,7 +100,7 @@ export default function ConfianzaSeguridadPage() {
               Consentimientos sellan cada firma con un HMAC-SHA256 generado del lado del servidor
               (clave nunca expuesta al navegador), conforme al Art. 7 de la Ley 527/1999. Incluye
               verificación de integridad para detectar si el contenido cambió después de firmarse.
-              No equivale a la "firma digital" certificada del Decreto 2364/2012 (PKI de una Entidad
+              No equivale a la &quot;firma digital&quot; certificada del Decreto 2364/2012 (PKI de una Entidad
               de Certificación Digital acreditada) — ver la nota legal en cada módulo.
             </Check>
           </ul>

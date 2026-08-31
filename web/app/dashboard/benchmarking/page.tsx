@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 
 // ── Tipos ────────────────────────────────────────────────────
@@ -270,6 +271,11 @@ export default function BenchmarkingPage() {
     }
   }, [segActivo]);
 
+  // cargar() trae TODOS los segmentos y TODOS los benchmarks de una sola vez;
+  // cambiar el segmento activo (setSegActivo) solo filtra en cliente, no
+  // necesita refetch. Deps a proposito en [uid] solamente: agregar `cargar`
+  // dispararia un refetch completo de Firestore en cada clic del selector.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { cargar(); }, [uid]);
 
   // ── Datos calculados ──
@@ -365,12 +371,12 @@ export default function BenchmarkingPage() {
             Una vez que finalices una auditoría de habilitación, tu score aparecerá aquí
             comparado con el mercado — de forma completamente anónima para las demás IPS.
           </p>
-          <a href="/dashboard/auditoria"
+          <Link href="/dashboard/auditoria"
             style={{ display: 'inline-block', padding: '10px 24px',
               background: '#0d9488', color: 'white', borderRadius: 10,
               fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
             Ir a Auditoría →
-          </a>
+          </Link>
         </div>
       )}
 
@@ -628,21 +634,21 @@ export default function BenchmarkingPage() {
                         </p>
                       </div>
                       <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-                        <a href="/dashboard/auditoria/domiciliaria" style={{
+                        <Link href="/dashboard/auditoria/domiciliaria" style={{
                           display: 'inline-block', fontSize: 11, padding: '6px 14px',
                           background: '#f59e0b', color: 'white', borderRadius: 8,
                           fontWeight: 700, textDecoration: 'none',
                         }}>
                           Ver no conformidades →
-                        </a>
-                        <a href="/dashboard/capas" style={{
+                        </Link>
+                        <Link href="/dashboard/capas" style={{
                           display: 'inline-block', fontSize: 11, padding: '6px 14px',
                           background: 'white', color: '#92400e', borderRadius: 8,
                           fontWeight: 700, textDecoration: 'none',
                           border: '1px solid #f59e0b',
                         }}>
                           Crear CAPA →
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   ) : (

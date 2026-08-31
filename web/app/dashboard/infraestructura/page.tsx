@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getCountFromServer, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
@@ -241,7 +242,7 @@ function HojaDeVidaModal({
                 <p className="text-sm text-gray-700">{insp.hallazgos || '(sin hallazgos registrados)'}</p>
                 <p className="text-xs text-gray-400 mt-1">👤 {insp.inspector}</p>
                 {insp.capaId && (
-                  <a href="/dashboard/capas" className="text-xs text-teal-600 hover:underline">✅ CAPA vinculada → Ver</a>
+                  <Link href="/dashboard/capas" className="text-xs text-teal-600 hover:underline">✅ CAPA vinculada → Ver</Link>
                 )}
               </div>
             );
@@ -296,9 +297,9 @@ function AreaCard({
           <button onClick={() => onEditar(area)} className={BTN_S}>✏️ Editar</button>
           <button onClick={() => onInspeccionar(area)} className={BTN_S}>🔍 Inspeccionar</button>
           {area.capaId ? (
-            <a href="/dashboard/capas" className="text-xs px-2.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg border border-emerald-200">
+            <Link href="/dashboard/capas" className="text-xs px-2.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg border border-emerald-200">
               ✅ CAPA creada
-            </a>
+            </Link>
           ) : necesitaCapa ? (
             <button onClick={() => onCrearCapa(area)} disabled={creandoCapa}
                     className="text-xs px-2.5 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold rounded-lg disabled:opacity-50">

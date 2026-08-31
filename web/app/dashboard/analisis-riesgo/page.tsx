@@ -734,14 +734,14 @@ function RiesgoCard({
 
           {isAlto && (
             item.capaId ? (
-              <a
+              <Link
                 href="/dashboard/capas"
                 className="text-xs px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100
                            text-emerald-700 font-bold rounded-lg transition-colors border border-emerald-200"
                 title="Ver la CAPA vinculada a este riesgo"
               >
                 ✅ CAPA creada → Ver
-              </a>
+              </Link>
             ) : (
               <button
                 onClick={() => onCrearCapa(item)}

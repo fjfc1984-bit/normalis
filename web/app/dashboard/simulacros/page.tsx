@@ -43,7 +43,7 @@ function SimulacroContent() {
     }).catch(() => setLoading(false));
   }, [nit]);
 
-  const answers = servicios[servicioId] ?? {};
+  const answers = useMemo(() => servicios[servicioId] ?? {}, [servicios, servicioId]);
   const faseData = useMemo(() => getAEFaseData(servicioId), [servicioId]);
   const stats = useMemo(() => calcAEStats(faseData, answers), [faseData, answers]);
 
@@ -113,7 +113,7 @@ function SimulacroContent() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">{stats.resultado}</p>
-            <p className="text-sm mt-0.5">{stats.cumple} de {stats.total} criterios evaluados en "Cumple"</p>
+            <p className="text-sm mt-0.5">{stats.cumple} de {stats.total} criterios evaluados en &quot;Cumple&quot;</p>
             {stats.criticas.length > 0 && (
               <p className="text-xs mt-1 font-semibold">⛔ {stats.criticas.length} hallazgo(s) crítico(s) sin resolver</p>
             )}

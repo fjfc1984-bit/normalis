@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, getCountFromServer, serverTimestamp } from 'firebase/firestore';
@@ -247,9 +248,9 @@ function VerificacionCard({
           <span className="text-xs text-gray-400">{fmtDate(v.fecha)}</span>
         </div>
         {v.capaId ? (
-          <a href="/dashboard/capas" className="text-xs px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg border border-emerald-200">
+          <Link href="/dashboard/capas" className="text-xs px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg border border-emerald-200">
             ✅ CAPA creada → Ver
-          </a>
+          </Link>
         ) : necesitaCapa ? (
           <button onClick={() => onCrearCapa(v)} disabled={creandoCapa}
                   className="text-xs px-2.5 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold rounded-lg disabled:opacity-50">
