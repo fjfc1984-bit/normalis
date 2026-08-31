@@ -30,33 +30,27 @@ section "1. Existencia de archivos críticos"
 # secciones que los validan (4, 6, 7, 8, 9, 10, 13) ya se auto-omiten con
 # guards `if [[ -f ... ]]` cuando el archivo no existe, así que no hace
 # falta tocarlas — solo se retiran de esta lista de "críticos".
+#
+# Esa limpieza quedó a medias: la migración a Next.js también se llevó 18
+# de los 27 módulos normalis-*.js que normativa-app-v2.html cargaba (eran
+# sus dependencias directas — sin el shell que los cargaba, no tenía
+# sentido mantenerlos). Como este bloque nunca se actualizó, esos 18
+# archivos aparecían como "CRITICAL: Archivo faltante" en cada corrida
+# desde entonces — el validador maestro ha estado permanentemente en rojo
+# (18 errores críticos, siempre los mismos) desde la migración. Esto
+# bloqueaba en silencio el pre-commit hook para cualquier commit que
+# tocara un .js/.html/.css de la raíz (normalis-repair.sh re-valida al
+# final y aborta si sigue en rojo) — verificado contra el disco real: solo
+# estos 9 siguen existiendo y en uso.
 CRITICAL_FILES=(
   "normalis-chat.js"
-  "normalis-data-audit.js"
-  "normalis-audit-score.js"
   "normalis-docs.js"
-  "normalis-pdf.js"
-  "normalis-capa.js"
   "normalis-indicadores.js"
-  "normalis-pqrs.js"
-  "normalis-incidentes.js"
   "normalis-vencimientos.js"
-  "normalis-simulacro.js"
-  "normalis-bitacora.js"
   "normalis-firestore.js"
   "normalis-styles.css"
-  "normalis-pilot.js"
-  "normalis-tour.js"
-  "normalis-autofix.js"
-  "normalis-utils.js"
-  "normalis-auth.js"
-  "normalis-pamec.js"
   "normalis-export.js"
-  "normalis-users.js"
   "normalis-automations.js"
-  "normalis-sst.js"
-  "normalis-plans.js"
-  "normalis-multiusuario.js"
   "normalis-main.js"
 )
 

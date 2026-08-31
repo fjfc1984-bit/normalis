@@ -20,6 +20,17 @@ import re
 import sys
 import os
 
+# La consola de Windows por defecto usa cp1252 (no UTF-8) — un print() con
+# cualquier caracter fuera de esa tabla (✗, ✔, ─, etc., que este script usa
+# en varios sitios) revienta con UnicodeEncodeError y mata el proceso antes
+# de terminar. Eso bloqueaba CUALQUIER commit que tocara un .js en cualquier
+# carpeta del repo (el hook de pre-commit corre este script), no solo los
+# legados de la raíz. Reconfigurar stdout/stderr a UTF-8 explícitamente
+# evita esto sin tener que auditar cada print() del archivo uno por uno.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 VERBOSE = '--verbose' in sys.argv
 CHECK_ONLY = '--check' in sys.argv
@@ -56,7 +67,7 @@ def write(path, content):
 def repair_app_html():
     path = os.path.join(ROOT, 'normativa-app-v2.html')
     if not os.path.exists(path):
-        print(f'  ✗ NO ENCONTRADO: {path}')
+        log(f'  · OMITIDO: {os.path.basename(path)} no existe (migrado a Next.js — ver web/, no es un truncamiento)')
         return
 
     content = read(path)
@@ -285,7 +296,7 @@ CSS_SEAL = '/* END:normalis-styles.css — NormaLis integrity seal */'
 def repair_styles_css():
     path = os.path.join(ROOT, 'normalis-styles.css')
     if not os.path.exists(path):
-        print(f'  ✗ NO ENCONTRADO: {path}')
+        log(f'  · OMITIDO: {os.path.basename(path)} no existe (migrado a Next.js — ver web/, no es un truncamiento)')
         return
 
     content = read(path)
@@ -332,7 +343,7 @@ function showToast(msg, type = 'info') {
 def repair_admin_html():
     path = os.path.join(ROOT, 'admin.html')
     if not os.path.exists(path):
-        print(f'  ✗ NO ENCONTRADO: {path}')
+        log(f'  · OMITIDO: {os.path.basename(path)} no existe (migrado a Next.js — ver web/, no es un truncamiento)')
         return
 
     content = read(path)
