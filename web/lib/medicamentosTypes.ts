@@ -20,6 +20,7 @@
 
 import type { Timestamp } from 'firebase/firestore';
 import { areasDB } from '@/data/auditData';
+import { preguntaTexto } from '@/lib/auditTypes';
 
 // ── Lotes de medicamentos/dispositivos ───────────────────────────────────────
 
@@ -100,7 +101,7 @@ export interface CriterioFarmacia {
 }
 
 export const CRITERIOS_FARMACIA: CriterioFarmacia[] =
-  (FARMACIA_AREA?.q ?? []).map((texto, i) => ({ id: `c${i}`, texto }));
+  (FARMACIA_AREA?.q ?? []).map((q, i) => ({ id: `c${i}`, texto: preguntaTexto(q) }));
 
 export const NORMA_FARMACIA = FARMACIA_AREA?.norm ?? 'Res. 1732/2026 — Estándar de Medicamentos y Dispositivos Médicos';
 

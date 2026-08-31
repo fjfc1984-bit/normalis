@@ -57,11 +57,11 @@ function AnswerBtn({ value, current, onSelect, label, emoji, colorClass, activeB
 }
 
 // ─── Score ring ───────────────────────────────────────────────────────────────
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, obligatorioIncumplido = false }: { score: number; obligatorioIncumplido?: boolean }) {
   const r = 40;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const color = scoreColor(score);
+  const color = scoreColor(score, obligatorioIncumplido);
 
   return (
     <svg viewBox="0 0 100 100" className="w-24 h-24">
@@ -300,8 +300,8 @@ export default function AuditoriaSegmentoPage({
 
   // ── Results view ─────────────────────────────────────────────────────────────
   if (view === 'results') {
-    const color = scoreColor(score.score);
-    const label = scoreLabel(score.score);
+    const color = scoreColor(score.score, score.obligatorioIncumplido);
+    const label = scoreLabel(score.score, score.obligatorioIncumplido);
 
     return (
       <div className="p-6 max-w-4xl mx-auto">
@@ -319,7 +319,7 @@ export default function AuditoriaSegmentoPage({
         {/* Score hero */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6 flex flex-col sm:flex-row
                         items-center gap-6">
-          <ScoreRing score={score.score} />
+          <ScoreRing score={score.score} obligatorioIncumplido={score.obligatorioIncumplido} />
           <div>
             <h2 className="text-xl font-bold text-gray-800 mb-1">
               {meta?.icon} Auditoría {meta?.label}
@@ -358,7 +358,7 @@ export default function AuditoriaSegmentoPage({
           </h3>
           <div className="space-y-3">
             {areaScores.map(as => {
-              const c = scoreColor(as.score);
+              const c = scoreColor(as.score, as.obligatorioIncumplido);
               return (
                 <div key={as.areaId}>
                   <div className="flex justify-between items-center mb-1">
@@ -388,14 +388,23 @@ export default function AuditoriaSegmentoPage({
               No conformidades ({nonConformities.length})
             </h3>
             <div className="space-y-3">
-              {nonConformities.map(nc => (
-                <div key={nc.globalIdx} className="flex gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+              {[...nonConformities]
+                .sort((a, b) => Number(b.obligatorio) - Number(a.obligatorio))
+                .map(nc => (
+                <div key={nc.globalIdx} className={`flex gap-3 p-3 rounded-xl border ${
+                  nc.obligatorio ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'
+                }`}>
                   <span className="text-base flex-shrink-0 mt-0.5">
                     {nc.answer === 'no' ? '🔴' : '🟡'}
                   </span>
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-0.5">
+                    <p className="text-xs font-semibold text-gray-600 mb-0.5 flex items-center gap-1.5">
                       {nc.icon} {nc.areaName}
+                      {nc.obligatorio && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+                          ⚠️ Crítico
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
                       {nc.question}

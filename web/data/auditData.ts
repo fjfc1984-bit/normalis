@@ -1,6 +1,17 @@
 // web/data/auditData.ts
 // Datos de auditoría — portado desde normalis-data-audit.js
 // Fuente: Res. 3100/2019 + Res. 465/2025
+//
+// PONDERACIÓN POR CRITERIO (peso/obligatorio, ver lib/auditTypes.ts):
+// piloto aplicado SOLO a 9 preguntas del segmento "general" — evacuación,
+// personal habilitado (RETHUS, Director Técnico), bioseguridad,
+// identificación del paciente, equipos de emergencia y medicamentos
+// controlados. Son las que se pudieron justificar con confianza sin el
+// instrumento oficial de criticidad de la Res. 1732/2026 en mano. El resto
+// de "general" y los otros 21 segmentos quedan en peso=1/obligatorio=false
+// (comportamiento idéntico al motor anterior) — pendientes de una revisión
+// real por un auditor con el instrumento oficial, no de que alguien más
+// "complete" los que faltan a ojo.
 
 import type { AuditArea } from '@/lib/auditTypes';
 
@@ -129,7 +140,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿La iluminación artificial en áreas clínicas supera los 300 lux en superficies de trabajo y existen respaldos de energía (UPS/planta eléctrica) para zonas críticas?",
         "¿La ventilación de áreas asistenciales garantiza renovaciones de aire adecuadas, diferenciando zonas de presión positiva y negativa donde corresponde?",
         "¿Las áreas asistenciales garantizan privacidad visual y auditiva del paciente durante la atención mediante puerta con seguro, biombo o separación física?",
-        "¿La señalización de rutas de evacuación, puntos de encuentro y salidas de emergencia es visible, fotoluminiscente y cubre todos los espacios del establecimiento?",
+        { "texto": "¿La señalización de rutas de evacuación, puntos de encuentro y salidas de emergencia es visible, fotoluminiscente y cubre todos los espacios del establecimiento?", "obligatorio": true },
         "¿Los baños destinados a usuarios están dotados de jabón líquido, papel higiénico, toallas o secador de manos, y cuentan con mantenimiento documentado?",
         "¿Las instalaciones eléctricas tienen concepto técnico vigente emitido por profesional calificado RETIE y los tableros están señalizados e identificados?",
         "¿El establecimiento construido antes de 2010 con servicios críticos (urgencias, cirugía, UCI) cuenta con estudio de vulnerabilidad sísmica y plan de reforzamiento NSR-10?",
@@ -160,11 +171,11 @@ export const areasDB: Record<string, AuditArea[]> = {
       "name": "Talento Humano",
       "norm": "Res. 3100/2019 Est. 1 · RETHUS · Ley 23/1981 · Res. 2278/2021",
       "q": [
-        "¿Todos los profesionales de la salud que prestan servicios tienen tarjeta profesional vigente verificable en el RETHUS del Ministerio de Salud?",
+        { "texto": "¿Todos los profesionales de la salud que prestan servicios tienen tarjeta profesional vigente verificable en el RETHUS del Ministerio de Salud?", "obligatorio": true },
         "¿Los médicos especialistas tienen su especialización reconocida y registrada en RETHUS correspondiente a los procedimientos que realizan?",
         "¿Existe un manual de funciones documentado para cada cargo asistencial y administrativo, con perfil de competencias y responsabilidades específicas?",
         "¿Los vínculos laborales o contractuales de todo el personal asistencial están formalizados mediante contratos escritos firmados y vigentes?",
-        "¿El Director Técnico está designado formalmente y tiene inscripción vigente como responsable de la prestación ante la Secretaría de Salud?",
+        { "texto": "¿El Director Técnico está designado formalmente y tiene inscripción vigente como responsable de la prestación ante la Secretaría de Salud?", "obligatorio": true },
         "¿Existe programa documentado de inducción para el personal nuevo con verificación de competencias antes del inicio de actividades asistenciales?",
         "¿El establecimiento tiene plan de capacitación continua con registros de asistencia del último año: BLS/ACLS, bioseguridad y normativa vigente?",
         "¿El personal asistencial cuenta con carné de vacunación al día: Hepatitis B (esquema completo), tétanos y demás vacunas para riesgo biológico?",
@@ -185,7 +196,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El establecimiento aplica Tecnovigilancia: reporta al INVIMA los incidentes o eventos adversos asociados a dispositivos médicos (Res. 4816/2008)?",
         "¿Los equipos en mal estado están claramente identificados con etiqueta de \"NO USAR - En mantenimiento\" y retirados del área asistencial?",
         "¿Existe recipiente para cortopunzantes (guardián) en cada área asistencial, sin superar el 75% de su capacidad y sin riesgo de volcamiento?",
-        "¿Los equipos de emergencia (DEA, oxígeno, ambú) están disponibles, operativos y con revisión documentada en la última semana?",
+        { "texto": "¿Los equipos de emergencia (DEA, oxígeno, ambú) están disponibles, operativos y con revisión documentada en la última semana?", "obligatorio": true },
         "¿Hay inventario actualizado de equipos biomédicos con número de serie, proveedor, fecha de adquisición y vida útil estimada?"
       ]
     },
@@ -195,12 +206,12 @@ export const areasDB: Record<string, AuditArea[]> = {
       "name": "Procesos Prioritarios y Protocolos",
       "norm": "Res. 3100/2019 Est. 5 · Res. 256/2016 · Dec. 1011/2006 · OMS Seguridad Paciente",
       "q": [
-        "¿Existe Manual de Bioseguridad actualizado en los últimos 12 meses, firmado por el responsable, con evidencia de socialización a todo el personal?",
+        { "texto": "¿Existe Manual de Bioseguridad actualizado en los últimos 12 meses, firmado por el responsable, con evidencia de socialización a todo el personal?", "obligatorio": true },
         "¿Hay protocolos escritos de atención para todos los servicios habilitados, basados en evidencia actualizada y accesibles al personal en el área?",
         "¿El protocolo de referencia y contrarreferencia está documentado con IPS de mayor complejidad de la red territorial y es conocido por el personal?",
-        "¿Se aplica consentimiento informado previo a procedimientos invasivos con formato específico por procedimiento, debidamente archivado en la HC?",
+        { "texto": "¿Se aplica consentimiento informado previo a procedimientos invasivos con formato específico por procedimiento, debidamente archivado en la HC?", "obligatorio": true },
         "¿El establecimiento tiene sistema documentado de reporte, análisis de causa raíz y seguimiento de eventos adversos e incidentes de seguridad?",
-        "¿Existe protocolo de identificación correcta del paciente con al menos dos identificadores antes de cualquier procedimiento?",
+        { "texto": "¿Existe protocolo de identificación correcta del paciente con al menos dos identificadores antes de cualquier procedimiento?", "obligatorio": true },
         "¿Hay protocolo de comunicación efectiva entre turnos (entrega de turno SBAR o equivalente) documentado y aplicado en todos los servicios?",
         "¿El establecimiento tiene protocolo de caídas con evaluación de riesgo al ingreso (Escala Morse), intervenciones preventivas y registro de caídas?",
         "¿Existe protocolo de úlceras por presión con escala de valoración (Braden o Norton) para pacientes en cama y registro de lesiones al ingreso?",
@@ -232,7 +243,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "name": "Gestión de Residuos Hospitalarios (PGIRH)",
       "norm": "Decreto 351/2014 · Res. 1164/2002 · Res. 3100/2019 Est. 5",
       "q": [
-        "¿Existen recipientes diferenciados según Dec. 351/2014: rojo (infeccioso/biológico), negro (ordinario no aprovechable), verde (biodegradable), blanco o gris (reciclable) y guardián rígido (cortopunzantes) en cada área asistencial?",
+        { "texto": "¿Existen recipientes diferenciados según Dec. 351/2014: rojo (infeccioso/biológico), negro (ordinario no aprovechable), verde (biodegradable), blanco o gris (reciclable) y guardián rígido (cortopunzantes) en cada área asistencial?", "obligatorio": true },
         "¿El contrato con empresa gestora de RESPEL autorizada está vigente con manifiestos de disposición final de las últimas tres recolecciones?",
         "¿El Plan de Gestión Integral de Residuos Hospitalarios (PGIRH) está actualizado, registrado ante la autoridad ambiental y con cronograma activo?",
         "¿El personal tiene capacitación documentada en segregación de residuos hospitalarios en los últimos 12 meses con registro de asistencia?",
@@ -251,7 +262,7 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Los medicamentos están almacenados separados de alimentos, con temperatura controlada según ficha técnica y termómetro calibrado?",
         "¿Se aplica metodología PEPS (Primero en Entrar, Primero en Salir) y los medicamentos próximos a vencer (menos de 3 meses) están identificados?",
         "¿Los medicamentos de alto riesgo (anticoagulantes, insulinas, opioides, electrolitos concentrados KCl) tienen alerta visual y doble verificación?",
-        "¿Los medicamentos controlados (psicotrópicos, estupefacientes) están bajo llave con inventario actualizado, libro de control y responsable designado?",
+        { "texto": "¿Los medicamentos controlados (psicotrópicos, estupefacientes) están bajo llave con inventario actualizado, libro de control y responsable designado?", "obligatorio": true },
         "¿Los insumos de uso único están diferenciados de los reutilizables y no hay evidencia de reutilización de insumos de un solo uso?",
         "¿Existe lista de medicamentos esenciales o formulario institucional aprobado, disponible y de uso obligatorio para el personal?",
         "¿Los medicamentos vencidos, deteriorados o con empaque comprometido están segregados con proceso documentado de devolución o destrucción?",

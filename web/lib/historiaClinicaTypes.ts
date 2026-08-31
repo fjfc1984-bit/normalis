@@ -23,6 +23,7 @@
 
 import type { Timestamp } from 'firebase/firestore';
 import { areasDB } from '@/data/auditData';
+import { preguntaTexto } from '@/lib/auditTypes';
 
 const HC_AREA = areasDB.general.find(a => a.id === 'historiaclinica');
 
@@ -31,7 +32,7 @@ export interface CriterioHC {
   texto: string;
 }
 
-export const CRITERIOS_HC: CriterioHC[] = (HC_AREA?.q ?? []).map((texto, i) => ({ id: `c${i}`, texto }));
+export const CRITERIOS_HC: CriterioHC[] = (HC_AREA?.q ?? []).map((q, i) => ({ id: `c${i}`, texto: preguntaTexto(q) }));
 
 export const NORMA_HC = HC_AREA?.norm ?? 'Res. 1732/2026 — Estándar de Historia Clínica';
 

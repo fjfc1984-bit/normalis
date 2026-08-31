@@ -19,6 +19,7 @@
 
 import type { Timestamp } from 'firebase/firestore';
 import { areasDB, SEGMENT_META } from '@/data/auditData';
+import { preguntaTexto } from '@/lib/auditTypes';
 
 // ── Criterios — fuente única: auditData.ts ──────────────────────────────────
 
@@ -30,7 +31,7 @@ export interface CriterioInfraestructura {
 }
 
 export const CRITERIOS_INFRAESTRUCTURA: CriterioInfraestructura[] =
-  (INFRA_AREA?.q ?? []).map((texto, i) => ({ id: `c${i}`, texto }));
+  (INFRA_AREA?.q ?? []).map((q, i) => ({ id: `c${i}`, texto: preguntaTexto(q) }));
 
 export const NORMA_INFRAESTRUCTURA = INFRA_AREA?.norm ?? 'Res. 1732/2026 — Estándar de Infraestructura';
 

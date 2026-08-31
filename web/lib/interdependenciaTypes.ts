@@ -21,6 +21,7 @@
 
 import type { Timestamp } from 'firebase/firestore';
 import { areasDB } from '@/data/auditData';
+import { preguntaTexto } from '@/lib/auditTypes';
 
 const INTERDEP_AREA = areasDB.urgencias.find(a => a.id === 'urg-interdep');
 
@@ -30,7 +31,7 @@ export interface CriterioInterdependencia {
 }
 
 export const CRITERIOS_INTERDEPENDENCIA: CriterioInterdependencia[] =
-  (INTERDEP_AREA?.q ?? []).map((texto, i) => ({ id: `c${i}`, texto }));
+  (INTERDEP_AREA?.q ?? []).map((q, i) => ({ id: `c${i}`, texto: preguntaTexto(q) }));
 
 export const NORMA_INTERDEPENDENCIA = INTERDEP_AREA?.norm ?? 'Res. 1732/2026 — Estándar de Interdependencia';
 
