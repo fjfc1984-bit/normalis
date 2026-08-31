@@ -31,6 +31,17 @@ const TABS: Array<{ key: Tab; label: string }> = [
   { key: 'reporte', label: '📄 Informes' },
 ];
 
+// Días del mes de un período "YYYY-MM". new Date(year, month, 0) da el
+// último día del mes anterior a `month` (0-indexado) — es decir, el
+// último día de `month` en 1-indexado. No usa parseo de string de fecha,
+// así que no tiene el problema de corrimiento UTC de fechaLocal.ts.
+function diasEnMes(periodo: string | undefined): number {
+  if (!periodo) return 30;
+  const [y, m] = periodo.split('-').map(Number);
+  if (!y || !m) return 30;
+  return new Date(y, m, 0).getDate();
+}
+
 export default function PROAPage() {
   const { nit, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<Tab>('checklist');
@@ -47,8 +58,17 @@ export default function PROAPage() {
 
   const [showFormDDD, setShowFormDDD] = useState(false);
   const [formDDD, setFormDDD] = useState<Partial<ConsumoAMR>>({
-    periodo: new Date().toISOString().slice(0, 7), camas: 30,
+    periodo: new Date().toISOString().slice(0, 7),
   });
+  // N° de camas SIMPLE (lo que cualquiera sabe de memoria) — camas-día
+  // (lo que exige la fórmula DDD/100 camas-día) se deriva multiplicando
+  // por los días del "Período" elegido, ver diasEnMes() más abajo. Antes
+  // este número se guardaba tal cual como si ya fuera camas-día, con un
+  // placeholder de "30" que invitaba a cargarlo mal — un hospital de 30
+  // camas en un mes tiene ~900 camas-día, no 30. Eso desviaba el
+  // indicador de consumo de antimicrobianos (Res. 2471/2022, num. 2.2.3)
+  // por un factor de ~30x si el usuario no hacía la cuenta a mano primero.
+  const [numCamasDDD, setNumCamasDDD] = useState(30);
   const [guardandoDDD, setGuardandoDDD] = useState(false);
 
   const [showFormIAAS, setShowFormIAAS] = useState(false);
@@ -129,12 +149,17 @@ export default function PROAPage() {
     setGuardandoDDD(true);
     try {
       const amr = ANTIMICROBIANOS_TRAZADORES.find(a => a.nombre === formDDD.antimicrobiano);
+      // camas-día = N° de camas × días del período — ver diasEnMes() y el
+      // comentario en numCamasDDD. `camas` en ConsumoAMR sigue significando
+      // camas-día (no cambia el esquema ni las lecturas históricas).
+      const camasDia = (numCamasDDD || 0) * diasEnMes(formDDD.periodo);
       await p.guardarConsumo({
         antimicrobiano: formDDD.antimicrobiano!, grupo: amr?.grupo || '',
-        ddd: formDDD.ddd!, dot: formDDD.dot ?? null, camas: formDDD.camas || 30, periodo: formDDD.periodo!,
+        ddd: formDDD.ddd!, dot: formDDD.dot ?? null, camas: camasDia || 30, periodo: formDDD.periodo!,
       });
       setShowFormDDD(false);
-      setFormDDD({ periodo: new Date().toISOString().slice(0, 7), camas: 30 });
+      setFormDDD({ periodo: new Date().toISOString().slice(0, 7) });
+      setNumCamasDDD(30);
     } finally { setGuardandoDDD(false); }
   };
 
@@ -506,11 +531,16 @@ export default function PROAPage() {
                          className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white" placeholder="Opcional" step="1" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">N° camas-día</label>
-                  <input type="number" value={formDDD.camas ?? ''} onChange={e => setFormDDD(p2 => ({ ...p2, camas: Number(e.target.value) }))}
-                         className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white" placeholder="30" />
+                  <label className="block text-[10px] font-bold uppercase tracking-wide text-teal-700 mb-1">N° de camas</label>
+                  <input type="number" value={numCamasDDD} onChange={e => setNumCamasDDD(Number(e.target.value))}
+                         className="w-full px-3 py-2 rounded-lg text-sm border border-teal-200 bg-white" placeholder="30" min={0} />
                 </div>
               </div>
+              <p className="text-[11px] text-teal-700 mt-2">
+                = <strong>{(numCamasDDD || 0) * diasEnMes(formDDD.periodo)}</strong> camas-día
+                (mes de {diasEnMes(formDDD.periodo)} días) — es el denominador real de DDD/100 camas-día,
+                calculado automáticamente para que no haya que hacer la cuenta a mano.
+              </p>
               <div className="flex gap-2 mt-4">
                 <button onClick={guardarConsumo} disabled={guardandoDDD} className="text-white text-sm font-bold px-5 py-2 rounded-xl disabled:opacity-60" style={btnPrimary}>{guardandoDDD ? 'Guardando...' : 'Guardar'}</button>
                 <button onClick={() => setShowFormDDD(false)} className="text-slate-500 text-sm px-4 py-2 rounded-xl hover:bg-slate-100">Cancelar</button>
