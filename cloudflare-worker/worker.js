@@ -2711,6 +2711,65 @@ ${listaNC}`;
   return new Response(JSON.stringify({ ok: true, estructurado: false, textoCrudo: text }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
+// ── WhatsApp (Meta Cloud API) — recordatorios de vencimientos ────────────────
+// Requiere WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID (secrets, ver
+// wrangler.toml). Fuera de la ventana de 24h de conversación iniciada por el
+// usuario, Meta exige un MENSAJE DE PLANTILLA pre-aprobado — no se puede
+// mandar texto libre. Plantilla a crear en Meta Business Manager
+// (WhatsApp Manager > Plantillas de mensajes) ANTES de que esto funcione:
+//
+//   Nombre:   normalis_vencimiento
+//   Idioma:   es
+//   Categoría: UTILITY
+//   Cuerpo:   "Hola {{1}}, tienes {{2}} documento(s) de tu IPS {{3}} por
+//              vencer en los próximos 7 días. Revisa el detalle en NormaLis:
+//              https://normalis.co/dashboard/vencimientos"
+//
+// Sin WHATSAPP_ACCESS_TOKEN configurado, se omite en silencio — igual que
+// RESEND_API_KEY arriba, este canal es best-effort y nunca bloquea el resto
+// del cron ni el envío de email (que sigue siendo el canal principal).
+async function sendWhatsAppVencimiento(env, toPhone, nombreContacto, cantidad, ipsNombre) {
+  const token    = env.WHATSAPP_ACCESS_TOKEN;
+  const phoneId  = env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token || !phoneId) return false;
+
+  // Meta exige formato E.164 (+<código país><número>, solo dígitos tras el +).
+  // Los números colombianos capturados en el registro suelen venir como
+  // "300 000 0000" o "3000000000" sin indicativo — se asume +57 si no trae
+  // uno ya. No es infalible (un usuario con número de otro país sin +
+  // quedaría mal formado), pero es la mejor inferencia posible sin pedirle
+  // al usuario que reingrese el teléfono en un formato distinto.
+  let digits = String(toPhone).replace(/[^\d+]/g, '');
+  if (!digits.startsWith('+')) digits = digits.startsWith('57') ? `+${digits}` : `+57${digits}`;
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: digits,
+        type: 'template',
+        template: {
+          name: 'normalis_vencimiento',
+          language: { code: 'es' },
+          components: [{
+            type: 'body',
+            parameters: [
+              { type: 'text', text: nombreContacto || 'director técnico' },
+              { type: 'text', text: String(cantidad) },
+              { type: 'text', text: ipsNombre || 'tu IPS' },
+            ],
+          }],
+        },
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ── Scheduled cron — runs daily at 08:00 COT ─────────────────────────────────
 export async function scheduled(event, env, ctx) {
   const now = new Date();
@@ -2736,7 +2795,7 @@ export async function scheduled(event, env, ctx) {
   const in30 = new Date(now); in30.setDate(in30.getDate() + 30);
   const fmt  = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
 
-  let emailsSent = 0, errors = 0;
+  let emailsSent = 0, whatsappSent = 0, errors = 0;
 
   // ─────────────────────────────────────────────────────
   // 1. PILOTOS próximos a vencer (expiresAt en 7 días)
@@ -2800,79 +2859,100 @@ export async function scheduled(event, env, ctx) {
   }
 
   // ─────────────────────────────────────────────────────
-  // 2. VENCIMIENTOS de personal próximos (7 días)
+  // 2. VENCIMIENTOS próximos (7 días)
+  //
+  // FIX: esta sección filtraba por `active == true` y leía
+  // fechaVencimiento/email/ipsNombre/profesional/tipo — campos de un
+  // esquema que ya no existe. web/app/dashboard/vencimientos/page.tsx (el
+  // único punto de escritura real, desde la migración a Next.js) guarda
+  // {nombre, fecha, notas, uid, nit, estado:'vigente'} — sin `active`, así
+  // que la query anterior no encontraba NUNCA ningún documento y esta
+  // sección llevaba desde la migración sin enviar un solo recordatorio,
+  // en silencio. Tampoco guarda email/teléfono en el propio documento —
+  // hay que resolverlos desde usuarios/{uid}.
   // ─────────────────────────────────────────────────────
   try {
     const rows = await firestoreQuery(projectId, 'vencimientos', [
-      { field: 'active', op: 'EQUAL', value: { booleanValue: true } },
+      { field: 'estado', op: 'EQUAL', value: { stringValue: 'vigente' } },
     ], token);
 
-    // Group by user email
-    const byUser = {};
+    // Agrupar por uid — un mismo usuario puede tener varios vencimientos
+    const byUid = {};
     for (const row of rows) {
       if (!row.document) continue;
       const f = row.document.fields || {};
-      const fechaStr = f.fechaVencimiento?.stringValue;
-      if (!fechaStr) continue;
+      const fechaStr = f.fecha?.stringValue;
+      const uid      = f.uid?.stringValue;
+      if (!fechaStr || !uid) continue;
 
       const vencDate = new Date(fechaStr + 'T00:00:00');
       const dias = Math.round((vencDate - now) / 86400000);
-      if (dias < 0 || dias > 7) continue; // Only next 7 days
+      if (dias < 0 || dias > 7) continue; // Solo próximos 7 días
 
-      const email = f.email?.stringValue;
-      if (!email) continue;
-      if (!byUser[email]) byUser[email] = { nombre: f.ipsNombre?.stringValue || '', items: [] };
-      byUser[email].items.push({
-        profesional: f.profesional?.stringValue || '—',
-        tipo:        f.tipo?.stringValue        || '—',
-        fecha:       fechaStr,
-        dias,
-      });
+      if (!byUid[uid]) byUid[uid] = [];
+      byUid[uid].push({ nombre: f.nombre?.stringValue || 'Documento', fecha: fechaStr, dias });
     }
 
-    for (const [email, { nombre, items }] of Object.entries(byUser)) {
+    for (const [uid, items] of Object.entries(byUid)) {
+      // Resolver email/teléfono/nombre de la IPS/contacto desde usuarios/{uid}
+      let userDoc;
+      try { userDoc = await firestoreGetDoc(projectId, `usuarios/${uid}`, token); }
+      catch { continue; }
+      if (!userDoc) continue;
+      const uf = userDoc.fields || {};
+      const email          = uf.email?.stringValue;
+      const telefono       = uf.telefono?.stringValue;
+      const ipsNombre      = uf.nombre?.stringValue || '';
+      const nombreContacto = uf.nombreContacto?.stringValue || ipsNombre;
+
       const filas = items.map(i =>
-        `<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">${i.profesional}</td>
-         <td style="padding:8px;border-bottom:1px solid #f1f5f9">${i.tipo}</td>
+        `<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9">${i.nombre}</td>
          <td style="padding:8px;border-bottom:1px solid #f1f5f9;color:${i.dias===0?'#ef4444':i.dias<=3?'#f59e0b':'#475569'};font-weight:600">
            ${i.dias===0?'VENCE HOY':'En '+i.dias+' día'+(i.dias>1?'s':'')} (${new Date(i.fecha+'T00:00:00').toLocaleDateString('es-CO',{day:'2-digit',month:'short'})})</td></tr>`
       ).join('');
 
-      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px">
-        <div style="background:#f59e0b;padding:20px;border-radius:12px 12px 0 0;text-align:center">
-          <h1 style="color:#fff;margin:0;font-size:20px">⚠️ Documentos por vencer — ${nombre || 'NormaLis'}</h1>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px;border-radius:0 0 12px 12px">
-          <p>Tienes <strong>${items.length} documento${items.length>1?'s':''}</strong> de personal que vencen en los próximos 7 días:</p>
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead><tr style="background:#f8fafc">
-              <th style="padding:8px;text-align:left">Profesional</th>
-              <th style="padding:8px;text-align:left">Tipo</th>
-              <th style="padding:8px;text-align:left">Estado</th>
-            </tr></thead>
-            <tbody>${filas}</tbody>
-          </table>
-          <div style="text-align:center;margin:24px 0">
-            <a href="https://normalis.co/normativa-app-v2.html" style="background:#f59e0b;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700">
-              Gestionar vencimientos →
-            </a>
+      if (email) {
+        const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px">
+          <div style="background:#f59e0b;padding:20px;border-radius:12px 12px 0 0;text-align:center">
+            <h1 style="color:#fff;margin:0;font-size:20px">⚠️ Documentos por vencer — ${ipsNombre || 'NormaLis'}</h1>
           </div>
-        </div>
-        <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8">NormaLis · normalis.co</div>
-      </div>`;
+          <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px;border-radius:0 0 12px 12px">
+            <p>Tienes <strong>${items.length} documento${items.length>1?'s':''}</strong> que vencen en los próximos 7 días:</p>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead><tr style="background:#f8fafc">
+                <th style="padding:8px;text-align:left">Documento</th>
+                <th style="padding:8px;text-align:left">Estado</th>
+              </tr></thead>
+              <tbody>${filas}</tbody>
+            </table>
+            <div style="text-align:center;margin:24px 0">
+              <a href="https://normalis.co/dashboard/vencimientos" style="background:#f59e0b;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700">
+                Gestionar vencimientos →
+              </a>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8">NormaLis · normalis.co</div>
+        </div>`;
 
-      const sendRes = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'NormaLis <fjfc1984@gmail.com>',
-          to: [email],
-          subject: `⚠️ ${items.length} documento${items.length>1?'s':''} por vencer esta semana — NormaLis`,
-          html,
-        }),
-      });
-      if (sendRes.ok) emailsSent++;
-      else errors++;
+        const sendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'NormaLis <fjfc1984@gmail.com>',
+            to: [email],
+            subject: `⚠️ ${items.length} documento${items.length>1?'s':''} por vencer esta semana — NormaLis`,
+            html,
+          }),
+        });
+        if (sendRes.ok) emailsSent++;
+        else errors++;
+      }
+
+      // WhatsApp — best-effort, no bloquea nada si no está configurado o falla
+      if (telefono) {
+        const wa = await sendWhatsAppVencimiento(env, telefono, nombreContacto, items.length, ipsNombre);
+        if (wa) whatsappSent++;
+      }
     }
   } catch (e) {
     console.error('[NormaLis Cron] Vencimientos check error:', e.message);
@@ -2880,5 +2960,5 @@ export async function scheduled(event, env, ctx) {
     errors++;
   }
 
-  console.log(`[NormaLis Cron] Done — ${emailsSent} emails sent, ${errors} errors`);
+  console.log(`[NormaLis Cron] Done — ${emailsSent} emails sent, ${whatsappSent} WhatsApp sent, ${errors} errors`);
 }

@@ -32,6 +32,22 @@ account_id      = "e4ba3dc6b998c992411a8bc56bc02d2b"
 #   → Clave para sellar firmas electrónicas (HMAC-SHA256) — NUNCA debe salir
 #     de este Worker. Generar con: openssl rand -hex 32
 #   Si no se configura, POST /firmar responde 503 (no bloquea el resto del sitio)
+#
+# Cron — recordatorios de vencimientos por WhatsApp (además del email):
+#   npx wrangler secret put WHATSAPP_ACCESS_TOKEN
+#   npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID
+#   → Meta Cloud API (WhatsApp Business Platform), gratis hasta cierto
+#     volumen. Requiere una app de Meta Business + un número de WhatsApp
+#     Business verificado. Obtener en: https://developers.facebook.com/apps
+#     (producto "WhatsApp" > API Setup — ahí están el token temporal y el
+#     Phone Number ID; para producción real generar un token permanente vía
+#     un usuario del sistema en Meta Business Manager).
+#   → Requiere ADEMÁS crear y que Meta apruebe la plantilla de mensaje
+#     "normalis_vencimiento" (WhatsApp Manager > Plantillas de mensajes,
+#     categoría UTILITY, idioma es) — ver el comentario junto a
+#     sendWhatsAppVencimiento() en worker.js para el texto exacto.
+#   Si no se configura, el cron sigue enviando solo por email — no bloquea
+#     nada (mismo patrón que RESEND_API_KEY/FIRMA_SIGNING_SECRET arriba).
 # ─────────────────────────────────────────────────────────────
 
 [triggers]
