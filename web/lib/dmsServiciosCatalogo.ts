@@ -169,6 +169,23 @@ export const DOCUMENTOS_SERVICIO_CATALOGO: DocServicioMeta[] = [
     ],
   },
   {
+    // Único de los 21 servicios auditables (ver SEGMENT_META) que se había
+    // quedado sin documento condicional propio — el resto ya estaba
+    // cubierto. Secciones tomadas literal de las 5 áreas reales de
+    // areasDB.consulta_externa (data/auditData.ts) — talento, infraestructura,
+    // dotación, procesos e historia clínica —, no inventadas para este
+    // documento.
+    id: 'srv_consulta_externa', nombre: 'Protocolo de Atención en Consulta Externa',
+    base: SERVICIOS_IPS.consulta_externa.norma, icono: SERVICIOS_IPS.consulta_externa.icon, servicios: ['consulta_externa'],
+    secciones: [
+      'Talento humano de consulta externa: perfiles, tarjeta profesional RETHUS, vinculación',
+      'Infraestructura y dotación del consultorio (área mínima, lavamanos, iluminación, equipos)',
+      'Procesos asistenciales: guías de práctica clínica y protocolos de atención por especialidad',
+      'Historia clínica: componentes mínimos, custodia y confidencialidad de los registros',
+      'Interdependencia con otros servicios (laboratorio, imágenes, referencia y contrarreferencia)',
+    ],
+  },
+  {
     id: 'srv_cuidado_intensivo', nombre: 'Protocolo de Manejo del Paciente Crítico en UCI',
     base: SERVICIOS_IPS.cuidado_intensivo.norma, icono: SERVICIOS_IPS.cuidado_intensivo.icon, servicios: ['cuidado_intensivo'],
     secciones: [
