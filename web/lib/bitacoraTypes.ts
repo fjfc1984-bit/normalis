@@ -16,6 +16,7 @@ export type BitacoraModulo =
   | 'Medicamentos'
   | 'Historia Clínica'
   | 'Interdependencia'
+  | 'Informes de Auditoría'
   | 'Sistema'
   | 'Otro';
 
@@ -40,7 +41,7 @@ export interface BitacoraEntry {
 export const BITACORA_MODULOS: BitacoraModulo[] = [
   'PQRS', 'Incidentes', 'Vencimientos', 'CAPAs', 'Indicadores',
   'SG-SST', 'Documentos', 'Auditoría', 'Infraestructura', 'Medicamentos',
-  'Historia Clínica', 'Interdependencia', 'Sistema', 'Otro',
+  'Historia Clínica', 'Interdependencia', 'Informes de Auditoría', 'Sistema', 'Otro',
 ];
 
 // Colores Tailwind por módulo (bg + text)
@@ -57,6 +58,7 @@ export const MODULO_COLOR: Record<BitacoraModulo, { bg: string; text: string }> 
   'Medicamentos':    { bg: 'bg-pink-100',    text: 'text-pink-700'    },
   'Historia Clínica': { bg: 'bg-cyan-100',   text: 'text-cyan-700'    },
   'Interdependencia': { bg: 'bg-lime-100',   text: 'text-lime-700'    },
+  'Informes de Auditoría': { bg: 'bg-violet-100', text: 'text-violet-700' },
   'Sistema':         { bg: 'bg-gray-100',    text: 'text-gray-600'    },
   'Otro':            { bg: 'bg-gray-100',    text: 'text-gray-600'    },
 };

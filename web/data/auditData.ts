@@ -205,6 +205,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "📋",
       "name": "Procesos Prioritarios y Protocolos",
       "norm": "Res. 3100/2019 Est. 5 · Res. 256/2016 · Dec. 1011/2006 · OMS Seguridad Paciente",
+      "estandar": "procesos_prioritarios",
       "q": [
         { "texto": "¿Existe Manual de Bioseguridad actualizado en los últimos 12 meses, firmado por el responsable, con evidencia de socialización a todo el personal?", "obligatorio": true },
         "¿Hay protocolos escritos de atención para todos los servicios habilitados, basados en evidencia actualizada y accesibles al personal en el área?",
@@ -242,6 +243,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🗑️",
       "name": "Gestión de Residuos Hospitalarios (PGIRH)",
       "norm": "Decreto 351/2014 · Res. 1164/2002 · Res. 3100/2019 Est. 5",
+      "estandar": "procesos_prioritarios",
       "q": [
         { "texto": "¿Existen recipientes diferenciados según Dec. 351/2014: rojo (infeccioso/biológico), negro (ordinario no aprovechable), verde (biodegradable), blanco o gris (reciclable) y guardián rígido (cortopunzantes) en cada área asistencial?", "obligatorio": true },
         "¿El contrato con empresa gestora de RESPEL autorizada está vigente con manifiestos de disposición final de las últimas tres recolecciones?",
@@ -337,6 +339,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🦠",
       "name": "Bioseguridad en Atención Domiciliaria",
       "norm": "Res. 3100/2019 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿El profesional realiza higiene de manos (lavado o alcohol gel) antes y después de cada procedimiento en el domicilio?",
         "¿Se aplican precauciones estándar (guantes, mascarilla, bata según riesgo) en todos los procedimientos con exposición a fluidos?",
@@ -552,6 +555,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🛡️",
       "name": "Bioseguridad y Control de Infecciones",
       "norm": "Res. 3100/2019 Est. 5 · OMS 5 Momentos · Precauciones Estándar",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe área de aislamiento o protocolo documentado para pacientes con sospecha de enfermedad transmisible de alta contagiosidad?",
         "¿El personal aplica precauciones estándar (guantes, mascarilla, gafas, bata) en TODAS las atenciones con riesgo de contacto con fluidos?",
@@ -601,6 +605,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🔗",
       "name": "Interdependencias y Red de Urgencias",
       "norm": "Res. 3100/2019 Est. 7 · Res. 544/2023 Art. 17 · CRUE",
+      "estandar": "interdependencia",
       "q": [
         "¿Existe convenio activo con laboratorio clínico con capacidad de respuesta urgente (resultados en menos de 60 minutos para pruebas básicas)?",
         "¿Hay acceso garantizado a banco de sangre o servicio transfusional propio o por convenio disponible las 24 horas?",
@@ -668,6 +673,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🦠",
       "name": "Prevención y Control de IAAS",
       "norm": "Res. 256/2016 · Res. 3100/2019 Est. 5 · OMS · CDC",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe Comité de IAAS activo con reuniones documentadas (actas, asistencia y seguimiento a planes de acción, mínimo bimestral)?",
         "¿Se realizan vigilancia epidemiológica activa y reporte de IAAS al SIVIGILA según el protocolo de vigilancia?",
@@ -767,6 +773,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🧪",
       "name": "Central de Esterilización y Control",
       "norm": "Res. 3100/2019 Est. 5 · AAMI ST79 · ICONTEC 4166",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿La central tiene autoclave de vapor saturado clase B con impresión o registro digital de cada ciclo (temperatura, presión, tiempo)?",
         "¿Se realiza control biológico semanal con indicador biológico (Geobacillus stearothermophilus ATCC 7953) con resultado archivado?",
@@ -815,6 +822,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🔗",
       "name": "Apoyo Clínico e Interdependencias",
       "norm": "Res. 3100/2019 Est. 7 · Res. 544/2023",
+      "estandar": "interdependencia",
       "q": [
         "¿El establecimiento tiene acceso garantizado a UCI propia o por convenio activo y vigente para manejo postoperatorio de pacientes críticos?",
         "¿Hay convenio activo con banco de sangre con disponibilidad de hemocomponentes para cirugía programada y urgente?",
@@ -865,6 +873,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "📊",
       "name": "Control de Calidad y PEEC",
       "norm": "Res. 3100/2019 Est. 5 · PEEC MinSalud · Westgard · NTC-ISO 15189",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿El laboratorio participa ACTIVAMENTE en el Programa de Evaluación Externa de la Calidad (PEEC) del MinSalud con cronograma al día?",
         "¿Se realizan controles de calidad internos con suero control de 3 niveles (bajo, normal, alto) con cada corrida analítica o diariamente?",
@@ -881,6 +890,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🩸",
       "name": "Fase Pre-analítica y Manejo de Muestras",
       "norm": "Res. 3100/2019 Est. 5 · Manual de Procedimientos · CLSI GP33",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe manual de toma de muestras disponible y actualizado en el área de toma, con instrucciones para cada tipo de muestra y contenedor?",
         "¿El personal verifica la identificación del paciente (nombre + documento) y la concordancia con la solicitud ANTES de la toma?",
@@ -1074,6 +1084,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🧼",
       "name": "Bioseguridad y Control de Infecciones",
       "norm": "Res. 3100/2019 Est. 5 · Precauciones Estándar OMS",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿Las camillas y superficies de contacto se desinfectan entre cada paciente con producto de espectro de acción adecuado?",
         "¿El papel protector de camilla es de un solo uso y se cambia entre cada paciente, o la cubierta de tela se lava y desinfecta entre pacientes?",
@@ -1233,6 +1244,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "♻️",
       "name": "Esterilización y Reprocesamiento de Instrumental",
       "norm": "Res. 3100/2019 Est. 5 · AAMI ST79 · CDC Esterilización Dental",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿El consultorio tiene autoclave de vapor saturado clase B con impresión de registro de cada ciclo (temperatura, presión, tiempo, resultado)?",
         "¿Se realizan controles biológicos semanales con indicador biológico (Geobacillus stearothermophilus) con resultado archivado por mínimo 1 año?",
@@ -1250,6 +1262,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "icon": "🛡️",
       "name": "Bioseguridad Odontológica Integral",
       "norm": "Res. 3100/2019 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
+      "estandar": "procesos_prioritarios",
       "q": [
         "¿El profesional usa en CADA atención: guantes de nitrilo o látex, mascarilla N95/FFP2 o quirúrgica, gafas protectoras o pantalla facial y bata de manga larga?",
         "¿El protocolo de lavado de manos clínico (6 pasos OMS, mínimo 40 segundos) se aplica antes de ponerse guantes y después de quitarlos?",
@@ -1351,7 +1364,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-hc",
       "icon": "📁",
       "name": "Historia Clínica y Registros",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 7 · Ley 23/1981",
+      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Ley 23/1981",
       "q": [
         "¿Cada consulta genera historia clínica con anamnesis, examen físico, diagnóstico (CIE-10), plan y firma del profesional?",
         "¿El sistema de historia clínica (física o electrónica) garantiza confidencialidad, acceso restringido y respaldo?",

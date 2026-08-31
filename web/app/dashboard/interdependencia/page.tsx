@@ -193,16 +193,21 @@ function VerificacionFormModal({ onSave, onClose }: { onSave: (data: Verificacio
 
           <div className="space-y-2">
             {CRITERIOS_INTERDEPENDENCIA.map((c, i) => (
-              <div key={c.id} className="border border-gray-200 rounded-lg p-3">
-                <p className="text-xs text-gray-700 mb-2">{i + 1}. {c.texto}</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {RESPUESTA_OPCIONES.map(r => (
-                    <button key={r} type="button" onClick={() => responder(c.id, r)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors
-                        ${form.respuestas[c.id] === r ? RESPUESTA_COLOR[r] : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                      {RESPUESTA_LABEL[r]}
-                    </button>
-                  ))}
+              <div key={c.id}>
+                {c.origenArea && c.origenArea !== CRITERIOS_INTERDEPENDENCIA[i - 1]?.origenArea && (
+                  <p className="text-[10px] font-bold text-teal-700 uppercase tracking-wide mt-3 mb-1.5">{c.origenArea}</p>
+                )}
+                <div className="border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-700 mb-2">{i + 1}. {c.texto}</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {RESPUESTA_OPCIONES.map(r => (
+                      <button key={r} type="button" onClick={() => responder(c.id, r)}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors
+                          ${form.respuestas[c.id] === r ? RESPUESTA_COLOR[r] : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                        {RESPUESTA_LABEL[r]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -317,6 +322,7 @@ export default function InterdependenciaPage() {
         origen: 'interdependencia',
         evidencia: '',
         estado: 'abierta',
+        estandar: 'interdependencia',
         refVerificacionId: v.id,
         fechaCreacion: serverTimestamp(),
         fechaActualizacion: null,

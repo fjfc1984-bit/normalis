@@ -30,6 +30,7 @@
 //   eventos_vigilancia/{id}     — Vigilancia Sanitaria: farmaco/tecno/reactivovigilancia (Numeral 6)
 //   iaas_casos/{id}              — Vigilancia IAAS: casos individuales (SIVIGILA 357/352)
 //   iaas_denominadores/{id}      — Vigilancia IAAS: consolidados mensuales (SIVIGILA 359/362)
+//   informes_auditoria/{id}      — Informes formales de auditoría/eventualidad (intro, justificación, hallazgos, etc.)
 //
 // Subcollections de usuarios/{uid} (módulos Next.js):
 //   usuarios/{uid}/pqrs/{id}        — PQRS (Peticiones, Quejas, Reclamos…)
@@ -255,6 +256,29 @@ service cloud.firestore {
       );
 
       // Al crear: solo verificar uid — nit puede ser vacío si el usuario no lo tiene configurado
+      allow create: if isAuthenticated() &&
+        request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // informes_auditoria/{id} — Informes formales de auditoría/eventualidad
+    // (introducción, justificación, objetivos, metodología, alcance,
+    // hallazgos, conclusiones, recomendaciones, salvedad). Mismo patrón
+    // uid/nit que capas — visible a todo el equipo IPS por NIT.
+    // ════════════════════════════════════════════════════════════════════════
+    match /informes_auditoria/{id} {
+      allow read: if isAuthenticated() && (
+        resource.data.uid == request.auth.uid ||
+        sameNIT(resource.data.nit) ||
+        isAdmin()
+      );
+
       allow create: if isAuthenticated() &&
         request.resource.data.uid == request.auth.uid;
 

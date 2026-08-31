@@ -34,11 +34,21 @@ export function preguntaObligatoria(q: AuditQuestion): boolean {
   return typeof q === 'string' ? false : (q.obligatorio ?? false);
 }
 
+/**
+ * Estándar oficial de habilitación al que pertenece el área, cuando ya se
+ * verificó contra la numeración de Res. 3100/2019 (Est. 5 = Procesos
+ * Prioritarios, Est. 7 = Interdependencia — ver comentario de cabecera de
+ * data/auditData.ts). Opcional y parcial a propósito: solo las áreas ya
+ * clasificadas lo tienen; el resto queda sin `estandar` en vez de adivinar.
+ */
+export type EstandarHabilitacion = 'procesos_prioritarios' | 'interdependencia';
+
 export interface AuditArea {
   id: string;
   icon: string;
   name: string;
   norm: string;
+  estandar?: EstandarHabilitacion;
   q: AuditQuestion[];
 }
 

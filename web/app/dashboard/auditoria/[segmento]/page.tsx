@@ -228,6 +228,10 @@ export default function AuditoriaSegmentoPage({
       for (const [, items] of Object.entries(porArea)) {
         const area = items[0];
         const preguntas = items.map(i => `• ${i.question}`).join('\n');
+        // Plan de Mejora de Alto Impacto: hereda el estándar del área (solo
+        // Procesos Prioritarios/Interdependencia lo tienen, ver auditData.ts)
+        // y marca "alto impacto" si algún criterio agrupado era obligatorio.
+        const estandarArea = areasDB[segmento]?.find(a => a.id === area.areaId)?.estandar;
         await addDoc(collection(db, 'capas'), {
           uid:              user.uid,
           nit,
@@ -242,6 +246,8 @@ export default function AuditoriaSegmentoPage({
           evidencia:        '',
           estado:           'abierta',
           refSegmento:      segmento,
+          ...(estandarArea && { estandar: estandarArea }),
+          obligatorio:      items.some(i => i.obligatorio),
           fechaCreacion:    serverTimestamp(),
           fechaActualizacion: null,
           fechaInicio:      null,

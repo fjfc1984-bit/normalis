@@ -3,6 +3,7 @@
 // Base legal: Dec. 1011/2006 Art. 34, Res. 256/2016, ciclo PAMEC
 
 import type { Timestamp } from 'firebase/firestore';
+import type { EstandarHabilitacion } from './auditTypes';
 
 export type CapaEstado = 'abierta' | 'en_progreso' | 'implementada' | 'cerrada';
 export type CapaOrigen = 'auditoria' | 'manual' | 'queja' | 'indicador' | 'supervision' | 'brecha_1732' | 'incidente' | 'riesgo';
@@ -44,6 +45,14 @@ export interface Capa {
   veredictoVerificacion?: CapaVeredicto | null;
   reincidencias?: number;
   historialVerificaciones?: CapaVerificacionHistorial[];
+  // ── Plan de Mejora de Alto Impacto ──────────────────────────
+  // Presentes solo cuando la CAPA se originó de un área/verificación ya
+  // clasificada por estándar (ver EstandarHabilitacion) — ausentes en CAPAs
+  // manuales o previas a esta clasificación, nunca inferidos a posteriori.
+  estandar?: EstandarHabilitacion;
+  /** true si alguno de los criterios que originaron esta CAPA era `obligatorio`
+   *  (ver auditTypes.ts) — la marca de "alto impacto" del Plan de Mejora. */
+  obligatorio?: boolean;
   // computed client-side
   _vencida?: boolean;
   _diasRestantes?: number | null;

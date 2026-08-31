@@ -3,37 +3,49 @@
 // Base legal: Res. 1732/2026 — Estándar de Interdependencia (equivalente al
 // Estándar 7 de la derogada Res. 3100/2019).
 //
-// El checklist de 8 criterios se toma TAL CUAL de web/data/auditData.ts
-// (areasDB.urgencias → "urg-interdep", citado explícitamente como
-// "Res. 3100/2019 Est. 7" — el mismo Estándar de Interdependencia), fuente
-// única compartida con el módulo de Auditoría.
+// El checklist se toma TAL CUAL de web/data/auditData.ts — fuente única
+// compartida con el módulo de Auditoría, sin reescribir criterios a mano:
+//   - areasDB.urgencias → "urg-interdep"    (8 criterios, c0..c7)
+//   - areasDB.quirurgicos → "qui-interdep"  (7 criterios, c8..c14)
+// Ambas áreas citan "Res. 3100/2019 Est. 7" pero cubren contextos distintos
+// (urgencias: CRUE/referencia/banco de sangre 24h; quirúrgicos: UCI
+// postoperatoria/apoyo intraoperatorio/traslado de complicaciones) — no son
+// duplicadas, así que se concatenan en vez de fusionarse. "qui-interdep" se
+// agrega DESPUÉS de "urg-interdep" (nunca antepuesto ni intercalado) para
+// que los índices c0..c7 de verificaciones ya guardadas sigan significando
+// lo mismo que antes de que existiera esta segunda fuente.
 //
 // Diseño: registro de convenios/red de prestadores (laboratorio, banco de
 // sangre, imágenes diagnósticas, IPS de mayor complejidad, transporte
 // asistencial…) con seguimiento de vigencia — mismo patrón de alertas que
 // medicamentosTypes.ts — más verificación periódica contra el checklist.
 //
-// SIMPLIFICACIÓN CONOCIDA: el criterio q8 pide un registro remisión-por-
-// remisión (paciente, desenlace, tiempo de traslado). Esta primera versión
-// no modela ese log individual — solo el convenio marco con cada
-// prestador — para no dispersar el alcance en la primera entrega. Si lo
-// necesitas, es la extensión natural siguiente.
+// SIMPLIFICACIÓN CONOCIDA: el último criterio de "urg-interdep" pide un
+// registro remisión-por-remisión (paciente, desenlace, tiempo de traslado).
+// Esta primera versión no modela ese log individual — solo el convenio
+// marco con cada prestador — para no dispersar el alcance en la primera
+// entrega. Si lo necesitas, es la extensión natural siguiente.
 
 import type { Timestamp } from 'firebase/firestore';
 import { areasDB } from '@/data/auditData';
 import { preguntaTexto } from '@/lib/auditTypes';
 
-const INTERDEP_AREA = areasDB.urgencias.find(a => a.id === 'urg-interdep');
+const INTERDEP_AREA_URGENCIAS  = areasDB.urgencias.find(a => a.id === 'urg-interdep');
+const INTERDEP_AREA_QUIRURGICO = areasDB.quirurgicos.find(a => a.id === 'qui-interdep');
+const INTERDEP_FUENTES = [INTERDEP_AREA_URGENCIAS, INTERDEP_AREA_QUIRURGICO];
 
 export interface CriterioInterdependencia {
   id:    string;
   texto: string;
+  /** Área de auditData.ts de la que proviene, para mostrar contexto (Urgencias/Quirúrgicos) en la UI. */
+  origenArea: string;
 }
 
-export const CRITERIOS_INTERDEPENDENCIA: CriterioInterdependencia[] =
-  (INTERDEP_AREA?.q ?? []).map((q, i) => ({ id: `c${i}`, texto: preguntaTexto(q) }));
+export const CRITERIOS_INTERDEPENDENCIA: CriterioInterdependencia[] = INTERDEP_FUENTES
+  .flatMap(area => (area?.q ?? []).map(q => ({ texto: preguntaTexto(q), origenArea: area?.name ?? '' })))
+  .map((c, i) => ({ id: `c${i}`, ...c }));
 
-export const NORMA_INTERDEPENDENCIA = INTERDEP_AREA?.norm ?? 'Res. 1732/2026 — Estándar de Interdependencia';
+export const NORMA_INTERDEPENDENCIA = INTERDEP_AREA_URGENCIAS?.norm ?? 'Res. 1732/2026 — Estándar de Interdependencia';
 
 // ── Convenios / red de prestadores ───────────────────────────────────────────
 
