@@ -37,6 +37,7 @@ import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from 'firebase/firestore';
 import { auth as fbAuth, db as fbDb } from '@/lib/firebase';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 type Screen = 'form' | 'ya-conectado' | 'enviando' | 'exito' | 'error';
 
@@ -180,6 +181,11 @@ export default function InvitacionPage() {
         usadoPor: uid,
         usadoEn:  serverTimestamp(),
       });
+
+      // Best-effort — el momento exacto en que una identidad nueva gana
+      // acceso a los datos de una IPS existente es justo lo que ISO 27001
+      // A.9 (trazabilidad de accesos) pide poder reconstruir después.
+      logSecurityEvent('invitacion_equipo_aceptada', 'equipo', `nit=${inv.nit} invitacion=${code}`);
 
       setIpsExito(inv.nombreIPS || '');
       setScreen('exito');

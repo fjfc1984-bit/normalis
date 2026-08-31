@@ -43,6 +43,7 @@ const AUDIT_ACCIONES_VALIDAS = [
   'login',
   'admin_aprobar_usuario',
   'admin_rechazar_usuario',
+  'admin_cambiar_plan',
   'llave_api_creada',
   'llave_api_revocada',
   'llave_api_reactivada',
@@ -53,6 +54,10 @@ const AUDIT_ACCIONES_VALIDAS = [
   'consentimiento_firmado',
   'documento_version_aprobada',
   'documento_version_retirada',
+  'invitacion_equipo_creada',
+  'invitacion_equipo_revocada',
+  'invitacion_equipo_aceptada',
+  'acceso_miembro_modificado',
 ];
 
 // ── Protocolo de Londres (Vincent & Taylor-Adams) — análisis de causa raíz ───

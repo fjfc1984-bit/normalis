@@ -15,14 +15,24 @@ import { useBitacoraSeguridad, ACCION_LABEL, type SecurityLogItem } from '@/lib/
 import { SectionHeader, LoadingSpinner, EmptyState } from '@/components/ui';
 
 const ACCION_ICONO: Record<string, string> = {
-  login:                  '🔑',
-  admin_aprobar_usuario:  '✅',
-  admin_rechazar_usuario: '⛔',
-  llave_api_creada:       '🔌',
-  llave_api_revocada:     '🔌',
-  llave_api_reactivada:   '🔌',
-  llave_api_eliminada:    '🔌',
-  pqrs_respondida:        '📬',
+  login:                      '🔑',
+  admin_aprobar_usuario:      '✅',
+  admin_rechazar_usuario:     '⛔',
+  admin_cambiar_plan:         '💳',
+  llave_api_creada:           '🔌',
+  llave_api_revocada:         '🔌',
+  llave_api_reactivada:       '🔌',
+  llave_api_eliminada:        '🔌',
+  pqrs_respondida:            '📬',
+  mfa_enrolado:                '🛡️',
+  documento_firmado:          '✍️',
+  consentimiento_firmado:     '📝',
+  documento_version_aprobada: '📄',
+  documento_version_retirada: '🗑️',
+  invitacion_equipo_creada:   '✉️',
+  invitacion_equipo_revocada: '✉️',
+  invitacion_equipo_aceptada: '🤝',
+  acceso_miembro_modificado:  '👤',
 };
 
 function EventoRow({ item }: { item: SecurityLogItem }) {
@@ -70,8 +80,11 @@ export default function SeguridadPage() {
         <p className="text-teal-800">
           Estas entradas las genera el sistema automáticamente, no el usuario — ni siquiera un
           administrador puede editarlas o borrarlas una vez creadas. Hoy se registran: inicios de
-          sesión, aprobación/rechazo de usuarios, gestión de llaves API y respuestas a PQRS. El
-          catálogo de eventos registrados se irá ampliando a más módulos.
+          sesión, aprobación/rechazo de usuarios y cambios de plan, gestión de llaves API,
+          respuestas a PQRS, verificación en dos pasos, firmas electrónicas y de consentimientos,
+          aprobación de documentos del Gestor Documental, y toda la gestión de accesos de equipo
+          (invitar, revocar, aceptar, activar/desactivar un miembro). El catálogo de eventos
+          registrados se irá ampliando a más módulos.
         </p>
       </div>
 

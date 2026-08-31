@@ -27,6 +27,7 @@ import {
 } from 'firebase/firestore';
 import { db as fbDb, auth as fbAuth } from '@/lib/firebase';
 import { sendWorkerEmail } from '@/lib/worker';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 const APP_BASE_URL = 'https://app.normalis.co';
 
@@ -227,11 +228,16 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
       console.error('No se pudo enviar el correo de invitación:', emailErr);
     }
 
+    // Best-effort — logSecurityEvent nunca lanza, así que esto no puede
+    // hacer que una invitación creada exitosamente aparezca como fallida.
+    logSecurityEvent('invitacion_equipo_creada', 'equipo', `${correo} — IPS ${nombreIPS || nitPropio}`);
+
     return { codigo: ref.id, emailEnviado, emailError };
   }
 
   async function revocarInvitacion(id: string): Promise<void> {
     await updateDoc(doc(fbDb, 'invitaciones', id), { estado: 'revocada' as EstadoInvitacion });
+    logSecurityEvent('invitacion_equipo_revocada', 'equipo', `invitacion=${id}`);
   }
 
   async function cambiarAccesoMiembro(uid: string, activo: boolean): Promise<void> {
@@ -241,6 +247,7 @@ export function useEquipoIPS(nitPropio: string, nitEfectivo: string): UseEquipoI
       accesoModificadoPorNombre: fbAuth.currentUser?.displayName ?? '',
       accesoModificadoEn: serverTimestamp(),
     });
+    logSecurityEvent('acceso_miembro_modificado', 'equipo', `uid=${uid} activo=${activo}`);
   }
 
   return {

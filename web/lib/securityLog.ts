@@ -33,7 +33,11 @@ export type SecurityLogAccion =
   | 'documento_firmado'
   | 'consentimiento_firmado'
   | 'documento_version_aprobada'
-  | 'documento_version_retirada';
+  | 'documento_version_retirada'
+  | 'invitacion_equipo_creada'
+  | 'invitacion_equipo_revocada'
+  | 'invitacion_equipo_aceptada'
+  | 'acceso_miembro_modificado';
 
 export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   login:                   'Inicio de sesión',
@@ -50,6 +54,10 @@ export const ACCION_LABEL: Record<SecurityLogAccion, string> = {
   consentimiento_firmado:  'Consentimiento informado firmado',
   documento_version_aprobada: 'Versión de documento aprobada (DMS)',
   documento_version_retirada: 'Versión de documento retirada por falta de contenido (DMS)',
+  invitacion_equipo_creada:   'Invitación de equipo enviada',
+  invitacion_equipo_revocada: 'Invitación de equipo revocada',
+  invitacion_equipo_aceptada: 'Invitación de equipo aceptada — nuevo acceso a la IPS',
+  acceso_miembro_modificado:  'Acceso de miembro de equipo activado/desactivado',
 };
 
 export interface SecurityLogItem {
