@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 export type NormalisRole = 'cliente' | 'piloto' | 'admin' | 'pendiente' | 'rechazado' | null;
@@ -57,38 +57,60 @@ export function useAuth(): AuthState {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    // Suscripción anidada: onAuthStateChanged (¿quién está logueado?) por
+    // fuera, onSnapshot del propio documento (¿qué rol/plan/nit tiene?) por
+    // dentro. Antes era un getDoc de una sola vez — si un admin cambiaba el
+    // rol de alguien (ej. lo rechazaba) mientras esa persona tenía sesión
+    // abierta, seguía viendo el dashboard hasta recargar la página. Las
+    // Firestore rules ya bloqueaban los datos reales igual (no había fuga
+    // de información), pero la revocación no se sentía instantánea como
+    // debería en un producto de cumplimiento normativo. Con onSnapshot el
+    // cambio de rol llega solo, sin que el usuario tenga que hacer nada.
+    let unsubDoc: (() => void) | null = null;
+
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      // Cambio de usuario (login/logout/cambio de cuenta) — cortar
+      // cualquier listener del documento anterior antes de abrir el nuevo.
+      if (unsubDoc) { unsubDoc(); unsubDoc = null; }
+
       if (!user) {
         setState({ user: null, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
         return;
       }
 
-      try {
-        // Leer rol y datos de IPS desde Firestore (mismo patrón que login.html)
-        const snap = await getDoc(doc(db, 'usuarios', user.uid));
-        if (snap.exists()) {
-          const data = snap.data();
-          const nitPropio = data.nit ?? '';
-          const nitIps    = data.nit_ips ?? '';
-          setState({
-            user,
-            rol:    (data.rol as NormalisRole) ?? null,
-            nit:    nitPropio || nitIps,
-            nitPropio,
-            esMiembroEquipo: !nitPropio && !!nitIps,
-            plan:   (data.plan as PlanId) ?? null,
-            nombre: data.nombre ?? '',   // nombre de la IPS
-            loading: false,
-          });
-        } else {
+      unsubDoc = onSnapshot(
+        doc(db, 'usuarios', user.uid),
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            const nitPropio = data.nit ?? '';
+            const nitIps    = data.nit_ips ?? '';
+            setState({
+              user,
+              rol:    (data.rol as NormalisRole) ?? null,
+              nit:    nitPropio || nitIps,
+              nitPropio,
+              esMiembroEquipo: !nitPropio && !!nitIps,
+              plan:   (data.plan as PlanId) ?? null,
+              nombre: data.nombre ?? '',   // nombre de la IPS
+              loading: false,
+            });
+          } else {
+            setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
+          }
+        },
+        () => {
+          // Error de lectura (ej. reglas rechazando por rol inconsistente
+          // en pleno cambio) — mismo fallback que el catch original.
           setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
-        }
-      } catch {
-        setState({ user, rol: null, nit: '', nitPropio: '', esMiembroEquipo: false, plan: null, nombre: '', loading: false });
-      }
+        },
+      );
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubAuth();
+      if (unsubDoc) unsubDoc();
+    };
   }, []);
 
   return state;
