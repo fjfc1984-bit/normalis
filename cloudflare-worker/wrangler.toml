@@ -44,8 +44,10 @@ account_id      = "e4ba3dc6b998c992411a8bc56bc02d2b"
 #     un usuario del sistema en Meta Business Manager).
 #   → Requiere ADEMÁS crear y que Meta apruebe la plantilla de mensaje
 #     "normalis_vencimiento" (WhatsApp Manager > Plantillas de mensajes,
-#     categoría UTILITY, idioma es) — ver el comentario junto a
-#     sendWhatsAppVencimiento() en worker.js para el texto exacto.
+#     idioma Spanish genérico). Categoría real: MARKETING — Meta rechazó
+#     UTILITY para este texto (ver el comentario junto a
+#     sendWhatsAppVencimiento() en worker.js para el detalle y las
+#     implicaciones de opt-in/tarifas).
 #   Si no se configura, el cron sigue enviando solo por email — no bloquea
 #     nada (mismo patrón que RESEND_API_KEY/FIRMA_SIGNING_SECRET arriba).
 # ─────────────────────────────────────────────────────────────

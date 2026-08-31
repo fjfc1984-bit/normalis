@@ -2719,8 +2719,16 @@ ${listaNC}`;
 // (WhatsApp Manager > Plantillas de mensajes) ANTES de que esto funcione:
 //
 //   Nombre:   normalis_vencimiento
-//   Idioma:   es
-//   Categoría: UTILITY
+//   Idioma:   es (Spanish genérico, NO es_CO — así quedó aprobada la plantilla)
+//   Categoría: MARKETING (Meta rechazó UTILITY para este texto — su
+//              clasificador automático lo consideró contenido promocional
+//              pese a ser una notificación de cuenta/servicio existente.
+//              Categoría MARKETING implica: los destinatarios deben tener
+//              opt-in de marketing — no basta con ser cliente activo —,
+//              tarifa de conversación distinta a UTILITY, y Meta puede exigir
+//              mecanismo de opt-out. Gap conocido: hoy el cron no verifica
+//              opt-in de marketing antes de enviar — asume que todo usuario
+//              con teléfono registrado acepta recibir este recordatorio.)
 //   Cuerpo:   "Hola {{1}}, tienes {{2}} documento(s) de tu IPS {{3}} por
 //              vencer en los próximos 7 días. Revisa el detalle en NormaLis:
 //              https://normalis.co/dashboard/vencimientos"
