@@ -40,7 +40,33 @@ jobs:
       - name: Run master validator
         run: bash normalis-validate.sh
 
-  # ─── 4. Auto-Repair ──────────────────────────────────────────────
+  # ─── 4. Web (Next.js) ────────────────────────────────────────────
+  # normalis-validate.sh (job 3, arriba) solo cubre los archivos legados de
+  # la raiz — no toca nada dentro de web/. Sin este job, un push podia
+  # romper el type-check o el lint de la app Next.js y el resto del CI
+  # seguia en verde igual. npm ci (no npm install) para instalar exacto
+  # lo que dice package-lock.json, reproducible en CI.
+  web-checks:
+    name: Web (Next.js) — type-check + lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Instalar dependencias
+        working-directory: web
+        run: npm ci
+      - name: Type-check
+        working-directory: web
+        run: npm run type-check
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+
+  # ─── 5. Auto-Repair ──────────────────────────────────────────────
   # Solo se ejecuta en pushes a main (no en PRs) y solo si validate falló.
   # Si el reparador corrige algo, lo commitea automáticamente al branch.
   auto-repair:
@@ -84,12 +110,12 @@ jobs:
           git push origin main
           echo "✔ Reparaciones commiteadas y pusheadas."
 
-  # ─── 5. Notify on persistent failure ────────────────────────────
+  # ─── 6. Notify on persistent failure ────────────────────────────
   # Si el auto-repair también falla, al menos queda registrado en el log.
   notify-failure:
     name: Notificar falla persistente
     runs-on: ubuntu-latest
-    needs: [ smoke-tests, unit-tests, validate, auto-repair ]
+    needs: [ smoke-tests, unit-tests, validate, web-checks, auto-repair ]
     if: failure()
     steps:
       - name: Reportar estado

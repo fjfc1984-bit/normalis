@@ -5,9 +5,13 @@
 # Corre automaticamente en cada git commit.
 #
 # Flujo:
+#   0. Gate independiente: si el commit toca web/, corre npm run
+#      type-check + lint ahi (solo si node_modules ya esta instalado)
 #   1. Si normalis-repair.sh existe → validate + auto-repair + re-validate
 #   2. Fallback: solo validador maestro
 #   3. Fallback: validadores individuales
+# Los pasos 1-3 solo cubren los archivos legados de la raiz; el paso 0 es
+# el unico que valida algo dentro de web/.
 
 if ! command -v bash >/dev/null 2>&1; then
   echo "  [INFO] bash no disponible — saltando validacion NormaLis"
@@ -25,9 +29,41 @@ echo "============================================================"
 MODIFIED=$(git diff --cached --name-only)
 JS_HTML_CHANGED=$(echo "$MODIFIED" | grep -qE '\.(html|js|css)$' && echo "1" || echo "0")
 
-# Si no se modifico nada relevante y no es full check, pasar
+# ── Gate independiente: web/ (Next.js) ─────────────────────────────
+# normalis-repair.sh / normalis-validate.sh (mas abajo) solo cubren los
+# archivos legados de la raiz — nunca tocan nada dentro de web/. Sin este
+# gate, un commit que rompe el type-check o el lint de la app Next.js pasa
+# el hook igual. Corre ANTES del early-exit de arriba porque ese exit solo
+# aplica al alcance legado: un commit que toque solo .tsx en web/ no matchea
+# \.(html|js|css)$ y saltaria esta verificacion si no fuera independiente.
+WEB_CHANGED=$(echo "$MODIFIED" | grep -q '^web/' && echo "1" || echo "0")
+
+if [ "$WEB_CHANGED" = "1" ]; then
+  if [ -d "$REPO_ROOT/web/node_modules" ]; then
+    echo ""
+    echo "── web/ (Next.js) — type-check + lint ──"
+    if (cd "$REPO_ROOT/web" && npm run type-check && npm run lint); then
+      echo "  OK — web/ sin errores de type-check ni lint"
+    else
+      echo ""
+      echo "============================================================"
+      echo "  COMMIT BLOQUEADO — errores de type-check o lint en web/"
+      echo "  Ejecuta: cd web && npm run type-check && npm run lint"
+      echo "============================================================"
+      echo ""
+      exit 1
+    fi
+  else
+    echo ""
+    echo "  [WARN] web/node_modules no encontrado — saltando type-check/lint de web/"
+    echo "  Ejecuta 'cd web && npm install' para que este gate corra localmente."
+    echo "  (En CI corre siempre: .github/workflows/smoke-tests.yml → web-checks)"
+  fi
+fi
+
+# Si no se modifico nada relevante del alcance legado y no es full check, pasar
 if [ "$JS_HTML_CHANGED" = "0" ] && [ "${NORMALIS_FULL_CHECK:-0}" != "1" ]; then
-  echo "  Sin cambios en HTML/JS/CSS — saltando validacion"
+  echo "  Sin cambios en HTML/JS/CSS de la raiz — saltando validacion legada"
   echo "  COMMIT AUTORIZADO"
   echo "============================================================"
   exit 0
