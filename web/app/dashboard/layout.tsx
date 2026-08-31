@@ -41,6 +41,7 @@ const NAV_GROUPS: Array<{
     items: [
       { href: '/dashboard/auditoria',    label: 'Auditoría',    icon: '🔍' },
       { href: '/dashboard/cumplimiento', label: 'Cumplimiento', icon: '⚡' },
+      { href: '/dashboard/reporte-ejecutivo', label: 'Reporte Ejecutivo', icon: '📊', badge: 'NUEVO' },
       { href: '/dashboard/analisis-riesgo', label: 'Análisis de Riesgo', icon: '⚠️', badge: 'NUEVO' },
       { href: '/dashboard/infraestructura', label: 'Infraestructura', icon: '🏗️', badge: 'NUEVO' },
       { href: '/dashboard/medicamentos', label: 'Medicamentos y Dispositivos', icon: '💊', badge: 'NUEVO' },
