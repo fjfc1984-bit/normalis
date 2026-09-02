@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { LogoMark } from '@/components/LogoMark';
 
 export default function NotFound() {
   return (
@@ -9,14 +10,8 @@ export default function NotFound() {
       style={{ background: 'linear-gradient(135deg, #00251A 0%, #00695C 100%)' }}
     >
       {/* Logo */}
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl text-white mb-6"
-        style={{
-          background: 'linear-gradient(135deg,#00897B,#00BCD4)',
-          boxShadow: '0 0 32px rgba(0,188,212,.4)',
-        }}
-      >
-        N
+      <div className="mb-6" style={{ filter: 'drop-shadow(0 0 20px rgba(0,188,212,.4))' }}>
+        <LogoMark size={64} idPrefix="notfound" />
       </div>
 
       {/* Error code */}

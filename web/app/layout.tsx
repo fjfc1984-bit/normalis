@@ -21,7 +21,12 @@ export const metadata: Metadata = {
     title:       'NormaLis — Habilitación IPS con IA · Res. 1732/2026',
     description: 'Software colombiano para auditoría y habilitación de IPS. Cumple con Res. 1732/2026, PAMEC, PROA y más.',
   },
-  icons: { icon: '/favicon.ico' },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+  },
   robots: { index: true, follow: true },
   metadataBase: new URL('https://app.normalis.co'),
 };

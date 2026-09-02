@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { LogoMark } from '@/components/LogoMark';
 
 const TYPING_WORDS = ['la habilitación.','el PAMEC.','la visita de la Supersalud.','los vencimientos.','la Res. 1732/2026.','el SG-SST.','la seguridad del paciente.'];
 
@@ -174,8 +175,7 @@ function Dashboard3D() {
                style={{ borderRight: '1px solid rgba(255,255,255,.05)', background: 'rgba(0,20,15,.4)' }}>
             <div className="text-[9px] font-black mb-2 pb-1 flex items-center gap-1"
                  style={{ color: '#26A69A', borderBottom: '1px solid rgba(0,188,212,.1)' }}>
-              <div className="w-3 h-3 rounded flex items-center justify-center text-[7px]"
-                   style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)' }}>N</div>
+              <LogoMark size={12} idPrefix="mockup" simple />
               Norma<span style={{ color: '#00BCD4' }}>Lis</span>
             </div>
             {[['⊞','Dashboard'],['🔍','Auditoría'],['⚡','Cumplim.'],['📊','Benchmark'],['📈','PAMEC'],['✓','CAPAs']].map(([ic, lb], i) => (
@@ -276,8 +276,9 @@ function Navbar({ onDemo }: { onDemo: () => void }) {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/96 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2.5 font-black text-xl">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
-               style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)', boxShadow: '0 0 16px rgba(0,188,212,.4)' }}>N</div>
+          <div style={{ filter: 'drop-shadow(0 0 10px rgba(0,188,212,.4))' }}>
+            <LogoMark size={32} idPrefix="navbar" />
+          </div>
           <span className={scrolled ? 'text-slate-900' : 'text-white'}>Norma</span>
           <span style={{ color: '#00BCD4' }}>Lis</span>
         </a>
@@ -934,8 +935,7 @@ function Footer() {
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
-                 style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)' }}>N</div>
+            <LogoMark size={28} idPrefix="footer" />
             <span className="font-black text-white">NormaLis</span>
           </div>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,.25)' }}>Software colombiano de habilitación IPS · Res. 1732/2026</p>

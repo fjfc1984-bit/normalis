@@ -19,6 +19,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { LogoMark } from '@/components/LogoMark';
 
 // ── Cuenta regresiva hasta el fin de la transición ───────────────────────────
 // Res. 1732/2026 se publicó el 5 de agosto de 2026; el periodo de transición
@@ -115,8 +116,9 @@ function MiniHeader() {
   return (
     <header className="absolute top-0 left-0 right-0 z-20 px-5 py-5 flex items-center justify-between">
       <div className="flex items-center gap-2.5 font-black text-lg">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
-             style={{ background: 'linear-gradient(135deg,#00897B,#00BCD4)', boxShadow: '0 0 16px rgba(0,188,212,.4)' }}>N</div>
+        <div style={{ filter: 'drop-shadow(0 0 10px rgba(0,188,212,.4))' }}>
+          <LogoMark size={32} idPrefix="res1732-header" />
+        </div>
         <span className="text-white">Norma<span style={{ color: '#00BCD4' }}>Lis</span></span>
       </div>
       <Link href="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors">Ingresar</Link>

@@ -1,6 +1,7 @@
 'use client';
 
 import AuthGuard from '@/components/auth/AuthGuard';
+import { LogoMark } from '@/components/LogoMark';
 import { useAuth } from '@/lib/auth';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -116,12 +117,8 @@ function Sidebar() {
       {/* Logo */}
       <div className="relative px-4 py-5 flex items-center gap-3"
            style={{ borderBottom: '1px solid rgba(255,255,255,.07)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base text-white flex-shrink-0"
-             style={{
-               background: 'linear-gradient(135deg,#00897B,#00BCD4)',
-               boxShadow: '0 0 16px rgba(0,188,212,.35)',
-             }}>
-          N
+        <div className="flex-shrink-0" style={{ filter: 'drop-shadow(0 0 10px rgba(0,188,212,.35))' }}>
+          <LogoMark size={36} idPrefix="sidebar" />
         </div>
         <div>
           <p className="text-base font-extrabold text-white leading-none tracking-tight">NormaLis</p>
