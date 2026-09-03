@@ -3,8 +3,11 @@
  * Publica el post de LinkedIn que corresponde a la fecha de hoy.
  *
  * Variables de entorno requeridas (GitHub Secrets):
- *   LINKEDIN_TOKEN    — OAuth 2.0 access token con scope w_member_social
- *   LINKEDIN_PERSON_URN — urn:li:person:XXXXXXXX (obtenido con /v2/me)
+ *   LINKEDIN_TOKEN      — OAuth 2.0 access token con scope w_member_social
+ *   LINKEDIN_PERSON_URN — urn:li:person:XXXXXXXX (campo "sub" de /v2/userinfo, scope openid)
+ *
+ * Usa la API moderna /rest/posts (LinkedIn-Version header) — /v2/ugcPosts
+ * está deprecado y las apps nuevas ya no tienen acceso a su capa legada.
  */
 
 const https = require('https');
@@ -38,26 +41,26 @@ console.log(toPost.text.slice(0, 80) + '...');
 
 const body = JSON.stringify({
   author: PERSON_URN,
-  lifecycleState: 'PUBLISHED',
-  specificContent: {
-    'com.linkedin.ugc.ShareContent': {
-      shareCommentary: { text: toPost.text },
-      shareMediaCategory: 'NONE'
-    }
+  commentary: toPost.text,
+  visibility: 'PUBLIC',
+  distribution: {
+    feedDistribution: 'MAIN_FEED',
+    targetEntities: [],
+    thirdPartyDistributionChannels: []
   },
-  visibility: {
-    'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
-  }
+  lifecycleState: 'PUBLISHED',
+  isReshareDisabledByAuthor: false
 });
 
 const options = {
   hostname: 'api.linkedin.com',
-  path: '/v2/ugcPosts',
+  path: '/rest/posts',
   method: 'POST',
   headers: {
     'Authorization':             'Bearer ' + TOKEN,
     'Content-Type':              'application/json',
     'X-Restli-Protocol-Version': '2.0.0',
+    'LinkedIn-Version':          '202409',
     'Content-Length':            Buffer.byteLength(body)
   }
 };
@@ -67,8 +70,8 @@ const req = https.request(options, (res) => {
   res.on('data', chunk => data += chunk);
   res.on('end', () => {
     if (res.statusCode === 201) {
-      const result = JSON.parse(data);
-      console.log('Post publicado. LinkedIn ID: ' + result.id);
+      const postId = res.headers['x-restli-id'] || (data ? JSON.parse(data).id : null);
+      console.log('Post publicado. LinkedIn ID: ' + postId);
     } else {
       console.error('Error LinkedIn API: HTTP ' + res.statusCode);
       console.error(data);
