@@ -47,7 +47,7 @@ jobs:
           echo "Post status: $POST"
 
       - name: Publicar en LinkedIn
-        if: ${{ !inputs.dry_run && startsWith(steps.check.outputs.post_status, 'FOUND') }}
+        if: ${{ inputs.dry_run != 'true' && startsWith(steps.check.outputs.post_status, 'FOUND') }}
         env:
           LINKEDIN_TOKEN: ${{ secrets.LINKEDIN_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
@@ -75,5 +75,5 @@ jobs:
           "
 
       - name: Sin post para hoy
-        if: ${{ !inputs.dry_run && steps.check.outputs.post_status == 'NONE' }}
+        if: ${{ inputs.dry_run != 'true' && steps.check.outputs.post_status == 'NONE' }}
         run: echo "No hay post programado para hoy. Nada que publicar."
