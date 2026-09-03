@@ -11,6 +11,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth';
 import { useCRM, useCRMNotas, type NuevoContacto } from '@/lib/useCRM';
 import { migrarDatosLegadosACRM } from '@/lib/crmMigration';
@@ -21,9 +22,19 @@ import {
 import Button from '@/components/ui/Button';
 import { Toast, useToast } from '@/components/ui/Toast';
 
+const ETAPAS_ACTIVAS: CRMEtapa[] = CRM_ETAPAS.filter(e => e !== 'cliente' && e !== 'perdido');
+
 function fmtDate(ts: CRMContacto['createdAt']): string {
   if (!ts) return '—';
   try { return ts.toDate().toLocaleDateString('es-CO'); } catch { return '—'; }
+}
+
+/** Sin próxima acción definida, o con fecha ya vencida — el contacto se puede "perder". */
+function estaSinSeguimiento(c: CRMContacto): boolean {
+  if (!ETAPAS_ACTIVAS.includes(c.etapa)) return false;
+  if (!c.proximaAccion) return true;
+  if (c.fechaProximaAccion && c.fechaProximaAccion.toMillis() < Date.now()) return true;
+  return false;
 }
 
 const FORM_VACIO: NuevoContacto = {
@@ -35,7 +46,7 @@ export default function CRMPage() {
   const { user, rol, loading } = useAuth();
   const router = useRouter();
   const { toast, show } = useToast();
-  const { contactos, loading: loadingContactos, crear, cambiarEtapa } = useCRM();
+  const { contactos, loading: loadingContactos, crear, cambiarEtapa, actualizar } = useCRM();
 
   const [migrando, setMigrando] = useState(false);
   const [migroYa, setMigroYa]   = useState(false);
@@ -64,6 +75,8 @@ export default function CRMPage() {
     for (const c of contactos) map.get(c.etapa)?.push(c);
     return map;
   }, [contactos]);
+
+  const sinSeguimiento = useMemo(() => contactos.filter(estaSinSeguimiento), [contactos]);
 
   async function crearContacto(e: React.FormEvent) {
     e.preventDefault();
@@ -97,6 +110,16 @@ export default function CRMPage() {
       </header>
 
       <main className="max-w-[1600px] mx-auto p-6">
+        {sinSeguimiento.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 mb-6 text-sm flex items-center gap-2">
+            <span>⚠️</span>
+            <span>
+              <strong>{sinSeguimiento.length}</strong> contacto{sinSeguimiento.length !== 1 ? 's' : ''} sin
+              próxima acción definida (o con fecha vencida) — riesgo de que se pierdan sin seguimiento.
+            </span>
+          </div>
+        )}
+
         {showForm && (
           <form onSubmit={crearContacto} className="bg-white rounded-xl border border-gray-200 p-5 mb-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -155,6 +178,13 @@ export default function CRMPage() {
                       >
                         <p className="font-medium text-gray-800 text-sm truncate">{c.nombre || '—'}</p>
                         <p className="text-xs text-gray-400 truncate">{c.contactoNombre} · {c.ciudad}</p>
+                        {estaSinSeguimiento(c) ? (
+                          <p className="text-[10px] text-amber-700 mt-1.5">⚠️ Sin seguimiento</p>
+                        ) : c.proximaAccion ? (
+                          <p className="text-[10px] text-gray-500 mt-1.5 truncate">
+                            📅 {c.proximaAccion}{c.fechaProximaAccion ? ` · ${c.fechaProximaAccion.toDate().toLocaleDateString('es-CO')}` : ''}
+                          </p>
+                        ) : null}
                         <div className="flex items-center justify-between mt-2 gap-2">
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-100">
                             {FUENTE_LABEL[c.fuente] ?? c.fuente}
@@ -187,18 +217,37 @@ export default function CRMPage() {
           contacto={seleccionado}
           autor={user.email ?? ''}
           onClose={() => setSeleccionado(null)}
+          actualizar={actualizar}
         />
       )}
     </div>
   );
 }
 
-function ContactoDetalle({ contacto, autor, onClose }: {
+function ContactoDetalle({ contacto, autor, onClose, actualizar }: {
   contacto: CRMContacto; autor: string; onClose: () => void;
+  actualizar: (id: string, cambios: Partial<CRMContacto>) => Promise<void>;
 }) {
   const { notas, loading, agregarNota, eliminarNota } = useCRMNotas(contacto.id);
   const [texto, setTexto]   = useState('');
   const [saving, setSaving] = useState(false);
+
+  const [proximaAccion, setProximaAccion] = useState(contacto.proximaAccion ?? '');
+  const [fechaAccion, setFechaAccion]     = useState(
+    contacto.fechaProximaAccion ? contacto.fechaProximaAccion.toDate().toISOString().slice(0, 10) : ''
+  );
+  const [savingAccion, setSavingAccion] = useState(false);
+
+  async function guardarAccion(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingAccion(true);
+    try {
+      await actualizar(contacto.id, {
+        proximaAccion: proximaAccion.trim(),
+        fechaProximaAccion: fechaAccion ? Timestamp.fromDate(new Date(fechaAccion + 'T00:00:00')) : null,
+      });
+    } finally { setSavingAccion(false); }
+  }
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -231,6 +280,27 @@ function ContactoDetalle({ contacto, autor, onClose }: {
           <p>🏷️ {FUENTE_LABEL[contacto.fuente] ?? contacto.fuente}</p>
           <p className="text-xs text-gray-400">Creado {fmtDate(contacto.createdAt)}</p>
         </div>
+
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Próxima acción</h3>
+        <form onSubmit={guardarAccion} className="space-y-2 mb-6">
+          <input
+            value={proximaAccion}
+            onChange={e => setProximaAccion(e.target.value)}
+            placeholder="Ej: Llamar, enviar propuesta…"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={fechaAccion}
+              onChange={e => setFechaAccion(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <Button type="submit" loading={savingAccion} variant="secondary">Guardar</Button>
+          </div>
+        </form>
 
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Notas</h3>
         <form onSubmit={enviar} className="flex gap-2 mb-4">

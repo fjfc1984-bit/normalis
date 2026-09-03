@@ -30,23 +30,31 @@ export function useCRM() {
   const [error, setError]         = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelado = false;
+    let unsubActivo: (() => void) | null = null;
+
     const q = query(collection(db, 'crm_contactos'), orderBy('updatedAt', 'desc'));
-    const unsub = onSnapshot(
+    unsubActivo = onSnapshot(
       q,
       snap => {
+        if (cancelado) return;
         setContactos(snap.docs.map(d => ({ id: d.id, ...d.data() } as CRMContacto)));
         setLoading(false);
       },
       () => {
-        // Sin índice para el orderBy (aún no existe o falta desplegar) — fallback sin ordenar
+        if (cancelado) return;
+        // Sin índice para el orderBy (aún no existe o falta desplegar) — fallback sin ordenar.
+        // Se cierra el listener que falló antes de abrir el de respaldo para no dejarlo huérfano.
+        unsubActivo?.();
         const qFallback = query(collection(db, 'crm_contactos'));
-        onSnapshot(qFallback, snap2 => {
+        unsubActivo = onSnapshot(qFallback, snap2 => {
+          if (cancelado) return;
           setContactos(snap2.docs.map(d => ({ id: d.id, ...d.data() } as CRMContacto)));
           setLoading(false);
-        }, e2 => { setError(e2.message); setLoading(false); });
+        }, e2 => { if (!cancelado) { setError(e2.message); setLoading(false); } });
       }
     );
-    return unsub;
+    return () => { cancelado = true; unsubActivo?.(); };
   }, []);
 
   const crear = useCallback(async (payload: NuevoContacto): Promise<void> => {
@@ -80,17 +88,29 @@ export function useCRMNotas(contactoId: string | null) {
 
   useEffect(() => {
     if (!contactoId) { setNotas([]); setLoading(false); return; }
+    let cancelado = false;
+    let unsubActivo: (() => void) | null = null;
+
     const q = query(
       collection(db, 'crm_actividad'),
       where('contactoId', '==', contactoId),
       orderBy('createdAt', 'desc'),
     );
-    const unsub = onSnapshot(
+    unsubActivo = onSnapshot(
       q,
-      snap => { setNotas(snap.docs.map(d => ({ id: d.id, ...d.data() } as CRMNota))); setLoading(false); },
+      snap => {
+        if (cancelado) return;
+        setNotas(snap.docs.map(d => ({ id: d.id, ...d.data() } as CRMNota)));
+        setLoading(false);
+      },
       () => {
+        if (cancelado) return;
+        // Sin índice compuesto (aún no existe o falta desplegar) — fallback sin ordenar en
+        // el servidor. Se cierra el listener que falló antes de abrir el de respaldo.
+        unsubActivo?.();
         const qFallback = query(collection(db, 'crm_actividad'), where('contactoId', '==', contactoId));
-        onSnapshot(qFallback, snap2 => {
+        unsubActivo = onSnapshot(qFallback, snap2 => {
+          if (cancelado) return;
           const data = snap2.docs.map(d => ({ id: d.id, ...d.data() } as CRMNota));
           data.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
           setNotas(data);
@@ -98,7 +118,7 @@ export function useCRMNotas(contactoId: string | null) {
         });
       }
     );
-    return unsub;
+    return () => { cancelado = true; unsubActivo?.(); };
   }, [contactoId]);
 
   const agregarNota = useCallback(async (contactoId: string, texto: string, autor: string): Promise<void> => {

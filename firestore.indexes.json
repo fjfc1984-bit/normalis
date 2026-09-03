@@ -97,6 +97,20 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "crm_actividad",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "contactoId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []
