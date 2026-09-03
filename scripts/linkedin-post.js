@@ -61,6 +61,7 @@ const options = {
     'Content-Type':              'application/json',
     'X-Restli-Protocol-Version': '2.0.0',
     'LinkedIn-Version':          '202608',
+    'X-RestLi-Method':           'CREATE',
     'Content-Length':            Buffer.byteLength(body)
   }
 };
@@ -74,6 +75,7 @@ const req = https.request(options, (res) => {
       console.log('Post publicado. LinkedIn ID: ' + postId);
     } else {
       console.error('Error LinkedIn API: HTTP ' + res.statusCode);
+      console.error('Headers: ' + JSON.stringify(res.headers));
       console.error(data);
       process.exit(1);
     }
