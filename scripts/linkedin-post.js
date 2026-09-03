@@ -6,8 +6,9 @@
  *   LINKEDIN_TOKEN      — OAuth 2.0 access token con scope w_member_social
  *   LINKEDIN_PERSON_URN — urn:li:person:XXXXXXXX (campo "sub" de /v2/userinfo, scope openid)
  *
- * Usa la API moderna /rest/posts (LinkedIn-Version header) — /v2/ugcPosts
- * está deprecado y las apps nuevas ya no tienen acceso a su capa legada.
+ * Endpoint oficial para el producto "Share on LinkedIn" (ver docs de
+ * LinkedIn): POST /v2/ugcPosts. No usar /rest/posts — requiere el
+ * producto "Community Management API", incompatible con esta app.
  */
 
 const https = require('https');
@@ -41,27 +42,26 @@ console.log(toPost.text.slice(0, 80) + '...');
 
 const body = JSON.stringify({
   author: PERSON_URN,
-  commentary: toPost.text,
-  visibility: 'PUBLIC',
-  distribution: {
-    feedDistribution: 'MAIN_FEED',
-    targetEntities: [],
-    thirdPartyDistributionChannels: []
-  },
   lifecycleState: 'PUBLISHED',
-  isReshareDisabledByAuthor: false
+  specificContent: {
+    'com.linkedin.ugc.ShareContent': {
+      shareCommentary: { text: toPost.text },
+      shareMediaCategory: 'NONE'
+    }
+  },
+  visibility: {
+    'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+  }
 });
 
 const options = {
   hostname: 'api.linkedin.com',
-  path: '/rest/posts',
+  path: '/v2/ugcPosts',
   method: 'POST',
   headers: {
     'Authorization':             'Bearer ' + TOKEN,
     'Content-Type':              'application/json',
     'X-Restli-Protocol-Version': '2.0.0',
-    'LinkedIn-Version':          '202608',
-    'X-RestLi-Method':           'CREATE',
     'Content-Length':            Buffer.byteLength(body)
   }
 };
@@ -73,6 +73,7 @@ const req = https.request(options, (res) => {
     if (res.statusCode === 201) {
       const postId = res.headers['x-restli-id'] || (data ? JSON.parse(data).id : null);
       console.log('Post publicado. LinkedIn ID: ' + postId);
+      console.log('URL: https://www.linkedin.com/feed/update/' + postId);
     } else {
       console.error('Error LinkedIn API: HTTP ' + res.statusCode);
       console.error('Headers: ' + JSON.stringify(res.headers));
