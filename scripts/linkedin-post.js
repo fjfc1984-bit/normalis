@@ -60,7 +60,7 @@ const options = {
     'Authorization':             'Bearer ' + TOKEN,
     'Content-Type':              'application/json',
     'X-Restli-Protocol-Version': '2.0.0',
-    'LinkedIn-Version':          '202409',
+    'LinkedIn-Version':          '202608',
     'Content-Length':            Buffer.byteLength(body)
   }
 };
