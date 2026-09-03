@@ -18,6 +18,7 @@ import { db, firebaseConfig } from '@/lib/firebase';
 import { useAuth } from '@/lib/auth';
 import { logSecurityEvent } from '@/lib/securityLog';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Toast, useToast } from '@/components/ui/Toast';
 import MfaEnrollBanner from '@/components/MfaEnrollBanner';
@@ -59,18 +60,6 @@ interface Piloto {
   expiresAt:   Timestamp | null;
   activo:      boolean;
   salud?:      number;
-}
-
-interface Prospecto {
-  id:        string;
-  nombre:    string;
-  contacto:  string;
-  email:     string;
-  telefono:  string;
-  ciudad:    string;
-  estado:    string;
-  notas?:    string;
-  createdAt: Timestamp | null;
 }
 
 interface Lead {
@@ -386,126 +375,6 @@ function PlanesTab({ show }: { show: (m: string, t: 'success'|'error') => void }
   );
 }
 
-function CRMTab({ show }: { show: (m: string, t: 'success'|'error') => void }) {
-  const [items, setItems]       = useState<Prospecto[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving]     = useState(false);
-  const [form, setForm]         = useState({ nombre:'', contacto:'', email:'', telefono:'', ciudad:'', notas:'' });
-
-  useEffect(() => {
-    const q = query(collection(db, 'prospectos'));
-    return onSnapshot(q, snap =>
-      setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Prospecto[]),
-    );
-  }, []);
-
-  async function crear(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.nombre) return;
-    setSaving(true);
-    try {
-      await addDoc(collection(db, 'prospectos'), { ...form, estado: 'nuevo', createdAt: serverTimestamp() });
-      setForm({ nombre:'', contacto:'', email:'', telefono:'', ciudad:'', notas:'' });
-      setShowForm(false);
-      show('Prospecto agregado', 'success');
-    } catch { show('Error al guardar', 'error'); }
-    finally { setSaving(false); }
-  }
-
-  const ESTADOS = ['nuevo', 'contactado', 'demo', 'propuesta', 'cerrado', 'perdido'];
-
-  return (
-    <div>
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancelar' : '+ Agregar prospecto'}
-        </Button>
-      </div>
-
-      {showForm && (
-        <form onSubmit={crear} className="bg-white rounded-xl border border-gray-200 p-5 mb-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { key:'nombre',   label:'Nombre IPS *', required:true },
-              { key:'contacto', label:'Persona contacto' },
-              { key:'email',    label:'Email' },
-              { key:'telefono', label:'Teléfono' },
-              { key:'ciudad',   label:'Ciudad' },
-            ].map(({ key, label, required }) => (
-              <div key={key}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-                <input
-                  required={!!required}
-                  value={(form as Record<string, string>)[key]}
-                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                             focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            ))}
-          </div>
-          <Button type="submit" loading={saving}>Guardar</Button>
-        </form>
-      )}
-
-      <div className="space-y-3">
-        {items.map(p => (
-          <div key={p.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-800">{p.nombre}</p>
-              <p className="text-xs text-gray-400">{p.contacto} · {p.email} · {p.ciudad}</p>
-              {p.notas && <p className="text-xs text-gray-400 mt-0.5 truncate">{p.notas}</p>}
-            </div>
-            <select
-              value={p.estado}
-              onChange={e => updateDoc(doc(db, 'prospectos', p.id), { estado: e.target.value })}
-              className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        ))}
-        {items.length === 0 && <p className="text-gray-400 py-12 text-center">No hay prospectos.</p>}
-      </div>
-    </div>
-  );
-}
-
-function LeadsTab() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-
-  useEffect(() => {
-    const q = query(collection(db, 'leads'));
-    return onSnapshot(q, snap =>
-      setLeads(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Lead[]),
-    );
-  }, []);
-
-  const ESTADOS_LEAD = ['nuevo', 'contactado', 'calificado', 'descartado'];
-
-  return (
-    <div className="space-y-3">
-      {leads.length === 0 && <p className="text-gray-400 py-12 text-center">No hay leads.</p>}
-      {leads.map(l => (
-        <div key={l.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-800">{l.nombre}</p>
-            <p className="text-xs text-gray-400">{l.email} · {l.telefono} · {l.ciudad}</p>
-            <p className="text-xs text-gray-400">{l.tipoIPS} · {fmtDate(l.createdAt)}</p>
-          </div>
-          <select
-            value={l.estado}
-            onChange={e => updateDoc(doc(db, 'leads', l.id), { estado: e.target.value })}
-            className="text-xs px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            {ESTADOS_LEAD.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function AnalyticsTab() {
   const [totales, setTotales] = useState({ clientes: 0, pilotos: 0, pendientes: 0, leads: 0 });
 
@@ -710,7 +579,7 @@ function EnVivoTab() {
 
 /* ─── Main page ─────────────────────────────────────────────── */
 
-const TABS = ['Solicitudes', 'Pilotos', 'Planes', 'CRM', 'Leads', 'Analytics', 'En Vivo'] as const;
+const TABS = ['Solicitudes', 'Pilotos', 'Planes', 'CRM', 'Analytics', 'En Vivo'] as const;
 type Tab = typeof TABS[number];
 
 export default function AdminPage() {
@@ -742,7 +611,15 @@ export default function AdminPage() {
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200 px-6">
         <nav className="flex gap-1 -mb-px">
-          {TABS.map(t => (
+          {TABS.map(t => t === 'CRM' ? (
+            <Link
+              key={t}
+              href="/admin/crm"
+              className="px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              CRM ↗
+            </Link>
+          ) : (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -768,8 +645,6 @@ export default function AdminPage() {
         {tab === 'Solicitudes' && <SolicitudesTab show={show} />}
         {tab === 'Pilotos'     && <PilotosTab     show={show} />}
         {tab === 'Planes'      && <PlanesTab      show={show} />}
-        {tab === 'CRM'         && <CRMTab         show={show} />}
-        {tab === 'Leads'       && <LeadsTab />}
         {tab === 'Analytics'   && <AnalyticsTab />}
         {tab === 'En Vivo'    && <EnVivoTab />}
       </main>

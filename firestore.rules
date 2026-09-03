@@ -512,6 +512,19 @@ service cloud.firestore {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    // crm_contactos/{id}, crm_actividad/{id} — CRM interno unificado
+    // (reemplaza el uso directo de prospectos/leads en /admin; ambas
+    // colecciones se siguen migrando hacia acá pero no se borran)
+    // ════════════════════════════════════════════════════════════════════════
+    match /crm_contactos/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /crm_actividad/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     // normalis_orgs/{orgId} — sincronización secundaria (normalis-main.js)
     // orgId = NIT de la IPS — solo accesible para miembros del mismo NIT o admin
     // ════════════════════════════════════════════════════════════════════════
