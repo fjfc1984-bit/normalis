@@ -196,7 +196,7 @@ export default function CRMPage() {
 function ContactoDetalle({ contacto, autor, onClose }: {
   contacto: CRMContacto; autor: string; onClose: () => void;
 }) {
-  const { notas, loading, agregarNota } = useCRMNotas(contacto.id);
+  const { notas, loading, agregarNota, eliminarNota } = useCRMNotas(contacto.id);
   const [texto, setTexto]   = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -251,9 +251,18 @@ function ContactoDetalle({ contacto, autor, onClose }: {
         ) : (
           <div className="space-y-3">
             {notas.map(n => (
-              <div key={n.id} className="border-l-2 border-gray-100 pl-3">
-                <p className="text-sm text-gray-700">{n.texto}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{n.autor} · {fmtDate(n.createdAt)}</p>
+              <div key={n.id} className="border-l-2 border-gray-100 pl-3 flex items-start justify-between gap-2 group">
+                <div>
+                  <p className="text-sm text-gray-700">{n.texto}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{n.autor} · {fmtDate(n.createdAt)}</p>
+                </div>
+                <button
+                  onClick={() => eliminarNota(n.id)}
+                  className="text-gray-300 hover:text-red-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  title="Eliminar nota"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>

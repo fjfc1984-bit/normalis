@@ -107,5 +107,9 @@ export function useCRMNotas(contactoId: string | null) {
     });
   }, []);
 
-  return { notas, loading, agregarNota };
+  const eliminarNota = useCallback(async (id: string): Promise<void> => {
+    await deleteDoc(doc(db, 'crm_actividad', id));
+  }, []);
+
+  return { notas, loading, agregarNota, eliminarNota };
 }
