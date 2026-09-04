@@ -42,11 +42,57 @@ const FORM_VACIO: NuevoContacto = {
   tipoIPS: '', fuente: 'otro',
 };
 
+/** Parser CSV mínimo: respeta comillas y comas dentro de campos entrecomillados. */
+function parseCSV(texto: string): string[][] {
+  const limpio = texto.replace(/^﻿/, '');
+  const filas: string[][] = [];
+  let fila: string[] = [];
+  let campo = '';
+  let entreComillas = false;
+  for (let i = 0; i < limpio.length; i++) {
+    const c = limpio[i];
+    if (entreComillas) {
+      if (c === '"') {
+        if (limpio[i + 1] === '"') { campo += '"'; i++; }
+        else entreComillas = false;
+      } else campo += c;
+    } else if (c === '"') {
+      entreComillas = true;
+    } else if (c === ',') {
+      fila.push(campo); campo = '';
+    } else if (c === '\n') {
+      fila.push(campo); filas.push(fila); fila = []; campo = '';
+    } else if (c !== '\r') {
+      campo += c;
+    }
+  }
+  if (campo !== '' || fila.length > 0) { fila.push(campo); filas.push(fila); }
+  return filas.filter(f => f.some(v => v.trim() !== ''));
+}
+
+/** Convierte filas de un CSV (con header) en contactos listos para importar al CRM. */
+function csvAContactos(texto: string): NuevoContacto[] {
+  const filas = parseCSV(texto);
+  if (filas.length < 2) return [];
+  const header = filas[0].map(h => h.trim().toLowerCase());
+  const idx = (nombre: string) => header.indexOf(nombre);
+  const iNombre = idx('nombre'), iCiudad = idx('ciudad'), iEmail = idx('email'), iTelefono = idx('telefono');
+  if (iNombre === -1 || iEmail === -1) return [];
+  return filas.slice(1).map(f => ({
+    nombre:         f[iNombre]?.trim() ?? '',
+    contactoNombre: '',
+    email:          f[iEmail]?.trim() ?? '',
+    telefono:       iTelefono !== -1 ? (f[iTelefono]?.trim() ?? '') : '',
+    ciudad:         iCiudad !== -1 ? (f[iCiudad]?.trim() ?? '') : '',
+    fuente:         'llamada_fria' as CRMFuente,
+  })).filter(c => c.nombre && c.email);
+}
+
 export default function CRMPage() {
   const { user, rol, loading } = useAuth();
   const router = useRouter();
   const { toast, show } = useToast();
-  const { contactos, loading: loadingContactos, crear, cambiarEtapa, actualizar } = useCRM();
+  const { contactos, loading: loadingContactos, crear, cambiarEtapa, actualizar, importarLote } = useCRM();
 
   const [migrando, setMigrando] = useState(false);
   const [migroYa, setMigroYa]   = useState(false);
@@ -54,6 +100,7 @@ export default function CRMPage() {
   const [saving, setSaving]     = useState(false);
   const [form, setForm]         = useState<NuevoContacto>(FORM_VACIO);
   const [seleccionado, setSeleccionado] = useState<CRMContacto | null>(null);
+  const [importando, setImportando] = useState(false);
 
   useEffect(() => {
     if (!loading && rol !== 'admin') router.push('/login');
@@ -91,6 +138,27 @@ export default function CRMPage() {
     finally { setSaving(false); }
   }
 
+  async function importarCSV(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permite reimportar el mismo archivo si hace falta
+    if (!file) return;
+    setImportando(true);
+    try {
+      const texto = await file.text();
+      const filas = csvAContactos(texto);
+      if (filas.length === 0) {
+        show('El CSV no tiene filas válidas (se requieren columnas nombre y email)', 'error');
+        return;
+      }
+      const { importados, duplicados } = await importarLote(filas);
+      show(`${importados} contacto(s) importado(s)${duplicados > 0 ? ` · ${duplicados} ya existían` : ''}`, 'success');
+    } catch {
+      show('Error al importar el CSV', 'error');
+    } finally {
+      setImportando(false);
+    }
+  }
+
   if (loading || !user) return null;
 
   return (
@@ -104,9 +172,22 @@ export default function CRMPage() {
           <span className="font-bold text-primary-700 text-lg">CRM NormaLis</span>
           {migrando && <span className="text-xs text-gray-400">migrando datos existentes…</span>}
         </div>
-        <Button onClick={() => setShowForm(s => !s)}>
-          {showForm ? 'Cancelar' : '+ Nuevo contacto'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <label className="px-4 py-2 rounded-lg font-medium text-sm bg-white border border-gray-300
+                             hover:bg-gray-50 text-gray-700 cursor-pointer transition-colors">
+            {importando ? 'Importando…' : 'Importar CSV'}
+            <input
+              type="file"
+              accept=".csv"
+              onChange={importarCSV}
+              disabled={importando}
+              className="hidden"
+            />
+          </label>
+          <Button onClick={() => setShowForm(s => !s)}>
+            {showForm ? 'Cancelar' : '+ Nuevo contacto'}
+          </Button>
+        </div>
       </header>
 
       <main className="max-w-[1600px] mx-auto p-6">

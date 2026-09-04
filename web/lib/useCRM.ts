@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, doc, query, onSnapshot, orderBy, where,
-  addDoc, updateDoc, deleteDoc, serverTimestamp,
+  addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { CRMContacto, CRMEtapa, CRMFuente, CRMNota } from '@/lib/crmTypes';
@@ -79,7 +79,38 @@ export function useCRM() {
     await deleteDoc(doc(db, 'crm_contactos', id));
   }, []);
 
-  return { contactos, loading, error, crear, cambiarEtapa, actualizar, eliminar };
+  // Importación masiva (ej. desde un CSV de prospección en frío). Idempotente por email:
+  // omite filas cuyo email ya exista en el CRM para no duplicar en reimportaciones.
+  const importarLote = useCallback(async (filas: NuevoContacto[]): Promise<{ importados: number; duplicados: number }> => {
+    const existentes = new Set(
+      contactos.map(c => c.email.trim().toLowerCase()).filter(Boolean)
+    );
+    const nuevos = filas.filter(f => {
+      const email = f.email.trim().toLowerCase();
+      if (!email || existentes.has(email)) return false;
+      existentes.add(email); // evita duplicados dentro del mismo archivo
+      return true;
+    });
+
+    const TAMANO_LOTE = 400; // margen bajo el límite de 500 writes por batch de Firestore
+    for (let i = 0; i < nuevos.length; i += TAMANO_LOTE) {
+      const batch = writeBatch(db);
+      for (const f of nuevos.slice(i, i + TAMANO_LOTE)) {
+        const ref = doc(collection(db, 'crm_contactos'));
+        batch.set(ref, {
+          ...f,
+          etapa:     'nuevo' as CRMEtapa,
+          origen:    'manual',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      await batch.commit();
+    }
+    return { importados: nuevos.length, duplicados: filas.length - nuevos.length };
+  }, [contactos]);
+
+  return { contactos, loading, error, crear, cambiarEtapa, actualizar, eliminar, importarLote };
 }
 
 export function useCRMNotas(contactoId: string | null) {
