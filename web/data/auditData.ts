@@ -1,6 +1,11 @@
 // web/data/auditData.ts
 // Datos de auditoría — portado desde normalis-data-audit.js
-// Fuente: Res. 3100/2019 + Res. 465/2025
+// Fuente: Res. 1732/2026 (reemplazó la Res. 3100/2019 + Res. 465/2025 —
+// mismos 7 estándares, contenido heredado y citas de norma actualizadas).
+// Novedades propias de la 1732/2026 (IHCE, RDA, 4 modalidades de
+// telemedicina, Plan de Adecuación Progresiva) agregadas como áreas nuevas
+// — ver segmentos "general" y "telemedicina". Fuente de esas novedades:
+// checklist ya verificado en app/dashboard/gap-1732/page.tsx.
 //
 // PONDERACIÓN POR CRITERIO (peso/obligatorio, ver lib/auditTypes.ts):
 // piloto aplicado SOLO a 9 preguntas del segmento "general" — evacuación,
@@ -19,12 +24,12 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
   "general": {
     "label": "Establecimiento General",
     "icon": "🏥",
-    "norm": "Res. 3100/2019"
+    "norm": "Res. 1732/2026"
   },
   "domiciliaria": {
     "label": "Salud Domiciliaria",
     "icon": "🏠",
-    "norm": "Dec. 780/2016 · Res. 3100/2019"
+    "norm": "Dec. 780/2016 · Res. 1732/2026"
   },
   "imagenologia": {
     "label": "Imagenología",
@@ -34,22 +39,22 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
   "urgencias": {
     "label": "Urgencias",
     "icon": "🚨",
-    "norm": "Res. 3100/2019 · Triage 5 niveles"
+    "norm": "Res. 1732/2026 · Triage 5 niveles"
   },
   "internacion": {
     "label": "Internación",
     "icon": "🛏️",
-    "norm": "Res. 3100/2019 · IAAS"
+    "norm": "Res. 1732/2026 · IAAS"
   },
   "quirurgicos": {
     "label": "Quirúrgicos",
     "icon": "🔪",
-    "norm": "Res. 3100/2019 · OMS Lista Verificación"
+    "norm": "Res. 1732/2026 · OMS Lista Verificación"
   },
   "laboratorio": {
     "label": "Laboratorio Clínico",
     "icon": "🔬",
-    "norm": "Res. 3100/2019 · PEEC MinSalud"
+    "norm": "Res. 1732/2026 · PEEC MinSalud"
   },
   "transporte": {
     "label": "Transporte Asistencial",
@@ -59,72 +64,72 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
   "rehabilitacion": {
     "label": "Rehabilitación",
     "icon": "♿",
-    "norm": "Res. 3100/2019 · Ley 528/1999"
+    "norm": "Res. 1732/2026 · Ley 528/1999"
   },
   "salud_mental": {
     "label": "Salud Mental",
     "icon": "🧠",
-    "norm": "Ley 1616/2013 · Res. 3100/2019"
+    "norm": "Ley 1616/2013 · Res. 1732/2026"
   },
   "odontologia": {
     "label": "Odontología",
     "icon": "🦷",
-    "norm": "Res. 3100/2019 · Ley 35/1989"
+    "norm": "Res. 1732/2026 · Ley 35/1989"
   },
   "consulta_externa": {
     "label": "Consulta Externa",
     "icon": "🩺",
-    "norm": "Res. 3100/2019 · Consulta Externa · Res. 3280/2018"
+    "norm": "Res. 1732/2026 · Consulta Externa · Res. 3280/2018"
   },
   "cuidado_intensivo": {
     "label": "Cuidado Intensivo (UCI)",
     "icon": "🏥",
-    "norm": "Res. 3100/2019 · UCI · Res. 544/2023 · Neonatología"
+    "norm": "Res. 1732/2026 · UCI · Res. 544/2023 · Neonatología"
   },
   "obstetricia": {
     "label": "Obstetricia y Parto",
     "icon": "👶",
-    "norm": "Res. 3100/2019 · Atención del parto · OMS"
+    "norm": "Res. 1732/2026 · Atención del parto · OMS"
   },
   "banco_sangre": {
     "label": "Banco de Sangre",
     "icon": "🩸",
-    "norm": "Res. 1285/2010 · Decreto 1571/1993 · Res. 3100/2019"
+    "norm": "Res. 1285/2010 · Decreto 1571/1993 · Res. 1732/2026"
   },
   "oncologia": {
     "label": "Oncología",
     "icon": "🎗️",
-    "norm": "Res. 3100/2019 · Res. 1383/2013 · Guías IETS oncología"
+    "norm": "Res. 1732/2026 · Res. 1383/2013 · Guías IETS oncología"
   },
   "hemodialisis": {
     "label": "Hemodiálisis",
     "icon": "💉",
-    "norm": "Res. 3100/2019 · KDIGO 2012 · Manual habilitación"
+    "norm": "Res. 1732/2026 · KDIGO 2012 · Manual habilitación"
   },
   "farmacia": {
     "label": "Servicio Farmacéutico",
     "icon": "💊",
-    "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 3100/2019"
+    "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 1732/2026"
   },
   "vacunacion": {
     "label": "Vacunación (PAI)",
     "icon": "🔬",
-    "norm": "Res. 3100/2019 · PAI MSPS · Res. 2184/2019"
+    "norm": "Res. 1732/2026 · PAI MSPS · Res. 2184/2019"
   },
   "telemedicina": {
     "label": "Telemedicina",
     "icon": "💻",
-    "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 465/2025"
+    "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 1732/2026"
   },
   "esterilizacion": {
     "label": "Central de Esterilización",
     "icon": "🧪",
-    "norm": "Res. 3100/2019 · Decreto 4725/2005 · ANSI/AAMI ST79"
+    "norm": "Res. 1732/2026 · Decreto 4725/2005 · ANSI/AAMI ST79"
   },
   "trasplante": {
     "label": "Trasplante de Órganos",
     "icon": "🫀",
-    "norm": "Decreto 2493/2004 · Res. 3100/2019 · Red de Donación"
+    "norm": "Decreto 2493/2004 · Res. 1732/2026 · Red de Donación"
   }
 };
 
@@ -134,7 +139,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "infraestructura",
       "icon": "🏗️",
       "name": "Infraestructura Física",
-      "norm": "Res. 3100/2019 Est. 2 · Res. 544/2023 · NSR-10",
+      "norm": "Res. 1732/2026 Est. 2 · Res. 544/2023 · NSR-10",
       "q": [
         "¿Todas las áreas asistenciales tienen pisos, paredes y techos de material liso, lavable, no poroso y resistente a productos de limpieza y desinfección?",
         "¿La iluminación artificial en áreas clínicas supera los 300 lux en superficies de trabajo y existen respaldos de energía (UPS/planta eléctrica) para zonas críticas?",
@@ -146,14 +151,14 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El establecimiento construido antes de 2010 con servicios críticos (urgencias, cirugía, UCI) cuenta con estudio de vulnerabilidad sísmica y plan de reforzamiento NSR-10?",
         "¿Las áreas de almacenamiento de insumos y medicamentos están separadas de áreas de atención, con temperatura, humedad y luz controladas?",
         "¿Existe un plan de mantenimiento locativo documentado con cronograma, responsables y registros de intervenciones de los últimos 12 meses?",
-        "¿Los consultorios donde se atienden menores de 5 años cumplen los requisitos de infraestructura vigentes? (Res. 465/2025 · Art. 19: ya NO se requiere barrera física fija o móvil entre área de entrevista y examen — verificar que el consultorio no tenga restricciones de otro tipo que afecten la habilitación)"
+        "¿Los consultorios donde se atienden menores de 5 años cumplen los requisitos de infraestructura vigentes? (Res. 1732/2026 · Art. 19: ya NO se requiere barrera física fija o móvil entre área de entrevista y examen — verificar que el consultorio no tenga restricciones de otro tipo que afecten la habilitación)"
       ]
     },
     {
       "id": "accesibilidad",
       "icon": "♿",
       "name": "Accesibilidad y Derechos del Paciente",
-      "norm": "Res. 3100/2019 Est. 2 · Ley 1618/2013 · Res. 13437/1991 · Dec. 1011/2006",
+      "norm": "Res. 1732/2026 Est. 2 · Ley 1618/2013 · Res. 13437/1991 · Dec. 1011/2006",
       "q": [
         "¿El establecimiento garantiza acceso físico sin barreras para personas con discapacidad: rampas con inclinación ≤8%, pasillos ≥1.2 m y baño adaptado?",
         "¿La carta de derechos y deberes del paciente (Res. 13437/1991) está publicada en lugar visible al ingreso y disponible en versión accesible?",
@@ -169,7 +174,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · Ley 23/1981 · Res. 2278/2021",
+      "norm": "Res. 1732/2026 Est. 1 · RETHUS · Ley 23/1981 · Res. 2278/2021",
       "q": [
         { "texto": "¿Todos los profesionales de la salud que prestan servicios tienen tarjeta profesional vigente verificable en el RETHUS del Ministerio de Salud?", "obligatorio": true },
         "¿Los médicos especialistas tienen su especialización reconocida y registrada en RETHUS correspondiente a los procedimientos que realizan?",
@@ -187,7 +192,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dotacion",
       "icon": "🩺",
       "name": "Dotación y Gestión de Equipos",
-      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · INVIMA · Res. 4816/2008",
+      "norm": "Res. 1732/2026 Est. 3 · Decreto 4725/2005 · INVIMA · Res. 4816/2008",
       "q": [
         "¿Todos los equipos biomédicos en uso tienen hoja de vida individual con registros actualizados de mantenimiento preventivo y correctivo firmados?",
         "¿Los dispositivos médicos en uso tienen registro INVIMA vigente o están en la lista de dispositivos exentos verificable en la base INVIMA?",
@@ -204,7 +209,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "procesos",
       "icon": "📋",
       "name": "Procesos Prioritarios y Protocolos",
-      "norm": "Res. 3100/2019 Est. 5 · Res. 256/2016 · Dec. 1011/2006 · OMS Seguridad Paciente",
+      "norm": "Res. 1732/2026 Est. 5 · Res. 256/2016 · Dec. 1011/2006 · OMS Seguridad Paciente",
       "estandar": "procesos_prioritarios",
       "q": [
         { "texto": "¿Existe Manual de Bioseguridad actualizado en los últimos 12 meses, firmado por el responsable, con evidencia de socialización a todo el personal?", "obligatorio": true },
@@ -217,16 +222,16 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El establecimiento tiene protocolo de caídas con evaluación de riesgo al ingreso (Escala Morse), intervenciones preventivas y registro de caídas?",
         "¿Existe protocolo de úlceras por presión con escala de valoración (Braden o Norton) para pacientes en cama y registro de lesiones al ingreso?",
         "¿El plan de emergencias y desastres está actualizado, con simulacros en los últimos 12 meses y evidencia de participación del personal?",
-        "¿Si el establecimiento tiene cámaras de videovigilancia que graban procedimientos de salud, existe documento escrito de autorización firmado por el paciente/representante Y por el profesional responsable, y dicho documento hace parte de la Historia Clínica? (Res. 465/2025 · Art. 19 · Sentencia T-144/2024)",
-        "¿Si el establecimiento realiza vacunación fuera del servicio habilitado específicamente para ello, documenta en Procesos Prioritarios: garantía de cadena de frío, procedimiento para obtención de biológicos y registros clínicos requeridos? (Res. 465/2025 · Art. 7)",
-        "¿La autoevaluación de las condiciones de habilitación está documentada y actualizada conforme a los 4 momentos obligatorios: previa inscripción, 4° año de vigencia, previa renovación anual, y previa al reporte de novedades? (Res. 465/2025 · Art. 5)"
+        "¿Si el establecimiento tiene cámaras de videovigilancia que graban procedimientos de salud, existe documento escrito de autorización firmado por el paciente/representante Y por el profesional responsable, y dicho documento hace parte de la Historia Clínica? (Res. 1732/2026 · Art. 19 · Sentencia T-144/2024)",
+        "¿Si el establecimiento realiza vacunación fuera del servicio habilitado específicamente para ello, documenta en Procesos Prioritarios: garantía de cadena de frío, procedimiento para obtención de biológicos y registros clínicos requeridos? (Res. 1732/2026 · Art. 7)",
+        "¿La autoevaluación de las condiciones de habilitación está documentada y actualizada conforme a los 4 momentos obligatorios: previa inscripción, 4° año de vigencia, previa renovación anual, y previa al reporte de novedades? (Res. 1732/2026 · Art. 5)"
       ]
     },
     {
       "id": "historiaclinica",
       "icon": "📄",
       "name": "Historia Clínica y Registros",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Res. 839/2017 · Ley 1581/2012",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6 · Res. 839/2017 · Ley 1581/2012",
       "q": [
         "¿Las historias clínicas cumplen componentes mínimos: identificación, motivo de consulta, anamnesis, examen físico, diagnóstico CIE-10, plan de manejo y evolución firmada?",
         "¿El sistema de custodia garantiza confidencialidad, acceso restringido e integridad, con conservación mínima de 20 años desde la última atención?",
@@ -239,10 +244,32 @@ export const areasDB: Record<string, AuditArea[]> = {
       ]
     },
     {
+      "id": "ihce",
+      "icon": "🔗",
+      "name": "Historia Clínica Electrónica Interoperable (IHCE)",
+      "norm": "Res. 1732/2026 · HL7 FHIR/CDA · Ley 1581/2012",
+      "q": [
+        "¿El sistema de historia clínica tiene capacidad de interoperabilidad (API o mecanismo de exportación en formato estándar HL7 FHIR o CDA) para intercambiar información clínica con otras IPS y el sistema nacional de salud, como exige la IHCE de la Res. 1732/2026?",
+        "¿Existe política documentada de seguridad de la información clínica electrónica que incluya autenticación, trazabilidad de accesos (log de auditoría) y cifrado de datos en tránsito y en reposo?",
+        "¿Los documentos clínicos electrónicos usan un mecanismo de firma electrónica con validez legal equivalente a la firma manuscrita?"
+      ]
+    },
+    {
+      "id": "rda",
+      "icon": "📝",
+      "name": "Resumen Digital de Atención (RDA)",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿La IPS genera un Resumen Digital de Atención (RDA) al momento del alta de cada episodio, y lo entrega al paciente, según exige la Res. 1732/2026?",
+        "¿El RDA incluye como mínimo: diagnóstico (CIE-10), tratamiento administrado, medicamentos prescritos, indicaciones de seguimiento y datos de contacto de la IPS?",
+        "¿El RDA generado queda incorporado y trazable dentro de la historia clínica del episodio para auditorías posteriores?"
+      ]
+    },
+    {
       "id": "residuos",
       "icon": "🗑️",
       "name": "Gestión de Residuos Hospitalarios (PGIRH)",
-      "norm": "Decreto 351/2014 · Res. 1164/2002 · Res. 3100/2019 Est. 5",
+      "norm": "Decreto 351/2014 · Res. 1164/2002 · Res. 1732/2026 Est. 5",
       "estandar": "procesos_prioritarios",
       "q": [
         { "texto": "¿Existen recipientes diferenciados según Dec. 351/2014: rojo (infeccioso/biológico), negro (ordinario no aprovechable), verde (biodegradable), blanco o gris (reciclable) y guardián rígido (cortopunzantes) en cada área asistencial?", "obligatorio": true },
@@ -259,7 +286,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "insumos",
       "icon": "📦",
       "name": "Medicamentos e Insumos Médico-Quirúrgicos",
-      "norm": "Res. 3100/2019 Est. 4 · Decreto 677/1995 · INVIMA · Res. 1403/2007",
+      "norm": "Res. 1732/2026 Est. 4 · Decreto 677/1995 · INVIMA · Res. 1403/2007",
       "q": [
         "¿Los medicamentos están almacenados separados de alimentos, con temperatura controlada según ficha técnica y termómetro calibrado?",
         "¿Se aplica metodología PEPS (Primero en Entrar, Primero en Salir) y los medicamentos próximos a vencer (menos de 3 meses) están identificados?",
@@ -270,6 +297,16 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿Los medicamentos vencidos, deteriorados o con empaque comprometido están segregados con proceso documentado de devolución o destrucción?",
         "¿Los registros de dispensación de medicamentos permiten rastrear: qué medicamento, a qué paciente, por quién, cuándo y en qué dosis?"
       ]
+    },
+    {
+      "id": "adecuacion-progresiva",
+      "icon": "🗺️",
+      "name": "Plan de Adecuación Progresiva (territorios especiales)",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿La IPS está ubicada en un municipio con dispersión geográfica, zona PDET o de difícil acceso? (si la respuesta es 'no', el resto de esta área no aplica)",
+        "Si aplica: ¿la IPS solicitó ante la Secretaría de Salud departamental el Plan de Adecuación Progresiva, con cronograma de adecuación y brechas identificadas?"
+      ]
     }
   ],
   "domiciliaria": [
@@ -277,7 +314,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-coordinacion",
       "icon": "📋",
       "name": "Coordinación Clínica y Administrativa",
-      "norm": "Dec. 780/2016 · Res. 3100/2019 · Atención Domiciliaria",
+      "norm": "Dec. 780/2016 · Res. 1732/2026 · Atención Domiciliaria",
       "q": [
         "¿Existe director médico o coordinador clínico con designación formal y tarjeta profesional vigente para el servicio domiciliario?",
         "¿Hay protocolos específicos y actualizados para cada tipo de atención domiciliaria prestada (curación, sonda, oxigenoterapia, manejo de heridas)?",
@@ -292,7 +329,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-dotacion",
       "icon": "🎒",
       "name": "Dotación del Maletín de Atención",
-      "norm": "Res. 3100/2019 Est. 3 · Dotación domiciliaria",
+      "norm": "Res. 1732/2026 Est. 3 · Dotación domiciliaria",
       "q": [
         "¿El maletín contiene tensiómetro, pulsioxímetro, glucómetro, termómetro y estetoscopio en buen estado y calibrados?",
         "¿Los insumos del maletín tienen revisión de vencimiento en los últimos 30 días con lista de verificación firmada?",
@@ -308,7 +345,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-hc",
       "icon": "📄",
       "name": "Historia Clínica Domiciliaria y Registros",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6",
       "q": [
         "¿Cada visita genera nota de evolución con: fecha, hora, profesional, hallazgos clínicos, intervención y plan?",
         "¿La historia clínica diferencia las atenciones domiciliarias de las presenciales y permite reconstruir la trayectoria del paciente?",
@@ -338,7 +375,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-bioseg",
       "icon": "🦠",
       "name": "Bioseguridad en Atención Domiciliaria",
-      "norm": "Res. 3100/2019 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
+      "norm": "Res. 1732/2026 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿El profesional realiza higiene de manos (lavado o alcohol gel) antes y después de cada procedimiento en el domicilio?",
@@ -353,20 +390,20 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-transporte",
       "icon": "🚐",
       "name": "Transporte y Desplazamiento",
-      "norm": "Dec. 2376/2011 · Res. 3100/2019 · Min. Transporte",
+      "norm": "Dec. 2376/2011 · Res. 1732/2026 · Min. Transporte",
       "q": [
         "¿El vehículo utilizado para atención domiciliaria está autorizado según el tipo de servicio y normativa vigente de transporte?",
         "¿El conductor tiene licencia de conducción vigente y categoría adecuada para el vehículo utilizado?",
         "¿Existe plan de rutas con protocolos de seguridad vial para personal que se desplaza a domicilios en zonas de difícil acceso?",
         "¿El establecimiento tiene cobertura de seguro de accidentes para el personal durante los desplazamientos a domicilios?",
-        "¿Si el establecimiento cuenta con ambulancias o vehículos de transporte asistencial, estos portan la \"estrella de la vida\" (azul o verde reflectivo) en costados, puertas posteriores y techo, y el emblema protector de la Misión Médica? (Res. 465/2025 · Art. 20 · Res. 4481/2012)"
+        "¿Si el establecimiento cuenta con ambulancias o vehículos de transporte asistencial, estos portan la \"estrella de la vida\" (azul o verde reflectivo) en costados, puertas posteriores y techo, y el emblema protector de la Misión Médica? (Res. 1732/2026 · Art. 20 · Res. 4481/2012)"
       ]
     },
     {
       "id": "dom-comunicacion",
       "icon": "📞",
       "name": "Comunicación y Disponibilidad 24 Horas",
-      "norm": "Res. 3100/2019 · Estándar Atención al Usuario",
+      "norm": "Res. 1732/2026 · Estándar Atención al Usuario",
       "q": [
         "¿Existe línea telefónica disponible 24 horas los 7 días de la semana para pacientes y cuidadores del servicio domiciliario?",
         "¿Hay protocolo documentado de escalamiento a urgencias o activación de transporte asistencial ante descompensación del paciente?",
@@ -379,7 +416,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "dom-calidad",
       "icon": "📊",
       "name": "Indicadores y Mejoramiento",
-      "norm": "Res. 256/2016 · Res. 3100/2019 Est. 6 · PAMEC",
+      "norm": "Res. 256/2016 · Res. 1732/2026 Est. 6 · PAMEC",
       "q": [
         "¿El servicio domiciliario tiene indicadores propios: adherencia al tratamiento, reingresos hospitalarios, satisfacción del cuidador?",
         "¿Se realiza auditoría periódica de historias clínicas domiciliarias para verificar calidad del registro y adherencia a protocolos?",
@@ -457,7 +494,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "img-talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano Especializado",
-      "norm": "Res. 3100/2019 Est. 1 · Ley 657/2001 · Res. 4445/1996",
+      "norm": "Res. 1732/2026 Est. 1 · Ley 657/2001 · Res. 4445/1996",
       "q": [
         "¿El tecnólogo en radiología e imágenes diagnósticas tiene tarjeta profesional vigente en RETHUS conforme a la Ley 657/2001?",
         "¿El médico radiólogo responsable tiene especialización registrada en RETHUS y firma los informes de los estudios que requieren interpretación médica?",
@@ -500,7 +537,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-th",
       "icon": "👨‍⚕️",
       "name": "Talento Humano 24/7 y Competencias",
-      "norm": "Res. 3100/2019 Est. 1 · Ley 23/1981 · RETHUS · BLS/ACLS",
+      "norm": "Res. 1732/2026 Est. 1 · Ley 23/1981 · RETHUS · BLS/ACLS",
       "q": [
         "¿Hay médico con presencia FÍSICA en el servicio de urgencias las 24 horas los 365 días del año, sin delegación a personal no médico?",
         "¿La enfermera profesional está presente de forma continua e ininterrumpida en urgencias en todos los turnos?",
@@ -518,7 +555,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-triage",
       "icon": "🚨",
       "name": "Sistema de Clasificación por Triage",
-      "norm": "Res. 3100/2019 Est. 6 · Protocolo MPS · Sistema Manchester",
+      "norm": "Res. 1732/2026 Est. 6 · Protocolo MPS · Sistema Manchester",
       "q": [
         "¿Se aplica el protocolo de triage de 5 niveles (Manchester, MPS o equivalente) con criterios explícitos por nivel de prioridad?",
         "¿La clasificación del triage se realiza en los primeros 10 minutos desde el ingreso, con registro de la hora en la historia clínica?",
@@ -536,7 +573,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-dotacion",
       "icon": "🏥",
       "name": "Dotación y Equipos de Emergencia",
-      "norm": "Res. 3100/2019 Est. 2 · INVIMA · Dec. 4725/2005",
+      "norm": "Res. 1732/2026 Est. 2 · INVIMA · Dec. 4725/2005",
       "q": [
         "¿El carro de paro está completo, sellado con sello numerado, con lista de chequeo verificada y firmada en la fecha del turno en curso?",
         "¿El desfibrilador está operativo, con baterías cargadas, electrodos vigentes y revisión de funcionamiento registrada semanalmente?",
@@ -554,7 +591,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-bioseg",
       "icon": "🛡️",
       "name": "Bioseguridad y Control de Infecciones",
-      "norm": "Res. 3100/2019 Est. 5 · OMS 5 Momentos · Precauciones Estándar",
+      "norm": "Res. 1732/2026 Est. 5 · OMS 5 Momentos · Precauciones Estándar",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe área de aislamiento o protocolo documentado para pacientes con sospecha de enfermedad transmisible de alta contagiosidad?",
@@ -572,7 +609,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-hc",
       "icon": "📄",
       "name": "Historia Clínica de Urgencias y Registros",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Res. 13437/1991",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6 · Res. 13437/1991",
       "q": [
         "¿Cada paciente tiene historia clínica abierta desde el primer contacto con identificación completa y hora de ingreso registrada?",
         "¿Las notas médicas incluyen: hora, motivo de consulta, anamnesis, examen físico, diagnóstico CIE-10, plan de manejo y firma del médico?",
@@ -589,7 +626,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-planta",
       "icon": "🏗️",
       "name": "Planta Física de Urgencias",
-      "norm": "Res. 3100/2019 Est. 2 · NSR-10 · Res. 544/2023",
+      "norm": "Res. 1732/2026 Est. 2 · NSR-10 · Res. 544/2023",
       "q": [
         "¿El área de urgencias tiene acceso directo desde el exterior con rampa para camillas y señalización visible desde la vía pública?",
         "¿La sala de reanimación/choque está equipada, señalizada y tiene dimensiones para al menos 2 operadores simultáneos?",
@@ -604,7 +641,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "urg-interdep",
       "icon": "🔗",
       "name": "Interdependencias y Red de Urgencias",
-      "norm": "Res. 3100/2019 Est. 7 · Res. 544/2023 Art. 17 · CRUE",
+      "norm": "Res. 1732/2026 Est. 7 · Res. 544/2023 Art. 17 · CRUE",
       "estandar": "interdependencia",
       "q": [
         "¿Existe convenio activo con laboratorio clínico con capacidad de respuesta urgente (resultados en menos de 60 minutos para pruebas básicas)?",
@@ -623,7 +660,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-th",
       "icon": "👩‍⚕️",
       "name": "Talento Humano y Suficiencia",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · Res. 2278/2021",
+      "norm": "Res. 1732/2026 Est. 1 · RETHUS · Res. 2278/2021",
       "q": [
         "¿Hay médico con presencia física o disponibilidad garantizada y documentada para pacientes hospitalizados las 24 horas?",
         "¿El ratio enfermera profesional-paciente cumple el estándar: máximo 1 enfermera por 8 pacientes en hospitalización general?",
@@ -640,7 +677,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-planta",
       "icon": "🏢",
       "name": "Planta Física e Instalaciones",
-      "norm": "Res. 3100/2019 Est. 2 · NSR-10 · Ley 361/1997",
+      "norm": "Res. 1732/2026 Est. 2 · NSR-10 · Ley 361/1997",
       "q": [
         "¿Las habitaciones tienen superficie mínima de 7.5 m² por cama en habitación individual y 6 m² en habitación compartida?",
         "¿Cada unidad del paciente tiene toma de oxígeno medicinal empotrada, aspiración de vacío y sistema de llamado de enfermería funcional?",
@@ -657,7 +694,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-dotacion",
       "icon": "🛏️",
       "name": "Dotación y Gestión de Equipos",
-      "norm": "Res. 3100/2019 Est. 2 · Dec. 4725/2005 · Tecnovigilancia",
+      "norm": "Res. 1732/2026 Est. 2 · Dec. 4725/2005 · Tecnovigilancia",
       "q": [
         "¿Hay al menos un carro de paro por piso o unidad, completo según lista de chequeo, sellado y con verificación diaria documentada?",
         "¿Los monitores de signos vitales están disponibles en número suficiente para los pacientes con necesidad de monitorización continua?",
@@ -672,7 +709,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-iaas",
       "icon": "🦠",
       "name": "Prevención y Control de IAAS",
-      "norm": "Res. 256/2016 · Res. 3100/2019 Est. 5 · OMS · CDC",
+      "norm": "Res. 256/2016 · Res. 1732/2026 Est. 5 · OMS · CDC",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe Comité de IAAS activo con reuniones documentadas (actas, asistencia y seguimiento a planes de acción, mínimo bimestral)?",
@@ -690,7 +727,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-farmacia",
       "icon": "💊",
       "name": "Gestión de Medicamentos en Hospitalización",
-      "norm": "Res. 3100/2019 Est. 3 · Res. 1403/2007 · Dec. 780/2016",
+      "norm": "Res. 1732/2026 Est. 3 · Res. 1403/2007 · Dec. 780/2016",
       "q": [
         "¿Existe servicio farmacéutico con Químico Farmacéutico responsable, habilitado y con tarjeta profesional vigente en RETHUS?",
         "¿Los medicamentos se almacenan con control de temperatura documentado (registro diario mínima/máxima), humedad y luz?",
@@ -706,7 +743,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "int-hc",
       "icon": "📋",
       "name": "Historia Clínica Hospitalaria y Epicrisis",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Res. 839/2017",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6 · Res. 839/2017",
       "q": [
         "¿Cada paciente tiene historia clínica con anamnesis completa, examen físico por sistemas, diagnóstico CIE-10 y plan de manejo al ingreso?",
         "¿Las notas de evolución médica se registran al menos una vez al día con hora, hallazgos, respuesta al tratamiento y plan?",
@@ -738,7 +775,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-th",
       "icon": "👨‍⚕️",
       "name": "Equipo Quirúrgico y Competencias",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · Ley 23/1981",
+      "norm": "Res. 1732/2026 Est. 1 · RETHUS · Ley 23/1981",
       "q": [
         "¿El cirujano tiene tarjeta profesional vigente en RETHUS con la especialidad quirúrgica específica del procedimiento que realiza?",
         "¿El anestesiólogo tiene especialización en anestesiología y reanimación registrada en RETHUS y está físicamente presente durante TODO el procedimiento?",
@@ -755,7 +792,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-planta",
       "icon": "🔪",
       "name": "Quirófano y Áreas de Apoyo",
-      "norm": "Res. 3100/2019 Est. 2 · NSR-10 · NTC 4166",
+      "norm": "Res. 1732/2026 Est. 2 · NSR-10 · NTC 4166",
       "q": [
         "¿El quirófano tiene superficie mínima de 36 m² con acabados lisos, sin uniones ni ranuras, lavables con desinfectantes de alto nivel?",
         "¿Los flujos separan claramente zona no restringida (cambio de ropa), semirrestringida (pasillos) y restringida (quirófano)?",
@@ -772,7 +809,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-esterilizacion",
       "icon": "🧪",
       "name": "Central de Esterilización y Control",
-      "norm": "Res. 3100/2019 Est. 5 · AAMI ST79 · ICONTEC 4166",
+      "norm": "Res. 1732/2026 Est. 5 · AAMI ST79 · ICONTEC 4166",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿La central tiene autoclave de vapor saturado clase B con impresión o registro digital de cada ciclo (temperatura, presión, tiempo)?",
@@ -790,7 +827,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-consentimiento",
       "icon": "✍️",
       "name": "Consentimiento Informado y Ética",
-      "norm": "Ley 23/1981 · Res. 13437/1991 · Res. 3100/2019 Est. 6",
+      "norm": "Ley 23/1981 · Res. 13437/1991 · Res. 1732/2026 Est. 6",
       "q": [
         "¿Existe consentimiento informado específico para cada tipo de procedimiento quirúrgico, diferenciado del consentimiento general?",
         "¿El consentimiento describe comprensiblemente: nombre del procedimiento, objetivo, técnica resumida, riesgos frecuentes y alternativas?",
@@ -805,7 +842,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-seguridad",
       "icon": "✅",
       "name": "Lista de Verificación OMS y Seguridad Quirúrgica",
-      "norm": "OMS Cirugía Segura · Res. 3100/2019 · Res. 256/2016",
+      "norm": "OMS Cirugía Segura · Res. 1732/2026 · Res. 256/2016",
       "q": [
         "¿Se aplica la Lista de Verificación Quirúrgica OMS en los 3 momentos (Sign In, Time Out, Sign Out) en el 100% de los procedimientos?",
         "¿El sitio quirúrgico es marcado de forma indeleble con el paciente despierto cuando aplica (lateralidad, nivel vertebral)?",
@@ -821,7 +858,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "qui-interdep",
       "icon": "🔗",
       "name": "Apoyo Clínico e Interdependencias",
-      "norm": "Res. 3100/2019 Est. 7 · Res. 544/2023",
+      "norm": "Res. 1732/2026 Est. 7 · Res. 544/2023",
       "estandar": "interdependencia",
       "q": [
         "¿El establecimiento tiene acceso garantizado a UCI propia o por convenio activo y vigente para manejo postoperatorio de pacientes críticos?",
@@ -839,7 +876,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "lab-th",
       "icon": "🔬",
       "name": "Talento Humano del Laboratorio",
-      "norm": "Res. 3100/2019 Est. 1 · Ley 841/2003 · RETHUS",
+      "norm": "Res. 1732/2026 Est. 1 · Ley 841/2003 · RETHUS",
       "q": [
         "¿El bacteriólogo director/responsable técnico tiene título universitario y tarjeta profesional vigente en RETHUS conforme a la Ley 841/2003?",
         "¿Los auxiliares o técnicos de laboratorio tienen certificado SENA de técnico en laboratorio clínico o título de institución técnica reconocida?",
@@ -855,7 +892,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "lab-equipos",
       "icon": "🧫",
       "name": "Equipos y Calibración Metrológica",
-      "norm": "Res. 3100/2019 Est. 2 · Dec. 4725/2005 · NTC-ISO 15189",
+      "norm": "Res. 1732/2026 Est. 2 · Dec. 4725/2005 · NTC-ISO 15189",
       "q": [
         "¿Los analizadores hematológico y de química sanguínea tienen cronograma de mantenimiento preventivo documentado y registros de cumplimiento?",
         "¿Cada equipo tiene hoja de vida individual con: número de serie, fecha de instalación, calibraciones y mantenimientos realizados?",
@@ -872,7 +909,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "lab-calidad",
       "icon": "📊",
       "name": "Control de Calidad y PEEC",
-      "norm": "Res. 3100/2019 Est. 5 · PEEC MinSalud · Westgard · NTC-ISO 15189",
+      "norm": "Res. 1732/2026 Est. 5 · PEEC MinSalud · Westgard · NTC-ISO 15189",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿El laboratorio participa ACTIVAMENTE en el Programa de Evaluación Externa de la Calidad (PEEC) del MinSalud con cronograma al día?",
@@ -889,7 +926,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "lab-muestras",
       "icon": "🩸",
       "name": "Fase Pre-analítica y Manejo de Muestras",
-      "norm": "Res. 3100/2019 Est. 5 · Manual de Procedimientos · CLSI GP33",
+      "norm": "Res. 1732/2026 Est. 5 · Manual de Procedimientos · CLSI GP33",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿Existe manual de toma de muestras disponible y actualizado en el área de toma, con instrucciones para cada tipo de muestra y contenedor?",
@@ -922,7 +959,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "lab-informes",
       "icon": "📋",
       "name": "Informes, Trazabilidad y Comunicación",
-      "norm": "Res. 3100/2019 Est. 6 · Res. 1995/1999 · Ley 841/2003",
+      "norm": "Res. 1732/2026 Est. 6 · Res. 1995/1999 · Ley 841/2003",
       "q": [
         "¿Los informes contienen: nombre completo del paciente, documento, médico solicitante, fecha de toma, fecha de resultado, valores de referencia y firma del bacteriólogo?",
         "¿Los tiempos de entrega están definidos por tipo y urgencia (urgente ≤60 min, rutina ≤2h para básicos) y se miden periódicamente?",
@@ -940,7 +977,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tra-vehiculo",
       "icon": "🚑",
       "name": "Vehículo, Habilitación y Condiciones Técnicas",
-      "norm": "Res. 3100/2019 · Dec. 2309/2002 · Min. Transporte · SOAT",
+      "norm": "Res. 1732/2026 · Dec. 2309/2002 · Min. Transporte · SOAT",
       "q": [
         "¿El vehículo tiene resolución de habilitación vigente como ambulancia expedida por la Secretaría de Salud departamental o distrital?",
         "¿El SOAT del vehículo está vigente y cubre específicamente el transporte de pacientes como actividad principal?",
@@ -957,7 +994,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tra-th",
       "icon": "👩‍⚕️",
       "name": "Talento Humano por Nivel de Complejidad",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · BLS/ACLS",
+      "norm": "Res. 1732/2026 Est. 1 · RETHUS · BLS/ACLS",
       "q": [
         "¿El TAB (Traslado Asistencial Básico) cuenta con conductor más auxiliar de salud con certificado en primeros auxilios (mínimo 100 horas)?",
         "¿El TAM (Traslado Asistencial Medicalizado) tiene médico o enfermera profesional ADEMÁS del conductor, con tarjeta profesional vigente?",
@@ -972,7 +1009,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tra-dotacion",
       "icon": "🏥",
       "name": "Dotación por Nivel y Verificación",
-      "norm": "Res. 3100/2019 Est. 2 · Dec. 4725/2005 · Lista Chequeo",
+      "norm": "Res. 1732/2026 Est. 2 · Dec. 4725/2005 · Lista Chequeo",
       "q": [
         "¿El TAB tiene: camilla plegable, inmovilizadores, equipo básico de signos vitales (TA, SpO2, FC), botiquín de primeros auxilios?",
         "¿El TAM tiene adicionalmente: monitor desfibrilador bifásico, ventilador de transporte, bomba de infusión y set de intubación completo?",
@@ -988,7 +1025,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tra-registro",
       "icon": "📋",
       "name": "Registro de Traslados y Documentación",
-      "norm": "Res. 3100/2019 Est. 6 · Res. 1995/1999",
+      "norm": "Res. 1732/2026 Est. 6 · Res. 1995/1999",
       "q": [
         "¿Se diligencia hoja de traslado para CADA paciente con: identificación, diagnóstico de remisión, tratamiento previo, origen y destino?",
         "¿Se registran signos vitales al inicio del traslado, durante (cada 15-30 min según complejidad) y al momento de la entrega?",
@@ -1003,7 +1040,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tra-comunicaciones",
       "icon": "📡",
       "name": "Comunicaciones, Operaciones y CRUE",
-      "norm": "Res. 3100/2019 · CRUE · Min. Salud Red de Urgencias",
+      "norm": "Res. 1732/2026 · CRUE · Min. Salud Red de Urgencias",
       "q": [
         "¿El vehículo tiene sistema de comunicación operativo en todo momento: radio, teléfono celular o dispositivo satelital?",
         "¿Existe protocolo documentado de activación del CRUE de la región con datos de contacto actualizados y procedimiento de solicitud?",
@@ -1019,7 +1056,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "reh-th",
       "icon": "🦽",
       "name": "Talento Humano en Rehabilitación",
-      "norm": "Res. 3100/2019 Est. 1 · RETHUS · Ley 528/1999 · Ley 376/1997",
+      "norm": "Res. 1732/2026 Est. 1 · RETHUS · Ley 528/1999 · Ley 376/1997",
       "q": [
         "¿El fisioterapeuta tiene tarjeta profesional vigente en RETHUS conforme a la Ley 528/1999 y está registrado en el REPS?",
         "¿El terapeuta ocupacional tiene tarjeta profesional vigente en RETHUS según Ley 949/2005 para los servicios que presta?",
@@ -1035,7 +1072,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "reh-planta",
       "icon": "🏃",
       "name": "Planta Física y Accesibilidad Universal",
-      "norm": "Res. 3100/2019 Est. 2 · NSR-10 · Ley 361/1997 · NTC 4143",
+      "norm": "Res. 1732/2026 Est. 2 · NSR-10 · Ley 361/1997 · NTC 4143",
       "q": [
         "¿El área de fisioterapia tiene mínimo 20 m² por puesto de atención permitiendo la circulación de sillas de ruedas y camillas sin obstrucción?",
         "¿Las instalaciones cumplen accesibilidad universal: rampas, pasamanos bilaterales, piso antideslizante, puertas ≥90 cm y baño adaptado?",
@@ -1051,7 +1088,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "reh-equipos",
       "icon": "⚡",
       "name": "Equipos de Rehabilitación y Tecnovigilancia",
-      "norm": "Res. 3100/2019 Est. 2 · Dec. 4725/2005 · INVIMA · Tecnovigilancia",
+      "norm": "Res. 1732/2026 Est. 2 · Dec. 4725/2005 · INVIMA · Tecnovigilancia",
       "q": [
         "¿Los equipos de electroterapia (ultrasonido, TENS/NMES, láser terapéutico) tienen registros de calibración de salida de energía del último año?",
         "¿Las hojas de vida de cada equipo están actualizadas con historial de mantenimiento preventivo y correctivo documentados?",
@@ -1067,7 +1104,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "reh-plan",
       "icon": "📋",
       "name": "Plan de Tratamiento y Seguimiento Clínico",
-      "norm": "Res. 3100/2019 Est. 6 · Res. 1995/1999 · CIF (OMS)",
+      "norm": "Res. 1732/2026 Est. 6 · Res. 1995/1999 · CIF (OMS)",
       "q": [
         "¿Cada paciente tiene evaluación inicial con: motivo de consulta, diagnóstico médico, diagnóstico funcional en términos de CIF y metas de rehabilitación?",
         "¿El plan de tratamiento está escrito con objetivos SMART y firmado por el profesional responsable?",
@@ -1083,7 +1120,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "reh-bioseg",
       "icon": "🧼",
       "name": "Bioseguridad y Control de Infecciones",
-      "norm": "Res. 3100/2019 Est. 5 · Precauciones Estándar OMS",
+      "norm": "Res. 1732/2026 Est. 5 · Precauciones Estándar OMS",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿Las camillas y superficies de contacto se desinfectan entre cada paciente con producto de espectro de acción adecuado?",
@@ -1113,7 +1150,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "sm-th",
       "icon": "🧠",
       "name": "Equipo Interdisciplinario de Salud Mental",
-      "norm": "Ley 1616/2013 · Res. 3100/2019 Est. 1 · RETHUS",
+      "norm": "Ley 1616/2013 · Res. 1732/2026 Est. 1 · RETHUS",
       "q": [
         "¿El psiquiatra responsable tiene especialización en psiquiatría registrada en RETHUS y tarjeta profesional vigente?",
         "¿El psicólogo clínico tiene título de psicología con tarjeta profesional vigente y formación en psicología clínica o de la salud?",
@@ -1129,7 +1166,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "sm-planta",
       "icon": "🏢",
       "name": "Planta Física Segura y Terapéutica",
-      "norm": "Ley 1616/2013 · Res. 3100/2019 Est. 2 · OPS/OMS Hospitales Seguros",
+      "norm": "Ley 1616/2013 · Res. 1732/2026 Est. 2 · OPS/OMS Hospitales Seguros",
       "q": [
         "¿Los consultorios de salud mental garantizan privacidad visual y auditiva completa durante la atención con aislamiento acústico?",
         "¿El entorno físico de las unidades de hospitalización está libre de objetos que puedan usarse como instrumentos de autolesión?",
@@ -1177,7 +1214,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "sm-crisis",
       "icon": "🚨",
       "name": "Manejo de Crisis y Emergencias Psiquiátricas",
-      "norm": "Ley 1616/2013 Art. 22 · Res. 3100/2019 · Guías Clínicas MSPS",
+      "norm": "Ley 1616/2013 Art. 22 · Res. 1732/2026 · Guías Clínicas MSPS",
       "q": [
         "¿Existe protocolo escrito para manejo de crisis psiquiátrica aguda con: algoritmo de decisión, criterios de hospitalización y derivación a urgencias?",
         "¿El personal tiene entrenamiento certificado en técnicas de des-escalada verbal y manejo no violento de la agresión en salud mental?",
@@ -1210,7 +1247,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-th",
       "icon": "🦷",
       "name": "Talento Humano Odontológico",
-      "norm": "Res. 3100/2019 Est. 1 · Ley 35/1989 · RETHUS · Ley 711/2001",
+      "norm": "Res. 1732/2026 Est. 1 · Ley 35/1989 · RETHUS · Ley 711/2001",
       "q": [
         "¿El odontólogo general tiene tarjeta profesional vigente en RETHUS conforme a la Ley 35/1989?",
         "¿Los especialistas tienen especialización registrada en RETHUS para los procedimientos específicos que realizan (ortodoncia, endodoncia, periodoncia, cirugía, odontopediatría)?",
@@ -1226,7 +1263,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-dotacion",
       "icon": "🪥",
       "name": "Unidad Odontológica y Equipos",
-      "norm": "Res. 3100/2019 Est. 2 · Dec. 4725/2005 · INVIMA · Res. 4445/1996",
+      "norm": "Res. 1732/2026 Est. 2 · Dec. 4725/2005 · INVIMA · Res. 4445/1996",
       "q": [
         "¿Cada consultorio tiene unidad completa (sillón dental regulable, escupidera funcional, lámpara de luz fría, jeringa triple) en buen estado?",
         "¿El compresor dental es libre de aceite (oil-free) o tiene filtros de aceite y humedad certificados con cambio según indicaciones del fabricante?",
@@ -1243,7 +1280,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-esterilizacion",
       "icon": "♻️",
       "name": "Esterilización y Reprocesamiento de Instrumental",
-      "norm": "Res. 3100/2019 Est. 5 · AAMI ST79 · CDC Esterilización Dental",
+      "norm": "Res. 1732/2026 Est. 5 · AAMI ST79 · CDC Esterilización Dental",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿El consultorio tiene autoclave de vapor saturado clase B con impresión de registro de cada ciclo (temperatura, presión, tiempo, resultado)?",
@@ -1261,7 +1298,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-bioseg",
       "icon": "🛡️",
       "name": "Bioseguridad Odontológica Integral",
-      "norm": "Res. 3100/2019 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
+      "norm": "Res. 1732/2026 Est. 5 · Dec. 351/2014 · Precauciones Estándar OMS",
       "estandar": "procesos_prioritarios",
       "q": [
         "¿El profesional usa en CADA atención: guantes de nitrilo o látex, mascarilla N95/FFP2 o quirúrgica, gafas protectoras o pantalla facial y bata de manga larga?",
@@ -1279,7 +1316,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-hc",
       "icon": "📋",
       "name": "Historia Clínica Odontológica y Documentación",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Ley 35/1989",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6 · Ley 35/1989",
       "q": [
         "¿Cada paciente tiene historia clínica odontológica con odontograma actualizado desde la primera consulta y actualizado en cada cambio significativo?",
         "¿El consentimiento informado para cada procedimiento (extracción, endodoncia, cirugía, blanqueamiento) especifica: diagnóstico, procedimiento, riesgos, alternativas y cuidados post?",
@@ -1295,7 +1332,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "odo-calidad",
       "icon": "📊",
       "name": "Indicadores y Mejoramiento del Consultorio",
-      "norm": "Res. 256/2016 · PAMEC · Res. 3100/2019 Est. 6",
+      "norm": "Res. 256/2016 · PAMEC · Res. 1732/2026 Est. 6",
       "q": [
         "¿El consultorio mide indicadores propios: tasa de accidentes biológicos, controles biológicos fallidos, satisfacción del usuario?",
         "¿Existe revisión periódica del protocolo de esterilización con acciones de mejoramiento ante controles biológicos positivos?",
@@ -1309,7 +1346,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano — Consulta Externa",
-      "norm": "Res. 3100/2019 Est. 1 · Perfiles TH consulta externa",
+      "norm": "Res. 1732/2026 Est. 1 · Perfiles TH consulta externa",
       "q": [
         "¿Todo el personal profesional que realiza consulta tiene tarjeta profesional vigente y sin sanción disciplinaria activa?",
         "¿Los médicos especialistas tienen certificado de especialización registrado ante el Ministerio de Salud?",
@@ -1323,7 +1360,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-infraestructura",
       "icon": "🏢",
       "name": "Infraestructura y Consultorios",
-      "norm": "Res. 3100/2019 Est. 2 · Criterios físicos consulta externa",
+      "norm": "Res. 1732/2026 Est. 2 · Criterios físicos consulta externa",
       "q": [
         "¿Cada consultorio tiene área mínima de 9 m², con puerta con seguro y privacidad visual y auditiva adecuada?",
         "¿Los consultorios cuentan con lavamanos de pedal o codo, jabón antiséptico y toallas desechables dentro del espacio?",
@@ -1337,7 +1374,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-dotacion",
       "icon": "🩺",
       "name": "Dotación y Equipos",
-      "norm": "Res. 3100/2019 Est. 3 · Dotación consultorios · Decreto 4725/2005",
+      "norm": "Res. 1732/2026 Est. 3 · Dotación consultorios · Decreto 4725/2005",
       "q": [
         "¿Cada consultorio dispone de camilla de examen, tensiómetro calibrado, estetoscopio, termómetro y linterna clínica?",
         "¿Los equipos médicos tienen hoja de vida, mantenimiento preventivo vigente y calibración al día?",
@@ -1350,7 +1387,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-procesos",
       "icon": "📋",
       "name": "Procesos Asistenciales",
-      "norm": "Res. 3100/2019 Est. 6 · Guías de práctica clínica MINSALUD",
+      "norm": "Res. 1732/2026 Est. 6 · Guías de práctica clínica MINSALUD",
       "q": [
         "¿Existen guías de práctica clínica adoptadas para las 10 condiciones de mayor demanda del servicio de consulta externa?",
         "¿Los protocolos de referencia y contrarreferencia están documentados y son conocidos por todo el personal?",
@@ -1364,7 +1401,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "ce-hc",
       "icon": "📁",
       "name": "Historia Clínica y Registros",
-      "norm": "Res. 1995/1999 · Res. 3100/2019 Est. 6 · Ley 23/1981",
+      "norm": "Res. 1995/1999 · Res. 1732/2026 Est. 6 · Ley 23/1981",
       "q": [
         "¿Cada consulta genera historia clínica con anamnesis, examen físico, diagnóstico (CIE-10), plan y firma del profesional?",
         "¿El sistema de historia clínica (física o electrónica) garantiza confidencialidad, acceso restringido y respaldo?",
@@ -1379,13 +1416,14 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "uci-talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano UCI",
-      "norm": "Res. 3100/2019 · Medicina crítica · Res. 544/2023 · Telexperticia UCI",
+      "norm": "Res. 1732/2026 · Medicina crítica · Res. 544/2023 · Telexperticia UCI",
       "q": [
         "¿El servicio cuenta con médico intensivista (especialista en medicina crítica) disponible 24/7 con certificación vigente?",
         "¿La razón enfermera-paciente en UCI cumple mínimo 1:2 en UCI adultos y 1:1 en UCI neonatal?",
         "¿El personal de enfermería de la UCI tiene entrenamiento documentado en cuidado intensivo y manejo de ventilador?",
         "¿Hay terapeuta respiratorio disponible en el horario de mayor demanda, con certificación técnica o profesional?",
         "¿Existe protocolo para uso de telexperticia sincrónica con intensivista cuando aplique (Res. 544/2023)?",
+        "Si la UCI está en un municipio con dispersión geográfica: ¿tiene disponible telexperticia sincrónica como mecanismo de apoyo clínico especializado, según exige el Plan de Adecuación Progresiva de la Res. 1732/2026?",
         "¿Se realiza inducción formal a todo el personal nuevo que ingresa a UCI con evaluación de competencias documentada?"
       ]
     },
@@ -1393,7 +1431,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "uci-infraestructura",
       "icon": "🏥",
       "name": "Infraestructura UCI",
-      "norm": "Res. 3100/2019 Est. 2 · Requisitos físicos UCI · NSR-10",
+      "norm": "Res. 1732/2026 Est. 2 · Requisitos físicos UCI · NSR-10",
       "q": [
         "¿Cada cama de UCI tiene área mínima de 12 m² con espacio para acceso lateral del equipo asistencial?",
         "¿Las instalaciones de gases medicinales (oxígeno, aire medicinal, vacío) son independientes y cuentan con alarmas?",
@@ -1407,7 +1445,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "uci-dotacion",
       "icon": "🫀",
       "name": "Dotación y Tecnología",
-      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · UCI",
+      "norm": "Res. 1732/2026 Est. 3 · Decreto 4725/2005 · UCI",
       "q": [
         "¿Cada cama de UCI tiene monitor multiparamétrico (ECG, SpO2, NIBP, temperatura, capnografía) calibrado?",
         "¿Hay ventilador mecánico por cama de UCI con número de ventiladores igual al de camas habilitadas?",
@@ -1421,7 +1459,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "uci-procesos",
       "icon": "📋",
       "name": "Procesos Clínicos y Seguridad",
-      "norm": "Res. 3100/2019 Est. 6 · Res. 2003/2014 · Bundles UCI",
+      "norm": "Res. 1732/2026 Est. 6 · Res. 2003/2014 · Bundles UCI",
       "q": [
         "¿Existe protocolo de prevención de infecciones asociadas al cuidado (IAAS): NAVM, ITS, bacteriuria, bacteriemia?",
         "¿Se implementan bundles de prevención (higiene de manos, baño diario con clorhexidina, elevación cabecera 30°)?",
@@ -1435,7 +1473,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "uci-neo",
       "icon": "👶",
       "name": "UCI Neonatal (UCIN) — Requisitos Específicos",
-      "norm": "Res. 3100/2019 · UCIN · Neonatología · Res. 465/2025",
+      "norm": "Res. 1732/2026 · UCIN · Neonatología · Res. 1732/2026",
       "q": [
         "¿La UCIN tiene neonatólogo disponible 24/7 o con tiempo de respuesta documentado inferior a 15 minutos?",
         "¿Cada incubadora o cuna de calor radiante tiene monitor neonatal con alarmas de SpO2, FC y temperatura?",
@@ -1451,7 +1489,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "obs-talento",
       "icon": "👩‍⚕️",
       "name": "Talento Humano — Obstetricia y Parto",
-      "norm": "Res. 3100/2019 · Atención del parto · Res. 3280/2018",
+      "norm": "Res. 1732/2026 · Atención del parto · Res. 3280/2018",
       "q": [
         "¿El equipo de atención del parto incluye médico obstetra o médico con entrenamiento documentado en atención del parto?",
         "¿Hay enfermera o auxiliar de enfermería con capacitación en asistencia al parto disponible en el horario de atención?",
@@ -1464,7 +1502,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "obs-infraestructura",
       "icon": "🏥",
       "name": "Infraestructura Sala de Partos",
-      "norm": "Res. 3100/2019 Est. 2 · Sala de partos · NSR-10",
+      "norm": "Res. 1732/2026 Est. 2 · Sala de partos · NSR-10",
       "q": [
         "¿La sala de partos tiene área mínima de 20 m² por sala, con lavamanos de pedal y sistema de gases medicinales?",
         "¿Existe sala de preparto o admisión obstétrica diferenciada de la sala de alumbramiento?",
@@ -1477,7 +1515,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "obs-dotacion",
       "icon": "🩺",
       "name": "Dotación Sala de Partos",
-      "norm": "Res. 3100/2019 Est. 3 · Equipos obstetricia",
+      "norm": "Res. 1732/2026 Est. 3 · Equipos obstetricia",
       "q": [
         "¿La sala de partos tiene mesa obstétrica, cuna de calor radiante, oxímetro neonatal y balanza neonatal calibrada?",
         "¿Se dispone de kit de reanimación neonatal completo: ambú neonatal, laringoscopio neonatal, tubos endotraqueales, aspirador?",
@@ -1490,7 +1528,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "obs-procesos",
       "icon": "📋",
       "name": "Procesos — Atención del Parto Seguro",
-      "norm": "Res. 3100/2019 Est. 6 · OMS atención parto · Res. 3280/2018",
+      "norm": "Res. 1732/2026 Est. 6 · OMS atención parto · Res. 3280/2018",
       "q": [
         "¿Se implementa la lista de verificación de seguridad del parto de la OMS adaptada o equivalente en cada parto?",
         "¿Existe protocolo para prevención y manejo de hemorragia posparto (AMTSL: manejo activo del tercer período)?",
@@ -1506,7 +1544,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "bs-talento",
       "icon": "🔬",
       "name": "Talento Humano — Banco de Sangre",
-      "norm": "Res. 3100/2019 · Res. 1285/2010 · Decreto 1571/1993",
+      "norm": "Res. 1732/2026 · Res. 1285/2010 · Decreto 1571/1993",
       "q": [
         "¿El banco de sangre cuenta con bacteriólogo o médico especialista en medicina transfusional como responsable técnico?",
         "¿El personal del banco de sangre tiene capacitación documentada en biosseguridad y manejo de material biológico?",
@@ -1518,7 +1556,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "bs-infraestructura",
       "icon": "🏢",
       "name": "Infraestructura y Condiciones Físicas",
-      "norm": "Res. 3100/2019 · Res. 1285/2010 · Banco de sangre",
+      "norm": "Res. 1732/2026 · Res. 1285/2010 · Banco de sangre",
       "q": [
         "¿El banco de sangre tiene áreas diferenciadas para recepción de donantes, extracción, procesamiento y almacenamiento?",
         "¿Las unidades de sangre se almacenan en refrigeradores específicos para sangre con alarma de temperatura y registro continuo?",
@@ -1530,7 +1568,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "bs-dotacion",
       "icon": "🩸",
       "name": "Dotación y Equipos",
-      "norm": "Res. 3100/2019 · Decreto 4725/2005 · Banco de sangre",
+      "norm": "Res. 1732/2026 · Decreto 4725/2005 · Banco de sangre",
       "q": [
         "¿Los equipos de centrifugación, procesamiento y fraccionamiento de sangre tienen mantenimiento preventivo al día?",
         "¿Se dispone de analizadores para tipificación ABO/Rh, pruebas de compatibilidad y tamización infecciosa (VIH, HBsAg, HCV, sífilis)?",
@@ -1542,7 +1580,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "bs-procesos",
       "icon": "📋",
       "name": "Procesos — Selección y Trazabilidad",
-      "norm": "Res. 3100/2019 · Res. 1285/2010 · Manual Técnico AABB",
+      "norm": "Res. 1732/2026 · Res. 1285/2010 · Manual Técnico AABB",
       "q": [
         "¿Existe protocolo documentado para selección del donante con criterios de inclusión/exclusión actualizados?",
         "¿Cada unidad de sangre tiene trazabilidad completa: donante → extracción → procesamiento → tamización → distribución → receptor?",
@@ -1558,7 +1596,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "onco-talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano — Oncología",
-      "norm": "Res. 3100/2019 · Guías IETS oncología · Res. 1383/2013",
+      "norm": "Res. 1732/2026 · Guías IETS oncología · Res. 1383/2013",
       "q": [
         "¿El servicio oncológico cuenta con oncólogo clínico o hematólogo con registro de especialista ante el MSPS?",
         "¿El personal de enfermería oncológica tiene entrenamiento certificado en preparación y administración de citotóxicos?",
@@ -1571,7 +1609,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "onco-infraestructura",
       "icon": "🏥",
       "name": "Infraestructura — Servicio de Oncología",
-      "norm": "Res. 3100/2019 Est. 2 · ISOPP estándares oncología",
+      "norm": "Res. 1732/2026 Est. 2 · ISOPP estándares oncología",
       "q": [
         "¿La sala de quimioterapia tiene sillas reclinables o camas individuales con privacidad visual entre pacientes?",
         "¿La farmacia oncológica dispone de campana de flujo laminar clase II tipo B2 o cabina de seguridad biológica certificada?",
@@ -1583,7 +1621,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "onco-dotacion",
       "icon": "💊",
       "name": "Dotación y Medicamentos",
-      "norm": "Res. 3100/2019 Est. 3 · INVIMA · Farmacias oncológicas",
+      "norm": "Res. 1732/2026 Est. 3 · INVIMA · Farmacias oncológicas",
       "q": [
         "¿Los citotóxicos se preparan en campana de flujo laminar con EPP completo (mascarilla N95, guantes dobles, gafas, bata)?",
         "¿Existe kit de derrame de citotóxicos disponible en el área de preparación y administración?",
@@ -1596,7 +1634,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "onco-procesos",
       "icon": "📋",
       "name": "Procesos Clínicos y Seguridad",
-      "norm": "Res. 3100/2019 Est. 6 · Guías IETS · OMS lista verificación oncológica",
+      "norm": "Res. 1732/2026 Est. 6 · Guías IETS · OMS lista verificación oncológica",
       "q": [
         "¿Cada paciente oncológico tiene plan terapéutico documentado y aprobado por comité tumores o médico tratante?",
         "¿Se aplica protocolo de verificación de identidad del paciente y correcta prescripción antes de cada ciclo de quimioterapia?",
@@ -1611,7 +1649,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "hemo-talento",
       "icon": "👨‍⚕️",
       "name": "Talento Humano — Hemodiálisis",
-      "norm": "Res. 3100/2019 · Nefrología · Manual Habilitación Hemodiálisis",
+      "norm": "Res. 1732/2026 · Nefrología · Manual Habilitación Hemodiálisis",
       "q": [
         "¿El servicio de hemodiálisis tiene nefrólogo responsable con especialización registrada ante el MSPS?",
         "¿La razón personal de enfermería-paciente cumple el estándar definido (mínimo 1 enfermera por cada 4 pacientes en diálisis)?",
@@ -1623,7 +1661,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "hemo-infraestructura",
       "icon": "🏥",
       "name": "Infraestructura — Unidad de Hemodiálisis",
-      "norm": "Res. 3100/2019 Est. 2 · KDIGO · Manual habilitación",
+      "norm": "Res. 1732/2026 Est. 2 · KDIGO · Manual habilitación",
       "q": [
         "¿Cada estación de hemodiálisis tiene el espacio mínimo requerido para la máquina, la camilla y el acceso lateral del personal?",
         "¿El sistema de tratamiento de agua (ósmosis inversa) tiene monitoreo continuo de calidad y pureza del agua de diálisis?",
@@ -1635,7 +1673,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "hemo-dotacion",
       "icon": "🔧",
       "name": "Dotación y Equipos",
-      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · Hemodiálisis",
+      "norm": "Res. 1732/2026 Est. 3 · Decreto 4725/2005 · Hemodiálisis",
       "q": [
         "¿Cada máquina de hemodiálisis tiene hoja de vida, mantenimiento preventivo vigente y calificación de instalación y funcionamiento?",
         "¿Los monitores de agua (conductividad, temperatura, alarmas) del sistema de tratamiento están calibrados y en buen estado?",
@@ -1647,7 +1685,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "hemo-procesos",
       "icon": "📋",
       "name": "Procesos Clínicos y Control",
-      "norm": "Res. 3100/2019 Est. 6 · KDIGO 2012 · Manual diálisis MSPS",
+      "norm": "Res. 1732/2026 Est. 6 · KDIGO 2012 · Manual diálisis MSPS",
       "q": [
         "¿Cada paciente tiene prescripción de diálisis individualizada con parámetros (Kt/V, flujo, dializador, anticoagulación)?",
         "¿Se realiza evaluación mensual de adecuación de diálisis (Kt/V) con registro en historia clínica?",
@@ -1662,7 +1700,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "far-talento",
       "icon": "💊",
       "name": "Talento Humano — Servicio Farmacéutico",
-      "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 3100/2019",
+      "norm": "Res. 1403/2007 · Decreto 780/2016 · Res. 1732/2026",
       "q": [
         "¿El servicio farmacéutico cuenta con regente de farmacia o químico farmacéutico como director técnico?",
         "¿La razón de regentes o químicos farmacéuticos por auxiliares cumple la normativa según complejidad del servicio?",
@@ -1674,7 +1712,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "far-infraestructura",
       "icon": "🏢",
       "name": "Infraestructura — Área Farmacéutica",
-      "norm": "Res. 1403/2007 · Res. 3100/2019 Est. 2 · Farmacias",
+      "norm": "Res. 1403/2007 · Res. 1732/2026 Est. 2 · Farmacias",
       "q": [
         "¿El servicio farmacéutico tiene áreas diferenciadas para recepción, almacenamiento, dispensación y distribución de medicamentos?",
         "¿Las condiciones de temperatura y humedad del área de almacenamiento son monitoreadas y registradas diariamente?",
@@ -1714,7 +1752,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "vac-talento",
       "icon": "💉",
       "name": "Talento Humano — Vacunación",
-      "norm": "Res. 3100/2019 · PAI MSPS · Decreto 1011/2006",
+      "norm": "Res. 1732/2026 · PAI MSPS · Decreto 1011/2006",
       "q": [
         "¿El personal que aplica vacunas tiene entrenamiento documentado en el Programa Ampliado de Inmunización (PAI)?",
         "¿Se realiza capacitación periódica al personal en manejo de cadena de frío, reconstitución de vacunas y manejo de eventos adversos?",
@@ -1726,7 +1764,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "vac-cadena-frio",
       "icon": "❄️",
       "name": "Cadena de Frío — Conservación de Vacunas",
-      "norm": "Res. 3100/2019 · Manual PAI MSPS · Cadena de frío",
+      "norm": "Res. 1732/2026 · Manual PAI MSPS · Cadena de frío",
       "q": [
         "¿Las vacunas se almacenan en refrigerador exclusivo para vacunas con temperatura entre +2°C y +8°C?",
         "¿La temperatura del refrigerador de vacunas se registra dos veces al día (mañana y tarde) con firma del responsable?",
@@ -1739,7 +1777,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "vac-procesos",
       "icon": "📋",
       "name": "Procesos de Vacunación Segura",
-      "norm": "Res. 3100/2019 Est. 6 · PAI MSPS · Res. 2184/2019",
+      "norm": "Res. 1732/2026 Est. 6 · PAI MSPS · Res. 2184/2019",
       "q": [
         "¿Existe protocolo de verificación de identidad y carnet de vacunación antes de aplicar cualquier biológico?",
         "¿El proceso de reconstitución de vacunas se realiza según la guía del fabricante y se documenta hora y lote?",
@@ -1752,10 +1790,22 @@ export const areasDB: Record<string, AuditArea[]> = {
   ],
   "telemedicina": [
     {
+      "id": "tele-modalidades",
+      "icon": "📡",
+      "name": "Modalidades de Telemedicina (Res. 1732/2026)",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿La IPS identificó cuáles de las 4 modalidades de telemedicina que define la Res. 1732/2026 (Teleconsulta, Telexperticia, Teleconcepto, Telemonitoreo) presta actualmente, aunque sea de forma informal (ej. por videollamada sin registro)?",
+        { "texto": "¿Cada modalidad de telemedicina que presta la IPS está registrada de forma independiente en el REPS?", "obligatorio": true },
+        { "texto": "¿La plataforma tecnológica usada garantiza cifrado extremo a extremo y autenticación (no se usa WhatsApp ni videollamada sin cifrar) para proteger la privacidad del paciente (Ley 1581/2012)?", "obligatorio": true },
+        "¿Existe protocolo documentado que defina cómo se activa una referencia urgente cuando el profesional detecta una emergencia durante la atención por telemedicina?"
+      ]
+    },
+    {
       "id": "tele-talento",
       "icon": "💻",
       "name": "Talento Humano — Telemedicina",
-      "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 3100/2019 · Res. 465/2025",
+      "norm": "Res. 2654/2019 · Res. 1317/2021 · Res. 1732/2026",
       "q": [
         "¿El médico que actúa como prestador de referencia en telemedicina tiene tarjeta profesional vigente y contrato activo?",
         "¿El personal de salud que usa telemedicina tiene capacitación documentada en el uso de la plataforma tecnológica?",
@@ -1780,7 +1830,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "tele-procesos",
       "icon": "📋",
       "name": "Procesos Clínicos — Telemedicina",
-      "norm": "Res. 2654/2019 · Res. 465/2025 · Manual telemedicina MSPS",
+      "norm": "Res. 2654/2019 · Res. 1732/2026 · Manual telemedicina MSPS",
       "q": [
         "¿Existe protocolo que define qué patologías y condiciones son aptas para atención por telemedicina y cuáles requieren presencial?",
         "¿El consentimiento informado del paciente para la consulta por telemedicina está documentado antes de cada sesión?",
@@ -1808,7 +1858,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "est-talento",
       "icon": "🧪",
       "name": "Talento Humano — Central de Esterilización",
-      "norm": "Res. 3100/2019 · Decreto 4725/2005 · ANSI/AAMI ST79",
+      "norm": "Res. 1732/2026 · Decreto 4725/2005 · ANSI/AAMI ST79",
       "q": [
         "¿El personal de la central de esterilización tiene capacitación documentada en procesamiento de dispositivos médicos (PDM)?",
         "¿Existe responsable técnico de la central con funciones definidas y capacitación específica en esterilización?",
@@ -1820,7 +1870,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "est-infraestructura",
       "icon": "🏢",
       "name": "Infraestructura — Central de Esterilización",
-      "norm": "Res. 3100/2019 Est. 2 · Zona limpia/sucia · Flujo unidireccional",
+      "norm": "Res. 1732/2026 Est. 2 · Zona limpia/sucia · Flujo unidireccional",
       "q": [
         "¿La central de esterilización tiene zonas diferenciadas: zona sucia (recepción y lavado), zona limpia (empaque) y zona estéril (almacenamiento)?",
         "¿El flujo del material sigue sentido único (sucia → limpia → estéril) sin cruces entre material contaminado y estéril?",
@@ -1832,7 +1882,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "est-dotacion",
       "icon": "🔧",
       "name": "Equipos y Control del Proceso",
-      "norm": "Res. 3100/2019 Est. 3 · Decreto 4725/2005 · ANSI/AAMI",
+      "norm": "Res. 1732/2026 Est. 3 · Decreto 4725/2005 · ANSI/AAMI",
       "q": [
         "¿Los autoclaves tienen calificación de instalación, operación y desempeño (IQ/OQ/PQ) documentada y vigente?",
         "¿Se realizan pruebas de eficacia del proceso (Bowie-Dick, indicadores biológicos, químicos) en cada ciclo y se registran los resultados?",
@@ -1845,7 +1895,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "est-procesos",
       "icon": "📋",
       "name": "Procesos de Esterilización y Trazabilidad",
-      "norm": "Res. 3100/2019 Est. 6 · ANSI/AAMI ST79 · Decreto 351/2014",
+      "norm": "Res. 1732/2026 Est. 6 · ANSI/AAMI ST79 · Decreto 351/2014",
       "q": [
         "¿Existe protocolo documentado para cada tipo de material (metálico, plástico, textil) con el método y parámetros de esterilización?",
         "¿Los artículos de uso único (single use) tienen proceso documentado para su resterilización si aplica, o se descartan correctamente?",
@@ -1860,7 +1910,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "trsp-talento",
       "icon": "🏥",
       "name": "Talento Humano — Trasplante de Órganos y Tejidos",
-      "norm": "Res. 3100/2019 · Ley 9/1979 · Decreto 2493/2004 · Red de Donación",
+      "norm": "Res. 1732/2026 · Ley 9/1979 · Decreto 2493/2004 · Red de Donación",
       "q": [
         "¿El equipo de trasplante incluye médico especialista en trasplante con certificación reconocida y registrada?",
         "¿Existe coordinador de trasplantes con funciones definidas y capacitación específica en gestión de donación?",
@@ -1872,7 +1922,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "trsp-procesos",
       "icon": "📋",
       "name": "Procesos — Donación y Lista de Espera",
-      "norm": "Decreto 2493/2004 · Res. 3100/2019 · Red de donación MSPS",
+      "norm": "Decreto 2493/2004 · Res. 1732/2026 · Red de donación MSPS",
       "q": [
         "¿Existe protocolo documentado para detección, notificación y mantenimiento del potencial donante en muerte encefálica?",
         "¿Se notifica de manera oportuna a la Red de Donación y Trasplante cada potencial donante detectado en la institución?",
@@ -1885,7 +1935,7 @@ export const areasDB: Record<string, AuditArea[]> = {
       "id": "trsp-tejidos",
       "icon": "🔬",
       "name": "Banco de Tejidos (si aplica)",
-      "norm": "Res. 3100/2019 · Decreto 2493/2004 · Red de donación tejidos",
+      "norm": "Res. 1732/2026 · Decreto 2493/2004 · Red de donación tejidos",
       "q": [
         "¿El banco de tejidos tiene habilitación vigente ante la Red de Donación y Trasplante del MSPS?",
         "¿Los tejidos almacenados (córneas, piel, hueso) tienen control de calidad, trazabilidad del donante y tiempo de vida útil?",
