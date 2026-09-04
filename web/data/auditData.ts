@@ -26,6 +26,11 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
     "icon": "🏥",
     "norm": "Res. 1732/2026"
   },
+  "profesional_independiente": {
+    "label": "Profesional Independiente de Salud",
+    "icon": "🩺",
+    "norm": "Res. 1732/2026 Art. 2 y 3"
+  },
   "domiciliaria": {
     "label": "Salud Domiciliaria",
     "icon": "🏠",
@@ -139,6 +144,73 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
 };
 
 export const areasDB: Record<string, AuditArea[]> = {
+  "profesional_independiente": [
+    {
+      "id": "pi-alcance",
+      "icon": "📋",
+      "name": "Alcance de la Habilitación",
+      "norm": "Res. 1732/2026 Art. 2 y 3",
+      "q": [
+        "¿Tienes claro que como Profesional Independiente de salud solo debes demostrar la condición de Capacidad Tecnológica y Científica? La Res. 1732/2026 (Art. 2) te exime de Capacidad Técnico-Administrativa y de Suficiencia Patrimonial y Financiera, que solo aplican a instituciones (IPS), entidades con objeto social diferente y transporte especial de pacientes.",
+        "¿Realizaste tu inscripción y autoevaluación de servicios en el REPS bajo la categoría 'Profesional Independiente', y no como Institución Prestadora de Servicios de Salud (IPS)?"
+      ]
+    },
+    {
+      "id": "pi-talento",
+      "icon": "🩺",
+      "name": "Talento Humano",
+      "norm": "Res. 1732/2026 · RETHUS",
+      "q": [
+        "¿Tu tarjeta o registro profesional está vigente y verificable en el RETHUS?",
+        "¿Tienes al día tus certificaciones de soporte vital básico o avanzado, si tu especialidad o los procedimientos que realizas lo requieren?",
+        "Si cuentas con personal de apoyo (auxiliar, secretaria clínica), ¿está vinculado formalmente y con la certificación correspondiente cuando aplique?"
+      ]
+    },
+    {
+      "id": "pi-infraestructura",
+      "icon": "🏢",
+      "name": "Infraestructura del Consultorio",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿El consultorio cuenta con iluminación y ventilación adecuadas para la atención, y con acceso para personas con movilidad reducida?",
+        "¿Existe señalización clara de salida de emergencia y ruta de evacuación del consultorio o del edificio donde funciona?",
+        "¿El área de atención garantiza la privacidad del paciente durante la consulta y el examen físico?"
+      ]
+    },
+    {
+      "id": "pi-dotacion",
+      "icon": "🧰",
+      "name": "Dotación y Bioseguridad",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿Cuentas con los equipos e insumos mínimos para el servicio que prestas, con mantenimiento o calibración vigente cuando aplique?",
+        "¿Tienes elementos de protección personal y un protocolo de bioseguridad (lavado de manos, desinfección de superficies e instrumental) documentado?",
+        "¿Los residuos generados en la consulta (cortopunzantes, biosanitarios) tienen ruta de recolección y disposición con un gestor autorizado?"
+      ]
+    },
+    {
+      "id": "pi-procesos",
+      "icon": "📋",
+      "name": "Procesos Prioritarios y Seguridad del Paciente",
+      "norm": "Res. 1732/2026",
+      "q": [
+        "¿Verificas la identidad del paciente antes de cada atención?",
+        "¿Obtienes y documentas el consentimiento informado cuando el procedimiento que realizas lo requiere?",
+        "¿Tienes definido a qué IPS o servicio remites a un paciente si se presenta una urgencia o una condición que supera tu capacidad de atención?"
+      ]
+    },
+    {
+      "id": "pi-historiaclinica",
+      "icon": "📄",
+      "name": "Historia Clínica",
+      "norm": "Res. 1732/2026 · Res. 1995/1999",
+      "q": [
+        "¿Llevas historia clínica de cada paciente con los componentes mínimos (motivo de consulta, anamnesis, examen físico, diagnóstico, plan de manejo) firmada?",
+        "¿La historia clínica se conserva con confidencialidad y acceso restringido, con respaldo periódico si es electrónica?",
+        "¿Generas un Resumen Digital de Atención (RDA) o su equivalente en papel al finalizar cada episodio, con diagnóstico, tratamiento e indicaciones de seguimiento?"
+      ]
+    }
+  ],
   "general": [
     {
       "id": "infraestructura",

@@ -26,7 +26,7 @@
 import { SEGMENT_META } from '@/data/auditData';
 import { FIRMA_CATALOGO } from '@/lib/useFirma';
 
-export type ServicioId = Exclude<keyof typeof SEGMENT_META, 'general'>;
+export type ServicioId = Exclude<keyof typeof SEGMENT_META, 'general' | 'profesional_independiente'>;
 
 /** Reemplaza la cita a la resolución derogada por su reemplazo confirmado,
  * sin mutar auditData.ts (ese módulo — Auditoría — no fue parte de este
@@ -40,7 +40,7 @@ function normaActualizada(norm: string): string {
 export const SERVICIOS_IPS: Record<ServicioId, { label: string; icon: string; norma: string }> =
   Object.fromEntries(
     Object.entries(SEGMENT_META)
-      .filter(([id]) => id !== 'general')
+      .filter(([id]) => id !== 'general' && id !== 'profesional_independiente')
       .map(([id, meta]) => [id, { label: meta.label, icon: meta.icon, norma: normaActualizada(meta.norm) }])
   ) as Record<ServicioId, { label: string; icon: string; norma: string }>;
 

@@ -63,7 +63,7 @@ export const ESTADO_AREA_CFG: Record<EstadoArea, { label: string; color: string;
 // en SEGMENT_META — se dejan explícitamente así, sin inventarles una cita.
 export const TIPOS_AREA: string[] = [
   ...Object.entries(SEGMENT_META)
-    .filter(([id]) => id !== 'general')
+    .filter(([id]) => id !== 'general' && id !== 'profesional_independiente')
     .map(([, meta]) => meta.label)
     .sort((a, b) => a.localeCompare(b, 'es')),
   'Servicio Farmacéutico', 'Central de Esterilización', 'Áreas comunes / administrativas', 'Otro',

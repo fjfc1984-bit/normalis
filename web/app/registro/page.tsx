@@ -325,6 +325,7 @@ export default function RegistroPage() {
                   <option value="clinica">Clínica</option>
                   <option value="hospital">Hospital</option>
                   <option value="consultorio">Consultorio / Esp.</option>
+                  <option value="profesional_independiente">Profesional Independiente de Salud</option>
                   <option value="otro">Otro</option>
                 </select>
               </div>
