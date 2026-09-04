@@ -37,6 +37,28 @@ function estaSinSeguimiento(c: CRMContacto): boolean {
   return false;
 }
 
+/** Normaliza a formato E.164 sin "+" para wa.me. Toma el primer número si hay varios (ej. "3810264-3810265"). */
+function telefonoWhatsapp(telefono: string): string | null {
+  const primero = telefono.split(/[-,/]/)[0] ?? '';
+  const digitos = primero.replace(/\D/g, '');
+  if (digitos.length === 10) return '57' + digitos;       // celular colombiano sin indicativo
+  if (digitos.length >= 11 && digitos.startsWith('57')) return digitos;
+  return null; // fijos locales de 7 dígitos u otros formatos no confiables para WhatsApp
+}
+
+/** Mensaje frío (Mensaje 1C de NormaLis-Scripts-Outreach.md), personalizado por contacto. */
+function mensajeWhatsappFrio(c: CRMContacto): string {
+  return `Buenos días. Le escribo de NormaLis, plataforma de cumplimiento normativo para IPS.\n\n` +
+    `¿${c.nombre || 'su IPS'} ya tiene un plan de transición hacia la Resolución 1732/2026? ` +
+    `Tenemos un piloto gratuito de 30 días que varias IPS en ${c.ciudad || 'Colombia'} están evaluando esta semana.`;
+}
+
+function whatsappUrl(c: CRMContacto): string | null {
+  const numero = telefonoWhatsapp(c.telefono);
+  if (!numero) return null;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensajeWhatsappFrio(c))}`;
+}
+
 const FORM_VACIO: NuevoContacto = {
   nombre: '', contactoNombre: '', email: '', telefono: '', ciudad: '',
   tipoIPS: '', fuente: 'otro',
@@ -267,9 +289,23 @@ export default function CRMPage() {
                           </p>
                         ) : null}
                         <div className="flex items-center justify-between mt-2 gap-2">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-100">
-                            {FUENTE_LABEL[c.fuente] ?? c.fuente}
-                          </span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-50 text-gray-500 border border-gray-100 truncate">
+                              {FUENTE_LABEL[c.fuente] ?? c.fuente}
+                            </span>
+                            {whatsappUrl(c) && (
+                              <a
+                                href={whatsappUrl(c)!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                title="Escribir por WhatsApp"
+                                className="text-sm flex-shrink-0 hover:scale-110 transition-transform"
+                              >
+                                💬
+                              </a>
+                            )}
+                          </div>
                           <select
                             value={c.etapa}
                             onClick={e => e.stopPropagation()}
@@ -354,13 +390,26 @@ function ContactoDetalle({ contacto, autor, onClose, actualizar }: {
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
 
-        <div className="space-y-2 text-sm text-gray-600 mb-6">
+        <div className="space-y-2 text-sm text-gray-600 mb-4">
           {contacto.email && <p>✉️ <a href={`mailto:${contacto.email}`} className="text-primary-600 hover:underline">{contacto.email}</a></p>}
           {contacto.telefono && <p>📞 {contacto.telefono}</p>}
           {contacto.ciudad && <p>📍 {contacto.ciudad}{contacto.tipoIPS ? ` · ${contacto.tipoIPS}` : ''}</p>}
           <p>🏷️ {FUENTE_LABEL[contacto.fuente] ?? contacto.fuente}</p>
           <p className="text-xs text-gray-400">Creado {fmtDate(contacto.createdAt)}</p>
         </div>
+
+        {whatsappUrl(contacto) && (
+          <a
+            href={whatsappUrl(contacto)!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full mb-6 px-4 py-2 rounded-lg
+                       font-medium text-sm bg-green-50 text-green-700 border border-green-200
+                       hover:bg-green-100 transition-colors"
+          >
+            💬 Escribir por WhatsApp
+          </a>
+        )}
 
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Próxima acción</h3>
         <form onSubmit={guardarAccion} className="space-y-2 mb-6">

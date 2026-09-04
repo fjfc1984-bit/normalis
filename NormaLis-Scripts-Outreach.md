@@ -5,19 +5,15 @@
 
 ## SEMANA 1 — Lista de prospectos
 
-Buscar en REPS (reps.sispro.gov.co) IPS con estos filtros:
-- Departamento: el tuyo (empezar local)
-- Naturaleza: Privada
-- Estado: Habilitada
+**Ya no hay que armar esto a mano.** El CRM (`/admin/crm`) tiene un botón "Importar CSV" que carga
+directo desde el REPS (dato abierto del Ministerio de Salud) — nombre, ciudad, email y teléfono ya
+filtrados por IPS privadas en tus ciudades con tracción (Barranquilla, Santa Marta, Medellín, Popayán,
+Ciénaga). El primer lote de 75 ya está importado en etapa "Nuevo", fuente "llamada fría".
 
-Exportar 50 IPS. Para cada una anotar:
-- Nombre de la IPS
-- Ciudad
-- Teléfono / WhatsApp
-- Correo (buscarlo en Google si no aparece)
-- ¿Conoces a alguien ahí? (Sí / No)
-
-Clasificar en: **Caliente** (conocido) / **Tibio** (referido) / **Frío** (desconocido)
+Para cada contacto del CRM, antes de escribirle, marcar mentalmente:
+- ¿Conoces a alguien ahí? → usar Mensaje 1A (caliente)
+- ¿Te lo refirió alguien? → usar Mensaje 1B (tibio)
+- Ninguno de los anteriores → usar Mensaje 1C (frío) — el botón de WhatsApp del CRM ya lo prellena.
 
 ---
 
@@ -26,9 +22,9 @@ Clasificar en: **Caliente** (conocido) / **Tibio** (referido) / **Frío** (desco
 ### Mensaje 1A — Contacto caliente (conocido)
 > Hola [Nombre], ¿cómo estás?
 >
-> Te cuento que estoy lanzando NormaLis, una plataforma para que las IPS manejen la habilitación y el PAMEC sin tanto papel. Automatiza listas de chequeo, vencimientos y reportes según la Resolución 3100 y la 465.
+> Te cuento que estoy lanzando NormaLis, una plataforma para que las IPS manejen la habilitación y el PAMEC sin tanto papel. Automatiza listas de chequeo, vencimientos y reportes según la Resolución 1732/2026.
 >
-> Sé que en [nombre IPS] siempre están pendientes de la habilitación — ¿te gustaría probarla gratis 30 días? Sin tarjeta, con soporte incluido.
+> Sé que en [nombre IPS] siempre están pendientes de la habilitación — y con la 1732 recién publicada, todos están en plan de transición. ¿Te gustaría probarla gratis 30 días? Sin tarjeta, con soporte incluido.
 >
 > Te mando el detalle 👇
 
@@ -39,7 +35,7 @@ Clasificar en: **Caliente** (conocido) / **Tibio** (referido) / **Frío** (desco
 ### Mensaje 1B — Contacto tibio (referido)
 > Hola [Nombre], lo saluda Fernando. Me pasaron su contacto porque trabaja en [nombre IPS] y andan muy juiciosos con el tema de habilitación.
 >
-> Lanzo NormaLis, una plataforma web que ayuda a las IPS a preparar auditorías de habilitación, gestionar el PAMEC e incidentes, todo según la Resolución 3100/2019 y 465/2025.
+> Lanzo NormaLis, una plataforma web que ayuda a las IPS a preparar auditorías de habilitación, gestionar el PAMEC e incidentes, todo según la Resolución 1732/2026.
 >
 > ¿Puedo enviarle información? Le tengo un piloto gratuito de 30 días sin ningún compromiso.
 
@@ -50,7 +46,7 @@ Clasificar en: **Caliente** (conocido) / **Tibio** (referido) / **Frío** (desco
 ### Mensaje 1C — Contacto frío
 > Buenos días, [Nombre]. Le escribo de NormaLis, plataforma de cumplimiento normativo para IPS.
 >
-> ¿Trabajan actualmente con alguna herramienta digital para gestionar los criterios de la Resolución 3100 y la 465?
+> ¿Ya tienen un plan de transición hacia la Resolución 1732/2026, la que reemplazó la 3100?
 >
 > Tenemos un piloto gratuito de 30 días que varias IPS en [ciudad] están evaluando esta semana.
 
@@ -81,7 +77,7 @@ Clasificar en: **Caliente** (conocido) / **Tibio** (referido) / **Frío** (desco
 ### Mensaje — Para grupos de WhatsApp (colegas / redes de salud)
 > Buenos días a todos. Les comparto NormaLis, una plataforma que creé para ayudar a las IPS colombianas con la gestión de habilitación y PAMEC.
 >
-> Automatiza listas de chequeo (Res. 3100 + 465), alertas de vencimientos, registro de incidentes y genera el reporte PDF para las visitas. Tiene IA para resolver preguntas normativas 24/7.
+> Automatiza listas de chequeo (Res. 1732/2026), alertas de vencimientos, registro de incidentes y genera el reporte PDF para las visitas. Tiene IA para resolver preguntas normativas 24/7.
 >
 > Si trabajan en una IPS o conocen alguien que lo haga, tengo pilotos gratuitos de 30 días disponibles. Pueden registrarse en normalis.co o escribirme directamente.
 >
@@ -100,7 +96,7 @@ Trabajé meses con equipos de calidad de IPS y encontré el mismo patrón:
 - Vencimientos que se pierden sin alertas
 - Visitas de habilitación que generan pánico
 
-La Resolución 3100/2019 tiene más de 400 criterios. La 465/2025 sumó más. Mantenerse al día manualmente no es sostenible.
+La Resolución 1732/2026 acaba de reemplazar la 3100/2019 y todas sus modificaciones — mismos 7 estándares, pero con nuevos criterios de telemedicina e historia clínica electrónica interoperable, y solo 12 meses de transición ya corriendo. Mantenerse al día manualmente no es sostenible.
 
 Por eso construí **NormaLis** — una plataforma 100% colombiana que automatiza:
 ✅ Listas de chequeo por servicio habilitado
@@ -113,7 +109,7 @@ Por eso construí **NormaLis** — una plataforma 100% colombiana que automatiza
 
 Si trabaja en una IPS o conoce quién lo haga — me encantaría que lo pruebe y me diga qué le falta.
 
-#SaludColombia #HabilitacionIPS #Resolución3100 #PAMEC #HealthTech
+#SaludColombia #HabilitacionIPS #Resolucion1732 #PAMEC #HealthTech
 
 ---
 
@@ -128,7 +124,7 @@ La habilitación es un proceso continuo, no un evento. Los criterios deben estar
 El ciclo PHVA del PAMEC debe alimentarse directamente de los hallazgos de las auditorías internas. Si están en documentos distintos, se pierde el hilo.
 
 **3. No tener trazabilidad de incidentes**
-La Resolución 3100 exige registro y análisis de incidentes. Sin un sistema, es imposible demostrar gestión ante los verificadores.
+La Resolución 1732/2026 exige registro y análisis de incidentes. Sin un sistema, es imposible demostrar gestión ante los verificadores.
 
 En NormaLis todo esto está conectado en una sola plataforma.
 
@@ -163,7 +159,7 @@ Estimado/a [Nombre],
 
 Le escribo porque trabajo con IPS colombianas que buscan simplificar la gestión de habilitación y PAMEC, y [nombre IPS] apareció en el REPS como una institución activa en [ciudad].
 
-Lancé NormaLis, una plataforma web que automatiza las listas de chequeo de la Resolución 3100/2019 y 465/2025, gestiona vencimientos, incidentes y PQRS, e incluye un chat con IA para resolver dudas normativas en cualquier momento.
+Lancé NormaLis, una plataforma web que automatiza las listas de chequeo de la Resolución 1732/2026, gestiona vencimientos, incidentes y PQRS, e incluye un chat con IA para resolver dudas normativas en cualquier momento.
 
 Le adjunto un resumen de una página. Si le interesa, tengo disponible un piloto gratuito de 30 días — sin tarjeta, con soporte incluido.
 
@@ -184,7 +180,7 @@ normalis.co | hola@normalis.co
 
 Le reenvío mi mensaje anterior por si se perdió entre el correo.
 
-Para contextualizar rápido: NormaLis es una plataforma para que las IPS manejen la habilitación de forma digital — listas de chequeo, PAMEC, incidentes y vencimientos, todo en un solo lugar según la Res. 3100 y 465.
+Para contextualizar rápido: NormaLis es una plataforma para que las IPS manejen la habilitación de forma digital — listas de chequeo, PAMEC, incidentes y vencimientos, todo en un solo lugar según la Res. 1732/2026.
 
 Esta semana tengo disponibles los últimos cupos de piloto gratuito de 30 días.
 
