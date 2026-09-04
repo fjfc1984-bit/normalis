@@ -10,9 +10,9 @@
  * Los ids de servicio reutilizan las mismas claves, íconos y citas
  * normativas ya usadas en el módulo de Auditoría (web/data/auditData.ts,
  * SEGMENT_META) para no introducir una segunda taxonomía de "servicios" en
- * la app — la única adaptación es reemplazar la cita a la Res. 3100/2019
- * (derogada) por su reemplazo confirmado, la Res. 1732/2026 (ver informe de
- * investigación regulatoria de NormaLis, ago-2026 — mismos 7 estándares).
+ * la app. `normaActualizada` ya es un no-op en la práctica — auditData.ts
+ * cita Res. 1732/2026 directamente desde sep-2026 — pero se deja como red
+ * de seguridad por si alguna cita quedó sin migrar.
  *
  * IMPORTANTE — naturaleza de estos documentos: cada uno es un ESQUELETO
  * profesional (objetivo/alcance, marco normativo, secciones que el equipo

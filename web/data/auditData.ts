@@ -116,6 +116,11 @@ export const SEGMENT_META: Record<string, { label: string; icon: string; norm: s
     "icon": "🔬",
     "norm": "Res. 1732/2026 · PAI MSPS · Res. 2184/2019"
   },
+  "proteccion_especifica": {
+    "label": "Protección Específica y Detección Temprana",
+    "icon": "🩺",
+    "norm": "Res. 1732/2026 · Res. 3280/2018"
+  },
   "telemedicina": {
     "label": "Telemedicina",
     "icon": "💻",
@@ -1785,6 +1790,42 @@ export const areasDB: Record<string, AuditArea[]> = {
         "¿El usuario espera mínimo 20 minutos post-vacunación en el servicio para observar reacciones adversas inmediatas?",
         "¿Los eventos adversos post-vacunación se registran, analizan y reportan al SIVIGILA según la normativa?",
         "¿Los indicadores de cobertura se reportan a la Secretaría de Salud en los formatos y tiempos establecidos?"
+      ]
+    }
+  ],
+  "proteccion_especifica": [
+    {
+      "id": "pyp-deteccion",
+      "icon": "🔍",
+      "name": "Detección Temprana de Alteraciones",
+      "norm": "Res. 1732/2026 · Res. 3280/2018",
+      "q": [
+        "¿La IPS realiza consulta de detección temprana de alteraciones del crecimiento y desarrollo en menores de 10 años, con talla, peso e hitos de desarrollo registrados según la Res. 3280/2018?",
+        "¿Existe consulta de detección temprana de alteraciones del desarrollo del joven (10 a 29 años) con valoración integral documentada?",
+        "¿Se realiza detección temprana de alteraciones del embarazo (control prenatal) según la Ruta Integral de Atención en Salud Materno-Perinatal?",
+        "¿La IPS realiza consulta de detección temprana de alteraciones en el adulto mayor de 45 años (tamización cardiovascular y metabólica) con seguimiento documentado?",
+        "¿Se realiza tamización de agudeza visual con remisión a optometría u oftalmología cuando hay hallazgo positivo?"
+      ]
+    },
+    {
+      "id": "pyp-cancer",
+      "icon": "🎗️",
+      "name": "Tamización de Cáncer de Cuello Uterino y Seno",
+      "norm": "Res. 1732/2026 · Res. 3280/2018",
+      "q": [
+        "¿La IPS realiza tamización de cáncer de cuello uterino (citología, prueba de VPH o inspección visual según protocolo vigente) con seguimiento documentado de resultados positivos?",
+        "¿Se realiza tamización de cáncer de seno (examen clínico y/o remisión a mamografía según edad y riesgo) con ruta de remisión documentada ante hallazgo sospechoso?",
+        "¿Los resultados de tamización se reportan al sistema de información correspondiente (SISPRO / Cuenta de Alto Costo) según la normativa vigente?"
+      ]
+    },
+    {
+      "id": "pyp-planificacion",
+      "icon": "👨‍👩‍👧",
+      "name": "Planificación Familiar y Salud Bucal Preventiva",
+      "norm": "Res. 1732/2026 · Res. 3280/2018",
+      "q": [
+        "¿La IPS ofrece atención en planificación familiar para hombres y mujeres, con consejería y oferta de métodos anticonceptivos según la Res. 3280/2018?",
+        "¿Existe atención preventiva en salud bucal (educación en higiene oral, control de placa bacteriana, aplicación de flúor o sellantes) diferenciada de la consulta de odontología general?"
       ]
     }
   ],
